@@ -1,21 +1,23 @@
-import { MENTORS } from '@/lib/data'
-import { Card, CardContent } from '@/components/ui/card'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { CheckCircle2, Target } from 'lucide-react'
-import { useState } from 'react'
+import { CheckCircle2 } from 'lucide-react'
 import { CheckoutModal } from '@/components/CheckoutModal'
+import { getMentorships } from '@/services/mentorships'
+import { Mentorship } from '@/types'
 
 export default function Mentorias() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [mentorship, setMentorship] = useState<Mentorship | null>(null)
+
+  useEffect(() => {
+    getMentorships()
+      .then((res) => {
+        if (res.length) setMentorship(res[0])
+      })
+      .catch(console.error)
+  }, [])
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -36,12 +38,17 @@ export default function Mentorias() {
         <div className="container px-4">
           <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
             <div className="lg:w-1/2 space-y-8">
-              <h2 className="text-4xl font-serif font-bold text-secondary">Como funciona?</h2>
+              <h2 className="text-4xl font-serif font-bold text-secondary">
+                {mentorship?.title || 'Sessão de Mentoria'}
+              </h2>
+              <p className="text-slate-600">
+                {mentorship?.description || 'Aconselhamento especializado.'}
+              </p>
               <ul className="space-y-6">
                 {[
                   'Escolha a data e horário ideal para a primeira sessão.',
                   'Realize o pagamento seguro via plataforma.',
-                  'Acesse o link da videochamada na sua Área do Aluno.',
+                  'Acesse o link da videochamada.',
                   'Receba direcionamento focado na sua carreira.',
                 ].map((step, i) => (
                   <li key={i} className="flex items-start gap-4">
@@ -51,8 +58,12 @@ export default function Mentorias() {
                 ))}
               </ul>
               <div className="p-6 bg-slate-50 rounded-xl border">
-                <p className="text-sm text-slate-500 mb-1">Valor por Sessão (1h)</p>
-                <p className="text-3xl font-bold text-primary">R$ 497,00</p>
+                <p className="text-sm text-slate-500 mb-1">Valor por Sessão</p>
+                <p className="text-3xl font-bold text-primary">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    mentorship?.price || 497,
+                  )}
+                </p>
               </div>
             </div>
 
@@ -83,8 +94,8 @@ export default function Mentorias() {
       <CheckoutModal
         isOpen={isCheckoutOpen}
         setIsOpen={setIsCheckoutOpen}
-        itemTitle="Sessão de Mentoria (1h)"
-        price={497}
+        itemTitle={mentorship?.title || 'Mentoria'}
+        price={mentorship?.price || 497}
       />
     </div>
   )

@@ -12,13 +12,13 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useEffect } from 'react'
 import { Logo, SquareLogo } from './ui/Logos'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/use-auth'
 import { LeadForm } from './LeadForm'
 
 export default function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -29,6 +29,7 @@ export default function Layout() {
     { name: 'Cursos', href: '/cursos' },
     { name: 'Mentorias', href: '/mentorias' },
     { name: 'Revistas', href: '/revistas' },
+    { name: 'Notícias', href: '/noticias' },
   ]
 
   return (
@@ -37,10 +38,10 @@ export default function Layout() {
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <SquareLogo variant="yellow" className="group-hover:scale-105 transition-transform" />
-            <Logo className="hidden sm:flex" />
+            <Logo className="hidden lg:flex" />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -68,7 +69,7 @@ export default function Layout() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    logout()
+                    signOut()
                     navigate('/')
                   }}
                 >
@@ -124,7 +125,7 @@ export default function Layout() {
                         variant="outline"
                         className="w-full justify-start text-lg h-12"
                         onClick={() => {
-                          logout()
+                          signOut()
                           navigate('/')
                         }}
                       >
@@ -151,18 +152,14 @@ export default function Layout() {
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <SquareLogo variant="black" />
-              <div className="flex flex-col">
-                <span className="font-bold text-xl leading-none text-accent">EDUCAÇÃO</span>
-                <span className="font-bold text-xl leading-none text-primary">SST.</span>
-              </div>
+              <SquareLogo variant="yellow" />
+              <Logo className="text-white" />
             </div>
             <p className="text-slate-400 text-sm leading-relaxed">
               Plataforma premium de educação e desenvolvimento profissional na área de Segurança e
               Saúde no Trabalho.
             </p>
           </div>
-
           <div>
             <h4 className="font-serif font-bold text-lg text-white mb-6">Links Rápidos</h4>
             <ul className="space-y-3 text-sm text-slate-400">
@@ -182,20 +179,18 @@ export default function Layout() {
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="hover:text-white transition-colors">
-                  Login / Cadastro
+                <Link to="/noticias" className="hover:text-white transition-colors">
+                  Notícias do Setor
                 </Link>
               </li>
             </ul>
           </div>
-
           <div>
             <h4 className="font-serif font-bold text-lg text-white mb-6">Fale Conosco</h4>
             <div className="bg-white/5 p-4 rounded-lg border border-white/10">
               <LeadForm variant="dark" />
             </div>
           </div>
-
           <div>
             <h4 className="font-serif font-bold text-lg text-white mb-6">Áreas de Atuação</h4>
             <ul className="space-y-3 text-sm text-slate-400">
@@ -210,9 +205,6 @@ export default function Layout() {
               </li>
             </ul>
           </div>
-        </div>
-        <div className="container mx-auto px-4 mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
-          <p>© {new Date().getFullYear()} Educação SST Premium. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

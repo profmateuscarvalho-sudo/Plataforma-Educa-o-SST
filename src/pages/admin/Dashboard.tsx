@@ -1,7 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { BookOpen, Users, DollarSign, TrendingUp } from 'lucide-react'
+import { BookOpen, Users, DollarSign, FileText } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { getLeads } from '@/services/leads'
+import { getCourses } from '@/services/courses'
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState({ leads: 0, courses: 0 })
+
+  useEffect(() => {
+    Promise.all([getLeads(), getCourses()]).then(([leadsRes, coursesRes]) => {
+      setStats({ leads: leadsRes.length, courses: coursesRes.length })
+    })
+  }, [])
+
   return (
     <div className="space-y-8">
       <div>
@@ -11,10 +22,20 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Total de Alunos', val: '1,248', icon: Users, color: 'text-blue-500' },
-          { label: 'Cursos Ativos', val: '12', icon: BookOpen, color: 'text-primary' },
-          { label: 'Receita Mensal', val: 'R$ 45.2K', icon: DollarSign, color: 'text-green-600' },
-          { label: 'Leads Capturados', val: '342', icon: TrendingUp, color: 'text-accent' },
+          { label: 'Total de Alunos', val: '142', icon: Users, color: 'text-blue-500' },
+          {
+            label: 'Cursos Ativos',
+            val: stats.courses.toString(),
+            icon: BookOpen,
+            color: 'text-primary',
+          },
+          { label: 'Revistas Publicadas', val: '12', icon: FileText, color: 'text-green-600' },
+          {
+            label: 'Leads Capturados',
+            val: stats.leads.toString(),
+            icon: DollarSign,
+            color: 'text-accent',
+          },
         ].map((s, i) => (
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -27,35 +48,6 @@ export default function AdminDashboard() {
           </Card>
         ))}
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Últimos Leads (Falar com Consultor)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[
-              { n: 'João Silva', e: 'joao@industria.com', t: '(11) 98888-7777', d: 'Há 2 horas' },
-              { n: 'Maria Santos', e: 'maria@seguranca.br', t: '(21) 99999-0000', d: 'Há 5 horas' },
-            ].map((l, i) => (
-              <div
-                key={i}
-                className="flex justify-between items-center p-4 bg-slate-50 rounded-lg border"
-              >
-                <div>
-                  <p className="font-bold text-secondary">{l.n}</p>
-                  <p className="text-sm text-slate-500">
-                    {l.e} • {l.t}
-                  </p>
-                </div>
-                <span className="text-xs text-slate-400 font-medium bg-white px-2 py-1 rounded border">
-                  {l.d}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

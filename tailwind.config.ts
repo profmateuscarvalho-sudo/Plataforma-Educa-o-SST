@@ -69,10 +69,6 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
-      boxShadow: {
-        premium: '0 4px 20px -2px rgba(27, 67, 50, 0.08)',
-        'premium-hover': '0 12px 30px -4px rgba(27, 67, 50, 0.12)',
-      },
     },
   },
   plugins: [animatePlugin, typographyPlugin, aspectRatioPlugin],

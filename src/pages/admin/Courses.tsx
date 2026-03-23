@@ -1,61 +1,141 @@
-import { COURSES } from '@/lib/data'
+import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Edit, Trash2 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Plus, Trash2 } from 'lucide-react'
+import { getCourses, createCourse, deleteCourse } from '@/services/courses'
+import { Course } from '@/types'
+import { toast } from '@/hooks/use-toast'
 
 export default function AdminCourses() {
+  const [courses, setCourses] = useState<Course[]>([])
+  const [open, setOpen] = useState(false)
+
+  const load = () => getCourses().then(setCourses)
+  useEffect(() => {
+    load()
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const form = new FormData(e.currentTarget)
+    try {
+      await createCourse(form)
+      toast({ title: 'Curso criado com sucesso' })
+      setOpen(false)
+      load()
+    } catch (err) {
+      toast({ title: 'Erro', variant: 'destructive' })
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Remover curso?')) {
+      await deleteCourse(id)
+      load()
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-serif font-bold text-secondary">Gerenciar Cursos</h2>
-          <p className="text-slate-500">Crie, edite ou remova conteúdos educacionais (CMS).</p>
+          <h2 className="text-3xl font-serif font-bold text-secondary">Cursos</h2>
+          <p className="text-slate-500">Gerencie o catálogo e vídeos do Panda Video.</p>
         </div>
-        <Button className="bg-primary">
-          <Plus className="mr-2 w-4 h-4" /> Novo Curso
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-primary">
+              <Plus className="mr-2 w-4 h-4" /> Novo Curso
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle>Cadastrar Curso</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label>Título</Label>
+                <Input name="title" required />
+              </div>
+              <div>
+                <Label>Descrição</Label>
+                <Input name="description" required />
+              </div>
+              <div>
+                <Label>Categoria</Label>
+                <Select name="category" defaultValue="Segurança do Trabalho">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Medicina do Trabalho">Medicina do Trabalho</SelectItem>
+                    <SelectItem value="Segurança do Trabalho">Segurança do Trabalho</SelectItem>
+                    <SelectItem value="Gestão de SST">Gestão de SST</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>ID do Panda Video</Label>
+                <Input name="panda_video_id" required />
+              </div>
+              <div>
+                <Label>Preço (R$)</Label>
+                <Input name="price" type="number" step="0.01" required />
+              </div>
+              <div>
+                <Label>Capa (Thumbnail)</Label>
+                <Input name="thumbnail" type="file" accept="image/*" />
+              </div>
+              <Button type="submit" className="w-full">
+                Salvar Curso
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="grid grid-cols-12 gap-4 p-4 border-b bg-slate-50 font-bold text-slate-600 text-sm">
-          <div className="col-span-5">Curso</div>
-          <div className="col-span-3">Categoria</div>
-          <div className="col-span-2">Preço</div>
-          <div className="col-span-2 text-right">Ações</div>
-        </div>
-
-        <div className="divide-y">
-          {COURSES.map((course) => (
-            <div
-              key={course.id}
-              className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors"
-            >
-              <div className="col-span-5 flex items-center gap-4">
-                <img
-                  src={course.image}
-                  className="w-16 h-10 object-cover rounded shadow-sm"
-                  alt="thumb"
-                />
-                <span className="font-medium text-secondary truncate">{course.title}</span>
+      <Card>
+        <CardContent className="p-0">
+          <div className="divide-y">
+            {courses.map((c) => (
+              <div
+                key={c.id}
+                className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50"
+              >
+                <div className="col-span-6 font-medium">{c.title}</div>
+                <div className="col-span-3 text-sm text-slate-500">{c.category}</div>
+                <div className="col-span-2 font-bold text-primary">R$ {c.price}</div>
+                <div className="col-span-1 text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-600"
+                    onClick={() => handleDelete(c.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="col-span-3">
-                <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">
-                  {course.category}
-                </span>
-              </div>
-              <div className="col-span-2 text-primary font-bold text-sm">R$ {course.price}</div>
-              <div className="col-span-2 flex justify-end gap-2">
-                <Button variant="ghost" size="icon" className="text-blue-600">
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="text-red-600">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

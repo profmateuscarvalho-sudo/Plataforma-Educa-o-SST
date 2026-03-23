@@ -1,22 +1,29 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { LeadForm } from '@/components/LeadForm'
 import { CourseCard } from '@/components/CourseCard'
-import { COURSES, MAGAZINES } from '@/lib/data'
-import { ShieldAlert, Stethoscope, Briefcase, ArrowRight, FileText } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { getCourses } from '@/services/courses'
+import { Course } from '@/types'
 
 export default function Index() {
-  const featuredCourses = COURSES.slice(0, 3)
+  const [courses, setCourses] = useState<Course[]>([])
+
+  useEffect(() => {
+    getCourses()
+      .then((res) => setCourses(res.slice(0, 3)))
+      .catch(console.error)
+  }, [])
 
   return (
     <div className="flex flex-col min-h-screen">
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-secondary">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://img.usecurling.com/p/1920/1080?q=industry&color=black"
+            src="https://img.usecurling.com/p/1920/1080?q=factory&color=black"
             alt="Background"
-            className="w-full h-full object-cover opacity-40 mix-blend-overlay"
+            className="w-full h-full object-cover opacity-30 mix-blend-overlay"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-secondary via-secondary/90 to-transparent" />
         </div>
@@ -24,8 +31,8 @@ export default function Index() {
         <div className="container relative z-10 px-4 py-20 flex flex-col lg:flex-row items-center gap-12">
           <div className="flex-1 space-y-8 animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary backdrop-blur-sm font-medium text-sm">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              Desenvolvimento Profissional SST
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> Desenvolvimento
+              Profissional SST
             </div>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-white leading-tight">
               Excelência e Liderança em <span className="text-accent">SST</span>
@@ -90,7 +97,7 @@ export default function Index() {
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredCourses.map((course) => (
+            {courses.map((course) => (
               <CourseCard key={course.id} course={course} />
             ))}
           </div>

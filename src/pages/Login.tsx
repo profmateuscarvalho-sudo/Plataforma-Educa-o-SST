@@ -1,32 +1,39 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { SquareLogo } from '@/components/ui/Logos'
+import { toast } from '@/hooks/use-toast'
 
 export default function Login() {
-  const { login } = useAuth()
+  const { signIn } = useAuth()
   const navigate = useNavigate()
-  const [role, setRole] = useState<'student' | 'admin'>('student')
+  const [email, setEmail] = useState('carvalhomateus@icloud.com')
+  const [pass, setPass] = useState('securepassword123')
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    login(role)
-    navigate(role === 'admin' ? '/admin' : '/aluno')
+    setLoading(true)
+    const { error } = await signIn(email, pass)
+    setLoading(false)
+    if (error) {
+      toast({
+        title: 'Erro de login',
+        description: 'Credenciais inválidas.',
+        variant: 'destructive',
+      })
+    } else {
+      toast({ title: 'Bem-vindo!' })
+      navigate('/')
+    }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-2xl border-none">
         <CardHeader className="space-y-4 text-center items-center pb-8">
           <SquareLogo variant="black" className="w-16 h-16 text-5xl mb-2" />
@@ -46,9 +53,9 @@ export default function Login() {
               <Input
                 id="email"
                 type="email"
-                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                defaultValue="demo@educacaosst.com"
                 className="h-12 bg-slate-50"
               />
             </div>
@@ -57,25 +64,14 @@ export default function Login() {
               <Input
                 id="password"
                 type="password"
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
                 required
-                defaultValue="123456"
                 className="h-12 bg-slate-50"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Simular Tipo de Usuário</Label>
-              <Select value={role} onValueChange={(v: 'student' | 'admin') => setRole(v)}>
-                <SelectTrigger className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">Aluno</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" className="w-full h-12 text-lg font-bold">
-              Entrar
+            <Button type="submit" className="w-full h-12 text-lg font-bold" disabled={loading}>
+              {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
         </CardContent>

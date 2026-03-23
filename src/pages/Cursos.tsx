@@ -1,7 +1,15 @@
-import { COURSES } from '@/lib/data'
+import { useEffect, useState } from 'react'
 import { CourseCard } from '@/components/CourseCard'
+import { getCourses } from '@/services/courses'
+import { Course } from '@/types'
 
 export default function Cursos() {
+  const [courses, setCourses] = useState<Course[]>([])
+
+  useEffect(() => {
+    getCourses().then(setCourses).catch(console.error)
+  }, [])
+
   return (
     <div className="bg-slate-50 min-h-screen pb-24">
       <section className="bg-secondary text-white py-20 relative overflow-hidden">
@@ -24,9 +32,12 @@ export default function Cursos() {
           <h2 className="text-2xl font-serif font-bold text-secondary">Catálogo Completo</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {COURSES.map((course) => (
+          {courses.map((course) => (
             <CourseCard key={course.id} course={course} />
           ))}
+          {courses.length === 0 && (
+            <p className="text-slate-500">Nenhum curso disponível no momento.</p>
+          )}
         </div>
       </section>
     </div>

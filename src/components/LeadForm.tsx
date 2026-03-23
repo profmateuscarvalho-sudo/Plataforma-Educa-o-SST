@@ -12,13 +12,16 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { createLead } from '@/services/leads'
 
 const formSchema = z.object({
   name: z.string().min(2, 'Nome muito curto.'),
   email: z.string().email('E-mail inválido.'),
   phone: z.string().min(10, 'Telefone inválido.'),
+  message: z.string().optional(),
 })
 
 export function LeadForm({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
@@ -27,16 +30,24 @@ export function LeadForm({ variant = 'light' }: { variant?: 'light' | 'dark' }) 
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', email: '', phone: '' },
+    defaultValues: { name: '', email: '', phone: '', message: '' },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      await createLead(values)
       toast({ title: 'Contato solicitado!', description: 'Um consultor falará com você em breve.' })
       form.reset()
-    }, 1000)
+    } catch (e) {
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao enviar o contato.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const isDark = variant === 'dark'
@@ -97,6 +108,28 @@ export function LeadForm({ variant = 'light' }: { variant?: 'light' | 'dark' }) 
                   className={cn(
                     isDark &&
                       'bg-white/10 border-white/20 text-white placeholder:text-slate-500 h-9',
+                  )}
+                />
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="message"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className={cn(isDark && 'text-slate-300 text-xs')}>
+                Mensagem (Opcional)
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Como podemos ajudar?"
+                  {...field}
+                  className={cn(
+                    isDark &&
+                      'bg-white/10 border-white/20 text-white placeholder:text-slate-500 min-h-[60px]',
                   )}
                 />
               </FormControl>

@@ -69,8 +69,17 @@ export interface PlatformEvent extends RecordModel {
   description: string
   type: 'Workshop' | 'Aula Online' | 'Aula Presencial'
   date: string
+  end_date?: string
   price: number
   location?: string
   meeting_link?: string
   thumbnail?: string
+}
+
+export interface EventRegistration extends RecordModel {
+  event: string
+  name: string
+  email: string
+  phone?: string
+  status: 'confirmed' | 'pending' | 'cancelled'
 }

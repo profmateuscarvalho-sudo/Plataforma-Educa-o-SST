@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, ListTree } from 'lucide-react'
 import { getCourses, createCourse, deleteCourse } from '@/services/courses'
 import { Course } from '@/types'
 import { toast } from '@/hooks/use-toast'
@@ -91,7 +92,7 @@ export default function AdminCourses() {
                 </Select>
               </div>
               <div>
-                <Label>ID do Panda Video</Label>
+                <Label>ID do Panda Video (Vídeo de Apresentação/Principal)</Label>
                 <Input name="panda_video_id" required />
               </div>
               <div>
@@ -120,12 +121,17 @@ export default function AdminCourses() {
               >
                 <div className="col-span-6 font-medium">{c.title}</div>
                 <div className="col-span-3 text-sm text-slate-500">{c.category}</div>
-                <div className="col-span-2 font-bold text-primary">R$ {c.price}</div>
-                <div className="col-span-1 text-right">
+                <div className="col-span-1 font-bold text-primary">R$ {c.price}</div>
+                <div className="col-span-2 flex justify-end gap-2">
+                  <Button variant="outline" size="sm" asChild className="text-secondary">
+                    <Link to={`/admin/cursos/${c.id}`}>
+                      <ListTree className="w-4 h-4 mr-2" /> Conteúdo
+                    </Link>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-red-600"
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
                     onClick={() => handleDelete(c.id)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -133,6 +139,9 @@ export default function AdminCourses() {
                 </div>
               </div>
             ))}
+            {courses.length === 0 && (
+              <div className="p-8 text-center text-slate-500">Nenhum curso cadastrado.</div>
+            )}
           </div>
         </CardContent>
       </Card>

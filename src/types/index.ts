@@ -15,6 +15,26 @@ export interface Course extends RecordModel {
   thumbnail: string
 }
 
+export interface Module extends RecordModel {
+  title: string
+  order: number
+  course: string
+}
+
+export interface Lesson extends RecordModel {
+  title: string
+  description: string
+  panda_video_id: string
+  order: number
+  module: string
+}
+
+export interface Material extends RecordModel {
+  title: string
+  file: string
+  module: string
+}
+
 export interface Magazine extends RecordModel {
   title: string
   summary: string

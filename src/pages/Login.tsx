@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -73,6 +73,14 @@ export default function Login() {
             <Button type="submit" className="w-full h-12 text-lg font-bold" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
+            <div className="text-center mt-6">
+              <p className="text-sm text-slate-500">
+                Ainda não tem conta?{' '}
+                <Link to="/register" className="text-primary font-bold hover:underline">
+                  Crie uma agora
+                </Link>
+              </p>
+            </div>
           </form>
         </CardContent>
       </Card>

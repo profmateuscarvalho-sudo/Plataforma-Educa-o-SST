@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T13:06:40.582Z",
+  "generatedAt": "2026-03-23T13:11:24.534Z",
   "collections": [
     {
       "name": "users",
@@ -560,6 +560,12 @@
         {
           "name": "end_date",
           "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "panda_video_id",
+          "type": "text",
           "required": false,
           "system": false
         }

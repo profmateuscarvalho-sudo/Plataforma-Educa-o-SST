@@ -74,6 +74,7 @@ export interface PlatformEvent extends RecordModel {
   location?: string
   meeting_link?: string
   thumbnail?: string
+  panda_video_id?: string
 }
 
 export interface EventRegistration extends RecordModel {

@@ -188,12 +188,25 @@ export function EventFormModal({
             )}
           </div>
 
-          <div>
-            <Label>Capa (Thumbnail)</Label>
-            <Input name="thumbnail" type="file" accept="image/*" />
-            {fieldErrors.thumbnail && (
-              <p className="text-xs text-red-500 mt-1">{fieldErrors.thumbnail}</p>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Capa (Thumbnail)</Label>
+              <Input name="thumbnail" type="file" accept="image/*" />
+              {fieldErrors.thumbnail && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.thumbnail}</p>
+              )}
+            </div>
+            <div>
+              <Label>ID do Vídeo (Panda Video)</Label>
+              <Input
+                name="panda_video_id"
+                defaultValue={editingEvent?.panda_video_id}
+                placeholder="ID ou URL de embed (Opcional)"
+              />
+              {fieldErrors.panda_video_id && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.panda_video_id}</p>
+              )}
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>

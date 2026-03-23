@@ -11,7 +11,6 @@ import {
   Clock,
   Ticket,
   CheckCircle2,
-  User,
   Loader2,
   ArrowRight,
 } from 'lucide-react'
@@ -20,6 +19,17 @@ import { createEventRegistration } from '@/services/event_registrations'
 import { PlatformEvent } from '@/types'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
+import { useRealtime } from '@/hooks/use-realtime'
+
+const getPandaUrl = (val?: string) => {
+  if (!val) return ''
+  if (val.includes('src="')) {
+    const match = val.match(/src="([^"]+)"/)
+    return match ? match[1] : ''
+  }
+  if (val.startsWith('http')) return val
+  return `https://player-vz-cf761a29-063.tv.pandavideo.com.br/embed/?v=${val}`
+}
 
 export default function EventDetails() {
   const { id } = useParams()
@@ -31,12 +41,23 @@ export default function EventDetails() {
 
   const formRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (id)
+  const loadEvent = () => {
+    if (id) {
       getEvent(id)
         .then(setEvt)
         .catch(() => setNotFound(true))
+    }
+  }
+
+  useEffect(() => {
+    loadEvent()
   }, [id])
+
+  useRealtime('events', (e) => {
+    if (e.record.id === id) {
+      loadEvent()
+    }
+  })
 
   const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: 'smooth' })
 
@@ -119,6 +140,19 @@ export default function EventDetails() {
         <div className="flex flex-col lg:flex-row gap-12 items-start">
           {/* Main Content */}
           <div className="flex-1 space-y-12">
+            {evt.panda_video_id && (
+              <section className="bg-white p-2 rounded-3xl shadow-lg border border-slate-100">
+                <div className="aspect-video w-full rounded-2xl overflow-hidden bg-slate-900 relative">
+                  <iframe
+                    src={getPandaUrl(evt.panda_video_id)}
+                    className="absolute inset-0 w-full h-full border-none"
+                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </section>
+            )}
+
             <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
               <h2 className="text-2xl font-serif font-bold text-secondary mb-6">
                 O que você vai aprender

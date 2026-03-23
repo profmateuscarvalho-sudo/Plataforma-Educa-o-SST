@@ -3,37 +3,60 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Plus, Trash2 } from 'lucide-react'
-import { getMagazines, createMagazine, deleteMagazine } from '@/services/magazines'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Plus, Trash2, Edit, BookOpen } from 'lucide-react'
+import { getMagazines, createMagazine, updateMagazine, deleteMagazine } from '@/services/magazines'
 import { Magazine } from '@/types'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/use-toast'
+import { useRealtime } from '@/hooks/use-realtime'
+import pb from '@/lib/pocketbase/client'
 
 export default function AdminMagazines() {
   const [mags, setMags] = useState<Magazine[]>([])
   const [open, setOpen] = useState(false)
+  const [editingMag, setEditingMag] = useState<Magazine | null>(null)
+  const { toast } = useToast()
 
   const load = () => getMagazines().then(setMags)
   useEffect(() => {
     load()
   }, [])
 
+  useRealtime('magazines', () => {
+    load()
+  })
+
+  const handleOpenNew = () => {
+    setEditingMag(null)
+    setOpen(true)
+  }
+
+  const handleOpenEdit = (m: Magazine) => {
+    setEditingMag(m)
+    setOpen(true)
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = new FormData(e.currentTarget)
+
+    // Clean up empty file inputs to avoid overriding or validation errors
+    const file = form.get('thumbnail') as File
+    if (!file || file.size === 0) {
+      form.delete('thumbnail')
+    }
+
     try {
-      await createMagazine(form)
-      toast({ title: 'Revista adicionada' })
+      if (editingMag) {
+        await updateMagazine(editingMag.id, form)
+        toast({ title: 'Revista atualizada com sucesso' })
+      } else {
+        await createMagazine(form)
+        toast({ title: 'Revista adicionada com sucesso' })
+      }
       setOpen(false)
-      load()
     } catch (err) {
-      toast({ title: 'Erro', variant: 'destructive' })
+      toast({ title: 'Erro ao salvar revista', variant: 'destructive' })
     }
   }
 
@@ -42,63 +65,103 @@ export default function AdminMagazines() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-serif font-bold text-secondary">Revistas (FlipHTML5)</h2>
+          <p className="text-muted-foreground mt-1">
+            Gerencie as revistas. O sistema busca a capa automaticamente da FlipHTML5.
+          </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 w-4 h-4" /> Nova Revista
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Cadastrar Revista</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label>Título</Label>
-                <Input name="title" required />
-              </div>
-              <div>
-                <Label>Resumo</Label>
-                <Input name="summary" />
-              </div>
-              <div>
-                <Label>Link FlipHTML5</Label>
-                <Input name="fliphtml5_link" type="url" required />
-              </div>
-              <div>
-                <Label>Capa</Label>
-                <Input name="thumbnail" type="file" accept="image/*" />
-              </div>
-              <Button type="submit" className="w-full">
-                Salvar
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleOpenNew}>
+          <Plus className="mr-2 w-4 h-4" /> Nova Revista
+        </Button>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingMag ? 'Editar Revista' : 'Cadastrar Revista'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>Título</Label>
+              <Input name="title" required defaultValue={editingMag?.title} />
+            </div>
+            <div>
+              <Label>Resumo</Label>
+              <Input name="summary" defaultValue={editingMag?.summary} />
+            </div>
+            <div>
+              <Label>Link FlipHTML5</Label>
+              <Input
+                name="fliphtml5_link"
+                type="url"
+                required
+                defaultValue={editingMag?.fliphtml5_link}
+              />
+            </div>
+            <div>
+              <Label>Capa (Opcional)</Label>
+              <Input name="thumbnail" type="file" accept="image/*" />
+              <p className="text-xs text-muted-foreground mt-1">
+                Deixe em branco para buscar automaticamente do link.
+              </p>
+            </div>
+            <Button type="submit" className="w-full">
+              Salvar
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardContent className="p-0 divide-y">
           {mags.map((m) => (
             <div key={m.id} className="flex justify-between items-center p-4 hover:bg-slate-50">
-              <div>
-                <p className="font-bold">{m.title}</p>
-                <p className="text-sm text-blue-500">{m.fliphtml5_link}</p>
+              <div className="flex items-center gap-4">
+                {m.thumbnail ? (
+                  <img
+                    src={pb.files.getUrl(m, m.thumbnail, { thumb: '100x100' })}
+                    alt={m.title}
+                    className="w-16 h-20 object-cover rounded shadow-sm border"
+                  />
+                ) : (
+                  <div className="w-16 h-20 bg-slate-100 rounded border flex items-center justify-center text-slate-400">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                )}
+                <div>
+                  <p className="font-bold text-lg text-slate-800">{m.title}</p>
+                  <a
+                    href={m.fliphtml5_link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    {m.fliphtml5_link}
+                  </a>
+                  {m.summary && <p className="text-sm text-slate-500 mt-1">{m.summary}</p>}
+                </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-red-600"
-                onClick={async () => {
-                  await deleteMagazine(m.id)
-                  load()
-                }}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(m)}>
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={async () => {
+                    if (confirm('Deseja realmente excluir esta revista?')) {
+                      await deleteMagazine(m.id)
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           ))}
+          {mags.length === 0 && (
+            <div className="p-8 text-center text-slate-500">Nenhuma revista cadastrada.</div>
+          )}
         </CardContent>
       </Card>
     </div>

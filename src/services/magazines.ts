@@ -9,6 +9,10 @@ export const createMagazine = async (data: FormData) => {
   return await pb.collection('magazines').create<Magazine>(data)
 }
 
+export const updateMagazine = async (id: string, data: FormData) => {
+  return await pb.collection('magazines').update<Magazine>(id, data)
+}
+
 export const deleteMagazine = async (id: string) => {
   return await pb.collection('magazines').delete(id)
 }

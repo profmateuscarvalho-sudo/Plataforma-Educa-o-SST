@@ -26,6 +26,7 @@ import AdminCourseBuilder from './pages/admin/CourseBuilder'
 import AdminMagazines from './pages/admin/Magazines'
 import AdminNews from './pages/admin/News'
 import AdminLeads from './pages/admin/Leads'
+import AdminMentorships from './pages/admin/Mentorships'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/cursos" element={<AdminCourses />} />
             <Route path="/admin/cursos/:id" element={<AdminCourseBuilder />} />
+            <Route path="/admin/mentorias" element={<AdminMentorships />} />
             <Route path="/admin/revistas" element={<AdminMagazines />} />
             <Route path="/admin/noticias" element={<AdminNews />} />
             <Route path="/admin/leads" element={<AdminLeads />} />

@@ -36,17 +36,37 @@ export default function Mentorias() {
 
       <section className="py-24 bg-white">
         <div className="container px-4">
-          <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
+          <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-16 items-start">
             <div className="lg:w-1/2 space-y-8">
-              <h2 className="text-4xl font-serif font-bold text-secondary">
-                {mentorship?.title || 'Sessão de Mentoria'}
-              </h2>
-              <p className="text-slate-600">
+              <div>
+                <h2 className="text-4xl font-serif font-bold text-secondary">
+                  {mentorship?.title || 'Sessão de Mentoria'}
+                </h2>
+                {mentorship?.mentor_name && (
+                  <p className="text-lg font-medium text-primary mt-2">
+                    Com {mentorship.mentor_name}
+                  </p>
+                )}
+              </div>
+
+              <p className="text-slate-600 text-lg leading-relaxed">
                 {mentorship?.description || 'Aconselhamento especializado.'}
               </p>
+
+              {mentorship?.available_dates && (
+                <div className="p-5 bg-slate-50 rounded-xl border border-slate-200">
+                  <h4 className="font-bold text-sm text-secondary uppercase tracking-wider mb-2">
+                    Horários Disponíveis
+                  </h4>
+                  <p className="text-slate-600 whitespace-pre-wrap leading-relaxed">
+                    {mentorship.available_dates}
+                  </p>
+                </div>
+              )}
+
               <ul className="space-y-6">
                 {[
-                  'Escolha a data e horário ideal para a primeira sessão.',
+                  'Escolha a data ideal para a primeira sessão.',
                   'Realize o pagamento seguro via plataforma.',
                   'Acesse o link da videochamada.',
                   'Receba direcionamento focado na sua carreira.',
@@ -57,6 +77,7 @@ export default function Mentorias() {
                   </li>
                 ))}
               </ul>
+
               <div className="p-6 bg-slate-50 rounded-xl border">
                 <p className="text-sm text-slate-500 mb-1">Valor por Sessão</p>
                 <p className="text-3xl font-bold text-primary">
@@ -67,8 +88,10 @@ export default function Mentorias() {
               </div>
             </div>
 
-            <div className="lg:w-1/2 w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
-              <h3 className="text-xl font-bold text-secondary mb-6 text-center">Agendar Sessão</h3>
+            <div className="lg:w-1/2 w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-100 lg:sticky lg:top-28">
+              <h3 className="text-xl font-bold text-secondary mb-6 text-center">
+                Sinalizar Interesse de Agendamento
+              </h3>
               <div className="flex justify-center mb-6">
                 <Calendar
                   mode="single"
@@ -81,12 +104,15 @@ export default function Mentorias() {
                 />
               </div>
               <Button
-                className="w-full h-14 text-lg bg-primary hover:bg-primary/90"
+                className="w-full h-14 text-lg bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
                 disabled={!date}
                 onClick={() => setIsCheckoutOpen(true)}
               >
                 Confirmar e Pagar Sessão
               </Button>
+              <p className="text-xs text-center text-slate-500 mt-4">
+                Após a confirmação, o mentor validará o horário e enviará o link de acesso.
+              </p>
             </div>
           </div>
         </div>

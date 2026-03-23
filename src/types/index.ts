@@ -53,6 +53,8 @@ export interface Mentorship extends RecordModel {
   description: string
   price: number
   scheduling_link: string
+  mentor_name: string
+  available_dates: string
 }
 
 export interface Lead extends RecordModel {

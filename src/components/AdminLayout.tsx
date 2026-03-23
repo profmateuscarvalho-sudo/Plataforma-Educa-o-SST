@@ -2,7 +2,15 @@ import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { useEffect } from 'react'
 import { SquareLogo } from './ui/Logos'
-import { LayoutDashboard, BookOpen, Users, LogOut, FileText, Newspaper } from 'lucide-react'
+import {
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  LogOut,
+  FileText,
+  Newspaper,
+  Presentation,
+} from 'lucide-react'
 
 export default function AdminLayout() {
   const { user, signOut, loading } = useAuth()
@@ -19,6 +27,7 @@ export default function AdminLayout() {
   const menu = [
     { label: 'Visão Geral', icon: LayoutDashboard, path: '/admin' },
     { label: 'Cursos', icon: BookOpen, path: '/admin/cursos' },
+    { label: 'Mentorias', icon: Presentation, path: '/admin/mentorias' },
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },
     { label: 'Notícias', icon: Newspaper, path: '/admin/noticias' },
     { label: 'Leads', icon: Users, path: '/admin/leads' },
@@ -26,7 +35,7 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      <aside className="w-64 bg-secondary text-white flex flex-col hidden md:flex">
+      <aside className="w-64 bg-secondary text-white flex flex-col hidden md:flex shrink-0">
         <div className="h-20 flex items-center px-6 border-b border-white/10 gap-3">
           <SquareLogo variant="yellow" className="w-8 h-8 text-xl" />
           <span className="font-bold text-accent tracking-tighter">SST ADMIN</span>

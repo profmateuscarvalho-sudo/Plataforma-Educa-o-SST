@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T12:33:05.141Z",
+  "generatedAt": "2026-03-23T12:38:59.081Z",
   "collections": [
     {
       "name": "users",
@@ -262,6 +262,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "mentor_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "available_dates",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

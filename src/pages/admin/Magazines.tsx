@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Trash2, Edit, BookOpen } from 'lucide-react'
+import { Plus, Trash2, Edit, BookOpen, Loader2 } from 'lucide-react'
 import { getMagazines, createMagazine, updateMagazine, deleteMagazine } from '@/services/magazines'
 import { Magazine } from '@/types'
 import { useToast } from '@/hooks/use-toast'
@@ -15,6 +15,7 @@ export default function AdminMagazines() {
   const [mags, setMags] = useState<Magazine[]>([])
   const [open, setOpen] = useState(false)
   const [editingMag, setEditingMag] = useState<Magazine | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
   const load = () => getMagazines().then(setMags)
@@ -38,6 +39,7 @@ export default function AdminMagazines() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setIsSubmitting(true)
     const form = new FormData(e.currentTarget)
 
     // Clean up empty file inputs to avoid overriding or validation errors
@@ -57,6 +59,8 @@ export default function AdminMagazines() {
       setOpen(false)
     } catch (err) {
       toast({ title: 'Erro ao salvar revista', variant: 'destructive' })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -101,10 +105,12 @@ export default function AdminMagazines() {
               <Label>Capa (Opcional)</Label>
               <Input name="thumbnail" type="file" accept="image/*" />
               <p className="text-xs text-muted-foreground mt-1">
-                Deixe em branco para buscar automaticamente do link.
+                Deixe em branco para buscar automaticamente do link. Apenas envie se a busca
+                automática falhar.
               </p>
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Salvar
             </Button>
           </form>

@@ -1,26 +1,45 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { BookOpen } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { BookOpen, BookX, Loader2 } from 'lucide-react'
 import { getMagazines } from '@/services/magazines'
 import { Magazine } from '@/types'
 import pb from '@/lib/pocketbase/client'
+import { useRealtime } from '@/hooks/use-realtime'
+import { cn } from '@/lib/utils'
 
 export default function Revistas() {
   const [magazines, setMagazines] = useState<Magazine[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const loadData = useCallback(async () => {
+    try {
+      const data = await getMagazines()
+      setMagazines(data)
+    } catch (err) {
+      console.error('Error fetching magazines:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    getMagazines().then(setMagazines).catch(console.error)
-  }, [])
+    loadData()
+  }, [loadData])
+
+  useRealtime('magazines', () => {
+    loadData()
+  })
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
-      <section className="bg-secondary text-white py-20">
+      <section className="bg-emerald-950 text-white py-20 border-b-4 border-yellow-400">
         <div className="container px-4 text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-accent">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-yellow-400 drop-shadow-sm">
             Acervo Científico
           </h1>
-          <p className="text-lg text-slate-300 leading-relaxed font-light">
+          <p className="text-lg text-emerald-100/90 leading-relaxed font-light">
             Acesso público e gratuito às nossas publicações periódicas com artigos focados no avanço
             da Segurança e Saúde no Trabalho.
           </p>
@@ -28,41 +47,82 @@ export default function Revistas() {
       </section>
 
       <section className="container px-4 pt-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {magazines.map((mag) => {
-            const imgUrl = mag.thumbnail
-              ? pb.files.getUrl(mag, mag.thumbnail)
-              : 'https://img.usecurling.com/p/400/600?q=magazine&color=green'
-            return (
-              <Card
-                key={mag.id}
-                className="group overflow-hidden border-none shadow-md hover:shadow-2xl transition-all duration-300 bg-white"
-              >
-                <div className="relative aspect-[3/4] overflow-hidden bg-slate-100">
-                  <img
-                    src={imgUrl}
-                    alt={mag.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
-                    <Button
-                      className="w-full bg-accent text-secondary hover:bg-accent/90 translate-y-4 group-hover:translate-y-0 transition-all duration-300 font-bold"
-                      onClick={() => window.open(mag.fliphtml5_link || '#', '_blank')}
-                    >
-                      <BookOpen className="w-4 h-4 mr-2" /> Ler na FlipHTML5
-                    </Button>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="w-full aspect-[3/4] rounded-xl" />
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+              </div>
+            ))}
+          </div>
+        ) : magazines.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in-up bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+              <BookX className="w-12 h-12 text-slate-400" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-emerald-950 mb-3">
+              Nenhuma revista publicada
+            </h2>
+            <p className="text-slate-500 max-w-md text-lg">
+              Nosso acervo está sendo preparado. Em breve, teremos novas edições repletas de
+              conhecimento em SST para você.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {magazines.map((mag) => {
+              const imgUrl = mag.thumbnail
+                ? pb.files.getUrl(mag, mag.thumbnail)
+                : 'https://img.usecurling.com/p/400/600?q=magazine&color=green'
+
+              return (
+                <Card
+                  key={mag.id}
+                  className="group overflow-hidden border border-slate-200/60 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white cursor-pointer flex flex-col h-full animate-fade-in-up"
+                  onClick={() => window.open(mag.fliphtml5_link || '#', '_blank')}
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden bg-slate-100 shrink-0">
+                    <img
+                      src={imgUrl}
+                      alt={mag.title}
+                      className={cn(
+                        'w-full h-full object-cover group-hover:scale-105 transition-transform duration-700',
+                        !mag.thumbnail && 'opacity-70 grayscale',
+                      )}
+                    />
+                    {!mag.thumbnail && (
+                      <div className="absolute top-3 right-3 bg-yellow-400 text-black text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Processando capa
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6">
+                      <Button
+                        className="w-full bg-yellow-400 text-emerald-950 hover:bg-yellow-500 translate-y-4 group-hover:translate-y-0 transition-all duration-300 font-bold"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          window.open(mag.fliphtml5_link || '#', '_blank')
+                        }}
+                      >
+                        <BookOpen className="w-4 h-4 mr-2" /> Ler Edição
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <CardContent className="p-5">
-                  <h3 className="font-serif font-bold text-lg text-secondary line-clamp-2 leading-tight group-hover:text-primary transition-colors">
-                    {mag.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 mt-2 line-clamp-2">{mag.summary}</p>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                  <CardContent className="p-6 flex-grow flex flex-col bg-white">
+                    <h3 className="font-serif font-bold text-xl text-emerald-950 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors mb-3">
+                      {mag.title}
+                    </h3>
+                    <p className="text-slate-600 line-clamp-3 flex-grow leading-relaxed text-sm">
+                      {mag.summary || 'Resumo não disponível para esta edição.'}
+                    </p>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        )}
       </section>
     </div>
   )

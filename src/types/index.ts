@@ -63,3 +63,14 @@ export interface Lead extends RecordModel {
   phone: string
   message: string
 }
+
+export interface PlatformEvent extends RecordModel {
+  title: string
+  description: string
+  type: 'Workshop' | 'Aula Online' | 'Aula Presencial'
+  date: string
+  price: number
+  location?: string
+  meeting_link?: string
+  thumbnail?: string
+}

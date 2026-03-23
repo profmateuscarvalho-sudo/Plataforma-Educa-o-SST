@@ -10,6 +10,7 @@ import {
   FileText,
   Newspaper,
   Presentation,
+  CalendarDays,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -28,6 +29,7 @@ export default function AdminLayout() {
     { label: 'Visão Geral', icon: LayoutDashboard, path: '/admin' },
     { label: 'Cursos', icon: BookOpen, path: '/admin/cursos' },
     { label: 'Mentorias', icon: Presentation, path: '/admin/mentorias' },
+    { label: 'Eventos', icon: CalendarDays, path: '/admin/eventos' },
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },
     { label: 'Notícias', icon: Newspaper, path: '/admin/noticias' },
     { label: 'Leads', icon: Users, path: '/admin/leads' },

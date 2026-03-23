@@ -13,6 +13,7 @@ import CourseDetails from './pages/CourseDetails'
 import Mentorias from './pages/Mentorias'
 import Revistas from './pages/Revistas'
 import Noticias from './pages/Noticias'
+import EventDetails from './pages/EventDetails'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import NotFound from './pages/NotFound'
@@ -27,6 +28,7 @@ import AdminMagazines from './pages/admin/Magazines'
 import AdminNews from './pages/admin/News'
 import AdminLeads from './pages/admin/Leads'
 import AdminMentorships from './pages/admin/Mentorships'
+import AdminEvents from './pages/admin/Events'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -39,6 +41,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/cursos" element={<Cursos />} />
             <Route path="/cursos/:id" element={<CourseDetails />} />
+            <Route path="/eventos/:id" element={<EventDetails />} />
             <Route path="/mentorias" element={<Mentorias />} />
             <Route path="/revistas" element={<Revistas />} />
             <Route path="/noticias" element={<Noticias />} />
@@ -54,6 +57,7 @@ const App = () => (
             <Route path="/admin/cursos" element={<AdminCourses />} />
             <Route path="/admin/cursos/:id" element={<AdminCourseBuilder />} />
             <Route path="/admin/mentorias" element={<AdminMentorships />} />
+            <Route path="/admin/eventos" element={<AdminEvents />} />
             <Route path="/admin/revistas" element={<AdminMagazines />} />
             <Route path="/admin/noticias" element={<AdminNews />} />
             <Route path="/admin/leads" element={<AdminLeads />} />

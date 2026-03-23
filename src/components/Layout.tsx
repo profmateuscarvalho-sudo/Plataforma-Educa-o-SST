@@ -1,13 +1,25 @@
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Shield, Menu, GraduationCap, Users, BookOpen, ChevronRight } from 'lucide-react'
+import {
+  Menu,
+  GraduationCap,
+  Users,
+  BookOpen,
+  ChevronRight,
+  LogOut,
+  LayoutDashboard,
+} from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useEffect } from 'react'
+import { Logo, SquareLogo } from './ui/Logos'
+import { useAuth } from '@/contexts/AuthContext'
+import { LeadForm } from './LeadForm'
 
 export default function Layout() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
-  // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [location.pathname])
@@ -23,21 +35,11 @@ export default function Layout() {
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 w-full glass-header">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="bg-primary text-primary-foreground p-2 rounded-lg group-hover:bg-primary/90 transition-colors">
-              <Shield className="w-6 h-6" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-serif font-bold text-xl leading-none text-primary tracking-tight">
-                Educação SST
-              </span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                Premium
-              </span>
-            </div>
+          <Link to="/" className="flex items-center gap-3 group">
+            <SquareLogo variant="yellow" className="group-hover:scale-105 transition-transform" />
+            <Logo className="hidden sm:flex" />
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             {navigation.map((item) => (
               <Link
@@ -55,22 +57,47 @@ export default function Layout() {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost" className="font-medium text-slate-600">
-              Área do Aluno
-            </Button>
-            <Button className="font-medium shadow-sm">Falar com Consultor</Button>
+            {user ? (
+              <>
+                <Button variant="ghost" asChild className="text-primary font-semibold">
+                  <Link to={user.role === 'admin' ? '/admin' : '/aluno'}>
+                    <LayoutDashboard className="w-4 h-4 mr-2" /> Painel
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    logout()
+                    navigate('/')
+                  }}
+                >
+                  Sair
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" asChild className="font-medium text-slate-600">
+                  <Link to="/login">Área do Aluno</Link>
+                </Button>
+                <Button asChild className="font-medium shadow-sm">
+                  <Link to="/cursos">Ver Cursos</Link>
+                </Button>
+              </>
+            )}
           </div>
 
-          {/* Mobile Navigation */}
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon">
                 <Menu className="w-6 h-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] border-l-0">
+            <SheetContent side="right" className="w-[300px] border-l-0">
               <SheetHeader className="text-left mb-8">
-                <SheetTitle className="font-serif text-2xl text-primary">Menu</SheetTitle>
+                <SheetTitle>
+                  <Logo />
+                </SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-6">
                 <nav className="flex flex-col gap-4">
@@ -78,19 +105,37 @@ export default function Layout() {
                     <Link
                       key={item.name}
                       to={item.href}
-                      className="text-lg font-medium text-slate-700 hover:text-primary transition-colors flex items-center justify-between"
+                      className="text-lg font-medium text-slate-700 hover:text-primary flex justify-between"
                     >
-                      {item.name}
-                      <ChevronRight className="w-5 h-5 opacity-50" />
+                      {item.name} <ChevronRight className="w-5 h-5 opacity-50" />
                     </Link>
                   ))}
                 </nav>
                 <div className="h-px bg-border my-2" />
                 <div className="flex flex-col gap-3">
-                  <Button variant="outline" className="w-full justify-start text-lg h-12">
-                    Área do Aluno
-                  </Button>
-                  <Button className="w-full justify-start text-lg h-12">Falar com Consultor</Button>
+                  {user ? (
+                    <>
+                      <Button className="w-full justify-start text-lg h-12" asChild>
+                        <Link to={user.role === 'admin' ? '/admin' : '/aluno'}>
+                          <LayoutDashboard className="mr-2" /> Painel
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-lg h-12"
+                        onClick={() => {
+                          logout()
+                          navigate('/')
+                        }}
+                      >
+                        <LogOut className="mr-2" /> Sair
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" className="w-full justify-start text-lg h-12" asChild>
+                      <Link to="/login">Área do Aluno</Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </SheetContent>
@@ -102,18 +147,19 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="bg-slate-900 text-slate-200 py-16">
+      <footer className="bg-secondary text-slate-200 py-16">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="bg-white/10 p-2 rounded-lg">
-                <Shield className="w-6 h-6 text-white" />
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <SquareLogo variant="black" />
+              <div className="flex flex-col">
+                <span className="font-bold text-xl leading-none text-accent">EDUCAÇÃO</span>
+                <span className="font-bold text-xl leading-none text-primary">SST.</span>
               </div>
-              <span className="font-serif font-bold text-xl text-white">Educação SST</span>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Plataforma premium de educação em Segurança e Saúde no Trabalho. Transformando
-              carreiras através da excelência acadêmica.
+              Plataforma premium de educação e desenvolvimento profissional na área de Segurança e
+              Saúde no Trabalho.
             </p>
           </div>
 
@@ -127,62 +173,46 @@ export default function Layout() {
               </li>
               <li>
                 <Link to="/mentorias" className="hover:text-white transition-colors">
-                  Corpo Docente
+                  Mentorias
                 </Link>
               </li>
               <li>
                 <Link to="/revistas" className="hover:text-white transition-colors">
-                  Publicações Científicas
+                  Revistas Digitais
                 </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Área do Aluno
-                </a>
+                <Link to="/login" className="hover:text-white transition-colors">
+                  Login / Cadastro
+                </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-serif font-bold text-lg text-white mb-6">Áreas de Estudo</h4>
+            <h4 className="font-serif font-bold text-lg text-white mb-6">Fale Conosco</h4>
+            <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+              <LeadForm variant="dark" />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-serif font-bold text-lg text-white mb-6">Áreas de Atuação</h4>
             <ul className="space-y-3 text-sm text-slate-400">
               <li className="flex items-center gap-2">
-                <GraduationCap className="w-4 h-4" /> Medicina do Trabalho
+                <GraduationCap className="w-4 h-4 text-accent" /> Medicina do Trabalho
               </li>
               <li className="flex items-center gap-2">
-                <Shield className="w-4 h-4" /> Segurança do Trabalho
+                <BookOpen className="w-4 h-4 text-accent" /> Segurança do Trabalho
               </li>
               <li className="flex items-center gap-2">
-                <Users className="w-4 h-4" /> Gestão Estratégica
-              </li>
-              <li className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4" /> Higiene Ocupacional
+                <Users className="w-4 h-4 text-accent" /> Gestão de SST
               </li>
             </ul>
-          </div>
-
-          <div>
-            <h4 className="font-serif font-bold text-lg text-white mb-6">Certificações</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="h-12 bg-white/5 rounded-md border border-white/10 flex items-center justify-center text-xs font-bold text-slate-400">
-                ISO 45001
-              </div>
-              <div className="h-12 bg-white/5 rounded-md border border-white/10 flex items-center justify-center text-xs font-bold text-slate-400">
-                MEC Autorizado
-              </div>
-            </div>
           </div>
         </div>
         <div className="container mx-auto px-4 mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
           <p>© {new Date().getFullYear()} Educação SST Premium. Todos os direitos reservados.</p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <a href="#" className="hover:text-white transition-colors">
-              Termos de Uso
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
-              Política de Privacidade
-            </a>
-          </div>
         </div>
       </footer>
     </div>

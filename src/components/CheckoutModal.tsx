@@ -10,11 +10,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CreditCard, Loader2, CheckCircle2 } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
+import { useToast } from '@/hooks/use-toast'
 
 export function CheckoutModal({
   open,
   isOpen,
   setOpen,
+  setIsOpen,
   onOpenChange,
   onClose,
   title,
@@ -25,9 +28,10 @@ export function CheckoutModal({
   itemPrice,
 }: any) {
   const isModalOpen = open !== undefined ? open : isOpen
+  const handleOpen = setIsOpen || setOpen
 
   const handleOpenChange = (val: boolean) => {
-    if (setOpen) setOpen(val)
+    if (handleOpen) handleOpen(val)
     if (onOpenChange) onOpenChange(val)
     if (!val && onClose) onClose()
   }
@@ -37,6 +41,7 @@ export function CheckoutModal({
 
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     if (isModalOpen) {
@@ -45,16 +50,45 @@ export function CheckoutModal({
     }
   }, [isModalOpen])
 
-  const handleCheckout = (e: React.FormEvent) => {
+  const handleCheckout = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
-    setTimeout(() => {
+
+    const formData = new FormData(e.currentTarget)
+    const payload = {
+      amount: displayPrice,
+      item: displayTitle,
+      card_name: formData.get('card_name'),
+      card_number: formData.get('card_number'),
+      expiry: formData.get('expiry'),
+      cvv: formData.get('cvv'),
+    }
+
+    try {
+      const response = await pb.send('/backend/v1/ipag/pay', {
+        method: 'POST',
+        body: payload,
+      })
+
+      if (response && response.status === 'approved') {
+        setIsSuccess(true)
+        toast({ title: 'Pagamento processado com sucesso!' })
+        setTimeout(() => {
+          handleOpenChange(false)
+        }, 3000)
+      } else {
+        throw new Error('Falha no processamento.')
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast({
+        title: 'Erro ao processar pagamento',
+        description: err?.message || 'Verifique os dados do cartão e tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
       setIsLoading(false)
-      setIsSuccess(true)
-      setTimeout(() => {
-        handleOpenChange(false)
-      }, 2000)
-    }, 1500)
+    }
   }
 
   return (
@@ -65,7 +99,8 @@ export function CheckoutModal({
             <CheckCircle2 className="w-16 h-16 text-emerald-500" />
             <DialogTitle className="text-2xl">Compra Aprovada!</DialogTitle>
             <p className="text-muted-foreground">
-              Sua transação foi concluída com sucesso. Você já tem acesso ao conteúdo.
+              Sua transação foi concluída com sucesso via iPag. Você receberá o comprovante por
+              e-mail.
             </p>
           </div>
         ) : (
@@ -78,8 +113,8 @@ export function CheckoutModal({
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              <div className="mb-6 text-center bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p className="text-sm text-muted-foreground mb-1">Total a pagar</p>
+              <div className="mb-6 text-center bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground font-medium">Total a pagar</p>
                 <p className="text-3xl font-bold text-primary">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                     displayPrice,
@@ -89,20 +124,25 @@ export function CheckoutModal({
               <form onSubmit={handleCheckout} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Nome Impresso no Cartão</Label>
-                  <Input required placeholder="JOÃO M SILVA" />
+                  <Input name="card_name" required placeholder="JOÃO M SILVA" />
                 </div>
                 <div className="space-y-2">
                   <Label>Número do Cartão</Label>
-                  <Input required placeholder="0000 0000 0000 0000" maxLength={19} />
+                  <Input
+                    name="card_number"
+                    required
+                    placeholder="0000 0000 0000 0000"
+                    maxLength={19}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Validade (MM/AA)</Label>
-                    <Input required placeholder="12/29" maxLength={5} />
+                    <Input name="expiry" required placeholder="12/29" maxLength={5} />
                   </div>
                   <div className="space-y-2">
                     <Label>CVV</Label>
-                    <Input required placeholder="123" maxLength={4} type="password" />
+                    <Input name="cvv" required placeholder="123" maxLength={4} type="password" />
                   </div>
                 </div>
                 <Button
@@ -115,8 +155,11 @@ export function CheckoutModal({
                   ) : (
                     <CreditCard className="w-5 h-5 mr-2" />
                   )}
-                  Pagar Agora
+                  Pagar de Forma Segura
                 </Button>
+                <p className="text-xs text-center text-slate-400 mt-4 flex items-center justify-center gap-1">
+                  Processamento seguro via iPag Gateway
+                </p>
               </form>
             </div>
           </>

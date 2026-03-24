@@ -40,6 +40,7 @@ export interface Magazine extends RecordModel {
   summary: string
   fliphtml5_link: string
   thumbnail: string
+  is_featured: boolean
 }
 
 export interface News extends RecordModel {

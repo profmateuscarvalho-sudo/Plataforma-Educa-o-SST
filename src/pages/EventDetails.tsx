@@ -23,12 +23,12 @@ import { useRealtime } from '@/hooks/use-realtime'
 
 const getPandaUrl = (val?: string) => {
   if (!val) return ''
-  if (val.includes('src="')) {
+  if (val.includes('<iframe') || val.includes('src="')) {
     const match = val.match(/src="([^"]+)"/)
     return match ? match[1] : ''
   }
   if (val.startsWith('http')) return val
-  return `https://player-vz-cf761a29-063.tv.pandavideo.com.br/embed/?v=${val}`
+  return `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${val}`
 }
 
 export default function EventDetails() {
@@ -85,10 +85,16 @@ export default function EventDetails() {
 
   if (notFound)
     return (
-      <div className="min-h-screen flex items-center justify-center">Evento não encontrado.</div>
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Evento não encontrado.
+      </div>
     )
   if (!evt)
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Carregando...
+      </div>
+    )
 
   const imgUrl = evt.thumbnail
     ? pb.files.getUrl(evt, evt.thumbnail)
@@ -97,10 +103,10 @@ export default function EventDetails() {
   const endDate = evt.end_date ? new Date(evt.end_date) : null
   const isOnline = evt.type === 'Aula Online' || evt.type === 'Workshop'
   const isPresencial = evt.type === 'Aula Presencial' || evt.type === 'Workshop'
+  const iframeUrl = getPandaUrl(evt.panda_video_id)
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
-      {/* Hero Section */}
       <section className="relative bg-secondary py-20 lg:py-28 text-white overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src={imgUrl} alt={evt.title} className="w-full h-full object-cover opacity-20" />
@@ -138,13 +144,12 @@ export default function EventDetails() {
 
       <div className="container px-4 mt-12">
         <div className="flex flex-col lg:flex-row gap-12 items-start">
-          {/* Main Content */}
           <div className="flex-1 space-y-12">
-            {evt.panda_video_id && (
+            {iframeUrl && (
               <section className="bg-white p-2 rounded-3xl shadow-lg border border-slate-100">
                 <div className="aspect-video w-full rounded-2xl overflow-hidden bg-slate-900 relative">
                   <iframe
-                    src={getPandaUrl(evt.panda_video_id)}
+                    src={iframeUrl}
                     className="absolute inset-0 w-full h-full border-none"
                     allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
                     allowFullScreen
@@ -185,7 +190,6 @@ export default function EventDetails() {
             </section>
           </div>
 
-          {/* Sidebar */}
           <aside className="w-full lg:w-96 space-y-6 lg:sticky lg:top-28">
             <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-200">
               <h3 className="font-serif font-bold text-xl text-secondary mb-4">
@@ -258,7 +262,6 @@ export default function EventDetails() {
         </div>
       </div>
 
-      {/* Registration Form Section */}
       <section ref={formRef} className="container px-4 mt-20 scroll-mt-24">
         <div className="max-w-2xl mx-auto bg-white p-8 md:p-12 rounded-3xl shadow-lg border border-slate-200">
           {registered ? (

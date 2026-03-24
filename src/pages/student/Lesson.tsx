@@ -14,6 +14,16 @@ import { getCourseModules, getCourseLessons, getCourseMaterials } from '@/servic
 import { Course, Module, Lesson, Material } from '@/types'
 import pb from '@/lib/pocketbase/client'
 
+const getPandaUrl = (val?: string) => {
+  if (!val) return ''
+  if (val.includes('<iframe') || val.includes('src="')) {
+    const match = val.match(/src="([^"]+)"/)
+    return match ? match[1] : ''
+  }
+  if (val.startsWith('http')) return val
+  return `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${val}`
+}
+
 export default function CourseLesson() {
   const { id } = useParams()
   const { user, loading } = useAuth()
@@ -43,6 +53,7 @@ export default function CourseLesson() {
   const videoId = currentLesson?.panda_video_id || course.panda_video_id
   const activeTitle = currentLesson?.title || course.title
   const activeDesc = currentLesson?.description || course.description
+  const iframeUrl = getPandaUrl(videoId)
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-80px)] bg-slate-900 text-slate-200">
@@ -62,13 +73,19 @@ export default function CourseLesson() {
             className="bg-black w-full rounded-xl overflow-hidden shadow-2xl relative"
             style={{ paddingTop: '56.25%' }}
           >
-            <iframe
-              src={`https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${videoId || 'dummy'}`}
-              title="Panda Video Player"
-              className="absolute top-0 left-0 w-full h-full border-none"
-              allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-              allowFullScreen
-            />
+            {iframeUrl ? (
+              <iframe
+                src={iframeUrl}
+                title="Panda Video Player"
+                className="absolute top-0 left-0 w-full h-full border-none"
+                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-slate-500">
+                Vídeo não disponível
+              </div>
+            )}
           </div>
           <div className="bg-secondary p-6 rounded-xl border border-white/10">
             <h2 className="text-2xl font-serif font-bold text-white mb-2">{activeTitle}</h2>

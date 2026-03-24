@@ -2,17 +2,27 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { LeadForm } from '@/components/LeadForm'
 import { CourseCard } from '@/components/CourseCard'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, BookOpen } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getCourses } from '@/services/courses'
-import { Course } from '@/types'
+import { getMagazines } from '@/services/magazines'
+import { Course, Magazine } from '@/types'
+import pb from '@/lib/pocketbase/client'
 
 export default function Index() {
   const [courses, setCourses] = useState<Course[]>([])
+  const [featuredMag, setFeaturedMag] = useState<Magazine | null>(null)
 
   useEffect(() => {
     getCourses()
       .then((res) => setCourses(res.slice(0, 3)))
+      .catch(console.error)
+
+    getMagazines()
+      .then((mags) => {
+        const featured = mags.find((m) => m.is_featured) || mags[0]
+        if (featured) setFeaturedMag(featured)
+      })
       .catch(console.error)
   }, [])
 
@@ -65,15 +75,53 @@ export default function Index() {
             style={{ animationDelay: '0.2s' }}
           >
             <h3 className="text-2xl font-serif font-bold text-secondary mb-2">
-              Fale com um Consultor
+              Cadastre no Educação SST
             </h3>
             <p className="text-slate-500 text-sm mb-6">
-              Descubra qual programa é o ideal para o seu momento profissional.
+              e dê um passo a mais para o seu desenvolvimento na área.
             </p>
             <LeadForm />
           </div>
         </div>
       </section>
+
+      {featuredMag && (
+        <section className="py-20 bg-slate-50 relative z-20 border-b border-slate-200">
+          <div className="container px-4">
+            <div className="flex flex-col md:flex-row gap-12 items-center bg-white p-8 md:p-12 rounded-3xl shadow-lg border border-slate-100">
+              <div className="flex-1 space-y-6">
+                <div className="inline-flex items-center gap-2 text-accent font-bold tracking-widest uppercase text-sm">
+                  <BookOpen className="w-4 h-4" /> Revista do Mês
+                </div>
+                <h2 className="text-4xl font-serif font-bold text-secondary leading-tight">
+                  {featuredMag.title}
+                </h2>
+                <p className="text-slate-600 text-lg leading-relaxed max-w-xl">
+                  {featuredMag.summary ||
+                    'Confira a edição mais recente da nossa revista científica com os melhores artigos sobre Segurança e Saúde no Trabalho.'}
+                </p>
+                <Button size="lg" className="h-12 px-8 font-bold" asChild>
+                  <Link to="/revistas">Ler Agora</Link>
+                </Button>
+              </div>
+              <div className="w-full md:w-1/3 aspect-[3/4] relative group">
+                <div className="absolute inset-0 bg-secondary/10 translate-x-4 translate-y-4 rounded-xl -z-10 transition-transform group-hover:translate-x-6 group-hover:translate-y-6"></div>
+                {featuredMag.thumbnail ? (
+                  <img
+                    src={pb.files.getUrl(featuredMag, featuredMag.thumbnail)}
+                    alt="Capa"
+                    className="w-full h-full object-cover rounded-xl shadow-xl"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-200 rounded-xl flex items-center justify-center">
+                    <BookOpen className="w-16 h-16 text-slate-400" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="py-24 bg-white relative z-20">
         <div className="container px-4">

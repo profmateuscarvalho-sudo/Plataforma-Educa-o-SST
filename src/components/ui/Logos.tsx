@@ -27,8 +27,10 @@ export function SquareLogo({
         className,
       )}
     >
-      <span className="mr-1 -mt-1 leading-none">E</span>
-      <div className={cn('absolute bottom-2 right-2 w-2 h-2 rounded-full', 'bg-white')}></div>
+      <span className="mr-0.5 -mt-1 leading-none">E</span>
+      <div
+        className={cn('absolute bottom-3 right-[10px] w-1.5 h-1.5 rounded-full', 'bg-white')}
+      ></div>
     </div>
   )
 }

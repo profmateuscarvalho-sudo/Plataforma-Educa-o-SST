@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog'
 import { BookOpen, BookX, Loader2, ImageOff } from 'lucide-react'
 import { getMagazines } from '@/services/magazines'
 import { Magazine } from '@/types'
@@ -10,8 +11,8 @@ import { useRealtime } from '@/hooks/use-realtime'
 
 function MagazineCard({ mag }: { mag: Magazine }) {
   const [isProcessing, setIsProcessing] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  // Manage visual state to prevent eternal "Processing"
   useEffect(() => {
     const checkProcessing = () => {
       const hasLink = !!mag.fliphtml5_link
@@ -24,7 +25,6 @@ function MagazineCard({ mag }: { mag: Magazine }) {
 
       const updatedTime = new Date(mag.updated).getTime()
       const now = Date.now()
-      // If the record was updated less than 30 seconds ago, assume processing
       if (now - updatedTime < 30000) {
         setIsProcessing(true)
       } else {
@@ -40,51 +40,70 @@ function MagazineCard({ mag }: { mag: Magazine }) {
   const imgUrl = mag.thumbnail ? pb.files.getUrl(mag, mag.thumbnail) : null
 
   return (
-    <Card
-      className="group overflow-hidden border border-slate-200/60 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white cursor-pointer flex flex-col h-full animate-fade-in-up"
-      onClick={() => window.open(mag.fliphtml5_link || '#', '_blank')}
-    >
-      <div className="relative aspect-[3/4] overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center">
-        {imgUrl ? (
-          <img
-            src={imgUrl}
-            alt={mag.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-slate-200/50 text-slate-400 gap-3">
-            <ImageOff className="w-12 h-12 opacity-40" />
-            <span className="text-sm font-medium">Capa indisponível</span>
-          </div>
-        )}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Card
+        className="group overflow-hidden border border-slate-200/60 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white cursor-pointer flex flex-col h-full animate-fade-in-up"
+        onClick={() => setOpen(true)}
+      >
+        <div className="relative aspect-[3/4] overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center">
+          {imgUrl ? (
+            <img
+              src={imgUrl}
+              alt={mag.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-200/50 text-slate-400 gap-3">
+              <ImageOff className="w-12 h-12 opacity-40" />
+              <span className="text-sm font-medium">Capa indisponível</span>
+            </div>
+          )}
 
-        {isProcessing && !imgUrl && (
-          <div className="absolute top-3 right-3 bg-yellow-400 text-black text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-2">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Processando capa
-          </div>
-        )}
+          {isProcessing && !imgUrl && (
+            <div className="absolute top-3 right-3 bg-yellow-400 text-black text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Processando
+            </div>
+          )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6">
-          <Button
-            className="w-full bg-yellow-400 text-emerald-950 hover:bg-yellow-500 translate-y-4 group-hover:translate-y-0 transition-all duration-300 font-bold"
-            onClick={(e) => {
-              e.stopPropagation()
-              window.open(mag.fliphtml5_link || '#', '_blank')
-            }}
-          >
-            <BookOpen className="w-4 h-4 mr-2" /> Ler Edição
-          </Button>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6">
+            <DialogTrigger asChild>
+              <Button
+                className="w-full bg-yellow-400 text-emerald-950 hover:bg-yellow-500 translate-y-4 group-hover:translate-y-0 transition-all duration-300 font-bold"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setOpen(true)
+                }}
+              >
+                <BookOpen className="w-4 h-4 mr-2" /> Ler Edição
+              </Button>
+            </DialogTrigger>
+          </div>
         </div>
-      </div>
-      <CardContent className="p-6 flex-grow flex flex-col bg-white">
-        <h3 className="font-serif font-bold text-xl text-emerald-950 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors mb-3">
-          {mag.title}
-        </h3>
-        <p className="text-slate-600 line-clamp-3 flex-grow leading-relaxed text-sm">
-          {mag.summary || 'Resumo não disponível para esta edição.'}
-        </p>
-      </CardContent>
-    </Card>
+        <CardContent className="p-6 flex-grow flex flex-col bg-white">
+          {mag.is_featured && (
+            <span className="text-xs font-bold text-accent mb-2 uppercase tracking-wider">
+              Edição Destaque
+            </span>
+          )}
+          <h3 className="font-serif font-bold text-xl text-emerald-950 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors mb-3">
+            {mag.title}
+          </h3>
+          <p className="text-slate-600 line-clamp-3 flex-grow leading-relaxed text-sm">
+            {mag.summary || 'Resumo não disponível para esta edição.'}
+          </p>
+        </CardContent>
+      </Card>
+
+      <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 overflow-hidden bg-black/5 border-none">
+        <DialogTitle className="sr-only">{mag.title}</DialogTitle>
+        <iframe
+          src={mag.fliphtml5_link}
+          className="w-full h-full border-none rounded-lg bg-white"
+          allowFullScreen
+          scrolling="no"
+        />
+      </DialogContent>
+    </Dialog>
   )
 }
 

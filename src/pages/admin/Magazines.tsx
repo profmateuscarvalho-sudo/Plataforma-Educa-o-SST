@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Trash2, Edit, BookOpen, Loader2 } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Plus, Trash2, Edit, BookOpen, Loader2, Star } from 'lucide-react'
 import { getMagazines, createMagazine, updateMagazine, deleteMagazine } from '@/services/magazines'
 import { Magazine } from '@/types'
 import { useToast } from '@/hooks/use-toast'
@@ -16,6 +17,7 @@ export default function AdminMagazines() {
   const [open, setOpen] = useState(false)
   const [editingMag, setEditingMag] = useState<Magazine | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isFeatured, setIsFeatured] = useState(false)
   const { toast } = useToast()
 
   const load = () => getMagazines().then(setMags)
@@ -29,11 +31,13 @@ export default function AdminMagazines() {
 
   const handleOpenNew = () => {
     setEditingMag(null)
+    setIsFeatured(false)
     setOpen(true)
   }
 
   const handleOpenEdit = (m: Magazine) => {
     setEditingMag(m)
+    setIsFeatured(!!m.is_featured)
     setOpen(true)
   }
 
@@ -42,11 +46,12 @@ export default function AdminMagazines() {
     setIsSubmitting(true)
     const form = new FormData(e.currentTarget)
 
-    // Clean up empty file inputs to avoid overriding or validation errors
     const file = form.get('thumbnail') as File
     if (!file || file.size === 0) {
       form.delete('thumbnail')
     }
+
+    form.set('is_featured', isFeatured ? 'true' : 'false')
 
     try {
       if (editingMag) {
@@ -70,7 +75,7 @@ export default function AdminMagazines() {
         <div>
           <h2 className="text-3xl font-serif font-bold text-secondary">Revistas (FlipHTML5)</h2>
           <p className="text-muted-foreground mt-1">
-            Gerencie as revistas. O sistema busca a capa automaticamente da FlipHTML5.
+            Gerencie as revistas e defina a Revista do Mês.
           </p>
         </div>
         <Button onClick={handleOpenNew}>
@@ -101,12 +106,15 @@ export default function AdminMagazines() {
                 defaultValue={editingMag?.fliphtml5_link}
               />
             </div>
+            <div className="flex items-center space-x-2 pt-2 pb-2">
+              <Switch id="is_featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
+              <Label htmlFor="is_featured">Destacar como Revista do Mês na Home</Label>
+            </div>
             <div>
               <Label>Capa (Opcional)</Label>
               <Input name="thumbnail" type="file" accept="image/*" />
               <p className="text-xs text-muted-foreground mt-1">
-                Deixe em branco para buscar automaticamente do link. Apenas envie se a busca
-                automática falhar.
+                Deixe em branco para buscar automaticamente.
               </p>
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -122,17 +130,27 @@ export default function AdminMagazines() {
           {mags.map((m) => (
             <div key={m.id} className="flex justify-between items-center p-4 hover:bg-slate-50">
               <div className="flex items-center gap-4">
-                {m.thumbnail ? (
-                  <img
-                    src={pb.files.getUrl(m, m.thumbnail, { thumb: '100x100' })}
-                    alt={m.title}
-                    className="w-16 h-20 object-cover rounded shadow-sm border"
-                  />
-                ) : (
-                  <div className="w-16 h-20 bg-slate-100 rounded border flex items-center justify-center text-slate-400">
-                    <BookOpen className="w-6 h-6" />
-                  </div>
-                )}
+                <div className="relative">
+                  {m.thumbnail ? (
+                    <img
+                      src={pb.files.getUrl(m, m.thumbnail, { thumb: '100x100' })}
+                      alt={m.title}
+                      className="w-16 h-20 object-cover rounded shadow-sm border"
+                    />
+                  ) : (
+                    <div className="w-16 h-20 bg-slate-100 rounded border flex items-center justify-center text-slate-400">
+                      <BookOpen className="w-6 h-6" />
+                    </div>
+                  )}
+                  {m.is_featured && (
+                    <div
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-accent rounded-full flex items-center justify-center text-white shadow-md"
+                      title="Revista do Mês"
+                    >
+                      <Star className="w-3 h-3 fill-current" />
+                    </div>
+                  )}
+                </div>
                 <div>
                   <p className="font-bold text-lg text-slate-800">{m.title}</p>
                   <a
@@ -143,7 +161,6 @@ export default function AdminMagazines() {
                   >
                     {m.fliphtml5_link}
                   </a>
-                  {m.summary && <p className="text-sm text-slate-500 mt-1">{m.summary}</p>}
                 </div>
               </div>
               <div className="flex gap-2">

@@ -35,6 +35,19 @@ export interface Material extends RecordModel {
   module: string
 }
 
+export interface Quiz extends RecordModel {
+  title: string
+  order: number
+  module: string
+}
+
+export interface QuizQuestion extends RecordModel {
+  quiz: string
+  question: string
+  options: string[]
+  correct_option: string
+}
+
 export interface Magazine extends RecordModel {
   title: string
   summary: string

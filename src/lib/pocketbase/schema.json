@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-25T00:38:27.034Z",
+  "generatedAt": "2026-03-25T20:26:37.470Z",
   "collections": [
     {
       "name": "users",
@@ -620,6 +620,106 @@
           "required": true,
           "system": false,
           "selectValues": ["confirmed", "pending", "cancelled"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "quizzes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "order",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "module",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "modules"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "quiz_questions",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "quiz",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "quizzes"
+        },
+        {
+          "name": "question",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "options",
+          "type": "json",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "correct_option",
+          "type": "text",
+          "required": true,
+          "system": false
         },
         {
           "name": "created",

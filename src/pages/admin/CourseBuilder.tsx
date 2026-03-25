@@ -11,12 +11,22 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Trash2, ChevronLeft, FileText, PlayCircle, Eye, Edit } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  ChevronLeft,
+  FileText,
+  PlayCircle,
+  Eye,
+  Edit,
+  CheckSquare,
+} from 'lucide-react'
 import { getCourse } from '@/services/courses'
 import {
   getCourseModules,
   getCourseLessons,
   getCourseMaterials,
+  getCourseQuizzes,
   createModule,
   updateModule,
   deleteModule,
@@ -24,14 +34,17 @@ import {
   deleteLesson,
   createMaterial,
   deleteMaterial,
+  createQuiz,
+  deleteQuiz,
 } from '@/services/curriculum'
-import { Course, Module, Lesson, Material } from '@/types'
+import { Course, Module, Lesson, Material, Quiz } from '@/types'
 import { toast } from '@/hooks/use-toast'
+import { QuizQuestionsModal } from '@/components/admin/QuizQuestionsModal'
 
 type DialogState =
   | { type: 'module' }
   | { type: 'edit_module'; module: Module }
-  | { type: 'lesson' | 'material'; moduleId: string }
+  | { type: 'lesson' | 'material' | 'quiz'; moduleId: string }
   | null
 
 export default function CourseBuilder() {
@@ -40,20 +53,24 @@ export default function CourseBuilder() {
   const [modules, setModules] = useState<Module[]>([])
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [materials, setMaterials] = useState<Material[]>([])
+  const [quizzes, setQuizzes] = useState<Quiz[]>([])
   const [dialog, setDialog] = useState<DialogState>(null)
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null)
 
   const loadData = async () => {
     if (!id) return
-    const [c, m, l, mat] = await Promise.all([
+    const [c, m, l, mat, q] = await Promise.all([
       getCourse(id),
       getCourseModules(id),
       getCourseLessons(id),
       getCourseMaterials(id),
+      getCourseQuizzes(id),
     ])
     setCourse(c)
     setModules(m)
     setLessons(l)
     setMaterials(mat)
+    setQuizzes(q)
   }
 
   useEffect(() => {
@@ -126,9 +143,33 @@ export default function CourseBuilder() {
     }
   }
 
-  const remove = async (type: 'module' | 'lesson' | 'material', delId: string) => {
+  const submitQuiz = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (dialog?.type !== 'quiz') return
+    const fd = new FormData(e.currentTarget)
+    try {
+      await createQuiz({
+        module: dialog.moduleId,
+        title: fd.get('title') as string,
+      })
+      toast({ title: 'Quiz adicionado' })
+      setDialog(null)
+      loadData()
+    } catch {
+      toast({ title: 'Erro', variant: 'destructive' })
+    }
+  }
+
+  const remove = async (type: 'module' | 'lesson' | 'material' | 'quiz', delId: string) => {
     if (!confirm('Excluir item?')) return
-    const fn = type === 'module' ? deleteModule : type === 'lesson' ? deleteLesson : deleteMaterial
+    const fn =
+      type === 'module'
+        ? deleteModule
+        : type === 'lesson'
+          ? deleteLesson
+          : type === 'material'
+            ? deleteMaterial
+            : deleteQuiz
     await fn(delId)
     loadData()
   }
@@ -149,7 +190,7 @@ export default function CourseBuilder() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="outline" asChild>
-            <Link to={`/cursos/${course.id}`} target="_blank">
+            <Link to={`/aluno/curso/${course.id}/aula`} target="_blank">
               <Eye className="w-4 h-4 mr-2" /> Visualizar como Aluno
             </Link>
           </Button>
@@ -210,6 +251,57 @@ export default function CourseBuilder() {
                     )}
                   </div>
                 </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-slate-700">Quizzes</h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDialog({ type: 'quiz', moduleId: mod.id })}
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Adicionar
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {quizzes
+                      .filter((q) => q.module === mod.id)
+                      .map((q) => (
+                        <div
+                          key={q.id}
+                          className="flex justify-between items-center bg-white p-3 rounded border"
+                        >
+                          <div className="flex items-center gap-3">
+                            <CheckSquare className="w-4 h-4 text-emerald-600" />
+                            <span className="font-medium text-sm">{q.title}</span>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-500"
+                              onClick={() => setSelectedQuiz(q)}
+                              title="Gerenciar Perguntas"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500"
+                              onClick={() => remove('quiz', q.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    {!quizzes.filter((q) => q.module === mod.id).length && (
+                      <p className="text-xs text-slate-400">Nenhum quiz.</p>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="font-semibold text-slate-700">Materiais de Apoio</h4>
@@ -344,8 +436,24 @@ export default function CourseBuilder() {
               </Button>
             </form>
           )}
+          {dialog?.type === 'quiz' && (
+            <form onSubmit={submitQuiz} className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>Adicionar Quiz</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2">
+                <Label>Título do Quiz</Label>
+                <Input name="title" required placeholder="Ex: Avaliação do Módulo 1" />
+              </div>
+              <Button type="submit" className="w-full">
+                Criar Quiz
+              </Button>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
+
+      <QuizQuestionsModal quiz={selectedQuiz} onClose={() => setSelectedQuiz(null)} />
     </div>
   )
 }

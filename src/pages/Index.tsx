@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { LeadForm } from '@/components/LeadForm'
 import { CourseCard } from '@/components/CourseCard'
-import { ArrowRight, BookOpen } from 'lucide-react'
+import { ArrowRight, BookOpen, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getCourses } from '@/services/courses'
 import { getMagazines } from '@/services/magazines'
@@ -27,7 +27,7 @@ export default function Index() {
   }, [])
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative">
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-secondary">
         <div className="absolute inset-0 z-0">
           <img
@@ -78,52 +78,15 @@ export default function Index() {
               Cadastre no Educação SST
             </h3>
             <p className="text-slate-500 text-sm mb-6">
-              e dê um passo a mais para o seu desenvolvimento na área.
+              e dê um passo a mais para o seu desenvolvimento na área. Receba novidades e
+              atualizações.
             </p>
             <LeadForm />
           </div>
         </div>
       </section>
 
-      {featuredMag && (
-        <section className="py-20 bg-slate-50 relative z-20 border-b border-slate-200">
-          <div className="container px-4">
-            <div className="flex flex-col md:flex-row gap-12 items-center bg-white p-8 md:p-12 rounded-3xl shadow-lg border border-slate-100">
-              <div className="flex-1 space-y-6">
-                <div className="inline-flex items-center gap-2 text-accent font-bold tracking-widest uppercase text-sm">
-                  <BookOpen className="w-4 h-4" /> Revista do Mês
-                </div>
-                <h2 className="text-4xl font-serif font-bold text-secondary leading-tight">
-                  {featuredMag.title}
-                </h2>
-                <p className="text-slate-600 text-lg leading-relaxed max-w-xl">
-                  {featuredMag.summary ||
-                    'Confira a edição mais recente da nossa revista científica com os melhores artigos sobre Segurança e Saúde no Trabalho.'}
-                </p>
-                <Button size="lg" className="h-12 px-8 font-bold" asChild>
-                  <Link to="/revistas">Ler Agora</Link>
-                </Button>
-              </div>
-              <div className="w-full md:w-1/3 aspect-[3/4] relative group">
-                <div className="absolute inset-0 bg-secondary/10 translate-x-4 translate-y-4 rounded-xl -z-10 transition-transform group-hover:translate-x-6 group-hover:translate-y-6"></div>
-                {featuredMag.thumbnail ? (
-                  <img
-                    src={pb.files.getUrl(featuredMag, featuredMag.thumbnail)}
-                    alt="Capa"
-                    className="w-full h-full object-cover rounded-xl shadow-xl"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-slate-200 rounded-xl flex items-center justify-center">
-                    <BookOpen className="w-16 h-16 text-slate-400" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="py-24 bg-white relative z-20">
+      <section className="py-24 bg-slate-50 relative z-20">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="max-w-2xl">
@@ -151,6 +114,37 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Floating Featured Magazine Widget */}
+      {featuredMag && (
+        <div className="fixed bottom-4 right-4 z-50 animate-fade-in-up max-w-[calc(100vw-2rem)]">
+          <Link
+            to="/revistas"
+            className="group flex items-center bg-white p-3 pr-5 rounded-2xl shadow-2xl border border-slate-200 hover:border-primary/50 transition-all hover:-translate-y-1 w-full sm:w-[320px] gap-4"
+          >
+            <div className="w-16 h-20 shrink-0 rounded-lg overflow-hidden bg-slate-100 shadow-inner relative flex items-center justify-center">
+              {featuredMag.thumbnail ? (
+                <img
+                  src={pb.files.getUrl(featuredMag, featuredMag.thumbnail)}
+                  alt="Capa"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                />
+              ) : (
+                <BookOpen className="w-6 h-6 text-slate-400" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1 flex items-center gap-1">
+                <Star className="w-3 h-3 fill-current" /> Revista do Mês
+              </div>
+              <h4 className="font-serif font-bold text-sm text-secondary line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                {featuredMag.title}
+              </h4>
+              <p className="text-xs text-slate-500 mt-1 line-clamp-1">Clique para ler grátis</p>
+            </div>
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

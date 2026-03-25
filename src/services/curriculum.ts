@@ -12,6 +12,10 @@ export const createModule = async (data: Partial<Module>) => {
   return await pb.collection('modules').create<Module>(data)
 }
 
+export const updateModule = async (id: string, data: Partial<Module>) => {
+  return await pb.collection('modules').update<Module>(id, data)
+}
+
 export const deleteModule = async (id: string) => {
   return await pb.collection('modules').delete(id)
 }

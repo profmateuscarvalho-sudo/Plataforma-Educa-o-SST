@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { getLeads } from '@/services/leads'
 import { Lead } from '@/types'
 
@@ -12,30 +20,51 @@ export default function AdminLeads() {
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-serif font-bold text-secondary">Leads (Falar com Consultor)</h2>
+      <div>
+        <h2 className="text-3xl font-serif font-bold text-secondary">Leads & Contatos</h2>
+        <p className="text-slate-500 mt-1">
+          Gerencie contatos recebidos através das landing pages e formulários da plataforma.
+        </p>
+      </div>
       <Card>
-        <CardContent className="p-0 divide-y">
-          {leads.map((l) => (
-            <div key={l.id} className="p-4 hover:bg-slate-50 flex justify-between items-start">
-              <div>
-                <p className="font-bold text-secondary">{l.name}</p>
-                <p className="text-sm text-slate-600">
-                  {l.email} • {l.phone}
-                </p>
-                {l.message && (
-                  <p className="text-sm text-slate-500 mt-2 bg-slate-100 p-2 rounded">
-                    {l.message}
-                  </p>
-                )}
-              </div>
-              <span className="text-xs text-slate-400">
-                {new Date(l.created).toLocaleString('pt-BR')}
-              </span>
-            </div>
-          ))}
-          {leads.length === 0 && (
-            <p className="p-8 text-center text-slate-500">Nenhum lead recebido ainda.</p>
-          )}
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Contato</TableHead>
+                <TableHead>Mensagem/Interesse</TableHead>
+                <TableHead>Data</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {leads.map((l) => (
+                <TableRow key={l.id}>
+                  <TableCell className="font-medium text-slate-800">{l.name}</TableCell>
+                  <TableCell>
+                    <div className="text-sm">{l.email}</div>
+                    <div className="text-xs text-slate-500">{l.phone}</div>
+                  </TableCell>
+                  <TableCell
+                    className="max-w-xs truncate text-slate-600"
+                    title={l.message || 'Interesse geral / Notificações'}
+                  >
+                    {l.message || 'Interesse geral / Notificações'}
+                  </TableCell>
+                  <TableCell className="text-sm text-slate-500">
+                    {new Date(l.created).toLocaleDateString('pt-BR')}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {leads.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                    Nenhum lead recebido ainda.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

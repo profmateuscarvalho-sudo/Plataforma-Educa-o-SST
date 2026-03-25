@@ -11,6 +11,7 @@ import {
   Newspaper,
   Presentation,
   CalendarDays,
+  GraduationCap,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -28,6 +29,7 @@ export default function AdminLayout() {
   const menu = [
     { label: 'Visão Geral', icon: LayoutDashboard, path: '/admin' },
     { label: 'Cursos', icon: BookOpen, path: '/admin/cursos' },
+    { label: 'Alunos', icon: GraduationCap, path: '/admin/alunos' },
     { label: 'Mentorias', icon: Presentation, path: '/admin/mentorias' },
     { label: 'Eventos', icon: CalendarDays, path: '/admin/eventos' },
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },

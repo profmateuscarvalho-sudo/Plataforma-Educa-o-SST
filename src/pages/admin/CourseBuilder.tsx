@@ -11,13 +11,14 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Trash2, ChevronLeft, FileText, PlayCircle } from 'lucide-react'
+import { Plus, Trash2, ChevronLeft, FileText, PlayCircle, Eye, Edit } from 'lucide-react'
 import { getCourse } from '@/services/courses'
 import {
   getCourseModules,
   getCourseLessons,
   getCourseMaterials,
   createModule,
+  updateModule,
   deleteModule,
   createLesson,
   deleteLesson,
@@ -27,7 +28,11 @@ import {
 import { Course, Module, Lesson, Material } from '@/types'
 import { toast } from '@/hooks/use-toast'
 
-type DialogState = { type: 'module' } | { type: 'lesson' | 'material'; moduleId: string } | null
+type DialogState =
+  | { type: 'module' }
+  | { type: 'edit_module'; module: Module }
+  | { type: 'lesson' | 'material'; moduleId: string }
+  | null
 
 export default function CourseBuilder() {
   const { id } = useParams()
@@ -63,6 +68,23 @@ export default function CourseBuilder() {
         title: new FormData(e.currentTarget).get('title') as string,
       })
       toast({ title: 'Módulo criado' })
+      setDialog(null)
+      loadData()
+    } catch {
+      toast({ title: 'Erro', variant: 'destructive' })
+    }
+  }
+
+  const submitEditModule = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (dialog?.type !== 'edit_module') return
+    const fd = new FormData(e.currentTarget)
+    try {
+      await updateModule(dialog.module.id, {
+        title: fd.get('title') as string,
+        order: Number(fd.get('order') || 0),
+      })
+      toast({ title: 'Módulo atualizado' })
       setDialog(null)
       loadData()
     } catch {
@@ -115,7 +137,7 @@ export default function CourseBuilder() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 border-b pb-4">
+      <div className="flex items-center gap-4 border-b pb-4 flex-wrap">
         <Button variant="ghost" size="icon" asChild>
           <Link to="/admin/cursos">
             <ChevronLeft />
@@ -125,106 +147,123 @@ export default function CourseBuilder() {
           <h2 className="text-2xl font-serif font-bold text-secondary">Construtor de Currículo</h2>
           <p className="text-slate-500 text-sm">Curso: {course.title}</p>
         </div>
-        <Button className="ml-auto bg-primary" onClick={() => setDialog({ type: 'module' })}>
-          <Plus className="w-4 h-4 mr-2" /> Novo Módulo
-        </Button>
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link to={`/cursos/${course.id}`} target="_blank">
+              <Eye className="w-4 h-4 mr-2" /> Visualizar como Aluno
+            </Link>
+          </Button>
+          <Button className="bg-primary" onClick={() => setDialog({ type: 'module' })}>
+            <Plus className="w-4 h-4 mr-2" /> Novo Módulo
+          </Button>
+        </div>
       </div>
 
       <Accordion type="multiple" className="space-y-4">
-        {modules.map((mod) => (
-          <AccordionItem
-            value={mod.id}
-            key={mod.id}
-            className="border rounded-lg bg-white overflow-hidden"
-          >
-            <AccordionTrigger className="px-4 hover:no-underline hover:bg-slate-50 font-bold text-secondary">
-              <span className="flex-1 text-left">{mod.title}</span>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 pt-2 bg-slate-50 border-t space-y-6">
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="font-semibold text-slate-700">Aulas</h4>
+        {modules
+          .sort((a, b) => a.order - b.order)
+          .map((mod) => (
+            <AccordionItem
+              value={mod.id}
+              key={mod.id}
+              className="border rounded-lg bg-white overflow-hidden"
+            >
+              <AccordionTrigger className="px-4 hover:no-underline hover:bg-slate-50 font-bold text-secondary">
+                <span className="flex-1 text-left">{mod.title}</span>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4 pt-2 bg-slate-50 border-t space-y-6">
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-slate-700">Aulas</h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDialog({ type: 'lesson', moduleId: mod.id })}
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Adicionar
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {lessons
+                      .filter((l) => l.module === mod.id)
+                      .map((l) => (
+                        <div
+                          key={l.id}
+                          className="flex justify-between items-center bg-white p-3 rounded border"
+                        >
+                          <div className="flex items-center gap-3">
+                            <PlayCircle className="w-4 h-4 text-primary" />
+                            <span className="font-medium text-sm">{l.title}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500"
+                            onClick={() => remove('lesson', l.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    {!lessons.filter((l) => l.module === mod.id).length && (
+                      <p className="text-xs text-slate-400">Nenhuma aula.</p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-slate-700">Materiais de Apoio</h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDialog({ type: 'material', moduleId: mod.id })}
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Adicionar
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {materials
+                      .filter((m) => m.module === mod.id)
+                      .map((m) => (
+                        <div
+                          key={m.id}
+                          className="flex justify-between items-center bg-white p-3 rounded border"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-4 h-4 text-accent" />
+                            <span className="font-medium text-sm">{m.title}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500"
+                            onClick={() => remove('material', m.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    {!materials.filter((m) => m.module === mod.id).length && (
+                      <p className="text-xs text-slate-400">Nenhum material.</p>
+                    )}
+                  </div>
+                </div>
+                <div className="pt-4 border-t flex items-center justify-between">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setDialog({ type: 'lesson', moduleId: mod.id })}
+                    className="text-slate-600"
+                    onClick={() => setDialog({ type: 'edit_module', module: mod })}
                   >
-                    <Plus className="w-3 h-3 mr-1" /> Adicionar
+                    <Edit className="w-4 h-4 mr-2" /> Editar Módulo
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => remove('module', mod.id)}>
+                    Excluir Módulo
                   </Button>
                 </div>
-                <div className="space-y-2">
-                  {lessons
-                    .filter((l) => l.module === mod.id)
-                    .map((l) => (
-                      <div
-                        key={l.id}
-                        className="flex justify-between items-center bg-white p-3 rounded border"
-                      >
-                        <div className="flex items-center gap-3">
-                          <PlayCircle className="w-4 h-4 text-primary" />
-                          <span className="font-medium text-sm">{l.title}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500"
-                          onClick={() => remove('lesson', l.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  {!lessons.filter((l) => l.module === mod.id).length && (
-                    <p className="text-xs text-slate-400">Nenhuma aula.</p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="font-semibold text-slate-700">Materiais de Apoio</h4>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDialog({ type: 'material', moduleId: mod.id })}
-                  >
-                    <Plus className="w-3 h-3 mr-1" /> Adicionar
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  {materials
-                    .filter((m) => m.module === mod.id)
-                    .map((m) => (
-                      <div
-                        key={m.id}
-                        className="flex justify-between items-center bg-white p-3 rounded border"
-                      >
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-4 h-4 text-accent" />
-                          <span className="font-medium text-sm">{m.title}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500"
-                          onClick={() => remove('material', m.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  {!materials.filter((m) => m.module === mod.id).length && (
-                    <p className="text-xs text-slate-400">Nenhum material.</p>
-                  )}
-                </div>
-              </div>
-              <div className="pt-4 border-t flex justify-end">
-                <Button variant="destructive" size="sm" onClick={() => remove('module', mod.id)}>
-                  Excluir Módulo
-                </Button>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
       </Accordion>
 
       <Dialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)}>
@@ -240,6 +279,28 @@ export default function CourseBuilder() {
               </div>
               <Button type="submit" className="w-full">
                 Salvar
+              </Button>
+            </form>
+          )}
+          {dialog?.type === 'edit_module' && (
+            <form
+              onSubmit={submitEditModule}
+              className="space-y-4"
+              key={`edit_mod_${dialog.module.id}`}
+            >
+              <DialogHeader>
+                <DialogTitle>Editar Módulo</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2">
+                <Label>Título</Label>
+                <Input name="title" defaultValue={dialog.module.title} required />
+              </div>
+              <div className="space-y-2">
+                <Label>Ordem de Exibição (Opcional)</Label>
+                <Input name="order" type="number" defaultValue={dialog.module.order || 0} />
+              </div>
+              <Button type="submit" className="w-full">
+                Salvar Alterações
               </Button>
             </form>
           )}

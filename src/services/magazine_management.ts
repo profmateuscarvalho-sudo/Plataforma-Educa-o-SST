@@ -50,3 +50,22 @@ export const updateConnection = (id: string, data: any) =>
   pb.collection('professional_connections').update(id, data)
 export const generateSubmissionLink = (type: 'article' | 'connection') =>
   pb.send<{ token: string }>('/backend/v1/generate-link', { method: 'POST', body: { type } })
+
+export const getLatestConnectionQuestions = async () => {
+  try {
+    const mags = await pb.collection('magazines').getList(1, 1, {
+      filter: 'connection_questions != null',
+      sort: '-created',
+    })
+    if (mags.items.length > 0 && mags.items[0].connection_questions) {
+      return mags.items[0].connection_questions as string[]
+    }
+  } catch {}
+  return [
+    'Qual a sua maior conquista na área de SST?',
+    'Como você enxerga o futuro da Segurança do Trabalho?',
+    'Que conselho daria para quem está começando na área?',
+    'Qual foi o maior desafio que já enfrentou em sua carreira?',
+    'Deixe uma mensagem final para os leitores da revista.',
+  ]
+}

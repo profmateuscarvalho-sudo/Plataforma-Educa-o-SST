@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-28T20:17:57.586Z",
+  "generatedAt": "2026-03-28T20:46:37.826Z",
   "collections": [
     {
       "name": "users",
@@ -168,6 +168,12 @@
         {
           "name": "is_featured",
           "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "connection_questions",
+          "type": "json",
           "required": false,
           "system": false
         }
@@ -823,7 +829,7 @@
         {
           "name": "content",
           "type": "editor",
-          "required": true,
+          "required": false,
           "system": false
         },
         {
@@ -890,6 +896,24 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "article_word_file",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "article_pdf_file",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "editorial_comments",
+          "type": "editor",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { validateToken, submitArticle } from '@/services/magazine_management'
+import { Calendar } from 'lucide-react'
 
 export default function ArticleSubmission() {
   const { token } = useParams()
@@ -18,11 +19,11 @@ export default function ArticleSubmission() {
   const [submitted, setSubmitted] = useState(false)
   const { toast } = useToast()
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm()
+  const { register, handleSubmit } = useForm()
+
+  const today = new Date()
+  const deadline = new Date(today.getFullYear(), today.getMonth(), 10)
+  const deadlineFormatted = deadline.toLocaleDateString('pt-BR')
 
   useEffect(() => {
     if (token) {
@@ -50,9 +51,17 @@ export default function ArticleSubmission() {
 
       const articleForm = new FormData()
       articleForm.append('title', data.title)
-      articleForm.append('content', data.content)
       articleForm.append('compliance_norms', 'true')
       articleForm.append('status', 'submitted')
+      articleForm.append('delivery_deadline', deadline.toISOString())
+
+      if (data.articleWordFile?.[0]) {
+        articleForm.append('article_word_file', data.articleWordFile[0])
+      }
+      if (data.articlePdfFile?.[0]) {
+        articleForm.append('article_pdf_file', data.articlePdfFile[0])
+      }
+
       if (data.articlePhotos?.length) {
         for (let i = 0; i < data.articlePhotos.length; i++) {
           articleForm.append('article_photos', data.articlePhotos[i])
@@ -97,7 +106,11 @@ export default function ArticleSubmission() {
           <CardTitle className="text-2xl text-center">Submissão de Artigo para Revista</CardTitle>
           <div className="bg-muted p-4 rounded-md text-sm mt-4">
             <strong>Normas de Conformidade:</strong> Seu artigo deve ter entre 2000 a 5000 palavras,
-            estar formatado segundo as normas da ABNT e focado em SST.
+            estar formatado segundo as normas da ABNT e focado em SST. O envio deve conter as
+            versões Word e PDF do texto.
+          </div>
+          <div className="flex items-center justify-center gap-2 mt-2 text-primary font-medium">
+            <Calendar className="w-5 h-5" /> Prazo de Entrega: {deadlineFormatted}
           </div>
         </CardHeader>
         <CardContent>
@@ -129,18 +142,34 @@ export default function ArticleSubmission() {
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Dados do Artigo</h3>
-              <div className="space-y-2">
-                <Label>Título do Artigo*</Label>
-                <Input {...register('title', { required: true })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Conteúdo do Artigo* (Suporta formatação HTML básica)</Label>
-                <Textarea {...register('content', { required: true })} rows={12} />
-              </div>
-              <div className="space-y-2">
-                <Label>Imagens do Artigo</Label>
-                <Input type="file" multiple accept="image/*" {...register('articlePhotos')} />
+              <h3 className="text-lg font-semibold border-b pb-2">Arquivos do Artigo</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Título do Artigo*</Label>
+                  <Input {...register('title', { required: true })} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Arquivo Word (.doc, .docx)*</Label>
+                    <Input
+                      type="file"
+                      accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      {...register('articleWordFile', { required: true })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Arquivo PDF (.pdf)*</Label>
+                    <Input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      {...register('articlePdfFile', { required: true })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Imagens e Gráficos Anexos</Label>
+                  <Input type="file" multiple accept="image/*" {...register('articlePhotos')} />
+                </div>
               </div>
             </div>
 

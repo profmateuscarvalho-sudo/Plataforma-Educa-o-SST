@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import {
   Table,
@@ -19,7 +19,16 @@ import {
 } from '@/services/magazine_management'
 import { getMagazines } from '@/services/magazines'
 import { Article, Magazine } from '@/types'
-import { Eye, Link as LinkIcon, Printer, Save, Copy } from 'lucide-react'
+import {
+  Eye,
+  Link as LinkIcon,
+  Save,
+  Copy,
+  FileText,
+  Download,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react'
 import { MagazineTabs } from '@/components/admin/MagazineTabs'
 import {
   Select,
@@ -32,6 +41,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import pb from '@/lib/pocketbase/client'
+import { Badge } from '@/components/ui/badge'
 
 export default function AdminMagazineArticles() {
   const [articles, setArticles] = useState<Article[]>([])
@@ -41,11 +51,10 @@ export default function AdminMagazineArticles() {
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterMagazine, setFilterMagazine] = useState<string>('all')
 
-  const [printMode, setPrintMode] = useState(false)
   const [generatedLink, setGeneratedLink] = useState('')
+  const [editorialComments, setEditorialComments] = useState('')
   const { toast } = useToast()
 
-  const contentRef = useRef<HTMLTextAreaElement>(null)
   const [complianceNorms, setComplianceNorms] = useState(false)
   const [imgAuth, setImgAuth] = useState(false)
   const [artAuth, setArtAuth] = useState(false)
@@ -87,7 +96,7 @@ export default function AdminMagazineArticles() {
   const handleStatusChange = async (id: string, status: string) => {
     try {
       await updateArticleStatus(id, status)
-      toast({ title: 'Sucesso', description: 'Status atualizado.' })
+      toast({ title: 'Sucesso', description: `Status atualizado para ${status}.` })
       load()
       if (selectedArticle?.id === id) setSelectedArticle({ ...selectedArticle, status } as Article)
     } catch {
@@ -99,7 +108,7 @@ export default function AdminMagazineArticles() {
     if (!selectedArticle) return
     try {
       const updatedData: any = {
-        content: contentRef.current?.value || selectedArticle.content,
+        editorial_comments: editorialComments,
         compliance_norms: complianceNorms,
         image_authorization: {
           ...selectedArticle.image_authorization,
@@ -124,6 +133,7 @@ export default function AdminMagazineArticles() {
     setComplianceNorms(!!article.compliance_norms)
     setImgAuth(!!article.image_authorization?.signed)
     setArtAuth(!!article.article_authorization?.signed)
+    setEditorialComments((article as any).editorial_comments || '')
   }
 
   const filteredArticles = articles.filter((a) => {
@@ -132,18 +142,18 @@ export default function AdminMagazineArticles() {
     return true
   })
 
-  const getStatusColor = (s: string) => {
+  const getStatusBadge = (s: string) => {
     switch (s) {
       case 'draft':
-        return 'bg-slate-200 text-slate-800'
+        return <Badge variant="secondary">Rascunho</Badge>
       case 'submitted':
-        return 'bg-blue-100 text-blue-800'
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Submetido</Badge>
       case 'approved':
-        return 'bg-green-100 text-green-800'
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Aprovado</Badge>
       case 'rejected':
-        return 'bg-red-100 text-red-800'
+        return <Badge variant="destructive">Rejeitado</Badge>
       default:
-        return 'bg-slate-100 text-slate-800'
+        return <Badge variant="outline">{s}</Badge>
     }
   }
 
@@ -152,7 +162,7 @@ export default function AdminMagazineArticles() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-serif font-bold text-secondary">Artigos da Revista</h1>
-          <p className="text-muted-foreground mt-1">Gerencie submissões de artigos.</p>
+          <p className="text-muted-foreground mt-1">Gerencie e revise submissões de artigos.</p>
         </div>
         <div className="flex items-center gap-2">
           {generatedLink && (
@@ -209,29 +219,30 @@ export default function AdminMagazineArticles() {
             <TableRow>
               <TableHead>Título</TableHead>
               <TableHead>Autor</TableHead>
-              <TableHead>Data de Envio</TableHead>
+              <TableHead>Prazo Ideal</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Ações</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredArticles.map((article) => (
               <TableRow key={article.id}>
-                <TableCell className="font-medium max-w-[200px] truncate">
-                  {article.title}
+                <TableCell className="font-medium max-w-[250px] truncate">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-slate-400" />
+                    {article.title}
+                  </div>
                 </TableCell>
                 <TableCell>{article.expand?.author?.name || 'Desconhecido'}</TableCell>
-                <TableCell>{new Date(article.created).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(article.status)}`}
-                  >
-                    {article.status.toUpperCase()}
-                  </span>
+                  {(article as any).delivery_deadline
+                    ? new Date((article as any).delivery_deadline).toLocaleDateString()
+                    : new Date(article.created).toLocaleDateString()}
                 </TableCell>
-                <TableCell>
+                <TableCell>{getStatusBadge(article.status)}</TableCell>
+                <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={() => openEditor(article)}>
-                    <Eye className="w-4 h-4 mr-1" /> Ver/Editar
+                    <Eye className="w-4 h-4 mr-1" /> Revisar
                   </Button>
                 </TableCell>
               </TableRow>
@@ -250,103 +261,118 @@ export default function AdminMagazineArticles() {
       <Dialog
         open={!!selectedArticle}
         onOpenChange={(open) => {
-          if (!open) {
-            setSelectedArticle(null)
-            setPrintMode(false)
-          }
+          if (!open) setSelectedArticle(null)
         }}
       >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedArticle && (
-            <div
-              id={printMode ? 'print-area' : undefined}
-              className={printMode ? 'p-8 bg-white text-black font-serif' : ''}
-            >
-              <DialogHeader className={printMode ? 'hidden' : 'mb-4'}>
-                <DialogTitle className="flex justify-between items-center text-xl">
-                  <span>{selectedArticle.title}</span>
-                  <div className="flex gap-2">
+            <div className="p-2">
+              <DialogHeader className="mb-6">
+                <DialogTitle className="flex justify-between items-start text-xl pr-6">
+                  <span className="leading-tight">{selectedArticle.title}</span>
+                  <div className="flex gap-2 flex-shrink-0 ml-4">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setPrintMode(true)
-                        setTimeout(() => window.print(), 200)
-                        setTimeout(() => setPrintMode(false), 2000)
-                      }}
-                    >
-                      <Printer className="w-4 h-4 mr-2" /> PDF / Imprimir
-                    </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
                       onClick={() => handleStatusChange(selectedArticle.id, 'approved')}
                     >
-                      Aprovar
+                      <CheckCircle className="w-4 h-4 mr-2" /> Aprovar
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
                       onClick={() => handleStatusChange(selectedArticle.id, 'rejected')}
                     >
-                      Rejeitar
+                      <XCircle className="w-4 h-4 mr-2" /> Rejeitar
                     </Button>
                   </div>
                 </DialogTitle>
               </DialogHeader>
 
               <div className="space-y-6">
-                <div className="bg-slate-50 p-4 rounded-md print:bg-transparent print:p-0">
-                  <p>
-                    <strong>Autor:</strong> {selectedArticle.expand?.author?.name}
-                  </p>
-                  <p>
-                    <strong>E-mail:</strong> {selectedArticle.expand?.author?.email}
-                  </p>
-                  <p>
-                    <strong>Data de Envio:</strong>{' '}
-                    {new Date(selectedArticle.created).toLocaleDateString()}
-                  </p>
+                <div className="bg-slate-50 p-4 rounded-md border text-sm grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-slate-500 mb-1">Autor</p>
+                    <p className="font-medium">{selectedArticle.expand?.author?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 mb-1">E-mail de Contato</p>
+                    <p className="font-medium">{selectedArticle.expand?.author?.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 mb-1">Data de Envio</p>
+                    <p className="font-medium">
+                      {new Date(selectedArticle.created).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 mb-1">Status Atual</p>
+                    <div>{getStatusBadge(selectedArticle.status)}</div>
+                  </div>
                 </div>
 
-                {!printMode && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-md">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="compliance">Normas Compliance</Label>
-                        <Switch
-                          id="compliance"
-                          checked={complianceNorms}
-                          onCheckedChange={setComplianceNorms}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="imgAuth">Autorização Imagem</Label>
-                        <Switch id="imgAuth" checked={imgAuth} onCheckedChange={setImgAuth} />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="artAuth">Autorização Artigo</Label>
-                        <Switch id="artAuth" checked={artAuth} onCheckedChange={setArtAuth} />
-                      </div>
-                    </div>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Arquivos do Artigo</h3>
+                  <div className="flex flex-wrap gap-4">
+                    {(selectedArticle as any).article_word_file ? (
+                      <Button variant="outline" asChild>
+                        <a
+                          href={pb.files.getUrl(
+                            selectedArticle,
+                            (selectedArticle as any).article_word_file,
+                          )}
+                          target="_blank"
+                          download
+                        >
+                          <Download className="w-4 h-4 mr-2" /> Baixar Versão Word
+                        </a>
+                      </Button>
+                    ) : (
+                      <div className="text-sm text-slate-500 py-2">Sem versão Word</div>
+                    )}
 
-                    <div className="space-y-2">
-                      <Label>Conteúdo do Artigo (HTML/Texto Rico)</Label>
-                      <Textarea
-                        ref={contentRef}
-                        defaultValue={selectedArticle.content}
-                        className="min-h-[300px] font-mono"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Você pode editar o conteúdo HTML diretamente aqui.
-                      </p>
-                    </div>
+                    {(selectedArticle as any).article_pdf_file ? (
+                      <Button variant="outline" asChild>
+                        <a
+                          href={pb.files.getUrl(
+                            selectedArticle,
+                            (selectedArticle as any).article_pdf_file,
+                          )}
+                          target="_blank"
+                          download
+                        >
+                          <Download className="w-4 h-4 mr-2" /> Baixar Versão PDF
+                        </a>
+                      </Button>
+                    ) : (
+                      <div className="text-sm text-slate-500 py-2">Sem versão PDF</div>
+                    )}
+                  </div>
+                </div>
 
-                    {selectedArticle.article_photos && (
-                      <div className="space-y-2">
-                        <Label>Fotos em Anexo</Label>
-                        <div className="flex flex-wrap gap-2">
+                {selectedArticle.article_photos && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold border-b pb-2">Imagens em Anexo</h3>
+                    <div className="flex flex-wrap gap-4">
+                      {Array.isArray(selectedArticle.article_photos) ? (
+                        selectedArticle.article_photos.map((photo: string, idx: number) => (
+                          <div key={idx} className="relative group">
+                            <a
+                              href={pb.files.getUrl(selectedArticle, photo)}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <img
+                                src={pb.files.getUrl(selectedArticle, photo, { thumb: '150x150' })}
+                                className="w-32 h-32 object-cover border rounded shadow-sm"
+                              />
+                            </a>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="relative group">
                           <a
                             href={pb.files.getUrl(selectedArticle, selectedArticle.article_photos)}
                             target="_blank"
@@ -356,54 +382,60 @@ export default function AdminMagazineArticles() {
                               src={pb.files.getUrl(
                                 selectedArticle,
                                 selectedArticle.article_photos,
-                                { thumb: '100x100' },
+                                {
+                                  thumb: '150x150',
+                                },
                               )}
-                              className="w-24 h-24 object-cover border rounded"
+                              className="w-32 h-32 object-cover border rounded shadow-sm"
                             />
                           </a>
                         </div>
-                      </div>
-                    )}
-
-                    <div className="pt-4 flex justify-end">
-                      <Button onClick={handleSave}>
-                        <Save className="w-4 h-4 mr-2" /> Salvar Alterações
-                      </Button>
+                      )}
                     </div>
                   </div>
                 )}
 
-                {printMode && (
-                  <div className="mt-8">
-                    <div
-                      className="prose max-w-none prose-slate"
-                      dangerouslySetInnerHTML={{ __html: selectedArticle.content }}
+                <div className="space-y-4 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-md border">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="compliance">Normas Compliance</Label>
+                      <Switch
+                        id="compliance"
+                        checked={complianceNorms}
+                        onCheckedChange={setComplianceNorms}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="imgAuth">Autorização Imagem</Label>
+                      <Switch id="imgAuth" checked={imgAuth} onCheckedChange={setImgAuth} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="artAuth">Autorização Artigo</Label>
+                      <Switch id="artAuth" checked={artAuth} onCheckedChange={setArtAuth} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-lg">Comentários do Comitê Editorial</Label>
+                    <Textarea
+                      value={editorialComments}
+                      onChange={(e) => setEditorialComments(e.target.value)}
+                      placeholder="Adicione observações, notas de revisão ou apontamentos para diagramação..."
+                      className="min-h-[150px]"
                     />
                   </div>
-                )}
+
+                  <div className="pt-4 flex justify-end">
+                    <Button onClick={handleSave}>
+                      <Save className="w-4 h-4 mr-2" /> Salvar Revisão
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #print-area, #print-area * {
-            visibility: visible;
-          }
-          #print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 2cm;
-          }
-        }
-      `}</style>
     </div>
   )
 }

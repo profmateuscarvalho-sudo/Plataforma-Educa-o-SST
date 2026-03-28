@@ -34,8 +34,6 @@ export default function AdminLayout() {
     { label: 'Mentorias', icon: Presentation, path: '/admin/mentorias' },
     { label: 'Eventos', icon: CalendarDays, path: '/admin/eventos' },
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },
-    { label: 'Artigos da Revista', icon: FileText, path: '/admin/revistas/artigos' },
-    { label: 'Conexões Profissionais', icon: Handshake, path: '/admin/revistas/conexoes' },
     { label: 'Notícias', icon: Newspaper, path: '/admin/noticias' },
     { label: 'Leads', icon: Users, path: '/admin/leads' },
   ]

@@ -7,7 +7,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { validateToken, submitConnection } from '@/services/magazine_management'
+import {
+  validateToken,
+  submitConnection,
+  getLatestConnectionQuestions,
+} from '@/services/magazine_management'
 
 export default function ProfessionalConnection() {
   const { token } = useParams()
@@ -15,6 +19,7 @@ export default function ProfessionalConnection() {
   const [tokenId, setTokenId] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [questions, setQuestions] = useState<string[]>([])
   const { toast } = useToast()
 
   const { register, handleSubmit } = useForm()
@@ -25,16 +30,9 @@ export default function ProfessionalConnection() {
         setIsValid(!!res)
         if (res) setTokenId(res.id)
       })
+      getLatestConnectionQuestions().then(setQuestions)
     }
   }, [token])
-
-  const questions = [
-    'Qual a sua maior conquista na área de SST?',
-    'Como você enxerga o futuro da Segurança do Trabalho?',
-    'Que conselho daria para quem está começando na área?',
-    'Qual foi o maior desafio que já enfrentou em sua carreira?',
-    'Deixe uma mensagem final para os leitores da revista.',
-  ]
 
   const onSubmit = async (data: any) => {
     setLoading(true)
@@ -46,7 +44,7 @@ export default function ProfessionalConnection() {
 
       const responses: Record<string, string> = {}
       questions.forEach((q, i) => {
-        responses[`q${i + 1}`] = data[`q${i}`] || ''
+        responses[q] = data[`q${i}`] || ''
       })
       form.append('responses', JSON.stringify(responses))
 
@@ -107,13 +105,16 @@ export default function ProfessionalConnection() {
               <h3 className="text-lg font-semibold">Entrevista</h3>
               {questions.map((q, i) => (
                 <div key={i} className="space-y-2">
-                  <Label className="text-base">{q}</Label>
+                  <Label className="text-base text-slate-800">{q}</Label>
                   <Textarea {...register(`q${i}`)} rows={3} placeholder="Sua resposta..." />
                 </div>
               ))}
+              {questions.length === 0 && (
+                <p className="text-sm text-slate-500">Nenhuma pergunta definida no momento.</p>
+              )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || questions.length === 0}>
               {loading ? 'Enviando...' : 'Enviar Respostas'}
             </Button>
           </form>

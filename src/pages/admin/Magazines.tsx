@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Plus, Trash2, Edit, BookOpen, Loader2, Star } from 'lucide-react'
 import { getMagazines, createMagazine, updateMagazine, deleteMagazine } from '@/services/magazines'
@@ -53,6 +54,14 @@ export default function AdminMagazines() {
     }
 
     form.set('is_featured', isFeatured ? 'true' : 'false')
+
+    const questionsVal = form.get('connection_questions') as string
+    if (questionsVal) {
+      const arr = questionsVal.split('\n').filter((q) => q.trim().length > 0)
+      form.set('connection_questions', JSON.stringify(arr))
+    } else {
+      form.set('connection_questions', JSON.stringify([]))
+    }
 
     try {
       if (editingMag) {
@@ -112,6 +121,15 @@ export default function AdminMagazines() {
             <div className="flex items-center space-x-2 pt-2 pb-2">
               <Switch id="is_featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
               <Label htmlFor="is_featured">Destacar como Revista do Mês na Home</Label>
+            </div>
+            <div>
+              <Label>Perguntas da Conexão Profissional (Uma por linha)</Label>
+              <Textarea
+                name="connection_questions"
+                defaultValue={(editingMag as any)?.connection_questions?.join('\n')}
+                rows={4}
+                placeholder="Insira as perguntas aqui..."
+              />
             </div>
             <div>
               <Label>Capa (Opcional)</Label>

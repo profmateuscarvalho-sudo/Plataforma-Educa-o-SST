@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Switch } from '@/components/ui/switch'
 import { Plus, Trash2, Edit, BookOpen, Loader2, Star } from 'lucide-react'
 import { getMagazines, createMagazine, updateMagazine, deleteMagazine } from '@/services/magazines'
+import { MagazineTabs } from '@/components/admin/MagazineTabs'
 import { Magazine } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -82,6 +83,8 @@ export default function AdminMagazines() {
           <Plus className="mr-2 w-4 h-4" /> Nova Revista
         </Button>
       </div>
+
+      <MagazineTabs />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

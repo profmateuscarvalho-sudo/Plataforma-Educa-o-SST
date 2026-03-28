@@ -41,9 +41,12 @@ export const getArticles = () =>
   pb.collection('articles').getFullList<Article>({ expand: 'author,magazine', sort: '-created' })
 export const updateArticleStatus = (id: string, status: string) =>
   pb.collection('articles').update(id, { status })
+export const updateArticle = (id: string, data: any) => pb.collection('articles').update(id, data)
 export const getConnections = () =>
   pb
     .collection('professional_connections')
     .getFullList<ProfessionalConnection>({ sort: '-created' })
+export const updateConnection = (id: string, data: any) =>
+  pb.collection('professional_connections').update(id, data)
 export const generateSubmissionLink = (type: 'article' | 'connection') =>
   pb.send<{ token: string }>('/backend/v1/generate-link', { method: 'POST', body: { type } })

@@ -44,3 +44,36 @@ export const submitArticle = async (
   await pb.collection('articles').create(articleForm)
   await pb.collection('submission_tokens').update(tokenId, { used: true })
 }
+
+export const submitConnection = async (formData: FormData, tokenId: string) => {
+  await pb.collection('professional_connections').create(formData)
+  await pb.collection('submission_tokens').update(tokenId, { used: true })
+}
+
+export const getLatestConnectionQuestions = async (): Promise<string[]> => {
+  try {
+    const mags = await pb.collection('magazines').getFullList({
+      sort: '-created',
+    })
+    for (const mag of mags) {
+      if (
+        mag.connection_questions &&
+        Array.isArray(mag.connection_questions) &&
+        mag.connection_questions.length > 0
+      ) {
+        return mag.connection_questions
+      }
+    }
+    return [
+      'Quais os maiores desafios da sua área atualmente?',
+      'Como você vê o futuro da Segurança e Saúde no Trabalho?',
+      'Quais conselhos daria para quem está começando na área?',
+    ]
+  } catch {
+    return [
+      'Quais os maiores desafios da sua área atualmente?',
+      'Como você vê o futuro da Segurança e Saúde no Trabalho?',
+      'Quais conselhos daria para quem está começando na área?',
+    ]
+  }
+}

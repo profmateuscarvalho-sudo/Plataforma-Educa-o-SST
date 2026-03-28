@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-28T20:46:37.826Z",
+  "generatedAt": "2026-03-28T21:09:28.580Z",
   "collections": [
     {
       "name": "users",
@@ -1032,6 +1032,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "recipient_name",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_sub_tokens ON submission_tokens (token)"]

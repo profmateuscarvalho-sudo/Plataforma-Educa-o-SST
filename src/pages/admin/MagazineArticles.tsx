@@ -16,19 +16,11 @@ import {
   updateArticleStatus,
   updateArticle,
   generateSubmissionLink,
+  getTokens,
 } from '@/services/magazine_management'
 import { getMagazines } from '@/services/magazines'
 import { Article, Magazine } from '@/types'
-import {
-  Eye,
-  Link as LinkIcon,
-  Save,
-  Copy,
-  FileText,
-  Download,
-  CheckCircle,
-  XCircle,
-} from 'lucide-react'
+import { Eye, Link as LinkIcon, Save, Copy, Download, CheckCircle, XCircle } from 'lucide-react'
 import { MagazineTabs } from '@/components/admin/MagazineTabs'
 import {
   Select,
@@ -37,11 +29,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import pb from '@/lib/pocketbase/client'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default function AdminMagazineArticles() {
   const [articles, setArticles] = useState<Article[]>([])
@@ -51,19 +44,15 @@ export default function AdminMagazineArticles() {
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterMagazine, setFilterMagazine] = useState<string>('all')
 
-  const [generatedLink, setGeneratedLink] = useState('')
+  const [linkModalOpen, setLinkModalOpen] = useState(false)
+  const [recipientName, setRecipientName] = useState('')
+  const [tokens, setTokens] = useState<any[]>([])
   const [editorialComments, setEditorialComments] = useState('')
   const { toast } = useToast()
 
-  const [complianceNorms, setComplianceNorms] = useState(false)
-  const [imgAuth, setImgAuth] = useState(false)
-  const [artAuth, setArtAuth] = useState(false)
-
   useEffect(() => {
     load()
-    getMagazines()
-      .then(setMagazines)
-      .catch((err) => console.error('Error loading magazines:', err))
+    getMagazines().then(setMagazines).catch(console.error)
   }, [])
 
   const load = async () => {
@@ -75,22 +64,43 @@ export default function AdminMagazineArticles() {
     }
   }
 
-  const handleGenerateLink = async () => {
+  const loadTokens = async () => {
     try {
-      const res = await generateSubmissionLink('article')
-      const url = `${window.location.origin}/submissao-artigo/${res.token}`
-      setGeneratedLink(url)
-      toast({ title: 'Link Gerado!', description: 'O link expira em 7 dias.' })
+      const data = await getTokens('article')
+      setTokens(data)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleOpenLinks = () => {
+    setLinkModalOpen(true)
+    loadTokens()
+  }
+
+  const handleGenerateLink = async () => {
+    if (!recipientName.trim()) {
+      toast({
+        title: 'Aviso',
+        description: 'Informe o nome do destinatário.',
+        variant: 'destructive',
+      })
+      return
+    }
+    try {
+      await generateSubmissionLink('article', recipientName)
+      toast({ title: 'Link Gerado!', description: 'O link expira em 30 dias.' })
+      setRecipientName('')
+      loadTokens()
     } catch {
       toast({ title: 'Erro', description: 'Falha ao gerar link.', variant: 'destructive' })
     }
   }
 
-  const copyLink = async () => {
-    if (generatedLink) {
-      await navigator.clipboard.writeText(generatedLink)
-      toast({ title: 'Link Copiado!' })
-    }
+  const copyLink = async (tokenStr: string) => {
+    const url = `${window.location.origin}/submissao-artigo/${tokenStr}`
+    await navigator.clipboard.writeText(url)
+    toast({ title: 'Link Copiado!' })
   }
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -107,20 +117,8 @@ export default function AdminMagazineArticles() {
   const handleSave = async () => {
     if (!selectedArticle) return
     try {
-      const updatedData: any = {
-        editorial_comments: editorialComments,
-        compliance_norms: complianceNorms,
-        image_authorization: {
-          ...selectedArticle.image_authorization,
-          signed: imgAuth,
-        },
-        article_authorization: {
-          ...selectedArticle.article_authorization,
-          signed: artAuth,
-        },
-      }
-      await updateArticle(selectedArticle.id, updatedData)
-      toast({ title: 'Artigo salvo com sucesso' })
+      await updateArticle(selectedArticle.id, { editorial_comments: editorialComments })
+      toast({ title: 'Revisão salva com sucesso' })
       load()
       setSelectedArticle(null)
     } catch (e) {
@@ -130,9 +128,6 @@ export default function AdminMagazineArticles() {
 
   const openEditor = (article: Article) => {
     setSelectedArticle(article)
-    setComplianceNorms(!!article.compliance_norms)
-    setImgAuth(!!article.image_authorization?.signed)
-    setArtAuth(!!article.article_authorization?.signed)
     setEditorialComments((article as any).editorial_comments || '')
   }
 
@@ -147,9 +142,9 @@ export default function AdminMagazineArticles() {
       case 'draft':
         return <Badge variant="secondary">Rascunho</Badge>
       case 'submitted':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Submetido</Badge>
+        return <Badge className="bg-blue-100 text-blue-800">Submetido</Badge>
       case 'approved':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Aprovado</Badge>
+        return <Badge className="bg-green-100 text-green-800">Aprovado</Badge>
       case 'rejected':
         return <Badge variant="destructive">Rejeitado</Badge>
       default:
@@ -164,19 +159,9 @@ export default function AdminMagazineArticles() {
           <h1 className="text-3xl font-serif font-bold text-secondary">Artigos da Revista</h1>
           <p className="text-muted-foreground mt-1">Gerencie e revise submissões de artigos.</p>
         </div>
-        <div className="flex items-center gap-2">
-          {generatedLink && (
-            <div className="flex items-center gap-2 bg-slate-100 p-2 rounded border text-sm">
-              <span className="truncate w-48 text-slate-600">{generatedLink}</span>
-              <Button size="icon" variant="ghost" onClick={copyLink} className="h-6 w-6">
-                <Copy className="w-3 h-3" />
-              </Button>
-            </div>
-          )}
-          <Button onClick={handleGenerateLink}>
-            <LinkIcon className="w-4 h-4 mr-2" /> Gerar Link (Expira em 7 dias)
-          </Button>
-        </div>
+        <Button onClick={handleOpenLinks}>
+          <LinkIcon className="w-4 h-4 mr-2" /> Gerenciar Links
+        </Button>
       </div>
 
       <MagazineTabs />
@@ -217,7 +202,7 @@ export default function AdminMagazineArticles() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Título</TableHead>
+              <TableHead>Artigo</TableHead>
               <TableHead>Autor</TableHead>
               <TableHead>Prazo Ideal</TableHead>
               <TableHead>Status</TableHead>
@@ -227,17 +212,34 @@ export default function AdminMagazineArticles() {
           <TableBody>
             {filteredArticles.map((article) => (
               <TableRow key={article.id}>
-                <TableCell className="font-medium max-w-[250px] truncate">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-slate-400" />
-                    {article.title}
+                <TableCell className="max-w-[250px]">
+                  <div className="flex flex-col truncate">
+                    <span className="font-semibold text-slate-800 truncate">{article.title}</span>
+                    <span className="text-xs text-slate-500">
+                      Enviado em {new Date(article.created).toLocaleDateString()}
+                    </span>
                   </div>
                 </TableCell>
-                <TableCell>{article.expand?.author?.name || 'Desconhecido'}</TableCell>
                 <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage
+                        src={pb.files.getUrl(
+                          article.expand?.author,
+                          article.expand?.author?.photos,
+                        )}
+                      />
+                      <AvatarFallback>{article.expand?.author?.name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">
+                      {article.expand?.author?.name || 'Desconhecido'}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm">
                   {(article as any).delivery_deadline
                     ? new Date((article as any).delivery_deadline).toLocaleDateString()
-                    : new Date(article.created).toLocaleDateString()}
+                    : '-'}
                 </TableCell>
                 <TableCell>{getStatusBadge(article.status)}</TableCell>
                 <TableCell className="text-right">
@@ -257,6 +259,76 @@ export default function AdminMagazineArticles() {
           </TableBody>
         </Table>
       </Card>
+
+      <Dialog open={linkModalOpen} onOpenChange={setLinkModalOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Links de Submissão de Artigo</DialogTitle>
+          </DialogHeader>
+          <div className="flex gap-4 items-end border-b pb-6">
+            <div className="flex-1 space-y-2">
+              <Label>Nome do Destinatário</Label>
+              <Input
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                placeholder="Ex: Dr. João Silva"
+              />
+            </div>
+            <Button onClick={handleGenerateLink}>Gerar Novo Link (30 dias)</Button>
+          </div>
+          <div className="space-y-4 pt-2 max-h-[400px] overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Destinatário</TableHead>
+                  <TableHead>Link</TableHead>
+                  <TableHead>Expira em</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tokens.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-medium text-sm">{t.recipient_name || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="truncate w-32 text-xs text-slate-500">
+                          {window.location.origin}/submissao-artigo/{t.token}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6"
+                          onClick={() => copyLink(t.token)}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {new Date(t.expires_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {t.used ? (
+                        <Badge variant="secondary">Usado</Badge>
+                      ) : (
+                        <Badge className="bg-green-100 text-green-800">Ativo</Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {tokens.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-4 text-slate-500">
+                      Nenhum link gerado.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={!!selectedArticle}
@@ -292,12 +364,23 @@ export default function AdminMagazineArticles() {
               </DialogHeader>
 
               <div className="space-y-6">
-                <div className="bg-slate-50 p-4 rounded-md border text-sm grid grid-cols-2 gap-4">
-                  <div>
+                <div className="bg-slate-50 p-4 rounded-md border text-sm grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="col-span-2">
                     <p className="text-slate-500 mb-1">Autor</p>
-                    <p className="font-medium">{selectedArticle.expand?.author?.name}</p>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-6 h-6">
+                        <AvatarImage
+                          src={pb.files.getUrl(
+                            selectedArticle.expand?.author,
+                            selectedArticle.expand?.author?.photos,
+                          )}
+                        />
+                        <AvatarFallback>{selectedArticle.expand?.author?.name?.[0]}</AvatarFallback>
+                      </Avatar>
+                      <p className="font-medium">{selectedArticle.expand?.author?.name}</p>
+                    </div>
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <p className="text-slate-500 mb-1">E-mail de Contato</p>
                     <p className="font-medium">{selectedArticle.expand?.author?.email}</p>
                   </div>
@@ -316,7 +399,7 @@ export default function AdminMagazineArticles() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold border-b pb-2">Arquivos do Artigo</h3>
                   <div className="flex flex-wrap gap-4">
-                    {(selectedArticle as any).article_word_file ? (
+                    {(selectedArticle as any).article_word_file && (
                       <Button variant="outline" asChild>
                         <a
                           href={pb.files.getUrl(
@@ -329,11 +412,8 @@ export default function AdminMagazineArticles() {
                           <Download className="w-4 h-4 mr-2" /> Baixar Versão Word
                         </a>
                       </Button>
-                    ) : (
-                      <div className="text-sm text-slate-500 py-2">Sem versão Word</div>
                     )}
-
-                    {(selectedArticle as any).article_pdf_file ? (
+                    {(selectedArticle as any).article_pdf_file && (
                       <Button variant="outline" asChild>
                         <a
                           href={pb.files.getUrl(
@@ -346,9 +426,11 @@ export default function AdminMagazineArticles() {
                           <Download className="w-4 h-4 mr-2" /> Baixar Versão PDF
                         </a>
                       </Button>
-                    ) : (
-                      <div className="text-sm text-slate-500 py-2">Sem versão PDF</div>
                     )}
+                    {!(
+                      (selectedArticle as any).article_word_file ||
+                      (selectedArticle as any).article_pdf_file
+                    ) && <div className="text-sm text-slate-500 py-2">Nenhum arquivo anexado.</div>}
                   </div>
                 </div>
 
@@ -358,70 +440,73 @@ export default function AdminMagazineArticles() {
                     <div className="flex flex-wrap gap-4">
                       {Array.isArray(selectedArticle.article_photos) ? (
                         selectedArticle.article_photos.map((photo: string, idx: number) => (
-                          <div key={idx} className="relative group">
-                            <a
-                              href={pb.files.getUrl(selectedArticle, photo)}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              <img
-                                src={pb.files.getUrl(selectedArticle, photo, { thumb: '150x150' })}
-                                className="w-32 h-32 object-cover border rounded shadow-sm"
-                              />
-                            </a>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="relative group">
                           <a
-                            href={pb.files.getUrl(selectedArticle, selectedArticle.article_photos)}
+                            key={idx}
+                            href={pb.files.getUrl(selectedArticle, photo)}
                             target="_blank"
                             rel="noreferrer"
                           >
                             <img
-                              src={pb.files.getUrl(
-                                selectedArticle,
-                                selectedArticle.article_photos,
-                                {
-                                  thumb: '150x150',
-                                },
-                              )}
-                              className="w-32 h-32 object-cover border rounded shadow-sm"
+                              src={pb.files.getUrl(selectedArticle, photo, { thumb: '150x150' })}
+                              className="w-32 h-32 object-cover border rounded shadow-sm hover:opacity-80 transition"
                             />
                           </a>
-                        </div>
+                        ))
+                      ) : (
+                        <a
+                          href={pb.files.getUrl(selectedArticle, selectedArticle.article_photos)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <img
+                            src={pb.files.getUrl(selectedArticle, selectedArticle.article_photos, {
+                              thumb: '150x150',
+                            })}
+                            className="w-32 h-32 object-cover border rounded shadow-sm hover:opacity-80 transition"
+                          />
+                        </a>
                       )}
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-4 pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-md border">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="compliance">Normas Compliance</Label>
-                      <Switch
-                        id="compliance"
-                        checked={complianceNorms}
-                        onCheckedChange={setComplianceNorms}
-                      />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-md border">
+                    <div>
+                      <Label className="text-slate-500 mb-1 block">Autorização de Imagem</Label>
+                      {selectedArticle.image_authorization?.signed ? (
+                        <Badge className="bg-green-100 text-green-800">
+                          Assinada por {selectedArticle.image_authorization?.name}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-slate-500">
+                          Pendente
+                        </Badge>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="imgAuth">Autorização Imagem</Label>
-                      <Switch id="imgAuth" checked={imgAuth} onCheckedChange={setImgAuth} />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="artAuth">Autorização Artigo</Label>
-                      <Switch id="artAuth" checked={artAuth} onCheckedChange={setArtAuth} />
+                    <div>
+                      <Label className="text-slate-500 mb-1 block">Autorização do Artigo</Label>
+                      {selectedArticle.article_authorization?.signed ? (
+                        <Badge className="bg-green-100 text-green-800">
+                          Assinada por {selectedArticle.article_authorization?.name}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-slate-500">
+                          Pendente
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-lg">Comentários do Comitê Editorial</Label>
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-lg text-primary font-bold">
+                      Comentários do Comitê Editorial
+                    </Label>
                     <Textarea
                       value={editorialComments}
                       onChange={(e) => setEditorialComments(e.target.value)}
                       placeholder="Adicione observações, notas de revisão ou apontamentos para diagramação..."
-                      className="min-h-[150px]"
+                      className="min-h-[150px] border-primary/20 focus-visible:ring-primary/30"
                     />
                   </div>
 

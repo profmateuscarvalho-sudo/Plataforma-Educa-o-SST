@@ -1,7 +1,6 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { useEffect } from 'react'
-import { SquareLogo } from './ui/Logos'
 import {
   LayoutDashboard,
   BookOpen,
@@ -42,7 +41,7 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-slate-50 flex">
       <aside className="w-64 bg-secondary text-white flex flex-col hidden md:flex shrink-0">
         <div className="h-20 flex items-center px-6 border-b border-white/10 gap-3">
-          <SquareLogo variant="yellow" className="w-8 h-8 text-xl" />
+          <img src="/logo.png" alt="E." className="w-8 h-8 object-contain" />
           <span className="font-bold text-accent tracking-tighter">SST ADMIN</span>
         </div>
         <nav className="flex-1 py-6 px-4 space-y-2">

@@ -55,14 +55,6 @@ export default function AdminMagazines() {
 
     form.set('is_featured', isFeatured ? 'true' : 'false')
 
-    const questionsVal = form.get('connection_questions') as string
-    if (questionsVal) {
-      const arr = questionsVal.split('\n').filter((q) => q.trim().length > 0)
-      form.set('connection_questions', JSON.stringify(arr))
-    } else {
-      form.set('connection_questions', JSON.stringify([]))
-    }
-
     try {
       if (editingMag) {
         await updateMagazine(editingMag.id, form)
@@ -121,15 +113,6 @@ export default function AdminMagazines() {
             <div className="flex items-center space-x-2 pt-2 pb-2">
               <Switch id="is_featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
               <Label htmlFor="is_featured">Destacar como Revista do Mês na Home</Label>
-            </div>
-            <div>
-              <Label>Perguntas da Conexão Profissional (Uma por linha)</Label>
-              <Textarea
-                name="connection_questions"
-                defaultValue={(editingMag as any)?.connection_questions?.join('\n')}
-                rows={4}
-                placeholder="Insira as perguntas aqui..."
-              />
             </div>
             <div>
               <Label>Capa (Opcional)</Label>

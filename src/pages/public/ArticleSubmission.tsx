@@ -22,8 +22,14 @@ export default function ArticleSubmission() {
   const { register, handleSubmit } = useForm()
 
   const today = new Date()
-  const deadline = new Date(today.getFullYear(), today.getMonth(), 10)
-  const deadlineFormatted = deadline.toLocaleDateString('pt-BR')
+  const deadlineMonth = today.getMonth()
+  const deadlineYear = today.getFullYear()
+  const deadline = new Date(deadlineYear, deadlineMonth, 10)
+  const deadlineFormatted = deadline.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
 
   useEffect(() => {
     if (token) {
@@ -55,11 +61,14 @@ export default function ArticleSubmission() {
       articleForm.append('status', 'submitted')
       articleForm.append('delivery_deadline', deadline.toISOString())
 
-      if (data.articleWordFile?.[0]) {
-        articleForm.append('article_word_file', data.articleWordFile[0])
-      }
-      if (data.articlePdfFile?.[0]) {
-        articleForm.append('article_pdf_file', data.articlePdfFile[0])
+      if (data.articleFile?.[0]) {
+        const file = data.articleFile[0]
+        const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+        if (isPdf) {
+          articleForm.append('article_pdf_file', file)
+        } else {
+          articleForm.append('article_word_file', file)
+        }
       }
 
       if (data.articlePhotos?.length) {
@@ -96,7 +105,9 @@ export default function ArticleSubmission() {
     return <div className="p-8 text-center text-red-500 font-bold">Link inválido ou expirado.</div>
   if (submitted)
     return (
-      <div className="p-8 text-center text-green-600 font-bold">Obrigado pela sua submissão!</div>
+      <div className="p-8 text-center text-green-600 font-bold">
+        Obrigado pela sua submissão! Seu artigo está sob análise.
+      </div>
     )
 
   return (
@@ -106,10 +117,10 @@ export default function ArticleSubmission() {
           <CardTitle className="text-2xl text-center">Submissão de Artigo para Revista</CardTitle>
           <div className="bg-muted p-4 rounded-md text-sm mt-4">
             <strong>Normas de Conformidade:</strong> Seu artigo deve ter entre 2000 a 5000 palavras,
-            estar formatado segundo as normas da ABNT e focado em SST. O envio deve conter as
-            versões Word e PDF do texto.
+            estar formatado segundo as normas da ABNT e focado em SST. O envio do documento original
+            é obrigatório.
           </div>
-          <div className="flex items-center justify-center gap-2 mt-2 text-primary font-medium">
+          <div className="flex items-center justify-center gap-2 mt-4 bg-accent/10 text-accent-foreground p-3 rounded-md font-medium text-lg border border-accent/20">
             <Calendar className="w-5 h-5" /> Prazo de Entrega: {deadlineFormatted}
           </div>
         </CardHeader>
@@ -142,29 +153,22 @@ export default function ArticleSubmission() {
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Arquivos do Artigo</h3>
+              <h3 className="text-lg font-semibold border-b pb-2">Arquivo do Artigo</h3>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Título do Artigo*</Label>
                   <Input {...register('title', { required: true })} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Arquivo Word (.doc, .docx)*</Label>
-                    <Input
-                      type="file"
-                      accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                      {...register('articleWordFile', { required: true })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Arquivo PDF (.pdf)*</Label>
-                    <Input
-                      type="file"
-                      accept=".pdf,application/pdf"
-                      {...register('articlePdfFile', { required: true })}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Arquivo (.doc, .docx ou .pdf)*</Label>
+                  <Input
+                    type="file"
+                    accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,application/pdf"
+                    {...register('articleFile', { required: true })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Envie uma versão única em Word ou PDF para revisão e diagramação.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Imagens e Gráficos Anexos</Label>

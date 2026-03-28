@@ -98,3 +98,45 @@ export interface EventRegistration extends RecordModel {
   phone?: string
   status: 'confirmed' | 'pending' | 'cancelled'
 }
+
+export interface Author extends RecordModel {
+  name: string
+  email: string
+  phone?: string
+  bio?: string
+  photos?: string[]
+  status: 'pending' | 'approved'
+}
+
+export interface Article extends RecordModel {
+  title: string
+  content: string
+  compliance_norms: boolean
+  delivery_deadline?: string
+  author: string
+  magazine?: string
+  article_photos?: string[]
+  image_authorization?: { signed: boolean; name: string; date: string }
+  article_authorization?: { signed: boolean; name: string; date: string }
+  status: 'draft' | 'submitted' | 'approved' | 'rejected'
+  expand?: {
+    author?: Author
+    magazine?: Magazine
+  }
+}
+
+export interface ProfessionalConnection extends RecordModel {
+  professional_name: string
+  email: string
+  responses: Record<string, string>
+  photos?: string[]
+  edition_month?: string
+  status: 'pending' | 'approved'
+}
+
+export interface SubmissionToken extends RecordModel {
+  token: string
+  type: 'article' | 'connection'
+  expires_at: string
+  used: boolean
+}

@@ -60,7 +60,9 @@ export const getLatestConnectionQuestions = async () => {
     if (mags.items.length > 0 && mags.items[0].connection_questions) {
       return mags.items[0].connection_questions as string[]
     }
-  } catch {}
+  } catch (err) {
+    console.error('Error fetching connection questions:', err)
+  }
   return [
     'Qual a sua maior conquista na área de SST?',
     'Como você enxerga o futuro da Segurança do Trabalho?',

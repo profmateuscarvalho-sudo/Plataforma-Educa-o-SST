@@ -63,7 +63,7 @@ export default function AdminMagazineArticles() {
     load()
     getMagazines()
       .then(setMagazines)
-      .catch(() => {})
+      .catch((err) => console.error('Error loading magazines:', err))
   }, [])
 
   const load = async () => {

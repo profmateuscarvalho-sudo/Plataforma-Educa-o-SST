@@ -21,15 +21,15 @@ export function SquareLogo({
   return (
     <div
       className={cn(
-        'relative flex items-center justify-center w-12 h-12 font-bold text-3xl font-sans',
+        'relative flex items-center justify-center w-12 h-12 font-bold text-[32px] font-sans',
         variant === 'black' ? 'bg-secondary text-white' : 'bg-accent text-white',
         'rounded-none rounded-bl-2xl',
         className,
       )}
     >
-      <span className="mr-0.5 -mt-1 leading-none">E</span>
+      <span className="leading-none transform -translate-x-[2px] -translate-y-[2px]">E</span>
       <div
-        className={cn('absolute bottom-3 right-[10px] w-1.5 h-1.5 rounded-full', 'bg-white')}
+        className={cn('absolute bottom-[10px] right-[8px] w-1.5 h-1.5 rounded-full', 'bg-white')}
       ></div>
     </div>
   )

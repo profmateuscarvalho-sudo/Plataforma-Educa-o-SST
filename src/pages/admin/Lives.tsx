@@ -26,6 +26,7 @@ import {
 } from '@/services/live'
 import { LiveSession } from '@/types'
 import { toast } from '@/hooks/use-toast'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function AdminLives() {
   const [sessions, setSessions] = useState<LiveSession[]>([])
@@ -56,7 +57,7 @@ export default function AdminLives() {
       setEditing(null)
       load()
     } catch (err) {
-      toast({ title: 'Erro', variant: 'destructive' })
+      toast({ title: 'Erro ao salvar', description: getErrorMessage(err), variant: 'destructive' })
     }
   }
 
@@ -90,8 +91,16 @@ export default function AdminLives() {
                 <Input name="description" defaultValue={editing?.description} />
               </div>
               <div>
-                <Label>Video ID ou Stream Key (Panda/OBS)</Label>
-                <Input name="panda_video_id" defaultValue={editing?.panda_video_id} required />
+                <Label>Video ID ou Chave de Transmissão (Panda/Youtube)</Label>
+                <Input
+                  name="panda_video_id"
+                  defaultValue={editing?.panda_video_id}
+                  required
+                  placeholder="ex: 12345-abcde"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Insira o ID do vídeo para aulas gravadas ou a chave de transmissão da live.
+                </p>
               </div>
               <div>
                 <Label>Data Agendada</Label>

@@ -78,6 +78,49 @@ export function LeadForm({ variant = 'light' }: { variant?: 'light' | 'dark' }) 
 
         <FormField
           control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className={cn(isDark && 'text-slate-300 text-xs')}>E-mail *</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="seu@email.com"
+                  type="email"
+                  {...field}
+                  className={cn(
+                    isDark &&
+                      'bg-white/10 border-white/20 text-white placeholder:text-slate-500 h-9',
+                  )}
+                />
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className={cn(isDark && 'text-slate-300 text-xs')}>Telefone *</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="(00) 00000-0000"
+                  {...field}
+                  className={cn(
+                    isDark &&
+                      'bg-white/10 border-white/20 text-white placeholder:text-slate-500 h-9',
+                  )}
+                />
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="message"
           render={({ field }) => (
             <FormItem className="space-y-1">

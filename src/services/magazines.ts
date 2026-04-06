@@ -9,7 +9,7 @@ export const createMagazine = async (data: FormData) => {
   return await pb.collection('magazines').create<Magazine>(data)
 }
 
-export const updateMagazine = async (id: string, data: FormData) => {
+export const updateMagazine = async (id: string, data: FormData | Partial<Magazine>) => {
   return await pb.collection('magazines').update<Magazine>(id, data)
 }
 

@@ -96,12 +96,19 @@ function MagazineCard({ mag }: { mag: Magazine }) {
 
       <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 overflow-hidden bg-black/5 border-none">
         <DialogTitle className="sr-only">{mag.title}</DialogTitle>
-        <iframe
-          src={mag.fliphtml5_link}
-          className="w-full h-full border-none rounded-lg bg-white"
-          allowFullScreen
-          scrolling="no"
-        />
+        {mag.embed_code ? (
+          <div
+            className="w-full h-full bg-white [&>iframe]:w-full [&>iframe]:h-full"
+            dangerouslySetInnerHTML={{ __html: mag.embed_code }}
+          />
+        ) : (
+          <iframe
+            src={mag.fliphtml5_link}
+            className="w-full h-full border-none rounded-lg bg-white"
+            allowFullScreen
+            scrolling="no"
+          />
+        )}
       </DialogContent>
     </Dialog>
   )

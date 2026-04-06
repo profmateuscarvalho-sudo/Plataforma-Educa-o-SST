@@ -4,6 +4,7 @@ export interface User extends RecordModel {
   name: string
   email: string
   role: 'admin' | 'student'
+  contract_end_date?: string
 }
 
 export interface Course extends RecordModel {
@@ -52,8 +53,17 @@ export interface Magazine extends RecordModel {
   title: string
   summary: string
   fliphtml5_link: string
+  embed_code?: string
   thumbnail: string
   is_featured: boolean
+}
+
+export interface SupportMessage extends RecordModel {
+  user: string
+  subject: string
+  message: string
+  status: 'pending' | 'answered'
+  expand?: { user?: User }
 }
 
 export interface News extends RecordModel {

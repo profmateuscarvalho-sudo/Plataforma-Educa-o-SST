@@ -156,8 +156,8 @@ export default function Layout() {
               <Logo className="text-white" />
             </div>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Plataforma premium de educação e desenvolvimento profissional na área de Segurança e
-              Saúde no Trabalho.
+              Plataforma de educação e desenvolvimento profissional na área de Segurança e Saúde no
+              Trabalho.
             </p>
           </div>
           <div>

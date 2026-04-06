@@ -138,8 +138,9 @@ export default function Revistas() {
             Acervo Científico
           </h1>
           <p className="text-lg text-emerald-100/90 leading-relaxed font-light">
-            Acesso público e gratuito às nossas publicações periódicas com artigos focados no avanço
-            da Segurança e Saúde no Trabalho.
+            Acesso gratuito às nossas publicações periódicas com artigos focados em Segurança e
+            Saúde no Trabalho, Fatores Humanos, Nova Visão de Segurança, Gestão e Gerenciamentos dos
+            Riscos Ocupacionais e muito mais.&nbsp;&nbsp;
           </p>
         </div>
       </section>

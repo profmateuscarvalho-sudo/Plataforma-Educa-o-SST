@@ -27,7 +27,7 @@ export default function Noticias() {
       <section className="bg-secondary text-white py-20">
         <div className="container px-4 text-center max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-accent">
-            Notícias do Setor
+            Notícias em SST
           </h1>
           <p className="text-lg text-slate-300 leading-relaxed font-light">
             Fique por dentro das últimas atualizações do mercado de Segurança e Saúde no Trabalho.

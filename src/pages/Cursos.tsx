@@ -17,11 +17,11 @@ export default function Cursos() {
         <div className="container px-4 relative z-10">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6">
-              Educação Profissional em SST
+              Educação e formação em SST
             </h1>
             <p className="text-lg text-slate-300 leading-relaxed font-light">
-              Explore nossos programas de formação, desenhados por especialistas para o seu
-              crescimento na área de Segurança e Saúde no Trabalho.
+              Explore nossos programas de formação, desenhados por profissionais atuantes no mercado
+              de trabalho e instituições de ensino.
             </p>
           </div>
         </div>

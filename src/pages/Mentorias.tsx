@@ -33,10 +33,9 @@ export default function Mentorias() {
           <span className="text-accent font-bold tracking-widest uppercase text-sm mb-4 block">
             Acompanhamento Exclusivo
           </span>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold mb-6">Catálogo de Mentorias</h1>
+          <h1 className="text-5xl md:text-6xl font-serif font-bold mb-6">Agende sua Mentoria</h1>
           <p className="text-xl text-slate-300 font-light mb-10">
-            Acelere sua trajetória com o direcionamento dos profissionais mais respeitados do
-            Brasil.
+            Acelere sua trajetória com o direcionamento de grande profissionais da Área.&nbsp;
           </p>
         </div>
       </section>

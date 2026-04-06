@@ -41,15 +41,19 @@ export default function Index() {
         <div className="container relative z-10 px-4 py-20 flex flex-col lg:flex-row items-center gap-12">
           <div className="flex-1 space-y-8 animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary backdrop-blur-sm font-medium text-sm">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> Desenvolvimento
-              Profissional SST
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              &nbsp;Plataforma para profissionais e estudantes em SST
             </div>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-white leading-tight">
-              Excelência e Liderança em <span className="text-accent">SST</span>
+              Educação e desenvolvimento
+              <div>
+                em <span className="text-accent">SST</span>
+              </div>
             </h1>
             <p className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed font-light">
-              Eleve sua carreira com programas educacionais premium focados em Segurança e Saúde no
-              Trabalho. Metodologia inspirada nas melhores instituições do país.
+              Eleve o seu conhecimento a partir de nossos programas educacionais focados em
+              Segurança e Saúde no Trabalho e construa um itinerário profissional de forma sólida
+              com foco na prática e na sua realidade de trabalho.&nbsp;&nbsp;
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button
@@ -75,7 +79,7 @@ export default function Index() {
             style={{ animationDelay: '0.2s' }}
           >
             <h3 className="text-2xl font-serif font-bold text-secondary mb-2">
-              Cadastre no Educação SST
+              Cadastre na Educação SST
             </h3>
             <p className="text-slate-500 text-sm mb-6">
               e dê um passo a mais para o seu desenvolvimento na área. Receba novidades e
@@ -94,7 +98,8 @@ export default function Index() {
                 Cursos em Destaque
               </h2>
               <p className="text-slate-600 text-lg">
-                Formação contínua de alto padrão para profissionais que buscam o topo do mercado.
+                Construa seu itinerário formativa de alto nível com foco na sua realidade e
+                conhecimento prático.
               </p>
             </div>
             <Button

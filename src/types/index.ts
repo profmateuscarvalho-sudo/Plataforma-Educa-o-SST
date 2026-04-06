@@ -189,3 +189,46 @@ export interface SubmissionToken extends RecordModel {
   expires_at: string
   used: boolean
 }
+
+export interface DocProject extends RecordModel {
+  title: string
+  description: string
+  objectives: string[]
+  target_audience: string
+  estimated_duration: number
+  episodes: number
+  script_structure: string
+  status: string
+  notes: string
+  responsible: string
+  attachments?: string[]
+  total_budget: number
+  expand?: { responsible?: User }
+}
+
+export interface DocProjectCost extends RecordModel {
+  project: string
+  category: 'Pré-produção' | 'Produção' | 'Equipamentos' | 'Pós-produção' | 'Outros'
+  description: string
+  estimated_value: number
+}
+
+export interface DocProjectRecording extends RecordModel {
+  project: string
+  date: string
+  location: string
+}
+
+export interface DocProjectTeam extends RecordModel {
+  project: string
+  name: string
+  role: string
+}
+
+export interface DocProjectTask extends RecordModel {
+  project: string
+  title: string
+  deadline: string
+  responsible: string
+  status: 'A Fazer' | 'Em Andamento' | 'Concluído'
+}

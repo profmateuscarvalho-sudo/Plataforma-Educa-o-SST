@@ -39,6 +39,9 @@ import AdminLeads from './pages/admin/Leads'
 import AdminMentorships from './pages/admin/Mentorships'
 import AdminEvents from './pages/admin/Events'
 import AdminStudents from './pages/admin/Students'
+import AdminDocumentaries from './pages/admin/Documentaries/List'
+import AdminDocumentaryWizard from './pages/admin/Documentaries/Wizard'
+import InvestorSummary from './pages/public/InvestorSummary'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -62,6 +65,8 @@ const App = () => (
             <Route path="/submissao-artigo/:token" element={<ArticleSubmission />} />
             <Route path="/conexao-profissional/:token" element={<ProfessionalConnection />} />
 
+            <Route path="/resumo-investidor/:id" element={<InvestorSummary />} />
+
             <Route path="/aluno" element={<StudentDashboard />} />
             <Route path="/aluno/curso/:id/aula" element={<CourseLesson />} />
             <Route path="/aluno/live/:id" element={<StudentLive />} />
@@ -74,6 +79,9 @@ const App = () => (
             <Route path="/admin/alunos" element={<AdminStudents />} />
             <Route path="/admin/mentorias" element={<AdminMentorships />} />
             <Route path="/admin/eventos" element={<AdminEvents />} />
+            <Route path="/admin/documentarios" element={<AdminDocumentaries />} />
+            <Route path="/admin/documentarios/novo" element={<AdminDocumentaryWizard />} />
+            <Route path="/admin/documentarios/:id/editar" element={<AdminDocumentaryWizard />} />
             <Route path="/admin/revistas" element={<AdminMagazines />} />
             <Route path="/admin/revistas/artigos" element={<AdminMagazineArticles />} />
             <Route path="/admin/revistas/conexoes" element={<AdminMagazineConnections />} />

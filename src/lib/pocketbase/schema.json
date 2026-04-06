@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-06T20:58:48.786Z",
+  "generatedAt": "2026-04-06T21:24:40.241Z",
   "collections": [
     {
       "name": "users",
@@ -1365,6 +1365,333 @@
           "required": true,
           "system": false,
           "selectValues": ["pending", "answered"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "doc_projects",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin' || @request.auth.id = '' || @request.auth.id != ''",
+        "view": "",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "objectives",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "target_audience",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Trabalhadores SST", "Gestores", "Treinadores", "Estudantes", "Outros"]
+        },
+        {
+          "name": "estimated_duration",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "episodes",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "script_structure",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "Planejado",
+            "Em Pré-produção",
+            "Produção",
+            "Pós-produção",
+            "Finalizado",
+            "Novo"
+          ]
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "responsible",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "attachments",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_budget",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "doc_project_costs",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "project",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "doc_projects"
+        },
+        {
+          "name": "category",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Pré-produção", "Produção", "Equipamentos", "Pós-produção", "Outros"]
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "estimated_value",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "doc_project_recordings",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "project",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "doc_projects"
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "location",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "doc_project_team",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "project",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "doc_projects"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "role",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "Diretor",
+            "Operador Câmera",
+            "Som",
+            "Iluminação",
+            "Produtor",
+            "Roteirista",
+            "Outro"
+          ]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "doc_project_tasks",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "project",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "doc_projects"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "deadline",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "responsible",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["A Fazer", "Em Andamento", "Concluído"]
         },
         {
           "name": "created",

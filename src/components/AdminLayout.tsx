@@ -12,6 +12,7 @@ import {
   CalendarDays,
   GraduationCap,
   Handshake,
+  Film,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -32,6 +33,7 @@ export default function AdminLayout() {
     { label: 'Alunos', icon: GraduationCap, path: '/admin/alunos' },
     { label: 'Mentorias', icon: Presentation, path: '/admin/mentorias' },
     { label: 'Eventos', icon: CalendarDays, path: '/admin/eventos' },
+    { label: 'Documentários', icon: Film, path: '/admin/documentarios' },
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },
     { label: 'Notícias', icon: Newspaper, path: '/admin/noticias' },
     { label: 'Leads', icon: Users, path: '/admin/leads' },

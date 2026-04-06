@@ -13,7 +13,7 @@ export default function Cursos() {
   return (
     <div className="bg-slate-50 min-h-screen pb-24">
       <section className="bg-secondary text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://img.usecurling.com/p/1920/600?q=library&color=black')] opacity-20 object-cover mix-blend-luminosity" />
+        <div className="absolute inset-0 bg-[url('https://img.usecurling.com/p/1920/600?q=library&color=black')] object-cover mix-blend-luminosity bg-[#00ea01] opacity-[0] text-[#2bfc0f] border-[#61eb14]" />
         <div className="container px-4 relative z-10">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6">

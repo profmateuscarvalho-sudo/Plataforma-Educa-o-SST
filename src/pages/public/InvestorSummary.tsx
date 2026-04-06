@@ -24,16 +24,16 @@ export default function InvestorSummary() {
     if (!id) return
     getDocProject(id)
       .then(setProject)
-      .catch(() => {})
+      .catch((e) => console.error(e))
     getDocProjectCosts(id)
       .then(setCosts)
-      .catch(() => {})
+      .catch((e) => console.error(e))
     getDocProjectRecordings(id)
       .then(setRecs)
-      .catch(() => {})
+      .catch((e) => console.error(e))
     getDocProjectTeam(id)
       .then(setTeam)
-      .catch(() => {})
+      .catch((e) => console.error(e))
   }, [id])
 
   if (!project) return <div className="p-10 text-center">Carregando resumo...</div>

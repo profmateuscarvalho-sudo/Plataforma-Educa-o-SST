@@ -34,7 +34,9 @@ export default function TabCosts({ projectId }: { projectId: string }) {
   const loadData = async () => {
     try {
       setCosts(await getDocProjectCosts(projectId))
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
   useEffect(() => {
     loadData()
@@ -62,7 +64,9 @@ export default function TabCosts({ projectId }: { projectId: string }) {
     try {
       await deleteDocProjectCost(id)
       loadData()
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const exportCSV = () => {

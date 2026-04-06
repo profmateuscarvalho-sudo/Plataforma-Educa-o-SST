@@ -24,7 +24,7 @@ export default function TabManagement({ project, onChange, onSave }: Props) {
     pb.collection('users')
       .getFullList({ filter: "role='admin'" })
       .then(setUsers)
-      .catch(() => {})
+      .catch((e) => console.error(e))
   }, [])
 
   return (

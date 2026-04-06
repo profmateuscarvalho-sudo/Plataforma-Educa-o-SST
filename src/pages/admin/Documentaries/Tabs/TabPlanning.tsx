@@ -43,7 +43,9 @@ export default function TabPlanning({ projectId }: { projectId: string }) {
       setRecs(await getDocProjectRecordings(projectId))
       setTeam(await getDocProjectTeam(projectId))
       setTasks(await getDocProjectTasks(projectId))
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
   useEffect(() => {
     loadAll()

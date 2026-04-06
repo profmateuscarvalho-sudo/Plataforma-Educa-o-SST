@@ -28,7 +28,7 @@ export default function Mentorias() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
-      <section className="bg-secondary text-white py-24 relative overflow-hidden">
+      <section className="bg-secondary text-white py-24 relative overflow-hidden pt-[8px] mt-[0px] pb-[8px]">
         <div className="container px-4 relative z-10 text-center max-w-4xl mx-auto">
           <span className="text-accent font-bold tracking-widest uppercase text-sm mb-4 block">
             Acompanhamento Exclusivo

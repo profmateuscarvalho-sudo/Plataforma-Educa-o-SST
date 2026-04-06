@@ -28,6 +28,10 @@ import AdminDashboard from './pages/admin/Dashboard'
 import AdminCourses from './pages/admin/Courses'
 import AdminCourseBuilder from './pages/admin/CourseBuilder'
 import AdminMagazines from './pages/admin/Magazines'
+import AdminPayments from './pages/admin/Payments'
+import AdminLives from './pages/admin/Lives'
+import StudentLive from './pages/student/Live'
+import NewsDetails from './pages/NewsDetails'
 import AdminMagazineArticles from './pages/admin/MagazineArticles'
 import AdminMagazineConnections from './pages/admin/MagazineConnections'
 import AdminNews from './pages/admin/News'
@@ -51,6 +55,7 @@ const App = () => (
             <Route path="/mentorias" element={<Mentorias />} />
             <Route path="/revistas" element={<Revistas />} />
             <Route path="/noticias" element={<Noticias />} />
+            <Route path="/noticias/:id" element={<NewsDetails />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
@@ -59,6 +64,7 @@ const App = () => (
 
             <Route path="/aluno" element={<StudentDashboard />} />
             <Route path="/aluno/curso/:id/aula" element={<CourseLesson />} />
+            <Route path="/aluno/live/:id" element={<StudentLive />} />
           </Route>
 
           <Route element={<AdminLayout />}>
@@ -73,6 +79,8 @@ const App = () => (
             <Route path="/admin/revistas/conexoes" element={<AdminMagazineConnections />} />
             <Route path="/admin/noticias" element={<AdminNews />} />
             <Route path="/admin/leads" element={<AdminLeads />} />
+            <Route path="/admin/pagamentos" element={<AdminPayments />} />
+            <Route path="/admin/lives" element={<AdminLives />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

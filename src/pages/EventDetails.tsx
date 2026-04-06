@@ -103,7 +103,7 @@ export default function EventDetails() {
   const endDate = evt.end_date ? new Date(evt.end_date) : null
   const isOnline = evt.type === 'Aula Online' || evt.type === 'Workshop'
   const isPresencial = evt.type === 'Aula Presencial' || evt.type === 'Workshop'
-  const iframeUrl = getPandaUrl(evt.panda_video_id)
+  const iframeUrl = evt.panda_video_id ? getPandaUrl(evt.panda_video_id) : null
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">

@@ -1,6 +1,6 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
-import { ChevronLeft, PlayCircle, FileText, CheckSquare } from 'lucide-react'
+import { ChevronLeft, PlayCircle, FileText, CheckSquare, Star, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -8,6 +8,8 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion'
+import { Progress } from '@/components/ui/progress'
+import { Textarea } from '@/components/ui/textarea'
 import { useEffect, useState } from 'react'
 import { getCourse } from '@/services/courses'
 import {
@@ -16,15 +18,17 @@ import {
   getCourseMaterials,
   getCourseQuizzes,
 } from '@/services/curriculum'
-import { Course, Module, Lesson, Material, Quiz } from '@/types'
+import { getCompletions, toggleCompletion, getLessonRatings, rateLesson } from '@/services/student'
+import { Course, Module, Lesson, Material, Quiz, LessonCompletion, LessonRating } from '@/types'
 import { QuizPlayer } from '@/components/student/QuizPlayer'
 import pb from '@/lib/pocketbase/client'
+import { cn } from '@/lib/utils'
 
 const getPandaUrl = (val?: string) => {
   if (!val) return ''
   if (val.includes('<iframe') || val.includes('src="')) {
-    const match = val.match(/src="([^"]+)"/)
-    return match ? match[1] : ''
+    const m = val.match(/src="([^"]+)"/)
+    return m ? m[1] : ''
   }
   if (val.startsWith('http')) return val
   return `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${val}`
@@ -41,45 +45,92 @@ export default function CourseLesson() {
   const [materials, setMaterials] = useState<Material[]>([])
   const [quizzes, setQuizzes] = useState<Quiz[]>([])
   const [activeItem, setActiveItem] = useState<ActiveItem | null>(null)
+  const [completions, setCompletions] = useState<LessonCompletion[]>([])
+  const [ratings, setRatings] = useState<LessonRating[]>([])
+  const [myRating, setMyRating] = useState(0)
+  const [myComment, setMyComment] = useState('')
 
   useEffect(() => {
-    if (!id) return
+    if (!id || !user) return
     Promise.all([
       getCourse(id),
       getCourseModules(id),
       getCourseLessons(id),
       getCourseMaterials(id),
       getCourseQuizzes(id),
+      getCompletions(user.id),
     ])
-      .then(([c, m, l, mat, q]) => {
+      .then(([c, m, l, mat, q, comp]) => {
         setCourse(c)
         setModules(m)
         setLessons(l)
         setMaterials(mat)
         setQuizzes(q)
-        if (l.length > 0) {
-          setActiveItem({ type: 'lesson', data: l[0] })
-        } else if (q.length > 0) {
-          setActiveItem({ type: 'quiz', data: q[0] })
-        }
+        setCompletions(comp)
+        if (l.length > 0) setActiveItem({ type: 'lesson', data: l[0] })
+        else if (q.length > 0) setActiveItem({ type: 'quiz', data: q[0] })
       })
       .catch(console.error)
-  }, [id])
+  }, [id, user])
+
+  useEffect(() => {
+    if (activeItem?.type === 'lesson') {
+      getLessonRatings(activeItem.data.id).then((r) => {
+        setRatings(r)
+        const mine = r.find((x) => x.user === user?.id)
+        if (mine) {
+          setMyRating(mine.rating)
+          setMyComment(mine.comment)
+        } else {
+          setMyRating(0)
+          setMyComment('')
+        }
+      })
+    }
+  }, [activeItem, user])
 
   if (loading) return null
   if (!user || (user.role !== 'student' && user.role !== 'admin')) return <Navigate to="/login" />
   if (!course) return <div className="p-8 text-white">Carregando aula...</div>
 
-  let videoId = course.panda_video_id
-  let activeTitle = course.title
-  let activeDesc = course.description
+  const progress = lessons.length ? (completions.length / lessons.length) * 100 : 0
+  const isCurrentCompleted =
+    activeItem?.type === 'lesson' && completions.some((c) => c.lesson === activeItem.data.id)
+  const compRecord =
+    activeItem?.type === 'lesson'
+      ? completions.find((c) => c.lesson === activeItem.data.id)
+      : undefined
 
-  if (activeItem?.type === 'lesson') {
-    videoId = activeItem.data.panda_video_id || course.panda_video_id
-    activeTitle = activeItem.data.title
-    activeDesc = activeItem.data.description
+  const handleCompleteNext = async () => {
+    if (activeItem?.type !== 'lesson') return
+    if (!isCurrentCompleted) {
+      await toggleCompletion(activeItem.data.id, user.id, false)
+      setCompletions(await getCompletions(user.id))
+    }
+    const idx = lessons.findIndex((l) => l.id === activeItem.data.id)
+    if (idx >= 0 && idx < lessons.length - 1)
+      setActiveItem({ type: 'lesson', data: lessons[idx + 1] })
   }
 
+  const submitRating = async () => {
+    if (activeItem?.type !== 'lesson' || myRating === 0) return
+    await rateLesson({
+      user: user.id,
+      lesson: activeItem.data.id,
+      rating: myRating,
+      comment: myComment,
+    })
+    const r = await getLessonRatings(activeItem.data.id)
+    setRatings(r)
+  }
+
+  const videoId =
+    activeItem?.type === 'lesson'
+      ? activeItem.data.panda_video_id || course.panda_video_id
+      : course.panda_video_id
+  const activeTitle = activeItem?.type === 'lesson' ? activeItem.data.title : course.title
+  const activeDesc =
+    activeItem?.type === 'lesson' ? activeItem.data.description : course.description
   const iframeUrl = getPandaUrl(videoId)
 
   return (
@@ -91,9 +142,12 @@ export default function CourseLesson() {
           </Link>
         </Button>
         <div className="h-6 w-px bg-white/10 mx-2 hidden md:block" />
-        <h1 className="font-medium truncate text-white">{course.title}</h1>
+        <h1 className="font-medium truncate text-white flex-1">{course.title}</h1>
+        <div className="hidden md:flex items-center gap-3 w-48">
+          <Progress value={progress} className="h-2" />
+          <span className="text-xs font-bold">{Math.round(progress)}%</span>
+        </div>
       </div>
-
       <div className="flex-1 flex flex-col lg:flex-row max-w-[1400px] mx-auto w-full p-4 md:p-8 gap-8 items-start">
         <div className="flex-1 w-full space-y-6">
           {activeItem?.type === 'quiz' ? (
@@ -107,7 +161,6 @@ export default function CourseLesson() {
                 {iframeUrl ? (
                   <iframe
                     src={iframeUrl}
-                    title="Panda Video Player"
                     className="absolute top-0 left-0 w-full h-full border-none"
                     allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
                     allowFullScreen
@@ -118,16 +171,82 @@ export default function CourseLesson() {
                   </div>
                 )}
               </div>
+              <div className="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-white/10">
+                <Button
+                  variant={isCurrentCompleted ? 'outline' : 'default'}
+                  onClick={handleCompleteNext}
+                  className={cn(
+                    'gap-2',
+                    isCurrentCompleted && 'text-emerald-400 border-emerald-500/50',
+                  )}
+                >
+                  <CheckCircle2 className="w-5 h-5" />{' '}
+                  {isCurrentCompleted ? 'Concluída' : 'Concluir e Próxima Aula'}
+                </Button>
+              </div>
               <div className="bg-slate-900 p-6 md:p-8 rounded-2xl border border-white/10">
-                <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-4">
-                  {activeTitle}
-                </h2>
+                <h2 className="text-2xl font-serif font-bold text-white mb-4">{activeTitle}</h2>
                 <p className="text-slate-400 whitespace-pre-wrap leading-relaxed">{activeDesc}</p>
+                <div className="mt-8 pt-8 border-t border-white/10">
+                  <h3 className="font-bold text-lg mb-4">Avalie esta aula</h3>
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setMyRating(s)}
+                          className="focus:outline-none"
+                        >
+                          <Star
+                            className={cn(
+                              'w-8 h-8 transition-colors',
+                              myRating >= s ? 'fill-yellow-400 text-yellow-400' : 'text-slate-600',
+                            )}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <Textarea
+                      placeholder="Deixe um comentário (opcional)..."
+                      value={myComment}
+                      onChange={(e) => setMyComment(e.target.value)}
+                      className="bg-slate-950 border-white/10 text-slate-200"
+                    />
+                    <Button onClick={submitRating} disabled={!myRating}>
+                      Enviar Avaliação
+                    </Button>
+                  </div>
+                  {ratings.length > 0 && (
+                    <div className="mt-8 space-y-4">
+                      <h4 className="font-bold text-sm text-slate-400">
+                        Comentários da Comunidade
+                      </h4>
+                      {ratings
+                        .filter((r) => r.comment)
+                        .map((r) => (
+                          <div key={r.id} className="bg-slate-950 p-4 rounded-lg">
+                            <div className="flex justify-between mb-2">
+                              <span className="font-bold text-sm">
+                                {r.expand?.user?.name || 'Aluno'}
+                              </span>
+                              <span className="flex text-yellow-400">
+                                {Array(r.rating)
+                                  .fill(0)
+                                  .map((_, i) => (
+                                    <Star key={i} className="w-3 h-3 fill-current" />
+                                  ))}
+                              </span>
+                            </div>
+                            <p className="text-slate-400 text-sm">{r.comment}</p>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           )}
         </div>
-
         <div className="w-full lg:w-80 shrink-0 bg-slate-900 rounded-2xl border border-white/10 overflow-hidden flex flex-col">
           <div className="p-5 border-b border-white/10 font-bold text-white tracking-wide">
             Conteúdo do Curso
@@ -150,56 +269,43 @@ export default function CourseLesson() {
                         <button
                           key={l.id}
                           onClick={() => setActiveItem({ type: 'lesson', data: l })}
-                          className={`text-left px-6 py-3.5 text-sm flex items-start gap-3 transition-colors ${
+                          className={cn(
+                            'text-left px-6 py-3.5 text-sm flex items-start gap-3 transition-colors border-l-2',
                             activeItem?.type === 'lesson' && activeItem.data.id === l.id
-                              ? 'bg-primary/20 text-primary border-l-2 border-primary font-medium'
-                              : 'text-slate-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
-                          }`}
+                              ? 'bg-primary/20 text-primary border-primary font-medium'
+                              : 'text-slate-400 hover:text-white hover:bg-white/5 border-transparent',
+                          )}
                         >
-                          <PlayCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                          {completions.some((c) => c.lesson === l.id) ? (
+                            <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />
+                          ) : (
+                            <PlayCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                          )}
                           <span className="line-clamp-2">{l.title}</span>
                         </button>
                       ))}
-
                     {quizzes
                       .filter((q) => q.module === mod.id)
                       .map((q) => (
                         <button
                           key={q.id}
                           onClick={() => setActiveItem({ type: 'quiz', data: q })}
-                          className={`text-left px-6 py-3.5 text-sm flex items-start gap-3 transition-colors ${
+                          className={cn(
+                            'text-left px-6 py-3.5 text-sm flex items-start gap-3 transition-colors border-l-2',
                             activeItem?.type === 'quiz' && activeItem.data.id === q.id
-                              ? 'bg-primary/20 text-primary border-l-2 border-primary font-medium'
-                              : 'text-slate-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
-                          }`}
+                              ? 'bg-primary/20 text-primary border-primary font-medium'
+                              : 'text-slate-400 hover:text-white hover:bg-white/5 border-transparent',
+                          )}
                         >
                           <CheckSquare className="w-4 h-4 mt-0.5 shrink-0" />
                           <span className="line-clamp-2">{q.title}</span>
                         </button>
-                      ))}
-
-                    {materials
-                      .filter((m) => m.module === mod.id)
-                      .map((m) => (
-                        <a
-                          key={m.id}
-                          href={pb.files.getUrl(m, m.file)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-left px-6 py-3.5 text-sm flex items-start gap-3 text-slate-400 hover:text-accent hover:bg-white/5 border-l-2 border-transparent transition-colors"
-                        >
-                          <FileText className="w-4 h-4 mt-0.5 shrink-0" />
-                          <span className="line-clamp-2">{m.title}</span>
-                        </a>
                       ))}
                   </div>
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
-          {modules.length === 0 && (
-            <div className="p-6 text-sm text-slate-500 text-center">Nenhum módulo cadastrado.</div>
-          )}
         </div>
       </div>
     </div>

@@ -59,7 +59,46 @@ export interface Magazine extends RecordModel {
 export interface News extends RecordModel {
   title: string
   content: string
-  image: string
+  image: string | string[]
+  images?: string[]
+}
+
+export interface Payment extends RecordModel {
+  user: string
+  amount: number
+  status: 'pending' | 'paid' | 'failed'
+  ipag_id: string
+  product_type: string
+  expand?: { user?: User }
+}
+
+export interface LiveSession extends RecordModel {
+  title: string
+  description: string
+  panda_video_id: string
+  status: 'scheduled' | 'live' | 'finished'
+  scheduled_at: string
+}
+
+export interface LiveMessage extends RecordModel {
+  user: string
+  session: string
+  content: string
+  is_question: boolean
+  expand?: { user?: User }
+}
+
+export interface LessonCompletion extends RecordModel {
+  user: string
+  lesson: string
+}
+
+export interface LessonRating extends RecordModel {
+  user: string
+  lesson: string
+  rating: number
+  comment: string
+  expand?: { user?: User }
 }
 
 export interface Mentorship extends RecordModel {

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Share2 } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { getNews } from '@/services/news'
 import { News } from '@/types'
 import pb from '@/lib/pocketbase/client'
-import { toast } from '@/hooks/use-toast'
 
 export default function Noticias() {
   const [news, setNews] = useState<News[]>([])
@@ -14,12 +14,10 @@ export default function Noticias() {
     getNews().then(setNews).catch(console.error)
   }, [])
 
-  const handleShare = (id: string) => {
-    navigator.clipboard.writeText(window.location.href)
-    toast({
-      title: 'Link copiado!',
-      description: 'Você pode compartilhar esta notícia com sua rede.',
-    })
+  const extractSummary = (html: string) => {
+    const tmp = document.createElement('div')
+    tmp.innerHTML = html
+    return (tmp.textContent || tmp.innerText || '').slice(0, 120) + '...'
   }
 
   return (
@@ -35,36 +33,45 @@ export default function Noticias() {
         </div>
       </section>
 
-      <section className="container px-4 pt-16 max-w-4xl mx-auto space-y-12">
-        {news.map((n) => {
-          const imgUrl = n.image
-            ? pb.files.getUrl(n, n.image)
-            : 'https://img.usecurling.com/p/800/400?q=industry&color=gray'
-          return (
-            <Card key={n.id} className="overflow-hidden border-none shadow-md bg-white">
-              <img src={imgUrl} alt={n.title} className="w-full h-64 object-cover" />
-              <CardHeader>
-                <h2 className="text-2xl font-serif font-bold text-secondary">{n.title}</h2>
-                <p className="text-sm text-slate-400">
-                  {new Date(n.created).toLocaleDateString('pt-BR')}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div
-                  className="prose max-w-none text-slate-600"
-                  dangerouslySetInnerHTML={{ __html: n.content }}
-                />
-                <div className="pt-4 flex border-t">
-                  <Button variant="outline" size="sm" onClick={() => handleShare(n.id)}>
-                    <Share2 className="w-4 h-4 mr-2" /> Compartilhar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
+      <section className="container px-4 pt-16 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {news.map((n) => {
+            const images = Array.isArray(n.images) ? n.images : n.images ? [n.images] : []
+            const imgUrl = images[0]
+              ? pb.files.getUrl(n, images[0])
+              : n.image
+                ? pb.files.getUrl(n, n.image as string)
+                : 'https://img.usecurling.com/p/800/400?q=industry&color=gray'
+            return (
+              <Card
+                key={n.id}
+                className="overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-shadow bg-white flex flex-col h-full"
+              >
+                <img src={imgUrl} alt={n.title} className="w-full h-48 object-cover shrink-0" />
+                <CardHeader className="pb-3 shrink-0">
+                  <p className="text-xs text-primary font-bold mb-2">
+                    {new Date(n.created).toLocaleDateString('pt-BR')}
+                  </p>
+                  <h2 className="text-xl font-serif font-bold text-secondary line-clamp-2">
+                    {n.title}
+                  </h2>
+                </CardHeader>
+                <CardContent className="pt-0 flex flex-col flex-1">
+                  <p className="text-slate-600 text-sm flex-1">{extractSummary(n.content)}</p>
+                  <div className="pt-6 mt-auto">
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link to={`/noticias/${n.id}`}>
+                        Ler mais <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
         {news.length === 0 && (
-          <p className="text-center text-slate-500">Nenhuma notícia publicada ainda.</p>
+          <p className="text-center text-slate-500 mt-12">Nenhuma notícia publicada ainda.</p>
         )}
       </section>
     </div>

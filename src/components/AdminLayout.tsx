@@ -35,6 +35,8 @@ export default function AdminLayout() {
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },
     { label: 'Notícias', icon: Newspaper, path: '/admin/noticias' },
     { label: 'Leads', icon: Users, path: '/admin/leads' },
+    { label: 'Pagamentos', icon: BookOpen, path: '/admin/pagamentos' },
+    { label: 'Aulas ao Vivo', icon: Presentation, path: '/admin/lives' },
   ]
 
   return (

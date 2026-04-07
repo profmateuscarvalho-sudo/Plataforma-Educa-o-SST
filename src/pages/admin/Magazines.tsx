@@ -11,12 +11,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Plus, Trash2, Edit } from 'lucide-react'
+import { Plus, Trash2, Edit, ImageIcon } from 'lucide-react'
 import { getMagazines, createMagazine, updateMagazine, deleteMagazine } from '@/services/magazines'
 import { Magazine } from '@/types'
 import { toast } from '@/hooks/use-toast'
 import { MagazineTabs } from '@/components/admin/MagazineTabs'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
+import pb from '@/lib/pocketbase/client'
+import { cn } from '@/lib/utils'
 
 export default function AdminMagazines() {
   const [magazines, setMagazines] = useState<Magazine[]>([])
@@ -97,11 +99,12 @@ export default function AdminMagazines() {
                   className="font-mono text-xs min-h-[100px]"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  Se fornecido, substituirá o link do FlipHTML5 na visualização.
+                  Se fornecido, substituirá o link do FlipHTML5 na visualização. A capa será
+                  extraída automaticamente do código caso nenhuma imagem seja enviada.
                 </p>
               </div>
               <div>
-                <Label>Capa (Opcional para edição)</Label>
+                <Label>Capa (Opcional para edição/substituição)</Label>
                 <Input name="thumbnail" type="file" accept="image/*" />
               </div>
               <Button type="submit" className="w-full">
@@ -116,16 +119,40 @@ export default function AdminMagazines() {
         <CardContent className="p-0 divide-y">
           {magazines.map((m) => (
             <div key={m.id} className="flex justify-between items-center p-4 hover:bg-slate-50">
-              <div>
-                <p className="font-bold flex items-center gap-2">
-                  {m.title}
-                  {m.embed_code && (
-                    <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                      Embed
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-slate-500">{m.fliphtml5_link || 'Sem link externo'}</p>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-20 bg-slate-100 rounded overflow-hidden flex-shrink-0 flex items-center justify-center border relative group">
+                  {m.thumbnail ? (
+                    <img
+                      src={pb.files.getURL(m, m.thumbnail)}
+                      alt={m.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className={cn(
+                      'text-[10px] text-slate-400 text-center flex flex-col items-center gap-1',
+                      m.thumbnail ? 'hidden' : '',
+                    )}
+                  >
+                    <ImageIcon className="w-4 h-4 opacity-50" />
+                    <span>Sem Capa</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="font-bold flex items-center gap-2">
+                    {m.title}
+                    {m.embed_code && (
+                      <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                        Embed
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-slate-500">{m.fliphtml5_link || 'Sem link externo'}</p>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button

@@ -1,13 +1,32 @@
 onRecordUpdate((e) => {
   try {
     const oldRecord = $app.findRecordById('magazines', e.record.id)
-    const link = e.record.get('fliphtml5_link')
-    const oldLink = oldRecord.get('fliphtml5_link')
+
+    let targetLink = e.record.get('fliphtml5_link')
+    let oldTargetLink = oldRecord.get('fliphtml5_link')
+
+    const embedCode = e.record.get('embed_code')
+    const oldEmbedCode = oldRecord.get('embed_code')
+
     const thumbnail = e.record.get('thumbnail')
     const oldThumbnail = oldRecord.get('thumbnail')
 
+    if (!targetLink && embedCode) {
+      const srcMatch = embedCode.match(/src=["']([^"']+)["']/i)
+      if (srcMatch && srcMatch[1]) {
+        targetLink = srcMatch[1]
+      }
+    }
+
+    if (!oldTargetLink && oldEmbedCode) {
+      const srcMatch = oldEmbedCode.match(/src=["']([^"']+)["']/i)
+      if (srcMatch && srcMatch[1]) {
+        oldTargetLink = srcMatch[1]
+      }
+    }
+
     // Pula se não tiver link, ou se o link não mudou e já temos uma capa
-    if (!link || (link === oldLink && thumbnail)) {
+    if (!targetLink || (targetLink === oldTargetLink && thumbnail)) {
       e.next()
       return
     }
@@ -19,7 +38,7 @@ onRecordUpdate((e) => {
     }
 
     const res = $http.send({
-      url: link,
+      url: targetLink,
       method: 'GET',
       headers: {
         'User-Agent':
@@ -46,7 +65,7 @@ onRecordUpdate((e) => {
       if (ogImageMatch && ogImageMatch[1]) {
         imageUrl = ogImageMatch[1]
       } else {
-        let base = link.split('?')[0]
+        let base = targetLink.split('?')[0]
         if (!base.endsWith('/')) base += '/'
         imageUrl = base + 'files/shot.jpg'
       }

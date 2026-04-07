@@ -1,7 +1,15 @@
 onRecordCreate((e) => {
   try {
-    const link = e.record.get('fliphtml5_link')
+    let link = e.record.get('fliphtml5_link')
+    const embedCode = e.record.get('embed_code')
     const thumbnail = e.record.get('thumbnail')
+
+    if (!link && embedCode) {
+      const srcMatch = embedCode.match(/src=["']([^"']+)["']/i)
+      if (srcMatch && srcMatch[1]) {
+        link = srcMatch[1]
+      }
+    }
 
     // Se não há link, ou se uma capa já foi enviada manualmente, não faz nada
     if (!link || thumbnail) {

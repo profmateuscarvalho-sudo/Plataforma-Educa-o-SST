@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,7 @@ import { getMagazines, createMagazine, updateMagazine, deleteMagazine } from '@/
 import { Magazine } from '@/types'
 import { toast } from '@/hooks/use-toast'
 import { MagazineTabs } from '@/components/admin/MagazineTabs'
-import { getErrorMessage } from '@/lib/pocketbase/errors'
+import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
 import { cn } from '@/lib/utils'
 
@@ -24,15 +24,40 @@ export default function AdminMagazines() {
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Magazine | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [embedCode, setEmbedCode] = useState('')
+  const [flipLink, setFlipLink] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const load = () => getMagazines().then(setMagazines)
   useEffect(() => {
     load()
   }, [])
 
+  const previewUrl = useMemo(() => {
+    let link = flipLink
+    if (!link && embedCode) {
+      const match = embedCode.match(/src=["']([^"']+)["']/i)
+      if (match) link = match[1]
+    }
+    if (link) {
+      let base = link.split('?')[0]
+      if (!base.endsWith('/')) base += '/'
+      return base + 'files/shot.jpg'
+    }
+    return null
+  }, [embedCode, flipLink])
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setIsLoading(true)
+    setFieldErrors({})
     const form = new FormData(e.currentTarget)
+
+    if (!form.get('thumbnail') || (form.get('thumbnail') as File).size === 0) {
+      form.delete('thumbnail')
+    }
+
     try {
       if (editing) {
         await updateMagazine(editing.id, form)
@@ -45,7 +70,10 @@ export default function AdminMagazines() {
       setEditing(null)
       load()
     } catch (err) {
+      setFieldErrors(extractFieldErrors(err))
       toast({ title: 'Erro ao salvar', description: getErrorMessage(err), variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -60,7 +88,15 @@ export default function AdminMagazines() {
           open={open}
           onOpenChange={(v) => {
             setOpen(v)
-            if (!v) setEditing(null)
+            if (!v) {
+              setEditing(null)
+              setEmbedCode('')
+              setFlipLink('')
+              setFieldErrors({})
+            } else if (editing) {
+              setEmbedCode(editing.embed_code || '')
+              setFlipLink(editing.fliphtml5_link || '')
+            }
           }}
         >
           <DialogTrigger asChild>
@@ -76,10 +112,16 @@ export default function AdminMagazines() {
               <div>
                 <Label>Título</Label>
                 <Input name="title" defaultValue={editing?.title} required />
+                {fieldErrors.title && (
+                  <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p>
+                )}
               </div>
               <div>
                 <Label>Resumo</Label>
                 <Textarea name="summary" defaultValue={editing?.summary} required />
+                {fieldErrors.summary && (
+                  <p className="text-xs text-red-500 mt-1">{fieldErrors.summary}</p>
+                )}
               </div>
               <div>
                 <Label>Link FlipHTML5 (Opcional)</Label>
@@ -87,28 +129,67 @@ export default function AdminMagazines() {
                   name="fliphtml5_link"
                   type="url"
                   defaultValue={editing?.fliphtml5_link}
+                  onChange={(e) => setFlipLink(e.target.value)}
                   placeholder="https://online.fliphtml5.com/..."
                 />
+                {fieldErrors.fliphtml5_link && (
+                  <p className="text-xs text-red-500 mt-1">{fieldErrors.fliphtml5_link}</p>
+                )}
               </div>
               <div>
                 <Label>Código de Incorporação (Embed HTML)</Label>
                 <Textarea
                   name="embed_code"
                   defaultValue={editing?.embed_code}
+                  onChange={(e) => setEmbedCode(e.target.value)}
                   placeholder="<iframe src='...' ></iframe>"
                   className="font-mono text-xs min-h-[100px]"
                 />
+                {fieldErrors.embed_code && (
+                  <p className="text-xs text-red-500 mt-1">{fieldErrors.embed_code}</p>
+                )}
                 <p className="text-xs text-slate-500 mt-1">
                   Se fornecido, substituirá o link do FlipHTML5 na visualização. A capa será
                   extraída automaticamente do código caso nenhuma imagem seja enviada.
                 </p>
               </div>
+
+              {previewUrl && (
+                <div className="bg-slate-50 border rounded-md p-2 flex gap-4 items-start">
+                  <div className="w-20 h-28 bg-white border shadow-sm rounded overflow-hidden flex-shrink-0">
+                    <img
+                      src={previewUrl}
+                      alt="Preview da Capa"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                      }}
+                    />
+                    <div className="hidden w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs text-center p-2">
+                      <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                      Sem capa
+                    </div>
+                  </div>
+                  <div className="flex-1 text-sm text-slate-600">
+                    <p className="font-medium text-slate-800 mb-1">Preview de Capa</p>
+                    <p className="text-xs">
+                      Esta imagem será baixada e salva como capa automaticamente, a menos que você
+                      envie uma imagem manualmente abaixo.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <Label>Capa (Opcional para edição/substituição)</Label>
                 <Input name="thumbnail" type="file" accept="image/*" />
+                {fieldErrors.thumbnail && (
+                  <p className="text-xs text-red-500 mt-1">{fieldErrors.thumbnail}</p>
+                )}
               </div>
-              <Button type="submit" className="w-full">
-                Salvar
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Salvando...' : 'Salvar'}
               </Button>
             </form>
           </DialogContent>

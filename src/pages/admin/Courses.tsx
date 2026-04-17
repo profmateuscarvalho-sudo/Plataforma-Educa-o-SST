@@ -22,11 +22,14 @@ import { Plus, Trash2, ListTree, Edit } from 'lucide-react'
 import { getCourses, createCourse, updateCourse, deleteCourse } from '@/services/courses'
 import { Course } from '@/types'
 import { toast } from '@/hooks/use-toast'
+import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState<Course[]>([])
   const [open, setOpen] = useState(false)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const load = () => getCourses().then(setCourses)
   useEffect(() => {
@@ -35,10 +38,22 @@ export default function AdminCourses() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setIsLoading(true)
+    setFieldErrors({})
     const form = new FormData(e.currentTarget)
 
     if (!form.get('thumbnail') || (form.get('thumbnail') as File).size === 0) {
       form.delete('thumbnail')
+    }
+
+    // Ensure category is captured from Shadcn Select if not in FormData
+    if (!form.get('category')) {
+      const categorySelect = e.currentTarget.querySelector(
+        'button[role="combobox"][name="category"]',
+      ) as HTMLButtonElement
+      if (categorySelect && categorySelect.textContent) {
+        form.set('category', categorySelect.textContent)
+      }
     }
 
     try {
@@ -52,7 +67,14 @@ export default function AdminCourses() {
       setOpen(false)
       load()
     } catch (err) {
-      toast({ title: 'Erro ao processar', variant: 'destructive' })
+      setFieldErrors(extractFieldErrors(err))
+      toast({
+        title: 'Erro ao processar',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -74,6 +96,7 @@ export default function AdminCourses() {
           className="bg-primary"
           onClick={() => {
             setEditingCourse(null)
+            setFieldErrors({})
             setOpen(true)
           }}
         >
@@ -81,7 +104,16 @@ export default function AdminCourses() {
         </Button>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v)
+          if (!v) {
+            setEditingCourse(null)
+            setFieldErrors({})
+          }
+        }}
+      >
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{editingCourse ? 'Editar Curso' : 'Cadastrar Curso'}</DialogTitle>
@@ -90,10 +122,16 @@ export default function AdminCourses() {
             <div>
               <Label>Título</Label>
               <Input name="title" defaultValue={editingCourse?.title} required />
+              {fieldErrors.title && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p>
+              )}
             </div>
             <div>
               <Label>Descrição</Label>
               <Input name="description" defaultValue={editingCourse?.description} required />
+              {fieldErrors.description && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.description}</p>
+              )}
             </div>
             <div>
               <Label>Categoria</Label>
@@ -101,7 +139,7 @@ export default function AdminCourses() {
                 name="category"
                 defaultValue={editingCourse?.category || 'Segurança do Trabalho'}
               >
-                <SelectTrigger>
+                <SelectTrigger name="category">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -110,32 +148,38 @@ export default function AdminCourses() {
                   <SelectItem value="Gestão de SST">Gestão de SST</SelectItem>
                 </SelectContent>
               </Select>
+              {fieldErrors.category && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.category}</p>
+              )}
             </div>
             <div>
               <Label>ID do Panda Video (Vídeo de Apresentação/Principal)</Label>
-              <Input name="panda_video_id" defaultValue={editingCourse?.panda_video_id} required />
+              <Input name="panda_video_id" defaultValue={editingCourse?.panda_video_id} />
+              {fieldErrors.panda_video_id && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.panda_video_id}</p>
+              )}
             </div>
             <div>
               <Label>Preço (R$)</Label>
-              <Input
-                name="price"
-                type="number"
-                step="0.01"
-                defaultValue={editingCourse?.price}
-                required
-              />
+              <Input name="price" type="number" step="0.01" defaultValue={editingCourse?.price} />
+              {fieldErrors.price && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.price}</p>
+              )}
             </div>
             <div>
               <Label>Capa (Thumbnail)</Label>
               <Input name="thumbnail" type="file" accept="image/*" />
+              {fieldErrors.thumbnail && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.thumbnail}</p>
+              )}
               {editingCourse?.thumbnail && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Deixe vazio para manter a capa atual.
                 </p>
               )}
             </div>
-            <Button type="submit" className="w-full">
-              Salvar Curso
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Salvando...' : 'Salvar Curso'}
             </Button>
           </form>
         </DialogContent>

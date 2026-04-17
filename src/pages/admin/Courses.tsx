@@ -30,11 +30,20 @@ export default function AdminCourses() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [category, setCategory] = useState<string>('Segurança do Trabalho')
 
   const load = () => getCourses().then(setCourses)
   useEffect(() => {
     load()
   }, [])
+
+  useEffect(() => {
+    if (editingCourse) {
+      setCategory(editingCourse.category || 'Segurança do Trabalho')
+    } else {
+      setCategory('Segurança do Trabalho')
+    }
+  }, [editingCourse])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -46,14 +55,16 @@ export default function AdminCourses() {
       form.delete('thumbnail')
     }
 
-    // Ensure category is captured from Shadcn Select if not in FormData
-    if (!form.get('category')) {
-      const categorySelect = e.currentTarget.querySelector(
-        'button[role="combobox"][name="category"]',
-      ) as HTMLButtonElement
-      if (categorySelect && categorySelect.textContent) {
-        form.set('category', categorySelect.textContent)
+    form.set('category', category)
+
+    const price = form.get('price') as string
+    if (price) {
+      const parsedPrice = parseFloat(price)
+      if (!isNaN(parsedPrice)) {
+        form.set('price', parsedPrice.toString())
       }
+    } else {
+      form.delete('price')
     }
 
     try {
@@ -135,11 +146,8 @@ export default function AdminCourses() {
             </div>
             <div>
               <Label>Categoria</Label>
-              <Select
-                name="category"
-                defaultValue={editingCourse?.category || 'Segurança do Trabalho'}
-              >
-                <SelectTrigger name="category">
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

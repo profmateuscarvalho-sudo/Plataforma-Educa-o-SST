@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-26T17:40:03.799Z",
+  "generatedAt": "2026-04-26T17:55:07.424Z",
   "collections": [
     {
       "name": "users",
@@ -1736,7 +1736,7 @@
         {
           "name": "banner",
           "type": "file",
-          "required": true,
+          "required": false,
           "system": false
         },
         {

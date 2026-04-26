@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,11 +18,18 @@ import type { Simulado } from '@/types'
 export default function AdminSimuladoWizard() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [simulado, setSimulado] = useState<Simulado | null>(null)
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('details')
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'details')
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (searchParams.get('tab')) {
+      setActiveTab(searchParams.get('tab') as string)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (id) {
@@ -55,10 +62,11 @@ export default function AdminSimuladoWizard() {
         const updated = await updateSimulado(id, formData)
         setSimulado(updated)
         toast.success('Simulado atualizado com sucesso')
+        setActiveTab('questions')
       } else {
         const created = await createSimulado(formData)
         toast.success('Simulado criado com sucesso')
-        navigate(`/admin/simulados/${created.id}/editar`)
+        navigate(`/admin/simulados/${created.id}/editar?tab=questions`, { replace: true })
       }
     } catch (error) {
       const fieldErrors = extractFieldErrors(error)
@@ -123,13 +131,12 @@ export default function AdminSimuladoWizard() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="banner">Imagem do Simulado</Label>
+                  <Label htmlFor="banner">Imagem do Simulado (Opcional)</Label>
                   <Input
                     id="banner"
                     name="banner"
                     type="file"
-                    accept="image/jpeg, image/png, image/webp"
-                    required={!id}
+                    accept="image/jpeg, image/png, image/webp, image/gif"
                   />
                   {errors.banner && <p className="text-sm text-red-500 mt-1">{errors.banner}</p>}
                   {errors.active && <p className="text-sm text-red-500 mt-1">{errors.active}</p>}

@@ -69,7 +69,7 @@ export default function SimuladoSession() {
     const percentage = Math.round((score / questions.length) * 100)
 
     const publicUrl = `https://educacaosst.goskip.app/simulados/${simulado.id}`
-    const shareText = `Fiz o simulado de SST no Educação SST e acertei ${score} de ${questions.length} questões! Faça você também: ${publicUrl}`
+    const shareText = `Eu acabei de completar o simulado ${simulado.title} na Educação SST e minha pontuação foi ${score} de ${questions.length}! Confira em: ${publicUrl}`
     const waLink = `https://wa.me/?text=${encodeURIComponent(shareText)}`
     const liLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`
 

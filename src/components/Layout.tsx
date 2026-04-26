@@ -28,6 +28,7 @@ export default function Layout() {
     { name: 'Início', href: '/' },
     { name: 'Cursos', href: '/cursos' },
     { name: 'Mentorias', href: '/mentorias' },
+    { name: 'Simulados', href: '/simulados' },
     { name: 'Revistas', href: '/revistas' },
     { name: 'Notícias', href: '/noticias' },
   ]

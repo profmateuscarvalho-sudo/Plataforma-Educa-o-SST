@@ -20,6 +20,8 @@ import NotFound from './pages/NotFound'
 
 import ArticleSubmission from './pages/public/ArticleSubmission'
 import ProfessionalConnection from './pages/public/ProfessionalConnection'
+import PublicSimulados from './pages/public/Simulados'
+import SimuladoSession from './pages/public/SimuladoSession'
 
 import StudentDashboard from './pages/student/Dashboard'
 import CourseLesson from './pages/student/Lesson'
@@ -41,6 +43,8 @@ import AdminEvents from './pages/admin/Events'
 import AdminStudents from './pages/admin/Students'
 import AdminDocumentaries from './pages/admin/Documentaries/List'
 import AdminDocumentaryWizard from './pages/admin/Documentaries/Wizard'
+import AdminSimulados from './pages/admin/Simulados/List'
+import AdminSimuladoWizard from './pages/admin/Simulados/Wizard'
 import InvestorSummary from './pages/public/InvestorSummary'
 
 const App = () => (
@@ -66,6 +70,8 @@ const App = () => (
             <Route path="/conexao-profissional/:token" element={<ProfessionalConnection />} />
 
             <Route path="/resumo-investidor/:id" element={<InvestorSummary />} />
+            <Route path="/simulados" element={<PublicSimulados />} />
+            <Route path="/simulados/:id" element={<SimuladoSession />} />
 
             <Route path="/aluno" element={<StudentDashboard />} />
             <Route path="/aluno/curso/:id/aula" element={<CourseLesson />} />
@@ -82,6 +88,9 @@ const App = () => (
             <Route path="/admin/documentarios" element={<AdminDocumentaries />} />
             <Route path="/admin/documentarios/novo" element={<AdminDocumentaryWizard />} />
             <Route path="/admin/documentarios/:id/editar" element={<AdminDocumentaryWizard />} />
+            <Route path="/admin/simulados" element={<AdminSimulados />} />
+            <Route path="/admin/simulados/novo" element={<AdminSimuladoWizard />} />
+            <Route path="/admin/simulados/:id/editar" element={<AdminSimuladoWizard />} />
             <Route path="/admin/revistas" element={<AdminMagazines />} />
             <Route path="/admin/revistas/artigos" element={<AdminMagazineArticles />} />
             <Route path="/admin/revistas/conexoes" element={<AdminMagazineConnections />} />

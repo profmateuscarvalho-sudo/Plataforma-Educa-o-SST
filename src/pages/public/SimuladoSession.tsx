@@ -1,0 +1,189 @@
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, CheckCircle2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { getSimulado, getSimuladoQuestions } from '@/services/simulados'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import type { Simulado, SimuladoQuestion } from '@/types'
+
+export default function SimuladoSession() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [simulado, setSimulado] = useState<Simulado | null>(null)
+  const [questions, setQuestions] = useState<SimuladoQuestion[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [showResults, setShowResults] = useState(false)
+
+  useEffect(() => {
+    if (!id) return
+    Promise.all([getSimulado(id), getSimuladoQuestions(id)])
+      .then(([s, qs]) => {
+        setSimulado(s)
+        setQuestions(qs)
+      })
+      .catch(() => {
+        toast.error('Erro ao carregar o simulado')
+        navigate('/simulados')
+      })
+      .finally(() => setLoading(false))
+  }, [id, navigate])
+
+  const handleSelectOption = (questionId: string, option: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: option }))
+  }
+
+  const handleNext = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((prev) => prev + 1)
+      window.scrollTo(0, 0)
+    } else {
+      setShowResults(true)
+    }
+  }
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1)
+      window.scrollTo(0, 0)
+    }
+  }
+
+  if (loading)
+    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>
+  if (!simulado || questions.length === 0)
+    return <div className="p-8 text-center">Nenhuma questão disponível neste simulado.</div>
+
+  const progress = ((currentIndex + 1) / questions.length) * 100
+
+  if (showResults) {
+    let score = 0
+    questions.forEach((q) => {
+      if (answers[q.id] === q.correct_option) score++
+    })
+    const percentage = Math.round((score / questions.length) * 100)
+
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl shadow-xl">
+          <CardContent className="p-8 md:p-12 text-center space-y-6">
+            <div className="w-24 h-24 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-6">
+              <CheckCircle2 className="w-12 h-12 text-primary" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-800">Resultado do Simulado</h2>
+            <p className="text-lg text-slate-600">{simulado.title}</p>
+
+            <div className="py-8">
+              <div className="text-6xl font-black text-primary mb-2">{percentage}%</div>
+              <p className="text-slate-500 text-lg">
+                Você acertou {score} de {questions.length} questões.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+              <Button variant="outline" size="lg" onClick={() => navigate('/simulados')}>
+                Voltar aos Simulados
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => {
+                  setAnswers({})
+                  setCurrentIndex(0)
+                  setShowResults(false)
+                }}
+              >
+                Refazer Simulado
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const currentQ = questions[currentIndex]
+  const hasAnsweredCurrent = !!answers[currentQ.id]
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <header className="bg-white border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/simulados')}
+            className="text-slate-500"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> Sair
+          </Button>
+          <div className="font-semibold text-slate-800 hidden md:block">{simulado.title}</div>
+          <div className="text-sm font-medium text-slate-500">
+            Questão {currentIndex + 1} de {questions.length}
+          </div>
+        </div>
+        <Progress value={progress} className="h-1 rounded-none" />
+      </header>
+
+      <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-3xl">
+        <div className="mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-800 leading-tight">
+            {currentIndex + 1}. {currentQ.question}
+          </h2>
+        </div>
+
+        <div className="space-y-3 mb-12">
+          {currentQ.options.map((opt, idx) => {
+            const isSelected = answers[currentQ.id] === opt
+            return (
+              <button
+                key={idx}
+                onClick={() => handleSelectOption(currentQ.id, opt)}
+                className={cn(
+                  'w-full text-left p-4 md:p-5 rounded-xl border-2 transition-all duration-200 text-lg',
+                  isSelected
+                    ? 'border-primary bg-primary/5 shadow-sm'
+                    : 'border-slate-200 bg-white hover:border-primary/50 hover:bg-slate-50',
+                )}
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className={cn(
+                      'w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm flex-shrink-0 transition-colors',
+                      isSelected
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-slate-300 text-slate-500',
+                    )}
+                  >
+                    {String.fromCharCode(65 + idx)}
+                  </div>
+                  <span
+                    className={cn(
+                      'flex-1',
+                      isSelected ? 'text-primary font-medium' : 'text-slate-700',
+                    )}
+                  >
+                    {opt}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-sm sticky bottom-4">
+          <Button variant="ghost" onClick={handlePrev} disabled={currentIndex === 0}>
+            Anterior
+          </Button>
+          <Button size="lg" onClick={handleNext} disabled={!hasAnsweredCurrent} className="px-8">
+            {currentIndex === questions.length - 1 ? 'Finalizar' : 'Próxima'}
+          </Button>
+        </div>
+      </main>
+    </div>
+  )
+}

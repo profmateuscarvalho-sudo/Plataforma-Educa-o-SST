@@ -232,3 +232,17 @@ export interface DocProjectTask extends RecordModel {
   responsible: string
   status: 'A Fazer' | 'Em Andamento' | 'Concluído'
 }
+
+export interface Simulado extends RecordModel {
+  title: string
+  description: string
+  banner: string
+  active: boolean
+}
+
+export interface SimuladoQuestion extends RecordModel {
+  simulado: string
+  question: string
+  options: string[]
+  correct_option: string
+}

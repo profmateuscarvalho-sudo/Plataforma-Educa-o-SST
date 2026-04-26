@@ -32,13 +32,14 @@ export default function AdminSimuladoWizard() {
   }, [searchParams])
 
   useEffect(() => {
-    if (id) {
+    if (id && !simulado) {
+      setLoading(true)
       getSimulado(id)
         .then(setSimulado)
         .catch(() => toast.error('Simulado não encontrado'))
         .finally(() => setLoading(false))
     }
-  }, [id])
+  }, [id, simulado])
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -65,6 +66,7 @@ export default function AdminSimuladoWizard() {
         setActiveTab('questions')
       } else {
         const created = await createSimulado(formData)
+        setSimulado(created)
         toast.success('Simulado criado com sucesso')
         navigate(`/admin/simulados/${created.id}/editar?tab=questions`, { replace: true })
       }
@@ -74,7 +76,7 @@ export default function AdminSimuladoWizard() {
         setErrors(fieldErrors)
         toast.error('Por favor, corrija os erros no formulário.')
       } else {
-        toast.error(getErrorMessage(error))
+        toast.error(getErrorMessage(error) || 'Erro ao salvar o simulado. Tente novamente.')
       }
     } finally {
       setSaving(false)

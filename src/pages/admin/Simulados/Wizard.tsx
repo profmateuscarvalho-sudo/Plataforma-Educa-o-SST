@@ -40,6 +40,12 @@ export default function AdminSimuladoWizard() {
     try {
       const formData = new FormData(e.currentTarget)
 
+      // Garante que o switch seja lido e enviado como booleano estrito
+      const isActive =
+        e.currentTarget.querySelector('button[role="switch"]')?.getAttribute('data-state') ===
+        'checked'
+      formData.set('active', isActive ? 'true' : 'false')
+
       const bannerFile = formData.get('banner') as File
       if (bannerFile && bannerFile.size === 0) {
         formData.delete('banner')
@@ -126,6 +132,7 @@ export default function AdminSimuladoWizard() {
                     required={!id}
                   />
                   {errors.banner && <p className="text-sm text-red-500 mt-1">{errors.banner}</p>}
+                  {errors.active && <p className="text-sm text-red-500 mt-1">{errors.active}</p>}
                   {simulado?.banner && (
                     <div className="mt-2 relative w-64 rounded overflow-hidden border">
                       <img
@@ -141,7 +148,6 @@ export default function AdminSimuladoWizard() {
                     id="active"
                     name="active"
                     defaultChecked={simulado ? simulado.active : true}
-                    value="true"
                   />
                   <Label htmlFor="active">Simulado Ativo (Visível para os usuários)</Label>
                 </div>

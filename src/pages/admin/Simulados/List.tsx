@@ -74,7 +74,7 @@ export default function AdminSimulados() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Capa</TableHead>
+                  <TableHead>Imagem</TableHead>
                   <TableHead>Título</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -84,10 +84,10 @@ export default function AdminSimulados() {
                 {simulados.map((simulado) => (
                   <TableRow key={simulado.id}>
                     <TableCell>
-                      <div className="w-16 h-9 rounded overflow-hidden bg-slate-100">
+                      <div className="w-12 h-12 rounded overflow-hidden bg-slate-100">
                         {simulado.banner && (
                           <img
-                            src={pb.files.getURL(simulado, simulado.banner, { thumb: '100x50' })}
+                            src={pb.files.getURL(simulado, simulado.banner, { thumb: '100x100' })}
                             alt={simulado.title}
                             className="w-full h-full object-cover"
                           />

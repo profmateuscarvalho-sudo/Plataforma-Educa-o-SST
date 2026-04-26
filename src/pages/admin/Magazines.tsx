@@ -251,9 +251,18 @@ export default function AdminMagazines() {
                   size="icon"
                   className="text-red-600"
                   onClick={async () => {
+                    if (!m || !m.id) return
                     if (confirm('Tem certeza que deseja excluir esta revista?')) {
-                      await deleteMagazine(m.id)
-                      load()
+                      try {
+                        await deleteMagazine(m.id)
+                        load()
+                      } catch (err) {
+                        toast({
+                          title: 'Erro',
+                          description: getErrorMessage(err),
+                          variant: 'destructive',
+                        })
+                      }
                     }
                   }}
                 >

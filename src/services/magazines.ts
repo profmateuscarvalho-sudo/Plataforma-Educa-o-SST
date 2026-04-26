@@ -14,5 +14,8 @@ export const updateMagazine = async (id: string, data: FormData | Partial<Magazi
 }
 
 export const deleteMagazine = async (id: string) => {
+  if (!id) {
+    throw new Error('ID is required to delete a magazine')
+  }
   return await pb.collection('magazines').delete(id)
 }

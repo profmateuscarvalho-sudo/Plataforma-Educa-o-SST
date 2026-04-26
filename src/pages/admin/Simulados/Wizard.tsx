@@ -25,6 +25,12 @@ export default function AdminSimuladoWizard() {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'details')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // Controlled form states
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [active, setActive] = useState(true)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+
   useEffect(() => {
     if (searchParams.get('tab')) {
       setActiveTab(searchParams.get('tab') as string)
@@ -35,7 +41,12 @@ export default function AdminSimuladoWizard() {
     if (id && !simulado) {
       setLoading(true)
       getSimulado(id)
-        .then(setSimulado)
+        .then((data) => {
+          setSimulado(data)
+          setTitle(data.title || '')
+          setDescription(data.description || '')
+          setActive(data.active)
+        })
         .catch(() => toast.error('Simulado não encontrado'))
         .finally(() => setLoading(false))
     }
@@ -43,20 +54,28 @@ export default function AdminSimuladoWizard() {
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    // Client-side validation
+    const newErrors: Record<string, string> = {}
+    if (!title.trim()) newErrors.title = 'Título é obrigatório'
+    if (!description.trim()) newErrors.description = 'Descrição é obrigatória'
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      toast.error('Por favor, corrija os erros no formulário.')
+      return
+    }
+
     setSaving(true)
     setErrors({})
     try {
-      const formData = new FormData(e.currentTarget)
+      const formData = new FormData()
+      formData.append('title', title.trim())
+      formData.append('description', description.trim())
+      formData.append('active', active ? 'true' : 'false')
 
-      // Garante que o switch seja lido e enviado como booleano estrito
-      const isActive =
-        e.currentTarget.querySelector('button[role="switch"]')?.getAttribute('data-state') ===
-        'checked'
-      formData.set('active', isActive ? 'true' : 'false')
-
-      const bannerFile = formData.get('banner') as File
-      if (bannerFile && bannerFile.size === 0) {
-        formData.delete('banner')
+      if (bannerFile) {
+        formData.append('banner', bannerFile)
       }
 
       if (id) {
@@ -116,7 +135,13 @@ export default function AdminSimuladoWizard() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="title">Título</Label>
-                  <Input id="title" name="title" defaultValue={simulado?.title} required />
+                  <Input
+                    id="title"
+                    name="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                  />
                   {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
                 </div>
                 <div className="space-y-2">
@@ -124,7 +149,8 @@ export default function AdminSimuladoWizard() {
                   <Textarea
                     id="description"
                     name="description"
-                    defaultValue={simulado?.description}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     required
                     rows={3}
                   />
@@ -139,10 +165,17 @@ export default function AdminSimuladoWizard() {
                     name="banner"
                     type="file"
                     accept="image/jpeg, image/png, image/webp, image/gif"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setBannerFile(e.target.files[0])
+                      } else {
+                        setBannerFile(null)
+                      }
+                    }}
                   />
                   {errors.banner && <p className="text-sm text-red-500 mt-1">{errors.banner}</p>}
                   {errors.active && <p className="text-sm text-red-500 mt-1">{errors.active}</p>}
-                  {simulado?.banner && (
+                  {simulado?.banner && !bannerFile && (
                     <div className="mt-2 relative w-64 rounded overflow-hidden border">
                       <img
                         src={pb.files.getURL(simulado, simulado.banner)}
@@ -153,11 +186,7 @@ export default function AdminSimuladoWizard() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Switch
-                    id="active"
-                    name="active"
-                    defaultChecked={simulado ? simulado.active : true}
-                  />
+                  <Switch id="active" name="active" checked={active} onCheckedChange={setActive} />
                   <Label htmlFor="active">Simulado Ativo (Visível para os usuários)</Label>
                 </div>
                 <div className="pt-4 border-t flex justify-end">

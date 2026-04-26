@@ -37,7 +37,7 @@ function MagazineCard({ mag }: { mag: Magazine }) {
     return () => clearInterval(interval)
   }, [mag.thumbnail, mag.fliphtml5_link, mag.updated])
 
-  const imgUrl = mag.thumbnail ? pb.files.getUrl(mag, mag.thumbnail) : null
+  const imgUrl = mag.thumbnail ? pb.files.getURL(mag, mag.thumbnail) : null
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

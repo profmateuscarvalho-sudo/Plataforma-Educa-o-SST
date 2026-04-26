@@ -54,8 +54,32 @@ export default function AdminMagazines() {
     setFieldErrors({})
     const form = new FormData(e.currentTarget)
 
-    if (!form.get('thumbnail') || (form.get('thumbnail') as File).size === 0) {
+    const thumbnailFile = form.get('thumbnail') as File | null
+    if (!thumbnailFile || thumbnailFile.size === 0) {
       form.delete('thumbnail')
+
+      const flipLinkVal = (form.get('fliphtml5_link') as string) || ''
+      const embedCodeVal = (form.get('embed_code') as string) || ''
+
+      const linkChanged =
+        editing &&
+        ((editing.fliphtml5_link || '') !== flipLinkVal ||
+          (editing.embed_code || '') !== embedCodeVal)
+
+      const shouldAutoFetch = !editing || !editing.thumbnail || linkChanged
+
+      if (shouldAutoFetch && previewUrl) {
+        try {
+          const res = await fetch(previewUrl)
+          if (res.ok) {
+            const blob = await res.blob()
+            const file = new File([blob], 'cover.jpg', { type: blob.type || 'image/jpeg' })
+            form.append('thumbnail', file)
+          }
+        } catch (err) {
+          console.error('Failed to fetch preview image:', err)
+        }
+      }
     }
 
     try {

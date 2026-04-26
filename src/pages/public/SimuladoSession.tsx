@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, MessageCircle, Share2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, MessageCircle, Share2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { getSimulado, getSimuladoQuestions } from '@/services/simulados'
+import { getSimulado, getSimuladoQuestions, submitSimuladoCompletion } from '@/services/simulados'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 import type { Simulado, SimuladoQuestion } from '@/types'
 
 export default function SimuladoSession() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [simulado, setSimulado] = useState<Simulado | null>(null)
   const [questions, setQuestions] = useState<SimuladoQuestion[]>([])
   const [loading, setLoading] = useState(true)
@@ -35,7 +37,9 @@ export default function SimuladoSession() {
   }, [id, navigate])
 
   const handleSelectOption = (questionId: string, option: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: option }))
+    if (!answers[questionId]) {
+      setAnswers((prev) => ({ ...prev, [questionId]: option }))
+    }
   }
 
   const handleNext = () => {
@@ -44,6 +48,9 @@ export default function SimuladoSession() {
       window.scrollTo(0, 0)
     } else {
       setShowResults(true)
+      if (user && simulado) {
+        submitSimuladoCompletion(simulado.id, user.id)
+      }
     }
   }
 
@@ -165,38 +172,68 @@ export default function SimuladoSession() {
 
         <div className="space-y-3 mb-12">
           {currentQ.options.map((opt, idx) => {
+            const hasAnswered = !!answers[currentQ.id]
             const isSelected = answers[currentQ.id] === opt
+            const isCorrect = opt === currentQ.correct_option
+            const showAsCorrect = hasAnswered && isCorrect
+            const showAsIncorrect = hasAnswered && isSelected && !isCorrect
+
+            let btnClass =
+              'w-full text-left p-4 md:p-5 rounded-xl border-2 transition-all duration-200 text-lg flex items-center justify-between '
+            if (!hasAnswered) {
+              btnClass +=
+                'border-slate-200 bg-white hover:border-primary/50 hover:bg-slate-50 cursor-pointer'
+            } else {
+              btnClass += 'cursor-default '
+              if (showAsCorrect) {
+                btnClass += 'border-green-500 bg-green-50 text-green-700 shadow-sm'
+              } else if (showAsIncorrect) {
+                btnClass += 'border-red-500 bg-red-50 text-red-700 shadow-sm'
+              } else {
+                btnClass += 'border-slate-200 bg-white opacity-50'
+              }
+            }
+
+            let letterClass =
+              'w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm flex-shrink-0 transition-colors '
+            if (!hasAnswered) {
+              letterClass += 'border-slate-300 text-slate-500 bg-white'
+            } else {
+              if (showAsCorrect) {
+                letterClass += 'border-green-500 bg-green-500 text-white'
+              } else if (showAsIncorrect) {
+                letterClass += 'border-red-500 bg-red-500 text-white'
+              } else {
+                letterClass += 'border-slate-300 text-slate-400 bg-slate-100'
+              }
+            }
+
             return (
               <button
                 key={idx}
-                onClick={() => handleSelectOption(currentQ.id, opt)}
-                className={cn(
-                  'w-full text-left p-4 md:p-5 rounded-xl border-2 transition-all duration-200 text-lg',
-                  isSelected
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-slate-200 bg-white hover:border-primary/50 hover:bg-slate-50',
-                )}
+                onClick={() => !hasAnswered && handleSelectOption(currentQ.id, opt)}
+                disabled={hasAnswered}
+                className={btnClass}
               >
                 <div className="flex items-center gap-4">
-                  <div
-                    className={cn(
-                      'w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm flex-shrink-0 transition-colors',
-                      isSelected
-                        ? 'border-primary bg-primary text-white'
-                        : 'border-slate-300 text-slate-500',
-                    )}
-                  >
-                    {String.fromCharCode(65 + idx)}
-                  </div>
+                  <div className={letterClass}>{String.fromCharCode(65 + idx)}</div>
                   <span
                     className={cn(
                       'flex-1',
-                      isSelected ? 'text-primary font-medium' : 'text-slate-700',
+                      hasAnswered
+                        ? showAsCorrect
+                          ? 'text-green-800 font-medium'
+                          : showAsIncorrect
+                            ? 'text-red-800 font-medium'
+                            : 'text-slate-500'
+                        : 'text-slate-700',
                     )}
                   >
                     {opt}
                   </span>
                 </div>
+                {showAsCorrect && <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />}
+                {showAsIncorrect && <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />}
               </button>
             )
           })}

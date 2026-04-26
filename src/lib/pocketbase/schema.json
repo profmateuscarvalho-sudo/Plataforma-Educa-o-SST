@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-26T18:15:31.463Z",
+  "generatedAt": "2026-04-26T18:36:17.658Z",
   "collections": [
     {
       "name": "users",
@@ -1797,6 +1797,48 @@
           "type": "text",
           "required": true,
           "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "simulado_submissions",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin' || user = @request.auth.id",
+        "view": "@request.auth.role = 'admin' || user = @request.auth.id",
+        "create": "@request.auth.id != ''",
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "simulado",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "simulados"
         },
         {
           "name": "created",

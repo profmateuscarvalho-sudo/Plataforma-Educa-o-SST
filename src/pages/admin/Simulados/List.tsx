@@ -12,18 +12,22 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { getSimulados, deleteSimulado } from '@/services/simulados'
+import { getSimulados, deleteSimulado, getSimuladoSubmissionsCount } from '@/services/simulados'
 import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
 import type { Simulado } from '@/types'
 
 export default function AdminSimulados() {
   const [simulados, setSimulados] = useState<Simulado[]>([])
+  const [submissionsCounts, setSubmissionsCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
 
   const loadData = async () => {
     try {
       const data = await getSimulados()
+      const counts = await Promise.all(data.map((s) => getSimuladoSubmissionsCount(s.id)))
+      const countsMap = data.reduce((acc, s, i) => ({ ...acc, [s.id]: counts[i] }), {})
+      setSubmissionsCounts(countsMap)
       setSimulados(data)
     } catch (error) {
       toast.error('Erro ao carregar simulados')
@@ -77,6 +81,7 @@ export default function AdminSimulados() {
                   <TableHead>Imagem</TableHead>
                   <TableHead>Título</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Conclusões</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -98,6 +103,11 @@ export default function AdminSimulados() {
                     <TableCell>
                       <Badge variant={simulado.active ? 'default' : 'secondary'}>
                         {simulado.active ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-mono">
+                        {submissionsCounts[simulado.id] ?? 0}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

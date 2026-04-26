@@ -246,3 +246,8 @@ export interface SimuladoQuestion extends RecordModel {
   options: string[]
   correct_option: string
 }
+
+export interface SimuladoSubmission extends RecordModel {
+  user: string
+  simulado: string
+}

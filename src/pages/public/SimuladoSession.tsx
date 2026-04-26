@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, MessageCircle, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -68,6 +68,11 @@ export default function SimuladoSession() {
     })
     const percentage = Math.round((score / questions.length) * 100)
 
+    const publicUrl = `https://educacaosst.goskip.app/simulados/${simulado.id}`
+    const shareText = `Eu acertei ${percentage}% no simulado "${simulado.title}" da Educação SST! Teste seus conhecimentos também: ${publicUrl}`
+    const waLink = `https://wa.me/?text=${encodeURIComponent(shareText)}`
+    const liLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`
+
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl shadow-xl">
@@ -99,6 +104,28 @@ export default function SimuladoSession() {
               >
                 Refazer Simulado
               </Button>
+            </div>
+
+            <div className="pt-6 border-t mt-8">
+              <p className="text-sm font-medium text-slate-500 mb-4">Compartilhe seu resultado</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  variant="outline"
+                  className="bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 border-[#25D366]/20"
+                  onClick={() => window.open(waLink, '_blank')}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </Button>
+                <Button
+                  variant="outline"
+                  className="bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2]/20 border-[#0A66C2]/20"
+                  onClick={() => window.open(liLink, '_blank')}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  LinkedIn
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

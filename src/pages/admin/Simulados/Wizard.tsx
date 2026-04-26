@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getSimulado, createSimulado, updateSimulado } from '@/services/simulados'
 import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
+import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 import QuestionsList from './QuestionsList'
 import type { Simulado } from '@/types'
 
@@ -21,6 +22,7 @@ export default function AdminSimuladoWizard() {
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('details')
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (id) {
@@ -34,6 +36,7 @@ export default function AdminSimuladoWizard() {
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setSaving(true)
+    setErrors({})
     try {
       const formData = new FormData(e.currentTarget)
 
@@ -52,7 +55,13 @@ export default function AdminSimuladoWizard() {
         navigate(`/admin/simulados/${created.id}/editar`)
       }
     } catch (error) {
-      toast.error('Erro ao salvar simulado')
+      const fieldErrors = extractFieldErrors(error)
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors)
+        toast.error('Por favor, corrija os erros no formulário.')
+      } else {
+        toast.error(getErrorMessage(error))
+      }
     } finally {
       setSaving(false)
     }
@@ -92,6 +101,7 @@ export default function AdminSimuladoWizard() {
                 <div className="space-y-2">
                   <Label htmlFor="title">Título</Label>
                   <Input id="title" name="title" defaultValue={simulado?.title} required />
+                  {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Descrição</Label>
@@ -102,16 +112,26 @@ export default function AdminSimuladoWizard() {
                     required
                     rows={3}
                   />
+                  {errors.description && (
+                    <p className="text-sm text-red-500 mt-1">{errors.description}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="banner">Imagem de Capa (Banner 16:9)</Label>
-                  <Input id="banner" name="banner" type="file" accept="image/*" required={!id} />
+                  <Label htmlFor="banner">Imagem do Simulado</Label>
+                  <Input
+                    id="banner"
+                    name="banner"
+                    type="file"
+                    accept="image/jpeg, image/png, image/webp"
+                    required={!id}
+                  />
+                  {errors.banner && <p className="text-sm text-red-500 mt-1">{errors.banner}</p>}
                   {simulado?.banner && (
-                    <div className="mt-2 relative w-64 aspect-video rounded overflow-hidden border">
+                    <div className="mt-2 relative w-64 rounded overflow-hidden border">
                       <img
                         src={pb.files.getURL(simulado, simulado.banner)}
-                        alt="Banner atual"
-                        className="w-full h-full object-cover"
+                        alt="Imagem atual"
+                        className="w-full h-auto object-contain"
                       />
                     </div>
                   )}

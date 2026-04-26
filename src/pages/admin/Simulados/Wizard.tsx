@@ -1,19 +1,38 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Save } from 'lucide-react'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
 import { getSimulado, createSimulado, updateSimulado } from '@/services/simulados'
 import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
 import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 import QuestionsList from './QuestionsList'
 import type { Simulado } from '@/types'
+
+const schema = z.object({
+  title: z.string().min(1, 'Título é obrigatório'),
+  description: z.string().min(1, 'Descrição é obrigatória'),
+  active: z.boolean().default(true),
+  banner: z.any().optional(),
+})
+
+type FormValues = z.infer<typeof schema>
 
 export default function AdminSimuladoWizard() {
   const { id } = useParams()
@@ -23,18 +42,14 @@ export default function AdminSimuladoWizard() {
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'details')
-  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Controlled form states
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [active, setActive] = useState(true)
-  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { title: '', description: '', active: true },
+  })
 
   useEffect(() => {
-    if (searchParams.get('tab')) {
-      setActiveTab(searchParams.get('tab') as string)
-    }
+    if (searchParams.get('tab')) setActiveTab(searchParams.get('tab') as string)
   }, [searchParams])
 
   useEffect(() => {
@@ -43,39 +58,29 @@ export default function AdminSimuladoWizard() {
       getSimulado(id)
         .then((data) => {
           setSimulado(data)
-          setTitle(data.title || '')
-          setDescription(data.description || '')
-          setActive(data.active)
+          form.reset({
+            title: data.title || '',
+            description: data.description || '',
+            active: data.active,
+          })
         })
         .catch(() => toast.error('Simulado não encontrado'))
         .finally(() => setLoading(false))
     }
-  }, [id, simulado])
+  }, [id, simulado, form])
 
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    // Client-side validation
-    const newErrors: Record<string, string> = {}
-    if (!title.trim()) newErrors.title = 'Título é obrigatório'
-    if (!description.trim()) newErrors.description = 'Descrição é obrigatória'
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      toast.error('Por favor, corrija os erros no formulário.')
-      return
-    }
-
+  const onSubmit = async (values: FormValues) => {
     setSaving(true)
-    setErrors({})
     try {
       const formData = new FormData()
-      formData.append('title', title.trim())
-      formData.append('description', description.trim())
-      formData.append('active', active ? 'true' : 'false')
+      formData.append('title', values.title.trim())
+      formData.append('description', values.description.trim())
+      formData.append('active', values.active ? 'true' : 'false')
 
-      if (bannerFile) {
-        formData.append('banner', bannerFile)
+      if (values.banner instanceof File) {
+        formData.append('banner', values.banner)
+      } else if (values.banner instanceof FileList && values.banner.length > 0) {
+        formData.append('banner', values.banner[0])
       }
 
       if (id) {
@@ -92,10 +97,12 @@ export default function AdminSimuladoWizard() {
     } catch (error) {
       const fieldErrors = extractFieldErrors(error)
       if (Object.keys(fieldErrors).length > 0) {
-        setErrors(fieldErrors)
-        toast.error('Por favor, corrija os erros no formulário.')
+        Object.entries(fieldErrors).forEach(([f, m]) =>
+          form.setError(f as keyof FormValues, { message: m }),
+        )
+        toast.error('Corrija os erros no formulário.')
       } else {
-        toast.error(getErrorMessage(error) || 'Erro ao salvar o simulado. Tente novamente.')
+        toast.error(getErrorMessage(error) || 'Erro ao salvar o simulado.')
       }
     } finally {
       setSaving(false)
@@ -128,80 +135,93 @@ export default function AdminSimuladoWizard() {
 
         <TabsContent value="details">
           <Card>
-            <form onSubmit={handleSave}>
-              <CardHeader>
-                <CardTitle>Informações Básicas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Título</Label>
-                  <Input
-                    id="title"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <CardHeader>
+                  <CardTitle>Informações Básicas</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
                     name="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                  {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Descrição</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                    rows={3}
-                  />
-                  {errors.description && (
-                    <p className="text-sm text-red-500 mt-1">{errors.description}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="banner">Imagem do Simulado (Opcional)</Label>
-                  <Input
-                    id="banner"
-                    name="banner"
-                    type="file"
-                    accept="image/jpeg, image/png, image/webp, image/gif"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        setBannerFile(e.target.files[0])
-                      } else {
-                        setBannerFile(null)
-                      }
-                    }}
-                  />
-                  {errors.banner && <p className="text-sm text-red-500 mt-1">{errors.banner}</p>}
-                  {errors.active && <p className="text-sm text-red-500 mt-1">{errors.active}</p>}
-                  {simulado?.banner && !bannerFile && (
-                    <div className="mt-2 relative w-64 rounded overflow-hidden border">
-                      <img
-                        src={pb.files.getURL(simulado, simulado.banner)}
-                        alt="Imagem atual"
-                        className="w-full h-auto object-contain"
-                      />
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch id="active" name="active" checked={active} onCheckedChange={setActive} />
-                  <Label htmlFor="active">Simulado Ativo (Visível para os usuários)</Label>
-                </div>
-                <div className="pt-4 border-t flex justify-end">
-                  <Button type="submit" disabled={saving}>
-                    {saving ? (
-                      'Salvando...'
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" /> Salvar Detalhes
-                      </>
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Título</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </Button>
-                </div>
-              </CardContent>
-            </form>
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descrição</FormLabel>
+                        <FormControl>
+                          <Textarea rows={3} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="banner"
+                    render={({ field: { value, onChange, ...rest } }) => (
+                      <FormItem>
+                        <FormLabel>Imagem do Simulado (Opcional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...rest}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => onChange(e.target.files?.[0])}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        {simulado?.banner && !(value instanceof File) && (
+                          <div className="mt-2 w-64 rounded overflow-hidden border">
+                            <img
+                              src={pb.files.getURL(simulado, simulado.banner)}
+                              alt="Banner"
+                              className="w-full h-auto object-contain"
+                            />
+                          </div>
+                        )}
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="active"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel>Simulado Ativo (Visível para os usuários)</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <div className="pt-4 border-t flex justify-end">
+                    <Button type="submit" disabled={saving}>
+                      {saving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" /> Salvar Detalhes
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </form>
+            </Form>
           </Card>
         </TabsContent>
 

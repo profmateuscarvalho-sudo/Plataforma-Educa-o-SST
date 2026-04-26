@@ -20,6 +20,7 @@ export default function AdminNews() {
   const [news, setNews] = useState<News[]>([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<News | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const load = () => getNews().then(setNews)
   useEffect(() => {
@@ -29,8 +30,9 @@ export default function AdminNews() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = new FormData(e.currentTarget)
+    setIsSubmitting(true)
     try {
-      if (editing) await updateNews(editing.id, form)
+      if (editing?.id) await updateNews(editing.id, form)
       else await createNews(form)
       toast({ title: editing ? 'Notícia atualizada' : 'Notícia publicada' })
       setOpen(false)
@@ -38,6 +40,8 @@ export default function AdminNews() {
       load()
     } catch (err) {
       toast({ title: 'Erro', variant: 'destructive' })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -79,7 +83,7 @@ export default function AdminNews() {
                 <Label>Imagens (Suporta múltiplas)</Label>
                 <Input name="images" type="file" accept="image/*" multiple />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
                 Salvar
               </Button>
             </form>
@@ -110,9 +114,19 @@ export default function AdminNews() {
                   variant="ghost"
                   size="icon"
                   className="text-red-600"
+                  disabled={isSubmitting}
                   onClick={async () => {
-                    await deleteNews(n.id)
-                    load()
+                    try {
+                      setIsSubmitting(true)
+                      if (!n.id) throw new Error('ID inválido')
+                      await deleteNews(n.id)
+                      toast({ title: 'Notícia excluída com sucesso' })
+                      await load()
+                    } catch (err) {
+                      toast({ title: 'Erro ao excluir', variant: 'destructive' })
+                    } finally {
+                      setIsSubmitting(false)
+                    }
                   }}
                 >
                   <Trash2 className="w-4 h-4" />

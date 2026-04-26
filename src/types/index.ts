@@ -251,3 +251,11 @@ export interface SimuladoSubmission extends RecordModel {
   user: string
   simulado: string
 }
+
+export interface Workplace extends RecordModel {
+  professional_name: string
+  job_title: string
+  city: string
+  description: string
+  photos?: string[]
+}

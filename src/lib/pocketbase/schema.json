@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-26T18:36:17.658Z",
+  "generatedAt": "2026-04-26T18:46:35.810Z",
   "collections": [
     {
       "name": "users",
@@ -1839,6 +1839,64 @@
           "required": true,
           "system": false,
           "collectionRef": "simulados"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "workplaces",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "professional_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "job_title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "city",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "photos",
+          "type": "file",
+          "required": false,
+          "system": false
         },
         {
           "name": "created",

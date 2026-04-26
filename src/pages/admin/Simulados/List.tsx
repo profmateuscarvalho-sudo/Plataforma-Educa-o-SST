@@ -16,6 +16,7 @@ import { getSimulados, deleteSimulado, getSimuladoSubmissionsCount } from '@/ser
 import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
 import type { Simulado } from '@/types'
+import { useRealtime } from '@/hooks/use-realtime'
 
 export default function AdminSimulados() {
   const [simulados, setSimulados] = useState<Simulado[]>([])
@@ -39,6 +40,10 @@ export default function AdminSimulados() {
   useEffect(() => {
     loadData()
   }, [])
+
+  useRealtime('simulado_submissions', () => {
+    loadData()
+  })
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este simulado?')) return
@@ -81,7 +86,7 @@ export default function AdminSimulados() {
                   <TableHead>Imagem</TableHead>
                   <TableHead>Título</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Conclusões</TableHead>
+                  <TableHead>Participações</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>

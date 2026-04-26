@@ -20,6 +20,7 @@ import NotFound from './pages/NotFound'
 
 import ArticleSubmission from './pages/public/ArticleSubmission'
 import ProfessionalConnection from './pages/public/ProfessionalConnection'
+import WorkplaceSubmission from './pages/public/WorkplaceSubmission'
 import PublicSimulados from './pages/public/Simulados'
 import SimuladoSession from './pages/public/SimuladoSession'
 
@@ -36,6 +37,7 @@ import StudentLive from './pages/student/Live'
 import NewsDetails from './pages/NewsDetails'
 import AdminMagazineArticles from './pages/admin/MagazineArticles'
 import AdminMagazineConnections from './pages/admin/MagazineConnections'
+import AdminMagazineWorkplaces from './pages/admin/MagazineWorkplaces'
 import AdminNews from './pages/admin/News'
 import AdminLeads from './pages/admin/Leads'
 import AdminMentorships from './pages/admin/Mentorships'
@@ -68,6 +70,7 @@ const App = () => (
 
             <Route path="/submissao-artigo/:token" element={<ArticleSubmission />} />
             <Route path="/conexao-profissional/:token" element={<ProfessionalConnection />} />
+            <Route path="/meu-local-trabalho" element={<WorkplaceSubmission />} />
 
             <Route path="/resumo-investidor/:id" element={<InvestorSummary />} />
             <Route path="/simulados" element={<PublicSimulados />} />
@@ -94,6 +97,7 @@ const App = () => (
             <Route path="/admin/revistas" element={<AdminMagazines />} />
             <Route path="/admin/revistas/artigos" element={<AdminMagazineArticles />} />
             <Route path="/admin/revistas/conexoes" element={<AdminMagazineConnections />} />
+            <Route path="/admin/revistas/locais" element={<AdminMagazineWorkplaces />} />
             <Route path="/admin/noticias" element={<AdminNews />} />
             <Route path="/admin/leads" element={<AdminLeads />} />
             <Route path="/admin/pagamentos" element={<AdminPayments />} />

@@ -24,15 +24,14 @@ export default function NewsDetails() {
     if (id) getNewsById(id).then(setNews).catch(console.error)
   }, [id])
 
-  if (!news)
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>
-
-  const galleryImages = Array.isArray(news.images) ? news.images : []
-  const coverUrl = news.image
-    ? pb.files.getUrl(news, news.image as string)
-    : galleryImages.length > 0
-      ? pb.files.getUrl(news, galleryImages[0])
-      : 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
+  const galleryImages = news && Array.isArray(news.images) ? news.images : []
+  const coverUrl = news
+    ? news.image
+      ? pb.files.getUrl(news, news.image as string)
+      : galleryImages.length > 0
+        ? pb.files.getUrl(news, galleryImages[0])
+        : 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
+    : ''
 
   const shareUrl = window.location.href
 
@@ -50,6 +49,9 @@ export default function NewsDetails() {
       })
     }
   }, [news, coverUrl, shareUrl])
+
+  if (!news)
+    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">

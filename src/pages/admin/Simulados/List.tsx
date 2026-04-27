@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { getSimulados, deleteSimulado, getSimuladoSubmissionsCount } from '@/services/simulados'
+import { getSimulados, deleteSimulado } from '@/services/simulados'
 import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
 import type { Simulado } from '@/types'
@@ -26,8 +26,20 @@ export default function AdminSimulados() {
   const loadData = async () => {
     try {
       const data = await getSimulados()
-      const counts = await Promise.all(data.map((s) => getSimuladoSubmissionsCount(s.id)))
-      const countsMap = data.reduce((acc, s, i) => ({ ...acc, [s.id]: counts[i] }), {})
+
+      // Fetch all submissions to count them accurately
+      const allSubmissions = await pb.collection('simulado_submissions').getFullList({
+        fields: 'simulado',
+      })
+
+      const countsMap = allSubmissions.reduce(
+        (acc, sub) => {
+          acc[sub.simulado] = (acc[sub.simulado] || 0) + 1
+          return acc
+        },
+        {} as Record<string, number>,
+      )
+
       setSubmissionsCounts(countsMap)
       setSimulados(data)
     } catch (error) {
@@ -86,7 +98,7 @@ export default function AdminSimulados() {
                   <TableHead>Imagem</TableHead>
                   <TableHead>Título</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Participações</TableHead>
+                  <TableHead>Participantes</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>

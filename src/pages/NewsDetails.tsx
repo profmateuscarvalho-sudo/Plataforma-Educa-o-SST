@@ -13,6 +13,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel'
+import { setMetaTags, stripHtml } from '@/lib/utils'
 
 export default function NewsDetails() {
   const { id } = useParams()
@@ -34,6 +35,21 @@ export default function NewsDetails() {
       : 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
 
   const shareUrl = window.location.href
+
+  useEffect(() => {
+    if (news) {
+      let plainText = stripHtml(news.content)
+      if (plainText.length > 180) {
+        plainText = plainText.substring(0, 180) + '...'
+      }
+      setMetaTags({
+        title: news.title,
+        description: plainText,
+        image: coverUrl,
+        url: shareUrl,
+      })
+    }
+  }, [news, coverUrl, shareUrl])
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">

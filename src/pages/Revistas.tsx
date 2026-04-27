@@ -3,15 +3,18 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog'
+import { useSearchParams } from 'react-router-dom'
 import { BookOpen, BookX, Loader2, ImageOff } from 'lucide-react'
 import { getMagazines } from '@/services/magazines'
 import { Magazine } from '@/types'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
+import { setMetaTags } from '@/lib/utils'
 
 function MagazineCard({ mag }: { mag: Magazine }) {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [isProcessing, setIsProcessing] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(searchParams.get('revista') === mag.id)
 
   useEffect(() => {
     const checkProcessing = () => {
@@ -39,11 +42,20 @@ function MagazineCard({ mag }: { mag: Magazine }) {
 
   const imgUrl = mag.thumbnail ? pb.files.getURL(mag, mag.thumbnail) : null
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen)
+    if (newOpen) {
+      setSearchParams({ revista: mag.id }, { replace: true })
+    } else {
+      setSearchParams({}, { replace: true })
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <Card
         className="group overflow-hidden border border-slate-200/60 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white cursor-pointer flex flex-col h-full animate-fade-in-up"
-        onClick={() => setOpen(true)}
+        onClick={() => handleOpenChange(true)}
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center">
           {imgUrl ? (
@@ -71,7 +83,7 @@ function MagazineCard({ mag }: { mag: Magazine }) {
                 className="w-full bg-yellow-400 text-emerald-950 hover:bg-yellow-500 translate-y-4 group-hover:translate-y-0 transition-all duration-300 font-bold"
                 onClick={(e) => {
                   e.stopPropagation()
-                  setOpen(true)
+                  handleOpenChange(true)
                 }}
               >
                 <BookOpen className="w-4 h-4 mr-2" /> Ler Edição
@@ -115,6 +127,7 @@ function MagazineCard({ mag }: { mag: Magazine }) {
 }
 
 export default function Revistas() {
+  const [searchParams] = useSearchParams()
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -136,6 +149,28 @@ export default function Revistas() {
   useRealtime('magazines', () => {
     loadData()
   })
+
+  useEffect(() => {
+    const revistaId = searchParams.get('revista')
+    if (revistaId && magazines.length > 0) {
+      const mag = magazines.find((m) => m.id === revistaId)
+      if (mag) {
+        const imgUrl = mag.thumbnail ? pb.files.getURL(mag, mag.thumbnail) : ''
+        setMetaTags({
+          title: `${mag.title} | Educação SST`,
+          description: mag.summary || 'Confira esta edição da Revista SST.',
+          image: imgUrl,
+          url: window.location.href,
+        })
+      }
+    } else {
+      setMetaTags({
+        title: 'Revistas | Educação SST',
+        description: 'Acervo Científico de publicações em Segurança e Saúde no Trabalho.',
+        url: window.location.href,
+      })
+    }
+  }, [searchParams, magazines])
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">

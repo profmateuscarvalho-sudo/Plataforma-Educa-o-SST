@@ -31,14 +31,6 @@ export const updateSimuladoQuestion = async (id: string, data: Partial<SimuladoQ
 export const deleteSimuladoQuestion = async (id: string) =>
   pb.collection('simulado_questions').delete(id)
 
-export const getSimuladoSubmissionsCount = async (simuladoId: string) => {
-  const result = await pb.collection('simulado_submissions').getList(1, 1, {
-    filter: `simulado = "${simuladoId}"`,
-    fields: 'id',
-  })
-  return result.totalItems
-}
-
 export const submitSimuladoCompletion = async (simuladoId: string, userId: string) => {
   try {
     await pb.collection('simulado_submissions').create({

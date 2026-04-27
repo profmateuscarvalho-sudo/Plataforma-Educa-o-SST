@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,7 @@ import { Plus, Trash2, Edit } from 'lucide-react'
 import { getNews, createNews, updateNews, deleteNews } from '@/services/news'
 import { News } from '@/types'
 import { toast } from '@/hooks/use-toast'
+import { RichTextEditor } from '@/components/RichTextEditor'
 
 export default function AdminNews() {
   const [news, setNews] = useState<News[]>([])
@@ -72,15 +72,14 @@ export default function AdminNews() {
               </div>
               <div>
                 <Label>Conteúdo (HTML suportado)</Label>
-                <Textarea
-                  name="content"
-                  defaultValue={editing?.content}
-                  required
-                  className="min-h-[150px]"
-                />
+                <RichTextEditor name="content" defaultValue={editing?.content} />
               </div>
               <div>
-                <Label>Imagens (Suporta múltiplas)</Label>
+                <Label>Foto Destaque</Label>
+                <Input name="image" type="file" accept="image/*" />
+              </div>
+              <div>
+                <Label>Fotos da Galeria (Opcional, múltiplas)</Label>
                 <Input name="images" type="file" accept="image/*" multiple />
               </div>
               <Button type="submit" className="w-full" disabled={isSubmitting}>

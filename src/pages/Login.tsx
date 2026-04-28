@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { SquareLogo } from '@/components/ui/Logos'
 import { toast } from '@/hooks/use-toast'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -21,9 +22,16 @@ export default function Login() {
     const { error } = await signIn(email, pass)
     setLoading(false)
     if (error) {
+      const isNetworkError =
+        typeof error === 'object' &&
+        error !== null &&
+        'status' in error &&
+        (error as any).status === 0
       toast({
         title: 'Erro de login',
-        description: 'Credenciais inválidas.',
+        description: isNetworkError
+          ? 'Serviço temporariamente indisponível. Verifique sua conexão e tente novamente.'
+          : 'Credenciais inválidas.',
         variant: 'destructive',
       })
     } else {

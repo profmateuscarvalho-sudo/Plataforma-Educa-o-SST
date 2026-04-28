@@ -1,6 +1,8 @@
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -8,154 +10,87 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
 import { DocProject } from '@/types'
-import { Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { Save, Plus, Trash2 } from 'lucide-react'
 
-interface Props {
+export default function TabIdea({
+  project,
+  onChange,
+  onSave,
+}: {
   project: Partial<DocProject>
   onChange: (p: Partial<DocProject>) => void
   onSave: () => void
-}
-
-export default function TabIdea({ project, onChange, onSave }: Props) {
-  const [newObj, setNewObj] = useState('')
+}) {
   const [newTopic, setNewTopic] = useState('')
+  const [newObjective, setNewObjective] = useState('')
 
-  const addObjective = () => {
-    if (!newObj) return
-    onChange({ ...project, objectives: [...(project.objectives || []), newObj] })
-    setNewObj('')
-  }
-
-  const removeObjective = (idx: number) => {
-    const arr = [...(project.objectives || [])]
-    arr.splice(idx, 1)
-    onChange({ ...project, objectives: arr })
-  }
-
-  const addTopic = () => {
-    if (!newTopic) return
-    onChange({ ...project, topics: [...(project.topics || []), newTopic] })
+  const handleAddTopic = () => {
+    if (!newTopic.trim()) return
+    const topics = project.topics || []
+    onChange({ ...project, topics: [...topics, newTopic.trim()] })
     setNewTopic('')
   }
 
-  const removeTopic = (idx: number) => {
-    const arr = [...(project.topics || [])]
-    arr.splice(idx, 1)
-    onChange({ ...project, topics: arr })
+  const handleAddObjective = () => {
+    if (!newObjective.trim()) return
+    const objectives = project.objectives || []
+    onChange({ ...project, objectives: [...objectives, newObjective.trim()] })
+    setNewObjective('')
+  }
+
+  const removeTopic = (index: number) => {
+    const topics = [...(project.topics || [])]
+    topics.splice(index, 1)
+    onChange({ ...project, topics })
+  }
+
+  const removeObjective = (index: number) => {
+    const objectives = [...(project.objectives || [])]
+    objectives.splice(index, 1)
+    onChange({ ...project, objectives })
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div>
-        <label className="text-sm font-medium">Título do Projeto</label>
-        <Input
-          value={project.title || ''}
-          onChange={(e) => onChange({ ...project, title: e.target.value })}
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium">Descrição da Ideia Central</label>
-        <Textarea
-          rows={5}
-          value={project.description || ''}
-          onChange={(e) => onChange({ ...project, description: e.target.value })}
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium block mb-2">Objetivos</label>
-        <div className="flex gap-2 mb-2">
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Título do Documentário *</Label>
           <Input
-            value={newObj}
-            onChange={(e) => setNewObj(e.target.value)}
-            placeholder="Novo objetivo..."
-            onKeyDown={(e) => e.key === 'Enter' && addObjective()}
+            value={project.title || ''}
+            onChange={(e) => onChange({ ...project, title: e.target.value })}
           />
-          <Button type="button" onClick={addObjective}>
-            <Plus className="h-4 w-4" />
-          </Button>
         </div>
-        <ul className="space-y-2">
-          {(project.objectives || []).map((obj, i) => (
-            <li
-              key={i}
-              className="flex justify-between items-center bg-slate-50 p-2 rounded border"
-            >
-              <span className="text-sm">{obj}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeObjective(i)}
-                className="h-6 w-6 text-red-500"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div>
-        <label className="text-sm font-medium block mb-2">Tópicos Abordados</label>
-        <div className="flex gap-2 mb-2">
-          <Input
-            value={newTopic}
-            onChange={(e) => setNewTopic(e.target.value)}
-            placeholder="Novo tópico..."
-            onKeyDown={(e) => e.key === 'Enter' && addTopic()}
-          />
-          <Button type="button" onClick={addTopic}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        <ul className="space-y-2">
-          {(project.topics || []).map((topic, i) => (
-            <li
-              key={i}
-              className="flex justify-between items-center bg-slate-50 p-2 rounded border"
-            >
-              <span className="text-sm">{topic}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeTopic(i)}
-                className="h-6 w-6 text-red-500"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        {' '}
-        <div>
-          <label className="text-sm font-medium block mb-2">Data Estimada de Lançamento</label>
-          <Input
-            type="date"
-            value={
-              project.estimated_release_date ? project.estimated_release_date.split(' ')[0] : ''
-            }
-            onChange={(e) =>
-              onChange({
-                ...project,
-                estimated_release_date: e.target.value
-                  ? new Date(e.target.value).toISOString()
-                  : '',
-              })
-            }
-          />
+        <div className="space-y-2">
+          <Label>Status</Label>
+          <Select
+            value={project.status || ''}
+            onValueChange={(v) => onChange({ ...project, status: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione..." />
+            </SelectTrigger>
+            <SelectContent>
+              {[
+                'Planejado',
+                'Em Pré-produção',
+                'Produção',
+                'Pós-produção',
+                'Finalizado',
+                'Novo',
+              ].map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium">Público-Alvo</label>
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="space-y-2">
+          <Label>Público Alvo</Label>
           <Select
             value={project.target_audience || ''}
             onValueChange={(v) => onChange({ ...project, target_audience: v })}
@@ -164,51 +99,161 @@ export default function TabIdea({ project, onChange, onSave }: Props) {
               <SelectValue placeholder="Selecione..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Trabalhadores SST">Trabalhadores SST</SelectItem>
-              <SelectItem value="Gestores">Gestores</SelectItem>
-              <SelectItem value="Treinadores">Treinadores</SelectItem>
-              <SelectItem value="Estudantes">Estudantes</SelectItem>
-              <SelectItem value="Outros">Outros</SelectItem>
+              {['Trabalhadores SST', 'Gestores', 'Treinadores', 'Estudantes', 'Outros'].map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <label className="text-sm font-medium">Número de Episódios</label>
+        <div className="space-y-2">
+          <Label>Duração Estimada (minutos)</Label>
           <Input
             type="number"
-            min={1}
-            value={project.episodes || ''}
-            onChange={(e) => onChange({ ...project, episodes: parseInt(e.target.value) })}
+            value={project.estimated_duration || ''}
+            onChange={(e) => onChange({ ...project, estimated_duration: Number(e.target.value) })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Data Estimada de Lançamento</Label>
+          <Input
+            type="date"
+            value={
+              project.estimated_release_date
+                ? String(project.estimated_release_date).substring(0, 10)
+                : ''
+            }
+            onChange={(e) => {
+              const val = e.target.value
+              onChange({
+                ...project,
+                estimated_release_date: val ? `${val}T12:00:00.000Z` : '',
+              })
+            }}
           />
         </div>
       </div>
 
-      <div>
-        <label className="text-sm font-medium block mb-4">
-          Duração Estimada (minutos): {project.estimated_duration || 10} min
-        </label>
-        <Slider
-          min={10}
-          max={120}
-          step={5}
-          value={[project.estimated_duration || 10]}
-          onValueChange={([v]) => onChange({ ...project, estimated_duration: v })}
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Número de Episódios</Label>
+          <Input
+            type="number"
+            value={project.episodes || ''}
+            onChange={(e) => onChange({ ...project, episodes: Number(e.target.value) })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Orçamento Total Estimado (R$)</Label>
+          <Input
+            type="number"
+            value={project.total_budget || ''}
+            onChange={(e) => onChange({ ...project, total_budget: Number(e.target.value) })}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Descrição / Sinopse</Label>
+        <Textarea
+          className="min-h-[100px]"
+          value={project.description || ''}
+          onChange={(e) => onChange({ ...project, description: e.target.value })}
         />
       </div>
 
-      <div>
-        <label className="text-sm font-medium">Estrutura do Roteiro</label>
+      <div className="space-y-2">
+        <Label>Estrutura de Roteiro</Label>
         <Textarea
-          rows={6}
-          placeholder="Ato 1: Introdução..."
+          className="min-h-[100px]"
           value={project.script_structure || ''}
           onChange={(e) => onChange({ ...project, script_structure: e.target.value })}
         />
       </div>
 
-      <Button onClick={onSave} className="w-full">
-        Salvar Ideia
-      </Button>
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-4">
+          <Label>Objetivos</Label>
+          <div className="flex gap-2">
+            <Input
+              value={newObjective}
+              onChange={(e) => setNewObjective(e.target.value)}
+              placeholder="Novo objetivo..."
+              onKeyDown={(e) => e.key === 'Enter' && handleAddObjective()}
+            />
+            <Button type="button" onClick={handleAddObjective} variant="secondary">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {(project.objectives || []).map((obj: string, i: number) => (
+              <div
+                key={i}
+                className="flex items-center justify-between bg-slate-50 p-2 rounded text-sm border"
+              >
+                <span>{obj}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-red-500"
+                  onClick={() => removeObjective(i)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Label>Tópicos Abordados</Label>
+          <div className="flex gap-2">
+            <Input
+              value={newTopic}
+              onChange={(e) => setNewTopic(e.target.value)}
+              placeholder="Novo tópico..."
+              onKeyDown={(e) => e.key === 'Enter' && handleAddTopic()}
+            />
+            <Button type="button" onClick={handleAddTopic} variant="secondary">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {(project.topics || []).map((topic: string, i: number) => (
+              <div
+                key={i}
+                className="flex items-center justify-between bg-slate-50 p-2 rounded text-sm border"
+              >
+                <span>{topic}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-red-500"
+                  onClick={() => removeTopic(i)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Notas Adicionais</Label>
+        <Textarea
+          className="min-h-[80px]"
+          value={project.notes || ''}
+          onChange={(e) => onChange({ ...project, notes: e.target.value })}
+        />
+      </div>
+
+      <div className="flex justify-end pt-6 border-t">
+        <Button onClick={onSave}>
+          <Save className="h-4 w-4 mr-2" /> Salvar Projeto
+        </Button>
+      </div>
     </div>
   )
 }

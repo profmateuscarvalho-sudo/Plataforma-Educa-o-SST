@@ -19,8 +19,10 @@ import {
   Target,
   ListChecks,
   CheckCircle2,
+  FileText,
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { Logo } from '@/components/ui/Logos'
 import { ptBR } from 'date-fns/locale'
 
 export default function DocumentaryPitch() {
@@ -83,6 +85,11 @@ export default function DocumentaryPitch() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-amber-500/30 pb-20">
+      {/* Header Logo */}
+      <div className="absolute top-6 left-6 md:top-10 md:left-10 z-50">
+        <Logo className="text-white drop-shadow-md" />
+      </div>
+
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -167,15 +174,15 @@ export default function DocumentaryPitch() {
         </section>
       )}
 
-      {/* Methodology Section */}
+      {/* Introduction Section (previously Methodology) */}
       {project.methodology && (
         <section className="py-24 bg-zinc-900 border-t border-zinc-800/50">
           <div className="container max-w-4xl mx-auto px-6">
             <div className="flex items-center gap-4 mb-12">
               <div className="p-4 bg-amber-500/10 rounded-2xl text-amber-500 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
-                <Camera className="h-8 w-8" />
+                <FileText className="h-8 w-8" />
               </div>
-              <h2 className="text-4xl font-bold tracking-tight">Nossa Metodologia</h2>
+              <h2 className="text-4xl font-bold tracking-tight">Introdução</h2>
             </div>
             <div
               className="prose prose-invert prose-lg max-w-none text-zinc-300 prose-headings:text-white prose-a:text-amber-500 hover:prose-a:text-amber-400 prose-strong:text-white"
@@ -311,8 +318,13 @@ export default function DocumentaryPitch() {
                 Garanta a visibilidade da sua marca neste projeto pioneiro e associe-se à inovação e
                 excelência no mercado de SST.
               </p>
-              <Button className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold text-lg px-8 py-6 rounded-xl w-full sm:w-auto">
-                Tenho Interesse em Patrocinar
+              <Button
+                className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold text-lg px-8 py-6 rounded-xl w-full sm:w-auto"
+                asChild
+              >
+                <a href="https://wa.me/5518997190486" target="_blank" rel="noopener noreferrer">
+                  Tenho Interesse em Patrocinar
+                </a>
               </Button>
             </div>
           </div>

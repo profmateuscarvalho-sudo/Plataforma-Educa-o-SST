@@ -8,6 +8,7 @@ import TabIdea from './Tabs/TabIdea'
 import TabCosts from './Tabs/TabCosts'
 import TabPlanning from './Tabs/TabPlanning'
 import TabManagement from './Tabs/TabManagement'
+import TabPresentation from './Tabs/TabPresentation'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -55,7 +56,7 @@ export default function AdminDocumentaryWizard() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="idea">Ideia e Estrutura</TabsTrigger>
           <TabsTrigger value="costs" disabled={!id}>
             Previsão de Custos
@@ -65,6 +66,9 @@ export default function AdminDocumentaryWizard() {
           </TabsTrigger>
           <TabsTrigger value="management" disabled={!id}>
             Gerenciamento
+          </TabsTrigger>
+          <TabsTrigger value="presentation" disabled={!id}>
+            Apresentação
           </TabsTrigger>
         </TabsList>
         <div className="mt-8 bg-white p-6 rounded-lg border shadow-sm">
@@ -76,7 +80,10 @@ export default function AdminDocumentaryWizard() {
           <TabsContent value="management">
             {id && <TabManagement project={project} onChange={setProject} onSave={handleSave} />}
           </TabsContent>
-        </div>
+          <TabsContent value="presentation">
+            {id && <TabPresentation project={project} onChange={setProject} />}
+          </TabsContent>
+        </div>{' '}
       </Tabs>
     </div>
   )

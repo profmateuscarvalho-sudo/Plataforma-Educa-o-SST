@@ -33,13 +33,6 @@ export function useRealtime(
           unsubscribeFn = fn
         }
       })
-      .catch((err) => {
-        // Gracefully handle network interruptions (status 0) and auth errors (401/403)
-        // to prevent UI crashes, particularly during initialization on public routes like /login
-        if (err?.status !== 0 && err?.status !== 401 && err?.status !== 403) {
-          console.warn(`Realtime subscription error for ${collectionName}:`, err)
-        }
-      })
 
     return () => {
       cancelled = true

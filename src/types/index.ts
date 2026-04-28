@@ -203,6 +203,10 @@ export interface DocProject extends RecordModel {
   responsible: string
   attachments?: string[]
   total_budget: number
+  slug?: string
+  methodology?: string
+  investment_quota?: number
+  presentation_photos?: string[]
   expand?: { responsible?: User }
 }
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-27T01:54:12.654Z",
+  "generatedAt": "2026-04-28T17:45:08.208Z",
   "collections": [
     {
       "name": "users",
@@ -1387,7 +1387,7 @@
       "name": "doc_projects",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = 'admin' || @request.auth.id = '' || @request.auth.id != ''",
+        "list": "",
         "view": "",
         "create": "@request.auth.role = 'admin'",
         "update": "@request.auth.role = 'admin'",
@@ -1489,9 +1489,33 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "methodology",
+          "type": "editor",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "investment_quota",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "presentation_photos",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
-      "indexes": []
+      "indexes": ["CREATE UNIQUE INDEX `idx_doc_projects_slug` ON `doc_projects` (slug)"]
     },
     {
       "name": "doc_project_costs",

@@ -48,6 +48,7 @@ import AdminDocumentaryWizard from './pages/admin/Documentaries/Wizard'
 import AdminSimulados from './pages/admin/Simulados/List'
 import AdminSimuladoWizard from './pages/admin/Simulados/Wizard'
 import InvestorSummary from './pages/public/InvestorSummary'
+import DocumentaryPitch from './pages/public/DocumentaryPitch'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -104,8 +105,10 @@ const App = () => (
             <Route path="/admin/lives" element={<AdminLives />} />
           </Route>
 
+          <Route path="/documentarios/projeto/:slug" element={<DocumentaryPitch />} />
+
           <Route path="*" element={<NotFound />} />
-        </Routes>
+        </Routes>{' '}
       </TooltipProvider>
     </AuthProvider>
   </BrowserRouter>

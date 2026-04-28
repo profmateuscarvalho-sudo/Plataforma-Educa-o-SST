@@ -11,9 +11,13 @@ export const getDocProjects = () =>
   pb.collection('doc_projects').getFullList<DocProject>({ expand: 'responsible', sort: '-created' })
 export const getDocProject = (id: string) =>
   pb.collection('doc_projects').getOne<DocProject>(id, { expand: 'responsible' })
+export const getDocProjectBySlug = (slug: string) =>
+  pb
+    .collection('doc_projects')
+    .getFirstListItem<DocProject>(`slug = '${slug}'`, { expand: 'responsible' })
 export const createDocProject = (data: Partial<DocProject>) =>
   pb.collection('doc_projects').create<DocProject>(data)
-export const updateDocProject = (id: string, data: Partial<DocProject>) =>
+export const updateDocProject = (id: string, data: Partial<DocProject> | FormData) =>
   pb.collection('doc_projects').update<DocProject>(id, data)
 export const deleteDocProject = (id: string) => pb.collection('doc_projects').delete(id)
 

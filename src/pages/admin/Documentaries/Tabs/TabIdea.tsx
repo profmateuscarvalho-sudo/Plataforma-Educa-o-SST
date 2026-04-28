@@ -21,6 +21,7 @@ interface Props {
 
 export default function TabIdea({ project, onChange, onSave }: Props) {
   const [newObj, setNewObj] = useState('')
+  const [newTopic, setNewTopic] = useState('')
 
   const addObjective = () => {
     if (!newObj) return
@@ -32,6 +33,18 @@ export default function TabIdea({ project, onChange, onSave }: Props) {
     const arr = [...(project.objectives || [])]
     arr.splice(idx, 1)
     onChange({ ...project, objectives: arr })
+  }
+
+  const addTopic = () => {
+    if (!newTopic) return
+    onChange({ ...project, topics: [...(project.topics || []), newTopic] })
+    setNewTopic('')
+  }
+
+  const removeTopic = (idx: number) => {
+    const arr = [...(project.topics || [])]
+    arr.splice(idx, 1)
+    onChange({ ...project, topics: arr })
   }
 
   return (
@@ -86,7 +99,41 @@ export default function TabIdea({ project, onChange, onSave }: Props) {
         </ul>
       </div>
 
+      <div>
+        <label className="text-sm font-medium block mb-2">Tópicos Abordados</label>
+        <div className="flex gap-2 mb-2">
+          <Input
+            value={newTopic}
+            onChange={(e) => setNewTopic(e.target.value)}
+            placeholder="Novo tópico..."
+            onKeyDown={(e) => e.key === 'Enter' && addTopic()}
+          />
+          <Button type="button" onClick={addTopic}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        <ul className="space-y-2">
+          {(project.topics || []).map((topic, i) => (
+            <li
+              key={i}
+              className="flex justify-between items-center bg-slate-50 p-2 rounded border"
+            >
+              <span className="text-sm">{topic}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => removeTopic(i)}
+                className="h-6 w-6 text-red-500"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
+        {' '}
         <div>
           <label className="text-sm font-medium block mb-2">Data Estimada de Lançamento</label>
           <Input

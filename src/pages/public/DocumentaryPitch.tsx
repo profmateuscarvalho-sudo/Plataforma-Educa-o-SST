@@ -10,7 +10,16 @@ import {
 } from '@/services/doc_projects'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Users, DollarSign, Camera, Calendar, UserRound } from 'lucide-react'
+import {
+  Users,
+  DollarSign,
+  Camera,
+  Calendar,
+  UserRound,
+  Target,
+  ListChecks,
+  CheckCircle2,
+} from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -68,8 +77,6 @@ export default function DocumentaryPitch() {
     )
   }
 
-  const calculatedBudget =
-    project.total_budget || costs.reduce((acc, c) => acc + c.estimated_value, 0)
   const heroImage = project.presentation_photos?.[0]
     ? pb.files.getUrl(project, project.presentation_photos[0])
     : 'https://img.usecurling.com/p/1920/1080?q=cinematic,documentary&color=black'
@@ -107,6 +114,58 @@ export default function DocumentaryPitch() {
           )}
         </div>
       </section>
+
+      {/* Objectives & Topics Section */}
+      {(project.objectives?.length > 0 || project.topics?.length > 0) && (
+        <section className="py-24 bg-zinc-950 border-t border-zinc-800/50">
+          <div className="container max-w-6xl mx-auto px-6">
+            <div className="grid md:grid-cols-2 gap-16">
+              {project.objectives && project.objectives.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500 border border-amber-500/20">
+                      <Target className="h-6 w-6" />
+                    </div>
+                    <h2 className="text-3xl font-bold tracking-tight">Objetivos do Projeto</h2>
+                  </div>
+                  <ul className="space-y-4">
+                    {project.objectives.map((obj, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-4 bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50"
+                      >
+                        <CheckCircle2 className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
+                        <span className="text-zinc-300 leading-relaxed">{obj}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {project.topics && project.topics.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500 border border-amber-500/20">
+                      <ListChecks className="h-6 w-6" />
+                    </div>
+                    <h2 className="text-3xl font-bold tracking-tight">Tópicos Abordados</h2>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {project.topics.map((topic, i) => (
+                      <div
+                        key={i}
+                        className="bg-zinc-900 border border-zinc-800 text-zinc-300 px-5 py-3 rounded-full text-sm font-medium"
+                      >
+                        {topic}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Methodology Section */}
       {project.methodology && (
@@ -228,68 +287,37 @@ export default function DocumentaryPitch() {
       )}
 
       {/* Investment Summary Section */}
-      <section className="py-24 bg-zinc-900 border-t border-zinc-800/50">
-        <div className="container max-w-4xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-zinc-950 border border-zinc-800 shadow-lg mb-6">
+      {project.investment_quota && (
+        <section className="py-24 bg-zinc-900 border-t border-zinc-800/50">
+          <div className="container max-w-3xl mx-auto px-6 text-center">
+            <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-zinc-950 border border-zinc-800 shadow-lg mb-8">
               <DollarSign className="h-5 w-5 text-amber-500" />
               <span className="font-semibold tracking-widest uppercase text-sm">
-                Plano de Investimento
+                Cota de Patrocínio
               </span>
             </div>
-          </div>
 
-          <div className="bg-zinc-950 p-10 rounded-3xl border border-zinc-800 shadow-2xl">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-10 pb-10 border-b border-zinc-800/50 gap-8">
-              <div>
-                <h3 className="text-zinc-400 font-medium mb-2 uppercase tracking-widest text-sm">
-                  Orçamento Estimado
-                </h3>
-                <p className="text-4xl font-black text-white tracking-tight">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                    calculatedBudget,
-                  )}
-                </p>
-              </div>
-              {project.investment_quota && (
-                <div className="text-right">
-                  <h3 className="text-amber-500/80 font-medium mb-2 uppercase tracking-widest text-sm">
-                    Cota de Patrocínio
-                  </h3>
-                  <p className="text-4xl font-black text-amber-500 tracking-tight">
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                      project.investment_quota,
-                    )}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4 max-w-2xl mx-auto">
-              {costs.length > 0 ? (
-                costs.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex justify-between items-center text-sm md:text-base p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/30"
-                  >
-                    <span className="text-zinc-400">{c.category}</span>
-                    <span className="text-zinc-200 font-semibold">
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }).format(c.estimated_value)}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-zinc-500 text-sm text-center italic">
-                  O orçamento detalhado está em elaboração.
-                </p>
-              )}
+            <div className="bg-zinc-950 p-12 rounded-3xl border border-amber-500/20 shadow-[0_0_40px_rgba(245,158,11,0.05)] relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50" />
+              <h3 className="text-zinc-400 font-medium mb-4 uppercase tracking-widest text-sm">
+                Valor do Investimento por Empresa
+              </h3>
+              <p className="text-5xl md:text-7xl font-black text-amber-500 tracking-tight mb-8">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                  project.investment_quota,
+                )}
+              </p>
+              <p className="text-zinc-300 leading-relaxed max-w-xl mx-auto mb-8">
+                Garanta a visibilidade da sua marca neste projeto pioneiro e associe-se à inovação e
+                excelência no mercado de SST.
+              </p>
+              <Button className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold text-lg px-8 py-6 rounded-xl w-full sm:w-auto">
+                Tenho Interesse em Patrocinar
+              </Button>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   )
 }

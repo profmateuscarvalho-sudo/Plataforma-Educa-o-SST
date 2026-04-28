@@ -200,6 +200,7 @@ export interface DocProject extends RecordModel {
   script_structure: string
   status: string
   notes: string
+  topics?: string[]
   responsible: string
   attachments?: string[]
   total_budget: number

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-28T17:58:39.363Z",
+  "generatedAt": "2026-04-28T18:24:32.248Z",
   "collections": [
     {
       "name": "users",
@@ -1517,6 +1517,12 @@
         {
           "name": "estimated_release_date",
           "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "topics",
+          "type": "json",
           "required": false,
           "system": false
         }

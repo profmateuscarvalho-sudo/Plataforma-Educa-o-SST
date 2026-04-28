@@ -1,14 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import {
   Select,
   SelectContent,
@@ -30,8 +23,9 @@ import {
   deleteDocProjectTask,
 } from '@/services/doc_projects'
 import { useRealtime } from '@/hooks/use-realtime'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Camera, User } from 'lucide-react'
 import { format } from 'date-fns'
+import pb from '@/lib/pocketbase/client'
 
 export default function TabPlanning({ projectId }: { projectId: string }) {
   const [recs, setRecs] = useState<DocProjectRecording[]>([])
@@ -56,6 +50,7 @@ export default function TabPlanning({ projectId }: { projectId: string }) {
   const [rLoc, setRLoc] = useState('')
   const [tName, setTName] = useState('')
   const [tRole, setTRole] = useState('Diretor')
+  const [tPhoto, setTPhoto] = useState<File | null>(null)
   const [tkTitle, setTkTitle] = useState('')
   const [tkResp, setTkResp] = useState('')
   const [tkDead, setTkDead] = useState('')
@@ -74,8 +69,15 @@ export default function TabPlanning({ projectId }: { projectId: string }) {
   }
   const addTeam = async () => {
     if (tName) {
-      await createDocProjectTeam({ project: projectId, name: tName, role: tRole })
+      const fd = new FormData()
+      fd.append('project', projectId)
+      fd.append('name', tName)
+      fd.append('role', tRole)
+      if (tPhoto) fd.append('photo', tPhoto)
+
+      await createDocProjectTeam(fd)
       setTName('')
+      setTPhoto(null)
       loadAll()
     }
   }
@@ -134,10 +136,15 @@ export default function TabPlanning({ projectId }: { projectId: string }) {
 
       <section>
         <h3 className="text-lg font-semibold mb-4">Equipe Técnica</h3>
-        <div className="flex gap-2 mb-4">
-          <Input placeholder="Nome" value={tName} onChange={(e) => setTName(e.target.value)} />
+        <div className="flex flex-col md:flex-row gap-2 mb-4">
+          <Input
+            placeholder="Nome"
+            value={tName}
+            onChange={(e) => setTName(e.target.value)}
+            className="flex-1"
+          />
           <Select value={tRole} onValueChange={setTRole}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full md:w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -156,6 +163,14 @@ export default function TabPlanning({ projectId }: { projectId: string }) {
               ))}
             </SelectContent>
           </Select>
+          <div className="relative w-full md:w-auto">
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setTPhoto(e.target.files?.[0] || null)}
+              className="md:w-64 cursor-pointer file:text-sm file:font-medium file:text-primary file:bg-primary/10 file:border-0 file:rounded file:px-3 file:py-1 file:mr-2 hover:file:bg-primary/20"
+            />
+          </div>
           <Button onClick={addTeam}>
             <Plus className="h-4 w-4" />
           </Button>
@@ -164,8 +179,21 @@ export default function TabPlanning({ projectId }: { projectId: string }) {
           <TableBody>
             {team.map((t) => (
               <TableRow key={t.id}>
-                <TableCell>{t.name}</TableCell>
-                <TableCell>{t.role}</TableCell>
+                <TableCell className="w-16">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border flex items-center justify-center">
+                    {t.photo ? (
+                      <img
+                        src={pb.files.getUrl(t, t.photo)}
+                        alt={t.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-5 w-5 text-slate-400" />
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium">{t.name}</TableCell>
+                <TableCell className="text-muted-foreground">{t.role}</TableCell>
                 <TableCell className="text-right">
                   <Button
                     variant="ghost"
@@ -244,6 +272,17 @@ export default function TabPlanning({ projectId }: { projectId: string }) {
                           ))}
                         </SelectContent>
                       </Select>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 bg-white border shadow-sm text-red-500 rounded-full"
+                        onClick={async () => {
+                          await deleteDocProjectTask(tk.id)
+                          loadAll()
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   ))}
               </div>

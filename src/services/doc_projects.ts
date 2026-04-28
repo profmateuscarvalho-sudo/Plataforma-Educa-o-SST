@@ -5,6 +5,7 @@ import {
   DocProjectRecording,
   DocProjectTeam,
   DocProjectTask,
+  DocProjectGuest,
 } from '@/types'
 
 export const getDocProjects = () =>
@@ -46,11 +47,21 @@ export const getDocProjectTeam = (projectId: string) =>
   pb
     .collection('doc_project_team')
     .getFullList<DocProjectTeam>({ filter: `project = '${projectId}'`, sort: 'created' })
-export const createDocProjectTeam = (data: Partial<DocProjectTeam>) =>
+export const createDocProjectTeam = (data: Partial<DocProjectTeam> | FormData) =>
   pb.collection('doc_project_team').create<DocProjectTeam>(data)
-export const updateDocProjectTeam = (id: string, data: Partial<DocProjectTeam>) =>
+export const updateDocProjectTeam = (id: string, data: Partial<DocProjectTeam> | FormData) =>
   pb.collection('doc_project_team').update<DocProjectTeam>(id, data)
 export const deleteDocProjectTeam = (id: string) => pb.collection('doc_project_team').delete(id)
+
+export const getDocProjectGuests = (projectId: string) =>
+  pb
+    .collection('doc_project_guests')
+    .getFullList<DocProjectGuest>({ filter: `project = '${projectId}'`, sort: 'created' })
+export const createDocProjectGuest = (data: Partial<DocProjectGuest> | FormData) =>
+  pb.collection('doc_project_guests').create<DocProjectGuest>(data)
+export const updateDocProjectGuest = (id: string, data: Partial<DocProjectGuest> | FormData) =>
+  pb.collection('doc_project_guests').update<DocProjectGuest>(id, data)
+export const deleteDocProjectGuest = (id: string) => pb.collection('doc_project_guests').delete(id)
 
 export const getDocProjectTasks = (projectId: string) =>
   pb

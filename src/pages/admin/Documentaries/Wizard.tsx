@@ -9,6 +9,7 @@ import TabCosts from './Tabs/TabCosts'
 import TabPlanning from './Tabs/TabPlanning'
 import TabManagement from './Tabs/TabManagement'
 import TabPresentation from './Tabs/TabPresentation'
+import TabGuests from './Tabs/TabGuests'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -56,13 +57,16 @@ export default function AdminDocumentaryWizard() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="idea">Ideia e Estrutura</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-6 h-auto p-1 text-sm overflow-x-auto">
+          <TabsTrigger value="idea">Ideia</TabsTrigger>
           <TabsTrigger value="costs" disabled={!id}>
-            Previsão de Custos
+            Custos
           </TabsTrigger>
           <TabsTrigger value="planning" disabled={!id}>
             Planejamento
+          </TabsTrigger>
+          <TabsTrigger value="guests" disabled={!id}>
+            Participantes
           </TabsTrigger>
           <TabsTrigger value="management" disabled={!id}>
             Gerenciamento
@@ -77,13 +81,14 @@ export default function AdminDocumentaryWizard() {
           </TabsContent>
           <TabsContent value="costs">{id && <TabCosts projectId={id} />}</TabsContent>
           <TabsContent value="planning">{id && <TabPlanning projectId={id} />}</TabsContent>
+          <TabsContent value="guests">{id && <TabGuests projectId={id} />}</TabsContent>
           <TabsContent value="management">
             {id && <TabManagement project={project} onChange={setProject} onSave={handleSave} />}
           </TabsContent>
           <TabsContent value="presentation">
             {id && <TabPresentation project={project} onChange={setProject} />}
           </TabsContent>
-        </div>{' '}
+        </div>
       </Tabs>
     </div>
   )

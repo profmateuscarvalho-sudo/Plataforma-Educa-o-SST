@@ -88,6 +88,26 @@ export default function TabIdea({ project, onChange, onSave }: Props) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
+          <label className="text-sm font-medium block mb-2">Data Estimada de Lançamento</label>
+          <Input
+            type="date"
+            value={
+              project.estimated_release_date ? project.estimated_release_date.split(' ')[0] : ''
+            }
+            onChange={(e) =>
+              onChange({
+                ...project,
+                estimated_release_date: e.target.value
+                  ? new Date(e.target.value).toISOString()
+                  : '',
+              })
+            }
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
           <label className="text-sm font-medium">Público-Alvo</label>
           <Select
             value={project.target_audience || ''}

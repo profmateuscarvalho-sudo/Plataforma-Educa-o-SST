@@ -207,6 +207,7 @@ export interface DocProject extends RecordModel {
   methodology?: string
   investment_quota?: number
   presentation_photos?: string[]
+  estimated_release_date?: string
   expand?: { responsible?: User }
 }
 
@@ -227,6 +228,14 @@ export interface DocProjectTeam extends RecordModel {
   project: string
   name: string
   role: string
+  photo?: string
+}
+
+export interface DocProjectGuest extends RecordModel {
+  project: string
+  name: string
+  bio: string
+  photo?: string
 }
 
 export interface DocProjectTask extends RecordModel {

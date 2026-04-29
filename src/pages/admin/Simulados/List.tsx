@@ -98,7 +98,8 @@ export default function AdminSimulados() {
                   <TableHead>Imagem</TableHead>
                   <TableHead>Título</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Participantes</TableHead>
+                  <TableHead>Acessos</TableHead>
+                  <TableHead>Conclusões</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -120,6 +121,14 @@ export default function AdminSimulados() {
                     <TableCell>
                       <Badge variant={simulado.active ? 'default' : 'secondary'}>
                         {simulado.active ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className="font-mono bg-blue-50 text-blue-700 hover:bg-blue-50"
+                      >
+                        {simulado.access_count || 0}
                       </Badge>
                     </TableCell>
                     <TableCell>

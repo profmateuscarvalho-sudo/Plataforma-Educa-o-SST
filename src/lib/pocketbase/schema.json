@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-28T18:55:02.685Z",
+  "generatedAt": "2026-04-29T18:00:57.997Z",
   "collections": [
     {
       "name": "users",
@@ -1800,6 +1800,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "access_count",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -1861,9 +1867,9 @@
       "name": "simulado_submissions",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = 'admin' || user = @request.auth.id",
-        "view": "@request.auth.role = 'admin' || user = @request.auth.id",
-        "create": "@request.auth.id != ''",
+        "list": "@request.auth.role = 'admin' || (@request.auth.id != '' && user = @request.auth.id)",
+        "view": "@request.auth.role = 'admin' || (@request.auth.id != '' && user = @request.auth.id)",
+        "create": "",
         "update": null,
         "delete": null
       },
@@ -1871,7 +1877,7 @@
         {
           "name": "user",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "users"
         },

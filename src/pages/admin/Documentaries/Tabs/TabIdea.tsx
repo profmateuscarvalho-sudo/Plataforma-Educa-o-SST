@@ -119,6 +119,8 @@ export default function TabIdea({
           <Label>Data Estimada de Lançamento</Label>
           <Input
             type="date"
+            min="1900-01-01"
+            max="2100-12-31"
             value={
               project.estimated_release_date
                 ? String(project.estimated_release_date).substring(0, 10)
@@ -126,10 +128,16 @@ export default function TabIdea({
             }
             onChange={(e) => {
               const val = e.target.value
-              onChange({
-                ...project,
-                estimated_release_date: val ? `${val}T12:00:00.000Z` : '',
-              })
+              if (!val) {
+                onChange({ ...project, estimated_release_date: '' })
+                return
+              }
+              if (val.length === 10) {
+                const year = parseInt(val.split('-')[0], 10)
+                if (year >= 1900 && year <= 2100) {
+                  onChange({ ...project, estimated_release_date: `${val} 12:00:00.000Z` })
+                }
+              }
             }}
           />
         </div>

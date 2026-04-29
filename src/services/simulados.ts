@@ -31,12 +31,21 @@ export const updateSimuladoQuestion = async (id: string, data: Partial<SimuladoQ
 export const deleteSimuladoQuestion = async (id: string) =>
   pb.collection('simulado_questions').delete(id)
 
-export const submitSimuladoCompletion = async (simuladoId: string, userId: string) => {
+export const incrementSimuladoAccess = async (id: string) => {
   try {
-    await pb.collection('simulado_submissions').create({
-      simulado: simuladoId,
-      user: userId,
-    })
+    await pb.send(`/backend/v1/simulados/${id}/view`, { method: 'POST' })
+  } catch (error) {
+    console.error('Erro ao incrementar acessos do simulado', error)
+  }
+}
+
+export const submitSimuladoCompletion = async (simuladoId: string, userId?: string) => {
+  try {
+    const data: Record<string, string> = { simulado: simuladoId }
+    if (userId) {
+      data.user = userId
+    }
+    await pb.collection('simulado_submissions').create(data)
   } catch (error) {
     console.error('Erro ao registrar conclusão do simulado', error)
   }

@@ -4,7 +4,12 @@ import { ArrowLeft, CheckCircle2, MessageCircle, Share2, XCircle } from 'lucide-
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { getSimulado, getSimuladoQuestions, submitSimuladoCompletion } from '@/services/simulados'
+import {
+  getSimulado,
+  getSimuladoQuestions,
+  submitSimuladoCompletion,
+  incrementSimuladoAccess,
+} from '@/services/simulados'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
@@ -28,6 +33,7 @@ export default function SimuladoSession() {
       .then(([s, qs]) => {
         setSimulado(s)
         setQuestions(qs)
+        incrementSimuladoAccess(s.id)
       })
       .catch(() => {
         toast.error('Erro ao carregar o simulado')
@@ -48,8 +54,8 @@ export default function SimuladoSession() {
       window.scrollTo(0, 0)
     } else {
       setShowResults(true)
-      if (user && simulado) {
-        submitSimuladoCompletion(simulado.id, user.id)
+      if (simulado) {
+        submitSimuladoCompletion(simulado.id, user?.id)
       }
     }
   }

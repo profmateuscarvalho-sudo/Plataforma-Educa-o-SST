@@ -252,6 +252,7 @@ export interface Simulado extends RecordModel {
   description: string
   banner: string
   active: boolean
+  access_count?: number
 }
 
 export interface SimuladoQuestion extends RecordModel {
@@ -262,7 +263,7 @@ export interface SimuladoQuestion extends RecordModel {
 }
 
 export interface SimuladoSubmission extends RecordModel {
-  user: string
+  user?: string
   simulado: string
 }
 

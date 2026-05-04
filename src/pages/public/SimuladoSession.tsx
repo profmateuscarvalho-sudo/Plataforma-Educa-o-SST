@@ -17,6 +17,24 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import type { Simulado, SimuladoQuestion } from '@/types'
 
+const injectOGTags = (title: string, desc: string, image: string, url: string) => {
+  document.title = title
+  const updateMeta = (property: string, content: string) => {
+    let el = document.querySelector(`meta[property="${property}"]`)
+    if (!el) {
+      el = document.createElement('meta')
+      el.setAttribute('property', property)
+      document.head.appendChild(el)
+    }
+    el.setAttribute('content', content)
+  }
+  updateMeta('og:title', title)
+  updateMeta('og:description', desc)
+  updateMeta('og:image', image)
+  updateMeta('og:url', url)
+  updateMeta('og:type', 'website')
+}
+
 export default function SimuladoSession() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -52,6 +70,12 @@ export default function SimuladoSession() {
           image: bannerUrl,
           url: window.location.href,
         })
+        injectOGTags(
+          `Simulado: ${s.title}`,
+          plainText || 'Teste seus conhecimentos em Segurança e Saúde no Trabalho.',
+          bannerUrl,
+          window.location.href,
+        )
       })
       .catch(() => {
         toast.error('Erro ao carregar o simulado')

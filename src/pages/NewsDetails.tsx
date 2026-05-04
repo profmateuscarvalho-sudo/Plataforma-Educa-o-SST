@@ -15,6 +15,24 @@ import {
 } from '@/components/ui/carousel'
 import { setMetaTags, stripHtml } from '@/lib/utils'
 
+const injectOGTags = (title: string, desc: string, image: string, url: string) => {
+  document.title = title
+  const updateMeta = (property: string, content: string) => {
+    let el = document.querySelector(`meta[property="${property}"]`)
+    if (!el) {
+      el = document.createElement('meta')
+      el.setAttribute('property', property)
+      document.head.appendChild(el)
+    }
+    el.setAttribute('content', content)
+  }
+  updateMeta('og:title', title)
+  updateMeta('og:description', desc)
+  updateMeta('og:image', image)
+  updateMeta('og:url', url)
+  updateMeta('og:type', 'article')
+}
+
 export default function NewsDetails() {
   const { id } = useParams()
   const [news, setNews] = useState<News | null>(null)
@@ -47,6 +65,7 @@ export default function NewsDetails() {
         image: coverUrl,
         url: shareUrl,
       })
+      injectOGTags(news.title, plainText, coverUrl, shareUrl)
     }
   }, [news, coverUrl, shareUrl])
 
@@ -90,15 +109,15 @@ export default function NewsDetails() {
             <h3 className="text-2xl font-serif font-bold text-secondary border-b pb-4">
               Galeria de Fotos
             </h3>
-            <Carousel className="w-full max-w-3xl mx-auto">
+            <Carousel className="w-full max-w-4xl mx-auto">
               <CarouselContent>
                 {galleryImages.map((img, i) => (
                   <CarouselItem key={i}>
-                    <div className="aspect-[4/3] rounded-xl overflow-hidden bg-slate-200">
+                    <div className="rounded-xl overflow-hidden bg-slate-900/5 flex items-center justify-center p-2 md:p-4 min-h-[400px] md:min-h-[600px]">
                       <img
                         src={pb.files.getUrl(news, img)}
                         alt={`Galeria ${i + 1}`}
-                        className="w-full h-full object-cover object-top"
+                        className="w-full h-full max-h-[70vh] object-contain rounded-lg shadow-sm"
                       />
                     </div>
                   </CarouselItem>

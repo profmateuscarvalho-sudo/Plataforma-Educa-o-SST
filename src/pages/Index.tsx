@@ -125,28 +125,25 @@ export default function Index() {
         <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up max-w-[calc(100vw-3rem)]">
           <Link
             to="/revistas"
-            className="group flex items-center bg-white p-4 pr-6 rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] border-2 border-primary/20 hover:border-primary/60 transition-all hover:-translate-y-2 w-full sm:w-[420px] gap-5"
+            className="group flex flex-col items-center bg-white p-4 rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] border-2 border-primary/20 hover:border-primary/60 transition-all hover:-translate-y-2 w-[220px] sm:w-[260px] gap-4"
           >
-            <div className="w-24 h-32 shrink-0 rounded-xl overflow-hidden bg-slate-100 shadow-inner relative flex items-center justify-center">
+            <div className="w-full aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-slate-100 shadow-inner relative flex items-center justify-center">
               {featuredMag.thumbnail ? (
                 <img
                   src={pb.files.getUrl(featuredMag, featuredMag.thumbnail)}
                   alt="Capa"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               ) : (
-                <BookOpen className="w-8 h-8 text-slate-400" />
+                <BookOpen className="w-12 h-12 text-slate-400" />
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-bold uppercase tracking-wider text-accent mb-2 flex items-center gap-1.5">
+            <div className="flex flex-col items-center text-center w-full min-w-0 pb-1">
+              <div className="text-xs font-bold uppercase tracking-wider text-accent mb-2 flex items-center justify-center gap-1.5">
                 <Star className="w-4 h-4 fill-current text-accent" /> Revista do Mês
               </div>
-              <h4 className="font-serif font-bold text-lg text-secondary line-clamp-2 leading-tight group-hover:text-primary transition-colors mb-2">
-                {featuredMag.title}
-              </h4>
-              <p className="text-sm font-medium text-primary mt-1 flex items-center gap-1">
-                Clique para ler grátis{' '}
+              <p className="text-sm font-bold text-primary mt-1 flex items-center justify-center gap-1 w-full bg-primary/5 hover:bg-primary/10 py-2.5 rounded-lg transition-colors">
+                Clique aqui para ler grátis
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </p>
             </div>

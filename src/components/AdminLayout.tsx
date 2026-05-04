@@ -14,6 +14,7 @@ import {
   Handshake,
   Film,
   ClipboardList,
+  Settings,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -37,6 +38,7 @@ export default function AdminLayout() {
     { label: 'Documentários', icon: Film, path: '/admin/documentarios' },
     { label: 'Simulados', icon: ClipboardList, path: '/admin/simulados' },
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },
+    { label: 'Anúncios Revista', icon: Settings, path: '/admin/configuracoes/anuncio-revista' },
     { label: 'Notícias', icon: Newspaper, path: '/admin/noticias' },
     { label: 'Leads', icon: Users, path: '/admin/leads' },
     { label: 'Pagamentos', icon: BookOpen, path: '/admin/pagamentos' },

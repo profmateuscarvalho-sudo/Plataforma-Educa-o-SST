@@ -1,12 +1,40 @@
+import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Check, Users, MessageSquare, TrendingUp, Target, Award } from 'lucide-react'
+import { getMagazineLandingPage } from '@/services/magazine_management'
+import type { MagazineLandingPage } from '@/types'
 
 export default function Anuncie() {
-  const whatsappNumber = '5518997190486'
+  const [data, setData] = useState<MagazineLandingPage | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getMagazineLandingPage().then((res) => {
+      if (res) setData(res as unknown as MagazineLandingPage)
+      setLoading(false)
+    })
+  }, [])
+
+  if (loading || !data) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-8 space-y-8 flex flex-col items-center pt-24">
+        <Skeleton className="w-[300px] h-8" />
+        <Skeleton className="w-full max-w-4xl h-24" />
+        <Skeleton className="w-full max-w-2xl h-16" />
+      </div>
+    )
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)
+  }
+
+  const whatsappNumber = data.whatsapp_number.replace(/\D/g, '')
   const whatsappMessage = encodeURIComponent(
-    'Olá! Tenho interesse em anunciar na Revista Educação SST.',
+    `Olá! Tenho interesse em anunciar na Revista Educação SST.`,
   )
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
 
@@ -27,13 +55,17 @@ export default function Anuncie() {
           <Badge className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm py-1.5 px-4 mb-8 font-medium">
             Mídia Kit Educação SST
           </Badge>
-          <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight max-w-4xl tracking-tight">
-            Alcance a Elite da SST: Sua Marca na{' '}
-            <span className="text-accent">Revista Educação SST</span>
-          </h1>
+          <h1
+            className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight max-w-4xl tracking-tight"
+            dangerouslySetInnerHTML={{
+              __html: data.hero_title.replace(
+                'Revista Educação SST',
+                '<span class="text-accent">Revista Educação SST</span>',
+              ),
+            }}
+          />
           <p className="text-xl md:text-2xl text-slate-300 max-w-2xl mb-12 font-light leading-relaxed">
-            Conecte seus produtos e serviços diretamente aos principais profissionais, gestores e
-            tomadores de decisão em Segurança e Saúde no Trabalho do Brasil.
+            {data.hero_description}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-16">
@@ -43,7 +75,7 @@ export default function Anuncie() {
               asChild
             >
               <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                <MessageSquare className="w-5 h-5 mr-2" /> Tenho interesse em anunciar
+                <MessageSquare className="w-5 h-5 mr-2" /> {data.cta_text}
               </a>
             </Button>
             <Button
@@ -65,7 +97,9 @@ export default function Anuncie() {
                 <Users className="w-8 h-8 text-accent" />
               </div>
               <div className="text-left">
-                <p className="text-4xl font-black text-white leading-none mb-1">+2.000</p>
+                <p className="text-4xl font-black text-white leading-none mb-1">
+                  {data.readers_count}
+                </p>
                 <p className="text-sm font-medium text-slate-300 uppercase tracking-wider">
                   Leitores Ativos
                 </p>
@@ -135,46 +169,18 @@ export default function Anuncie() {
 
             <div className="lg:w-1/2 w-full">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-slate-100 transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                <div className="absolute top-0 right-0 bg-accent text-accent-foreground px-4 py-2 font-bold z-10 rounded-bl-xl shadow-md">
+                <div className="absolute top-0 right-0 bg-slate-800 text-white px-4 py-2 font-bold z-10 rounded-bl-xl shadow-md">
                   Exemplo de Anúncio
                 </div>
-                <div className="aspect-[4/3] bg-slate-900 relative">
-                  <img
-                    src="https://img.usecurling.com/p/800/600?q=magazine%20advertisement&color=black"
-                    alt="Magazine Mockup"
-                    className="w-full h-full object-cover opacity-80"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center p-8">
-                    <div className="w-full h-full border-2 border-white/20 rounded flex">
-                      <div className="w-1/2 border-r-2 border-white/20 bg-white/95 p-6 flex flex-col justify-between">
-                        <div>
-                          <div className="w-20 h-20 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center font-bold text-2xl text-slate-900">
-                            ESS
-                          </div>
-                          <h3 className="font-bold text-xl mb-2 text-slate-800">
-                            Engenharia, Saúde & Segurança
-                          </h3>
-                          <p className="text-xs text-slate-600 font-medium">
-                            Apreciação de riscos • Adequação de máquinas • Ergonomia
-                          </p>
-                        </div>
-                        <div className="bg-slate-100 p-2 rounded text-center text-xs font-bold">
-                          11 4227-2180
-                        </div>
-                      </div>
-                      <div className="w-1/2 bg-green-700 p-6 flex flex-col items-center justify-center text-white text-center">
-                        <h2 className="text-3xl font-black italic mb-4">
-                          SAFETY
-                          <br />
-                          SUMMIT
-                          <br />
-                          2026
-                        </h2>
-                        <p className="text-xs font-medium bg-white/20 px-2 py-1 rounded">
-                          Clique e conheça os palestrantes
-                        </p>
-                      </div>
+                <div className="aspect-[4/3] bg-slate-100 relative">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                    <div className="w-20 h-20 border-4 border-slate-300 rounded-full mb-6 flex items-center justify-center">
+                      <span className="font-bold text-3xl">?</span>
                     </div>
+                    <h2 className="text-4xl font-serif font-bold mb-3 text-slate-500 uppercase tracking-widest">
+                      SUA MARCA AQUI
+                    </h2>
+                    <p className="text-lg font-medium text-slate-400">Posicionamento Premium</p>
                   </div>
                 </div>
               </div>
@@ -196,107 +202,51 @@ export default function Anuncie() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Plan 1 */}
-            <Card className="border-slate-200 shadow-lg hover:shadow-xl transition-shadow flex flex-col">
-              <CardContent className="p-8 flex-1 flex flex-col">
-                <div className="mb-6 text-center">
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">Trimestral</h3>
-                  <div className="text-primary font-bold bg-primary/10 inline-block px-3 py-1 rounded-full text-sm mb-4">
-                    3 Inserções
+            {data.plans?.map((plan, idx) => (
+              <Card
+                key={idx}
+                className={`shadow-lg flex flex-col ${plan.bestValue ? 'border-primary transform md:-translate-y-4 shadow-2xl relative' : 'border-slate-200 hover:shadow-xl transition-shadow'}`}
+              >
+                {plan.bestValue && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-accent-foreground px-4 py-1 rounded-full font-bold text-sm whitespace-nowrap shadow-lg">
+                    Melhor Custo-Benefício
                   </div>
-                  <div className="text-4xl font-black text-secondary">
-                    R$ 1.200<span className="text-lg text-slate-500 font-medium">,00</span>
+                )}
+                <CardContent className="p-8 flex-1 flex flex-col">
+                  <div className="mb-6 text-center">
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">{plan.title}</h3>
+                    <div className="text-primary font-bold bg-primary/10 inline-block px-3 py-1 rounded-full text-sm mb-4">
+                      {plan.insertions}
+                    </div>
+                    <div className="text-4xl font-black text-secondary">
+                      {formatPrice(plan.price).replace(',00', '')}
+                      <span className="text-lg text-slate-500 font-medium">,00</span>
+                    </div>
+                    <p className="text-sm text-slate-500 mt-2">
+                      {formatPrice(plan.pricePerInsertion)} por inserção
+                    </p>
                   </div>
-                  <p className="text-sm text-slate-500 mt-2">R$ 400 por inserção</p>
-                </div>
-                <div className="flex-1">
-                  <ul className="space-y-3 mb-8">
-                    <li className="flex items-center gap-2 text-sm text-slate-600">
-                      <Check className="w-4 h-4 text-green-500" /> 1/1 Página nas próximas 3 edições
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600">
-                      <Check className="w-4 h-4 text-green-500" /> Links interativos
-                    </li>
-                  </ul>
-                </div>
-                <Button className="w-full" variant="outline" asChild>
-                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                    Selecionar Plano
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Plan 2 */}
-            <Card className="border-primary shadow-2xl relative flex flex-col transform md:-translate-y-4">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-accent-foreground px-4 py-1 rounded-full font-bold text-sm whitespace-nowrap shadow-lg">
-                Melhor Custo-Benefício
-              </div>
-              <CardContent className="p-8 flex-1 flex flex-col">
-                <div className="mb-6 text-center">
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">Semestral</h3>
-                  <div className="text-primary font-bold bg-primary/10 inline-block px-3 py-1 rounded-full text-sm mb-4">
-                    6 Inserções
+                  <div className="flex-1">
+                    <ul className="space-y-3 mb-8">
+                      {plan.features?.map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
+                          <Check className="w-4 h-4 text-green-500 shrink-0" /> {feature}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <div className="text-4xl font-black text-secondary">
-                    R$ 2.000<span className="text-lg text-slate-500 font-medium">,00</span>
-                  </div>
-                  <p className="text-sm text-slate-500 mt-2">R$ 333 por inserção</p>
-                </div>
-                <div className="flex-1">
-                  <ul className="space-y-3 mb-8">
-                    <li className="flex items-center gap-2 text-sm text-slate-600">
-                      <Check className="w-4 h-4 text-green-500" /> 1/1 Página nas próximas 6 edições
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600">
-                      <Check className="w-4 h-4 text-green-500" /> Links interativos
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-                      <Check className="w-4 h-4 text-green-500" /> Posicionamento Premium
-                    </li>
-                  </ul>
-                </div>
-                <Button className="w-full bg-primary hover:bg-primary/90 text-lg h-12" asChild>
-                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                    Selecionar Plano
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Plan 3 */}
-            <Card className="border-slate-200 shadow-lg hover:shadow-xl transition-shadow flex flex-col">
-              <CardContent className="p-8 flex-1 flex flex-col">
-                <div className="mb-6 text-center">
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">Anual</h3>
-                  <div className="text-primary font-bold bg-primary/10 inline-block px-3 py-1 rounded-full text-sm mb-4">
-                    12 Inserções
-                  </div>
-                  <div className="text-4xl font-black text-secondary">
-                    R$ 3.600<span className="text-lg text-slate-500 font-medium">,00</span>
-                  </div>
-                  <p className="text-sm text-slate-500 mt-2">R$ 300 por inserção</p>
-                </div>
-                <div className="flex-1">
-                  <ul className="space-y-3 mb-8">
-                    <li className="flex items-center gap-2 text-sm text-slate-600">
-                      <Check className="w-4 h-4 text-green-500" /> 1/1 Página por 12 meses
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600">
-                      <Check className="w-4 h-4 text-green-500" /> Links interativos
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600">
-                      <Check className="w-4 h-4 text-green-500" /> Posicionamento Premium
-                    </li>
-                  </ul>
-                </div>
-                <Button className="w-full" variant="outline" asChild>
-                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                    Selecionar Plano
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
+                  <Button
+                    className={`w-full ${plan.bestValue ? 'bg-primary hover:bg-primary/90 text-lg h-12' : ''}`}
+                    variant={plan.bestValue ? 'default' : 'outline'}
+                    asChild
+                  >
+                    <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                      Selecionar Plano
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
           <p className="text-sm text-slate-500 text-center mt-8 italic">

@@ -51,12 +51,23 @@ export const validateToken = async (token: string, type: string) => {
 export const submitArticle = async (
   authorForm: FormData,
   articleForm: FormData,
-  tokenId: string,
+  tokenId?: string,
 ) => {
   const author = await pb.collection('authors').create(authorForm)
   articleForm.append('author', author.id)
   await pb.collection('articles').create(articleForm)
-  await pb.collection('submission_tokens').update(tokenId, { used: true })
+  if (tokenId) {
+    await pb.collection('submission_tokens').update(tokenId, { used: true })
+  }
+}
+
+export const getMagazineLandingPage = async () => {
+  const records = await pb.collection('magazine_landing_page').getFullList()
+  return records[0] || null
+}
+
+export const updateMagazineLandingPage = async (id: string, data: any) => {
+  return pb.collection('magazine_landing_page').update(id, data)
 }
 
 export const submitConnection = async (formData: FormData, tokenId: string) => {

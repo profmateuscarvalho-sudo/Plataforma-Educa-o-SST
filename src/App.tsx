@@ -49,6 +49,7 @@ import AdminDocumentaries from './pages/admin/Documentaries/List'
 import AdminDocumentaryWizard from './pages/admin/Documentaries/Wizard'
 import AdminSimulados from './pages/admin/Simulados/List'
 import AdminSimuladoWizard from './pages/admin/Simulados/Wizard'
+import AdminMagazineLanding from './pages/admin/MagazineLandingConfig'
 import InvestorSummary from './pages/public/InvestorSummary'
 import DocumentaryPitch from './pages/public/DocumentaryPitch'
 
@@ -71,8 +72,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            <Route path="/submeter-artigo" element={<SubmitArticleInfo />} />
-            <Route path="/submissao-artigo/:token" element={<ArticleSubmission />} />
+            <Route path="/submeter-artigo" element={<ArticleSubmission />} />
             <Route path="/conexao-profissional/:token" element={<ProfessionalConnection />} />
             <Route path="/meu-local-trabalho" element={<WorkplaceSubmission />} />
 
@@ -103,6 +103,7 @@ const App = () => (
             <Route path="/admin/revistas/artigos" element={<AdminMagazineArticles />} />
             <Route path="/admin/revistas/conexoes" element={<AdminMagazineConnections />} />
             <Route path="/admin/revistas/locais" element={<AdminMagazineWorkplaces />} />
+            <Route path="/admin/configuracoes/anuncio-revista" element={<AdminMagazineLanding />} />
             <Route path="/admin/noticias" element={<AdminNews />} />
             <Route path="/admin/leads" element={<AdminLeads />} />
             <Route path="/admin/pagamentos" element={<AdminPayments />} />

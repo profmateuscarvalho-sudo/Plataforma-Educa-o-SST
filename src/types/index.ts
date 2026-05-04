@@ -157,6 +157,24 @@ export interface Author extends RecordModel {
   status: 'pending' | 'approved'
 }
 
+export interface MagazineLandingPlan {
+  title: string
+  insertions: string
+  price: number
+  pricePerInsertion: number
+  features: string[]
+  bestValue: boolean
+}
+
+export interface MagazineLandingPage extends RecordModel {
+  hero_title: string
+  hero_description: string
+  readers_count: string
+  plans: MagazineLandingPlan[]
+  whatsapp_number: string
+  cta_text: string
+}
+
 export interface Article extends RecordModel {
   title: string
   content: string

@@ -31,7 +31,8 @@ export default function Layout() {
     { name: 'Simulados', href: '/simulados' },
     { name: 'Revistas', href: '/revistas' },
     { name: 'Notícias', href: '/noticias' },
-    { name: 'Anuncie', href: '/anuncie-na-revista' },
+    { name: 'Anuncie na Revista', href: '/anuncie-na-revista' },
+    { name: 'Submeter Artigo', href: '/submeter-artigo' },
   ]
 
   return (

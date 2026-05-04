@@ -28,10 +28,6 @@ export default function Anuncie() {
     )
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)
-  }
-
   const whatsappNumber = data.whatsapp_number.replace(/\D/g, '')
   const whatsappMessage = encodeURIComponent(
     `Olá! Tenho interesse em anunciar na Revista Educação SST.`,
@@ -168,19 +164,38 @@ export default function Anuncie() {
             </div>
 
             <div className="lg:w-1/2 w-full">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-slate-100 transform rotate-2 hover:rotate-0 transition-transform duration-500">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
                 <div className="absolute top-0 right-0 bg-slate-800 text-white px-4 py-2 font-bold z-10 rounded-bl-xl shadow-md">
                   Exemplo de Anúncio
                 </div>
-                <div className="aspect-[4/3] bg-slate-100 relative">
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                    <div className="w-20 h-20 border-4 border-slate-300 rounded-full mb-6 flex items-center justify-center">
-                      <span className="font-bold text-3xl">?</span>
+                <div className="flex bg-slate-200 p-2 md:p-4 rounded-xl shadow-inner">
+                  {/* Left page (content mock) */}
+                  <div className="flex-1 bg-white aspect-[3/4] border-r border-slate-200 shadow-sm rounded-l-md relative overflow-hidden flex flex-col p-4">
+                    <div className="w-full h-8 bg-slate-100 rounded mb-4"></div>
+                    <div className="w-3/4 h-4 bg-slate-100 rounded mb-2"></div>
+                    <div className="w-full h-4 bg-slate-100 rounded mb-2"></div>
+                    <div className="w-5/6 h-4 bg-slate-100 rounded mb-8"></div>
+                    <div className="flex-1 bg-slate-50 rounded border border-slate-100 flex items-center justify-center">
+                      <span className="text-slate-300 font-medium">Artigo Especializado</span>
                     </div>
-                    <h2 className="text-4xl font-serif font-bold mb-3 text-slate-500 uppercase tracking-widest">
-                      SUA MARCA AQUI
+                    <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-black/5 pointer-events-none"></div>
+                  </div>
+
+                  {/* Right page (ad mock) */}
+                  <div className="flex-1 bg-white aspect-[3/4] shadow-sm rounded-r-md relative flex flex-col items-center justify-center p-6 border-l border-white">
+                    <div className="absolute top-0 left-0 bottom-0 w-8 bg-gradient-to-r from-black/5 to-transparent pointer-events-none"></div>
+
+                    <div className="w-20 h-20 border-4 border-slate-200 rounded-full mb-6 flex items-center justify-center bg-slate-50 relative z-10">
+                      <span className="font-bold text-3xl text-slate-300">?</span>
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-serif font-bold mb-3 text-slate-400 uppercase tracking-widest text-center leading-tight relative z-10">
+                      Sua Marca
+                      <br />
+                      Aqui
                     </h2>
-                    <p className="text-lg font-medium text-slate-400">Posicionamento Premium</p>
+                    <p className="text-sm md:text-base font-medium text-slate-400 text-center relative z-10">
+                      Página Inteira
+                    </p>
                   </div>
                 </div>
               </div>
@@ -218,13 +233,6 @@ export default function Anuncie() {
                     <div className="text-primary font-bold bg-primary/10 inline-block px-3 py-1 rounded-full text-sm mb-4">
                       {plan.insertions}
                     </div>
-                    <div className="text-4xl font-black text-secondary">
-                      {formatPrice(plan.price).replace(',00', '')}
-                      <span className="text-lg text-slate-500 font-medium">,00</span>
-                    </div>
-                    <p className="text-sm text-slate-500 mt-2">
-                      {formatPrice(plan.pricePerInsertion)} por inserção
-                    </p>
                   </div>
                   <div className="flex-1">
                     <ul className="space-y-3 mb-8">

@@ -202,7 +202,7 @@ export default function AdminMagazineLandingConfig() {
                 <Trash2 className="w-4 h-4" />
               </Button>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-2">
                   <Label>Nome do Plano</Label>
                   <Input
@@ -215,24 +215,6 @@ export default function AdminMagazineLandingConfig() {
                   <Input
                     value={plan.insertions}
                     onChange={(e) => handlePlanChange(pIdx, 'insertions', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Preço Total (R$)</Label>
-                  <Input
-                    type="number"
-                    value={plan.price}
-                    onChange={(e) => handlePlanChange(pIdx, 'price', Number(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Preço por Inserção (R$)</Label>
-                  <Input
-                    type="number"
-                    value={plan.pricePerInsertion}
-                    onChange={(e) =>
-                      handlePlanChange(pIdx, 'pricePerInsertion', Number(e.target.value))
-                    }
                   />
                 </div>
               </div>

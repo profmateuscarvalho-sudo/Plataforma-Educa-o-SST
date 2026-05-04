@@ -31,8 +31,7 @@ export default function Layout() {
     { name: 'Simulados', href: '/simulados' },
     { name: 'Revistas', href: '/revistas' },
     { name: 'Notícias', href: '/noticias' },
-    { name: 'Anuncie na Revista', href: '/anuncie-na-revista' },
-    { name: 'Submeter Artigo', href: '/submeter-artigo' },
+    { name: 'Anuncie', href: '/anuncie-na-revista' },
   ]
 
   return (
@@ -188,12 +187,7 @@ export default function Layout() {
               </li>
               <li>
                 <Link to="/anuncie-na-revista" className="hover:text-white transition-colors">
-                  Anuncie na Revista
-                </Link>
-              </li>
-              <li>
-                <Link to="/submeter-artigo" className="hover:text-white transition-colors">
-                  Submeter Artigo
+                  Anuncie
                 </Link>
               </li>
             </ul>

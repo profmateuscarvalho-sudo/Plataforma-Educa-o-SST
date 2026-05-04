@@ -26,8 +26,6 @@ import {
   updateArticleStatus,
   updateArticle,
   deleteArticle,
-  generateSubmissionLink,
-  getTokens,
 } from '@/services/magazine_management'
 import { getMagazines } from '@/services/magazines'
 import { Article, Magazine } from '@/types'
@@ -66,8 +64,6 @@ export default function AdminMagazineArticles() {
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null)
 
   const [linkModalOpen, setLinkModalOpen] = useState(false)
-  const [recipientName, setRecipientName] = useState('')
-  const [tokens, setTokens] = useState<any[]>([])
   const [editorialComments, setEditorialComments] = useState('')
   const { toast } = useToast()
 
@@ -85,41 +81,12 @@ export default function AdminMagazineArticles() {
     }
   }
 
-  const loadTokens = async () => {
-    try {
-      const data = await getTokens('article')
-      setTokens(data)
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
   const handleOpenLinks = () => {
     setLinkModalOpen(true)
-    loadTokens()
   }
 
-  const handleGenerateLink = async () => {
-    if (!recipientName.trim()) {
-      toast({
-        title: 'Aviso',
-        description: 'Informe o nome do destinatário.',
-        variant: 'destructive',
-      })
-      return
-    }
-    try {
-      await generateSubmissionLink('article', recipientName)
-      toast({ title: 'Link Gerado!', description: 'O link expira em 30 dias.' })
-      setRecipientName('')
-      loadTokens()
-    } catch {
-      toast({ title: 'Erro', description: 'Falha ao gerar link.', variant: 'destructive' })
-    }
-  }
-
-  const copyLink = async (tokenStr: string) => {
-    const url = `${window.location.origin}/submissao-artigo/${tokenStr}`
+  const copyPublicLink = async () => {
+    const url = `${window.location.origin}/submeter-artigo`
     await navigator.clipboard.writeText(url)
     toast({ title: 'Link Copiado!' })
   }
@@ -193,7 +160,7 @@ export default function AdminMagazineArticles() {
           <p className="text-muted-foreground mt-1">Gerencie e revise submissões de artigos.</p>
         </div>
         <Button onClick={handleOpenLinks}>
-          <LinkIcon className="w-4 h-4 mr-2" /> Gerenciar Links
+          <LinkIcon className="w-4 h-4 mr-2" /> Link de Submissão
         </Button>
       </div>
 
@@ -304,71 +271,24 @@ export default function AdminMagazineArticles() {
       </Card>
 
       <Dialog open={linkModalOpen} onOpenChange={setLinkModalOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Links de Submissão de Artigo</DialogTitle>
+            <DialogTitle>Link Público de Submissão</DialogTitle>
           </DialogHeader>
-          <div className="flex gap-4 items-end border-b pb-6">
-            <div className="flex-1 space-y-2">
-              <Label>Nome do Destinatário</Label>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-slate-500">
+              Compartilhe o link abaixo para que os autores possam submeter artigos para a revista.
+            </p>
+            <div className="flex gap-2 items-center">
               <Input
-                value={recipientName}
-                onChange={(e) => setRecipientName(e.target.value)}
-                placeholder="Ex: Dr. João Silva"
+                readOnly
+                value={`${window.location.origin}/submeter-artigo`}
+                className="bg-slate-50"
               />
+              <Button onClick={copyPublicLink}>
+                <Copy className="w-4 h-4 mr-2" /> Copiar
+              </Button>
             </div>
-            <Button onClick={handleGenerateLink}>Gerar Novo Link (30 dias)</Button>
-          </div>
-          <div className="space-y-4 pt-2 max-h-[400px] overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Destinatário</TableHead>
-                  <TableHead>Link</TableHead>
-                  <TableHead>Expira em</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tokens.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium text-sm">{t.recipient_name || '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="truncate w-32 text-xs text-slate-500">
-                          {window.location.origin}/submissao-artigo/{t.token}
-                        </span>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => copyLink(t.token)}
-                        >
-                          <Copy className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {new Date(t.expires_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {t.used ? (
-                        <Badge variant="secondary">Usado</Badge>
-                      ) : (
-                        <Badge className="bg-green-100 text-green-800">Ativo</Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {tokens.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-4 text-slate-500">
-                      Nenhum link gerado.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
           </div>
         </DialogContent>
       </Dialog>

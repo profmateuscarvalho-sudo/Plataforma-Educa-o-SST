@@ -32,9 +32,13 @@ export const validateToken = async (token: string, type: string) => {
       .getFullList({ filter: `token="${token}" && type="${type}" && used=false` })
     const record = records[0] || null
     if (record) {
-      // Fix mobile browser date parsing (Safari) by replacing space with 'T'
-      const expiresAt = new Date(record.expires_at.replace(' ', 'T'))
-      if (expiresAt < new Date()) {
+      // Fix mobile browser date parsing (Safari) by replacing space with 'T' and ensuring 'Z' suffix if missing
+      let dateStr = record.expires_at.replace(' ', 'T')
+      if (!dateStr.endsWith('Z') && !dateStr.includes('+') && !dateStr.includes('-')) {
+        dateStr += 'Z'
+      }
+      const expiresAt = new Date(dateStr)
+      if (expiresAt.getTime() < Date.now()) {
         return null
       }
     }

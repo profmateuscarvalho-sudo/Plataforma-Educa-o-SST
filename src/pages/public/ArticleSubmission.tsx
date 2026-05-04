@@ -87,13 +87,49 @@ export default function ArticleSubmission() {
     }
   }
 
-  if (isValid === null) return <div className="p-8 text-center">Validando link...</div>
+  if (isValid === null)
+    return (
+      <div className="p-8 text-center text-slate-600 font-medium">
+        Validando link de submissão...
+      </div>
+    )
   if (!isValid)
-    return <div className="p-8 text-center text-red-500 font-bold">Link inválido ou expirado.</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center space-y-6">
+        <div className="p-4 bg-red-50 text-red-600 rounded-full">
+          <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-slate-800">Link inválido ou expirado</h2>
+          <p className="text-slate-600 max-w-md mx-auto">
+            O token de submissão que você tentou acessar não é mais válido, já foi utilizado ou
+            expirou.
+          </p>
+        </div>
+        <Button asChild size="lg" className="mt-4">
+          <a href="/submeter-artigo">Solicitar Novo Link</a>
+        </Button>
+      </div>
+    )
   if (submitted)
     return (
-      <div className="p-8 text-center text-green-600 font-bold">
-        Obrigado pela sua submissão! Seu artigo está sob análise.
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center space-y-6">
+        <div className="p-4 bg-green-50 text-green-600 rounded-full">
+          <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800">Obrigado pela sua submissão!</h2>
+        <p className="text-slate-600">
+          Seu artigo foi enviado com sucesso e está sob análise da nossa equipe editorial.
+        </p>
       </div>
     )
 

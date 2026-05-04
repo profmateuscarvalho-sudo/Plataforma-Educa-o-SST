@@ -19,6 +19,7 @@ import Register from './pages/Register'
 import NotFound from './pages/NotFound'
 
 import ArticleSubmission from './pages/public/ArticleSubmission'
+import SubmitArticleInfo from './pages/public/SubmitArticleInfo'
 import ProfessionalConnection from './pages/public/ProfessionalConnection'
 import WorkplaceSubmission from './pages/public/WorkplaceSubmission'
 import PublicSimulados from './pages/public/Simulados'
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
+            <Route path="/submeter-artigo" element={<SubmitArticleInfo />} />
             <Route path="/submissao-artigo/:token" element={<ArticleSubmission />} />
             <Route path="/conexao-profissional/:token" element={<ProfessionalConnection />} />
             <Route path="/meu-local-trabalho" element={<WorkplaceSubmission />} />

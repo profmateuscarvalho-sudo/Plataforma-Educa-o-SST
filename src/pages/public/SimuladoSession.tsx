@@ -4,6 +4,8 @@ import { ArrowLeft, CheckCircle2, MessageCircle, Share2, XCircle } from 'lucide-
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import pb from '@/lib/pocketbase/client'
+import { setMetaTags, stripHtml } from '@/lib/utils'
 import {
   getSimulado,
   getSimuladoQuestions,
@@ -34,6 +36,22 @@ export default function SimuladoSession() {
         setSimulado(s)
         setQuestions(qs)
         incrementSimuladoAccess(s.id)
+
+        let plainText = s.description ? stripHtml(s.description) : ''
+        if (plainText.length > 180) {
+          plainText = plainText.substring(0, 180) + '...'
+        }
+
+        const bannerUrl = s.banner
+          ? pb.files.getUrl(s, s.banner)
+          : 'https://img.usecurling.com/p/1200/600?q=education&color=blue'
+
+        setMetaTags({
+          title: `Simulado: ${s.title}`,
+          description: plainText || 'Teste seus conhecimentos em Segurança e Saúde no Trabalho.',
+          image: bannerUrl,
+          url: window.location.href,
+        })
       })
       .catch(() => {
         toast.error('Erro ao carregar o simulado')

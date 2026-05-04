@@ -8,6 +8,8 @@ import {
   ChevronRight,
   LogOut,
   LayoutDashboard,
+  Instagram,
+  MessageCircle,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useEffect } from 'react'
@@ -60,6 +62,24 @@ export default function Layout() {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-2 mr-4 border-r pr-4">
+              <a
+                href="https://www.instagram.com/revista.educacaosst"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-primary transition-colors"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href="https://wa.me/5518997425195"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-green-500 transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
+            </div>
             {user ? (
               <>
                 <Button variant="ghost" asChild className="text-primary font-semibold">
@@ -140,6 +160,24 @@ export default function Layout() {
                     </Button>
                   )}
                 </div>
+                <div className="flex items-center gap-4 justify-center mt-4 pt-4 border-t">
+                  <a
+                    href="https://www.instagram.com/revista.educacaosst"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-400 hover:text-primary transition-colors p-2 bg-slate-50 rounded-full"
+                  >
+                    <Instagram className="w-6 h-6" />
+                  </a>
+                  <a
+                    href="https://wa.me/5518997425195"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-400 hover:text-green-500 transition-colors p-2 bg-slate-50 rounded-full"
+                  >
+                    <MessageCircle className="w-6 h-6" />
+                  </a>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -161,6 +199,24 @@ export default function Layout() {
               Plataforma de educação e desenvolvimento profissional na área de Segurança e Saúde no
               Trabalho.
             </p>
+            <div className="flex items-center gap-4 pt-2">
+              <a
+                href="https://www.instagram.com/revista.educacaosst"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/10 p-2 rounded-full text-white hover:bg-primary transition-colors"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href="https://wa.me/5518997425195"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/10 p-2 rounded-full text-white hover:bg-green-500 transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
+            </div>
           </div>
           <div>
             <h4 className="font-serif font-bold text-lg text-white mb-6">Links Rápidos</h4>

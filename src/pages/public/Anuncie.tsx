@@ -87,7 +87,7 @@ export default function Anuncie() {
           </div>
 
           {/* Social Proof */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 md:p-8 rounded-2xl flex flex-col md:flex-row items-center gap-8 md:gap-16 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 md:p-8 rounded-2xl flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 shadow-2xl">
             <div className="flex items-center gap-4">
               <div className="bg-accent/20 p-4 rounded-full">
                 <Users className="w-8 h-8 text-accent" />
@@ -98,18 +98,6 @@ export default function Anuncie() {
                 </p>
                 <p className="text-sm font-medium text-slate-300 uppercase tracking-wider">
                   Leitores Ativos
-                </p>
-              </div>
-            </div>
-            <div className="hidden md:block w-px h-16 bg-white/20" />
-            <div className="flex items-center gap-4">
-              <div className="bg-primary/20 p-4 rounded-full">
-                <Award className="w-8 h-8 text-primary" />
-              </div>
-              <div className="text-left">
-                <p className="text-4xl font-black text-white leading-none mb-1">Top #1</p>
-                <p className="text-sm font-medium text-slate-300 uppercase tracking-wider">
-                  Conteúdo Especializado
                 </p>
               </div>
             </div>
@@ -130,7 +118,7 @@ export default function Anuncie() {
       </section>
 
       {/* Case Study / Example Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-primary/5">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-16">
             <div className="lg:w-1/2 space-y-8">
@@ -164,11 +152,11 @@ export default function Anuncie() {
             </div>
 
             <div className="lg:w-1/2 w-full">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                <div className="absolute top-0 right-0 bg-slate-800 text-white px-4 py-2 font-bold z-10 rounded-bl-xl shadow-md">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 border-8 border-white/50">
+                <div className="absolute top-0 right-0 bg-secondary text-white px-4 py-2 font-bold z-10 rounded-bl-xl shadow-md">
                   Exemplo de Anúncio
                 </div>
-                <div className="flex bg-slate-200 p-2 md:p-4 rounded-xl shadow-inner">
+                <div className="flex bg-slate-100 p-2 md:p-4 rounded-xl shadow-inner">
                   {/* Left page (content mock) */}
                   <div className="flex-1 bg-white aspect-[3/4] border-r border-slate-200 shadow-sm rounded-l-md relative overflow-hidden flex flex-col p-4">
                     <div className="w-full h-8 bg-slate-100 rounded mb-4"></div>
@@ -220,13 +208,8 @@ export default function Anuncie() {
             {data.plans?.map((plan, idx) => (
               <Card
                 key={idx}
-                className={`shadow-lg flex flex-col ${plan.bestValue ? 'border-primary transform md:-translate-y-4 shadow-2xl relative' : 'border-slate-200 hover:shadow-xl transition-shadow'}`}
+                className={`shadow-lg flex flex-col border-slate-200 hover:shadow-xl transition-all hover:-translate-y-2`}
               >
-                {plan.bestValue && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-accent-foreground px-4 py-1 rounded-full font-bold text-sm whitespace-nowrap shadow-lg">
-                    Melhor Custo-Benefício
-                  </div>
-                )}
                 <CardContent className="p-8 flex-1 flex flex-col">
                   <div className="mb-6 text-center">
                     <h3 className="text-xl font-bold text-slate-800 mb-2">{plan.title}</h3>
@@ -250,8 +233,8 @@ export default function Anuncie() {
                     </ul>
                   </div>
                   <Button
-                    className={`w-full ${plan.bestValue ? 'bg-primary hover:bg-primary/90 text-lg h-12' : ''}`}
-                    variant={plan.bestValue ? 'default' : 'outline'}
+                    className={`w-full hover:bg-primary hover:text-primary-foreground transition-colors`}
+                    variant="outline"
                     asChild
                   >
                     <a href={whatsappLink} target="_blank" rel="noopener noreferrer">

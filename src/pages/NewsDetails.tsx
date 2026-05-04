@@ -98,14 +98,14 @@ export default function NewsDetails() {
                       <img
                         src={pb.files.getUrl(news, img)}
                         alt={`Galeria ${i + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-top"
                       />
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-2" />
-              <CarouselNext className="right-2" />
+              <CarouselPrevious className="left-4 bg-black/40 border-0 text-white hover:bg-black/60 hover:text-white" />
+              <CarouselNext className="right-4 bg-black/40 border-0 text-white hover:bg-black/60 hover:text-white" />
             </Carousel>
           </div>
         )}

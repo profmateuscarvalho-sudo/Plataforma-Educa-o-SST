@@ -9,8 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { validateToken, submitArticle } from '@/services/magazine_management'
-import { Calendar } from 'lucide-react'
-
 export default function ArticleSubmission() {
   const { token } = useParams()
   const [isValid, setIsValid] = useState<boolean | null>(null)
@@ -20,16 +18,6 @@ export default function ArticleSubmission() {
   const { toast } = useToast()
 
   const { register, handleSubmit } = useForm()
-
-  const today = new Date()
-  const deadlineMonth = today.getMonth()
-  const deadlineYear = today.getFullYear()
-  const deadline = new Date(deadlineYear, deadlineMonth, 10)
-  const deadlineFormatted = deadline.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
 
   useEffect(() => {
     if (token) {
@@ -59,7 +47,6 @@ export default function ArticleSubmission() {
       articleForm.append('title', data.title)
       articleForm.append('compliance_norms', 'true')
       articleForm.append('status', 'submitted')
-      articleForm.append('delivery_deadline', deadline.toISOString())
 
       if (data.articleFile?.[0]) {
         const file = data.articleFile[0]
@@ -119,9 +106,6 @@ export default function ArticleSubmission() {
             <strong>Normas de Conformidade:</strong> Seu artigo deve ter entre 2000 a 5000 palavras,
             estar formatado segundo as normas da ABNT e focado em SST. O envio do documento original
             é obrigatório.
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-4 bg-accent/10 text-accent-foreground p-3 rounded-md font-medium text-lg border border-accent/20">
-            <Calendar className="w-5 h-5" /> Prazo de Entrega: {deadlineFormatted}
           </div>
         </CardHeader>
         <CardContent>

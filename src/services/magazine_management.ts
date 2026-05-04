@@ -23,12 +23,22 @@ export const generateSubmissionLink = (type: string, recipientName: string) =>
 export const getTokens = (type: string) =>
   pb.collection('submission_tokens').getFullList({ filter: `type="${type}"`, sort: '-created' })
 
+export const deleteArticle = (id: string) => pb.collection('articles').delete(id)
+
 export const validateToken = async (token: string, type: string) => {
   try {
     const records = await pb
       .collection('submission_tokens')
       .getFullList({ filter: `token="${token}" && type="${type}" && used=false` })
-    return records[0] || null
+    const record = records[0] || null
+    if (record) {
+      // Fix mobile browser date parsing (Safari) by replacing space with 'T'
+      const expiresAt = new Date(record.expires_at.replace(' ', 'T'))
+      if (expiresAt < new Date()) {
+        return null
+      }
+    }
+    return record
   } catch {
     return null
   }

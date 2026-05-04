@@ -12,15 +12,35 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   getArticles,
   updateArticleStatus,
   updateArticle,
+  deleteArticle,
   generateSubmissionLink,
   getTokens,
 } from '@/services/magazine_management'
 import { getMagazines } from '@/services/magazines'
 import { Article, Magazine } from '@/types'
-import { Eye, Link as LinkIcon, Save, Copy, Download, CheckCircle, XCircle } from 'lucide-react'
+import {
+  Eye,
+  Link as LinkIcon,
+  Save,
+  Copy,
+  Download,
+  CheckCircle,
+  XCircle,
+  Trash2,
+} from 'lucide-react'
 import { MagazineTabs } from '@/components/admin/MagazineTabs'
 import {
   Select,
@@ -43,6 +63,7 @@ export default function AdminMagazineArticles() {
 
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterMagazine, setFilterMagazine] = useState<string>('all')
+  const [articleToDelete, setArticleToDelete] = useState<string | null>(null)
 
   const [linkModalOpen, setLinkModalOpen] = useState(false)
   const [recipientName, setRecipientName] = useState('')
@@ -129,6 +150,18 @@ export default function AdminMagazineArticles() {
   const openEditor = (article: Article) => {
     setSelectedArticle(article)
     setEditorialComments((article as any).editorial_comments || '')
+  }
+
+  const handleDelete = async () => {
+    if (!articleToDelete) return
+    try {
+      await deleteArticle(articleToDelete)
+      toast({ title: 'Sucesso', description: 'Artigo excluído com sucesso.' })
+      setArticleToDelete(null)
+      load()
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao excluir o artigo.', variant: 'destructive' })
+    }
   }
 
   const filteredArticles = articles.filter((a) => {
@@ -243,9 +276,19 @@ export default function AdminMagazineArticles() {
                 </TableCell>
                 <TableCell>{getStatusBadge(article.status)}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" onClick={() => openEditor(article)}>
-                    <Eye className="w-4 h-4 mr-1" /> Revisar
-                  </Button>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => openEditor(article)}>
+                      <Eye className="w-4 h-4 mr-1" /> Revisar
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => setArticleToDelete(article.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -329,6 +372,29 @@ export default function AdminMagazineArticles() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!articleToDelete}
+        onOpenChange={(open) => !open && setArticleToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o artigo do sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Excluir Artigo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog
         open={!!selectedArticle}

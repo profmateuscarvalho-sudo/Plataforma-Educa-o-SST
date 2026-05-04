@@ -89,10 +89,10 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
   <meta name="twitter:image" content="${safeImage}">
 
   <meta http-equiv="refresh" content="0;url=${safeUrl}">
-  <script>window.location.href = "${safeUrl}";</script>
+  <script>window.location.replace("${safeUrl}");</script>
 </head>
 <body>
-  <p>Redirecionando...</p>
+  <p>Redirecionando para <a href="${safeUrl}">${safeTitle}</a>...</p>
 </body>
 </html>`
 

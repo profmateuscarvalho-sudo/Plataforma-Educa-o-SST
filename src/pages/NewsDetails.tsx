@@ -120,7 +120,7 @@ export default function NewsDetails() {
                       <img
                         src={pb.files.getUrl(news, img)}
                         alt={`Galeria ${i + 1}`}
-                        className="w-full h-full max-h-[70vh] object-contain rounded-lg shadow-sm"
+                        className="w-auto h-auto max-w-full max-h-[70vh] object-contain rounded-lg shadow-sm"
                       />
                     </div>
                   </CarouselItem>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ClipboardList, ChevronRight } from 'lucide-react'
+import { ClipboardList, ChevronRight, Share2 } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { getSimulados } from '@/services/simulados'
@@ -78,12 +78,27 @@ export default function PublicSimulados() {
                 <CardContent className="flex-1">
                   <p className="text-slate-600 text-sm line-clamp-3">{simulado.description}</p>
                 </CardContent>
-                <CardFooter className="pt-4 border-t">
-                  <Button className="w-full group" asChild>
+                <CardFooter className="pt-4 border-t flex gap-2">
+                  <Button className="w-full group flex-1" asChild>
                     <Link to={`/simulados/${simulado.id}`}>
                       Iniciar Simulado{' '}
                       <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    title="Compartilhar no WhatsApp"
+                    onClick={() => {
+                      const shareUrl = `${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/share/simulados/${simulado.id}`
+                      window.open(
+                        `https://wa.me/?text=${encodeURIComponent(simulado.title + ' ' + shareUrl)}`,
+                        '_blank',
+                      )
+                    }}
+                  >
+                    <Share2 className="w-4 h-4 text-slate-500 hover:text-slate-900" />
                   </Button>
                 </CardFooter>
               </Card>

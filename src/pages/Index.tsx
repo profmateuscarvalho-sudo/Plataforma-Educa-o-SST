@@ -125,9 +125,9 @@ export default function Index() {
         <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up max-w-[calc(100vw-3rem)]">
           <Link
             to="/revistas"
-            className="group flex flex-col items-center bg-white p-4 rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] border-2 border-primary/20 hover:border-primary/60 transition-all hover:-translate-y-2 w-[220px] sm:w-[260px] gap-4"
+            className="group flex flex-col items-center bg-white p-4 rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] border-2 border-primary/20 hover:border-primary/60 transition-all hover:-translate-y-2 w-[240px] sm:w-[280px] gap-4"
           >
-            <div className="w-full aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-slate-100 shadow-inner relative flex items-center justify-center">
+            <div className="w-full aspect-[1/1.414] shrink-0 rounded-xl overflow-hidden bg-slate-100 shadow-inner relative flex items-center justify-center">
               {featuredMag.thumbnail ? (
                 <img
                   src={pb.files.getUrl(featuredMag, featuredMag.thumbnail)}

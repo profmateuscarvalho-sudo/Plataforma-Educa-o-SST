@@ -190,6 +190,11 @@ export default function Layout() {
                   Anuncie
                 </Link>
               </li>
+              <li>
+                <Link to="/submeter-artigo" className="hover:text-white transition-colors">
+                  Submeter Artigo
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

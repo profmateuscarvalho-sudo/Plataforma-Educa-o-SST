@@ -233,6 +233,12 @@ export default function Anuncie() {
                     <div className="text-primary font-bold bg-primary/10 inline-block px-3 py-1 rounded-full text-sm mb-4">
                       {plan.insertions}
                     </div>
+                    <div className="text-4xl font-black text-slate-900 mb-2">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(plan.price || 0)}
+                    </div>
                   </div>
                   <div className="flex-1">
                     <ul className="space-y-3 mb-8">

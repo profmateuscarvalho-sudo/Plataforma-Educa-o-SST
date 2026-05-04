@@ -51,7 +51,10 @@ export default function NewsDetails() {
         : 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
     : ''
 
-  const shareUrl = window.location.href
+  const shareUrl = news
+    ? `${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/share/noticias/${news.id}`
+    : window.location.href
+  const actualUrl = window.location.href
 
   useEffect(() => {
     if (news) {
@@ -63,11 +66,11 @@ export default function NewsDetails() {
         title: news.title,
         description: plainText,
         image: coverUrl,
-        url: shareUrl,
+        url: actualUrl,
       })
-      injectOGTags(news.title, plainText, coverUrl, shareUrl)
+      injectOGTags(news.title, plainText, coverUrl, actualUrl)
     }
-  }, [news, coverUrl, shareUrl])
+  }, [news, coverUrl, actualUrl])
 
   if (!news)
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>

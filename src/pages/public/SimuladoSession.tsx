@@ -123,10 +123,10 @@ export default function SimuladoSession() {
     })
     const percentage = Math.round((score / questions.length) * 100)
 
-    const publicUrl = `https://educacaosst.goskip.app/simulados/${simulado.id}`
-    const shareText = `Eu acabei de marcar ${percentage}% no simulado ${simulado.title}! Confira em: ${publicUrl}`
+    const shareUrl = `${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/share/simulados/${simulado.id}`
+    const shareText = `Eu acabei de marcar ${percentage}% no simulado ${simulado.title}! Confira em: ${shareUrl}`
     const waLink = `https://wa.me/?text=${encodeURIComponent(shareText)}`
-    const liLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`
+    const liLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
 
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">

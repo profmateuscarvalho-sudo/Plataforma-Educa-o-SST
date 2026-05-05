@@ -17,10 +17,9 @@ import { useToast } from '@/hooks/use-toast'
 import { useRealtime } from '@/hooks/use-realtime'
 import { EventFormModal } from '@/components/admin/EventFormModal'
 import { EventSubscribersModal } from '@/components/admin/EventSubscribersModal'
-import { WorkshopGuestModal } from '@/components/admin/WorkshopGuestModal'
 import pb from '@/lib/pocketbase/client'
 import { Link } from 'react-router-dom'
-import { Ticket, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 
 export default function AdminEvents() {
   const [events, setEvents] = useState<PlatformEvent[]>([])
@@ -28,7 +27,6 @@ export default function AdminEvents() {
 
   const [formOpen, setFormOpen] = useState(false)
   const [subsOpen, setSubsOpen] = useState(false)
-  const [guestsOpen, setGuestsOpen] = useState(false)
   const [activeEvent, setActiveEvent] = useState<PlatformEvent | null>(null)
 
   const { toast } = useToast()
@@ -75,11 +73,6 @@ export default function AdminEvents() {
   const handleOpenSubs = (evt: PlatformEvent) => {
     setActiveEvent(evt)
     setSubsOpen(true)
-  }
-
-  const handleOpenGuests = (evt: PlatformEvent) => {
-    setActiveEvent(evt)
-    setGuestsOpen(true)
   }
 
   const copyLink = (id: string) => {
@@ -151,14 +144,6 @@ export default function AdminEvents() {
                     </Button>
                     {evt.is_workshop && (
                       <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Gerenciar Convidados VIP"
-                          onClick={() => handleOpenGuests(evt)}
-                        >
-                          <Ticket className="w-4 h-4 text-purple-600" />
-                        </Button>
                         <Button variant="ghost" size="icon" title="Página de Patrocínio" asChild>
                           <Link to={`/workshop/patrocinio/${evt.id}`} target="_blank">
                             <ExternalLink className="w-4 h-4 text-orange-600" />
@@ -204,9 +189,6 @@ export default function AdminEvents() {
         onSuccess={load}
       />
       <EventSubscribersModal open={subsOpen} setOpen={setSubsOpen} event={activeEvent} />
-      {activeEvent?.is_workshop && (
-        <WorkshopGuestModal open={guestsOpen} setOpen={setGuestsOpen} event={activeEvent} />
-      )}
     </div>
   )
 }

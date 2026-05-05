@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-05T14:41:34.123Z",
+  "generatedAt": "2026-05-05T15:04:52.189Z",
   "collections": [
     {
       "name": "users",
@@ -596,6 +596,48 @@
         {
           "name": "panda_video_id",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_workshop",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "speakers",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "structure",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "importance",
+          "type": "editor",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "objectives",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "sponsorship_value",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "sponsorship_tiers",
+          "type": "json",
           "required": false,
           "system": false
         }
@@ -2079,6 +2121,60 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "name": "workshop_invitations",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "",
+        "create": "@request.auth.role = 'admin'",
+        "update": "",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "event",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "events"
+        },
+        {
+          "name": "guest_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "token",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["pending", "viewed", "confirmed", "declined"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_workshop_inv_token ON workshop_invitations (token)"]
     }
   ]
 }

@@ -9,6 +9,7 @@ migrate(
       events.fields.add(new EditorField({ name: 'importance' }))
       events.fields.add(new JSONField({ name: 'objectives' }))
       events.fields.add(new NumberField({ name: 'sponsorship_value' }))
+      events.fields.add(new JSONField({ name: 'sponsorship_tiers' }))
       app.save(events)
     }
 
@@ -18,7 +19,7 @@ migrate(
       const invites = new Collection({
         name: 'workshop_invitations',
         type: 'base',
-        listRule: '',
+        listRule: "@request.auth.role = 'admin'",
         viewRule: '',
         createRule: "@request.auth.role = 'admin'",
         updateRule: '',
@@ -32,18 +33,18 @@ migrate(
             maxSelect: 1,
           },
           { name: 'guest_name', type: 'text', required: true },
-          { name: 'slug', type: 'text', required: true },
+          { name: 'token', type: 'text', required: true },
           {
             name: 'status',
             type: 'select',
             required: true,
-            values: ['pending', 'confirmed', 'declined'],
+            values: ['pending', 'viewed', 'confirmed', 'declined'],
             maxSelect: 1,
           },
           { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
           { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
         ],
-        indexes: ['CREATE UNIQUE INDEX idx_workshop_inv_slug ON workshop_invitations (slug)'],
+        indexes: ['CREATE UNIQUE INDEX idx_workshop_inv_token ON workshop_invitations (token)'],
       })
       app.save(invites)
     }

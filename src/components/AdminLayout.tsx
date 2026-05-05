@@ -35,6 +35,7 @@ export default function AdminLayout() {
     { label: 'Alunos', icon: GraduationCap, path: '/admin/alunos' },
     { label: 'Mentorias', icon: Presentation, path: '/admin/mentorias' },
     { label: 'Eventos', icon: CalendarDays, path: '/admin/eventos' },
+    { label: 'Workshops VIP', icon: Handshake, path: '/admin/workshops' },
     { label: 'Documentários', icon: Film, path: '/admin/documentarios' },
     { label: 'Simulados', icon: ClipboardList, path: '/admin/simulados' },
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },

@@ -139,18 +139,19 @@ export interface PlatformEvent extends RecordModel {
   thumbnail?: string
   panda_video_id?: string
   is_workshop?: boolean
-  speakers?: { name: string; topic: string }[]
+  speakers?: { name: string; topic: string; bio?: string; photo_url?: string }[]
   structure?: string[]
   importance?: string
   objectives?: string[]
   sponsorship_value?: number
+  sponsorship_tiers?: { name: string; price: number; benefits: string[] }[]
 }
 
 export interface WorkshopInvitation extends RecordModel {
   event: string
   guest_name: string
-  slug: string
-  status: 'pending' | 'confirmed' | 'declined'
+  token: string
+  status: 'pending' | 'viewed' | 'confirmed' | 'declined'
   expand?: { event?: PlatformEvent }
 }
 

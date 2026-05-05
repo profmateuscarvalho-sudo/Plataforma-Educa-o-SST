@@ -84,10 +84,28 @@ export function EventFormModal({
         .filter(Boolean)
         .map((l) => {
           const parts = l.split('|')
-          return { name: parts[0]?.trim() || '', topic: parts[1]?.trim() || '' }
+          return {
+            name: parts[0]?.trim() || '',
+            topic: parts[1]?.trim() || '',
+            bio: parts[2]?.trim() || '',
+          }
         })
       form.set('speakers', JSON.stringify(spk))
       form.delete('speakers_raw')
+
+      const tiers = ((form.get('tiers_raw') as string) || '')
+        .split('\n')
+        .filter(Boolean)
+        .map((l) => {
+          const parts = l.split('|')
+          return {
+            name: parts[0]?.trim() || '',
+            price: Number(parts[1]) || 0,
+            benefits: (parts[2] || '').split(',').map((b) => b.trim()),
+          }
+        })
+      form.set('sponsorship_tiers', JSON.stringify(tiers))
+      form.delete('tiers_raw')
 
       const struct = ((form.get('structure_raw') as string) || '')
         .split('\n')
@@ -264,13 +282,26 @@ export function EventFormModal({
                   />
                 </div>
                 <div>
-                  <Label>Palestrantes (Um por linha, formato: Nome | Tópico)</Label>
+                  <Label>Palestrantes (Um por linha, formato: Nome | Tópico | Mini Bio)</Label>
                   <Textarea
                     name="speakers_raw"
                     defaultValue={editingEvent?.speakers
-                      ?.map((s) => `${s.name} | ${s.topic}`)
+                      ?.map((s) => `${s.name} | ${s.topic} | ${s.bio || ''}`)
                       .join('\n')}
-                    placeholder="Ex: Mateus | Introdução à NR 01"
+                    placeholder="Ex: Mateus | Espiritualidade | Especialista em SST..."
+                  />
+                </div>
+                <div>
+                  <Label>
+                    Cotas de Patrocínio (Um por linha, formato: Nome | Valor | Benefícios separados
+                    por vírgula)
+                  </Label>
+                  <Textarea
+                    name="tiers_raw"
+                    defaultValue={editingEvent?.sponsorship_tiers
+                      ?.map((t) => `${t.name} | ${t.price} | ${t.benefits.join(', ')}`)
+                      .join('\n')}
+                    placeholder="Ex: Ouro | 10000 | Logo no banner, Menção honrosa"
                   />
                 </div>
                 <div>

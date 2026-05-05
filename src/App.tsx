@@ -54,6 +54,7 @@ import InvestorSummary from './pages/public/InvestorSummary'
 import DocumentaryPitch from './pages/public/DocumentaryPitch'
 import WorkshopInvitation from './pages/public/WorkshopInvitation'
 import WorkshopSponsorship from './pages/public/WorkshopSponsorship'
+import AdminWorkshops from './pages/admin/Workshops'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -79,7 +80,7 @@ const App = () => (
             <Route path="/meu-local-trabalho" element={<WorkplaceSubmission />} />
 
             <Route path="/resumo-investidor/:id" element={<InvestorSummary />} />
-            <Route path="/convite/:slug" element={<WorkshopInvitation />} />
+            <Route path="/convite/:token" element={<WorkshopInvitation />} />
             <Route path="/workshop/patrocinio/:id" element={<WorkshopSponsorship />} />
             <Route path="/simulados" element={<PublicSimulados />} />
             <Route path="/simulados/:id" element={<SimuladoSession />} />
@@ -112,6 +113,7 @@ const App = () => (
             <Route path="/admin/leads" element={<AdminLeads />} />
             <Route path="/admin/pagamentos" element={<AdminPayments />} />
             <Route path="/admin/lives" element={<AdminLives />} />
+            <Route path="/admin/workshops" element={<AdminWorkshops />} />
           </Route>
 
           <Route path="/documentarios/projeto/:slug" element={<DocumentaryPitch />} />

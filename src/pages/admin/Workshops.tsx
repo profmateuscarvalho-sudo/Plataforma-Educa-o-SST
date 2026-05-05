@@ -81,7 +81,7 @@ export default function AdminWorkshops() {
   }
 
   const copyToWhatsApp = (inv: WorkshopInvitation) => {
-    const url = `${window.location.origin}/backend/v1/share/convite/${inv.token}`
+    const url = `${window.location.origin}/convite/${inv.token}`
     const text = `Olá ${inv.guest_name}, você é nosso convidado especial! Acesse seu convite VIP aqui:\n${url}`
     navigator.clipboard.writeText(text)
     toast({ title: 'Mensagem copiada!', description: 'Cole no WhatsApp do convidado.' })

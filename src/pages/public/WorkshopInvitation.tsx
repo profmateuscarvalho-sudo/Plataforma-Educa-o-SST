@@ -58,8 +58,15 @@ export default function WorkshopInvitationPage() {
     )
   if (!invite || !invite.expand?.event)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-amber-50">
-        Convite não encontrado ou expirado.
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-50">
+        <div className="text-center space-y-4">
+          <XCircle className="w-16 h-16 text-rose-500 mx-auto opacity-80" />
+          <h2 className="text-3xl font-serif text-rose-200">Convite não encontrado</h2>
+          <p className="text-zinc-400 max-w-md mx-auto">
+            Não conseguimos localizar este convite. Ele pode ter expirado ou o link pode estar
+            incorreto.
+          </p>
+        </div>
       </div>
     )
 
@@ -152,6 +159,33 @@ export default function WorkshopInvitationPage() {
             </h2>
             <div className="prose prose-invert prose-lg mx-auto text-zinc-300 font-light leading-relaxed">
               <div dangerouslySetInnerHTML={{ __html: event.importance }} />
+            </div>
+          </section>
+        )}
+
+        {/* Objectives */}
+        {event.objectives && event.objectives.length > 0 && (
+          <section className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-amber-100">
+                Objetivos do Encontro
+              </h2>
+              <div className="w-16 h-1 bg-amber-500/50 mx-auto rounded-full" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {event.objectives.map((obj, i) => (
+                <Card
+                  key={i}
+                  className="bg-zinc-900 border-zinc-800 hover:border-amber-500/30 transition-all group"
+                >
+                  <CardContent className="p-8 text-center space-y-4 flex flex-col items-center">
+                    <div className="w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                      <CheckCircle2 className="w-6 h-6 text-amber-400" />
+                    </div>
+                    <p className="text-zinc-300 leading-relaxed font-light">{obj}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </section>
         )}

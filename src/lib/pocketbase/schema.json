@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-05T15:04:52.189Z",
+  "generatedAt": "2026-05-05T15:24:01.863Z",
   "collections": [
     {
       "name": "users",
@@ -2126,7 +2126,7 @@
       "name": "workshop_invitations",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = 'admin'",
+        "list": "",
         "view": "",
         "create": "@request.auth.role = 'admin'",
         "update": "",

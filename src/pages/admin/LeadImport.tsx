@@ -29,6 +29,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { createLead } from '@/services/leads'
 import { ArrowLeft, Upload, CheckCircle2, AlertCircle, FileText, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 function parseCSVLine(line: string) {
   const result = []
@@ -158,6 +159,12 @@ export default function AdminLeadImport() {
     }
 
     setImporting(false)
+    if (successCount > 0) {
+      toast.success(`${successCount} leads importados com sucesso!`)
+    }
+    if (errors.length > 0) {
+      toast.error(`Importação concluída com ${errors.length} erros.`)
+    }
   }
 
   const isMappingValid = mapping.name !== 'none' && mapping.email !== 'none'
@@ -309,7 +316,7 @@ export default function AdminLeadImport() {
                 Cancelar
               </Button>
               <Button onClick={handleImport} disabled={!isMappingValid || rows.length === 0}>
-                Importar {rows.length} Leads
+                Concluir Importação
               </Button>
             </CardFooter>
           </Card>

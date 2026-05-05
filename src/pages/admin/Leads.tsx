@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Upload } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -20,11 +23,19 @@ export default function AdminLeads() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-serif font-bold text-secondary">Leads & Contatos</h2>
-        <p className="text-slate-500 mt-1">
-          Gerencie contatos recebidos através das landing pages e formulários da plataforma.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-serif font-bold text-secondary">Leads & Contatos</h2>
+          <p className="text-slate-500 mt-1">
+            Gerencie contatos recebidos através das landing pages e formulários da plataforma.
+          </p>
+        </div>
+        <Button asChild>
+          <Link to="/admin/leads/import">
+            <Upload className="w-4 h-4 mr-2" />
+            Importar CSV
+          </Link>
+        </Button>
       </div>
       <Card>
         <CardContent className="p-0">

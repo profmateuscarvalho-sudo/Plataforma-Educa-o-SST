@@ -52,6 +52,8 @@ import AdminSimuladoWizard from './pages/admin/Simulados/Wizard'
 import AdminMagazineLanding from './pages/admin/MagazineLandingConfig'
 import InvestorSummary from './pages/public/InvestorSummary'
 import DocumentaryPitch from './pages/public/DocumentaryPitch'
+import WorkshopInvitation from './pages/public/WorkshopInvitation'
+import WorkshopSponsorship from './pages/public/WorkshopSponsorship'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -77,6 +79,8 @@ const App = () => (
             <Route path="/meu-local-trabalho" element={<WorkplaceSubmission />} />
 
             <Route path="/resumo-investidor/:id" element={<InvestorSummary />} />
+            <Route path="/convite/:slug" element={<WorkshopInvitation />} />
+            <Route path="/workshop/patrocinio/:id" element={<WorkshopSponsorship />} />
             <Route path="/simulados" element={<PublicSimulados />} />
             <Route path="/simulados/:id" element={<SimuladoSession />} />
             <Route path="/anuncie-na-revista" element={<Anuncie />} />

@@ -39,12 +39,14 @@ export function EventFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [selectedType, setSelectedType] = useState<string>('Workshop')
+  const [isWorkshop, setIsWorkshop] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
     if (open) {
       setFieldErrors({})
       setSelectedType(editingEvent?.type || 'Workshop')
+      setIsWorkshop(!!editingEvent?.is_workshop)
     }
   }, [open, editingEvent])
 
@@ -73,6 +75,33 @@ export function EventFormModal({
         }
         form.set('end_date', end.toISOString())
       }
+    }
+
+    form.set('is_workshop', isWorkshop.toString())
+    if (isWorkshop) {
+      const spk = ((form.get('speakers_raw') as string) || '')
+        .split('\n')
+        .filter(Boolean)
+        .map((l) => {
+          const parts = l.split('|')
+          return { name: parts[0]?.trim() || '', topic: parts[1]?.trim() || '' }
+        })
+      form.set('speakers', JSON.stringify(spk))
+      form.delete('speakers_raw')
+
+      const struct = ((form.get('structure_raw') as string) || '')
+        .split('\n')
+        .filter(Boolean)
+        .map((l) => l.trim())
+      form.set('structure', JSON.stringify(struct))
+      form.delete('structure_raw')
+
+      const obj = ((form.get('objectives_raw') as string) || '')
+        .split('\n')
+        .filter(Boolean)
+        .map((l) => l.trim())
+      form.set('objectives', JSON.stringify(obj))
+      form.delete('objectives_raw')
     }
 
     try {
@@ -207,6 +236,70 @@ export function EventFormModal({
                 <p className="text-xs text-red-500 mt-1">{fieldErrors.panda_video_id}</p>
               )}
             </div>
+          </div>
+
+          <div className="pt-4 border-t border-border/50">
+            <div className="flex items-center gap-2 mb-4">
+              <input
+                type="checkbox"
+                id="is_workshop"
+                checked={isWorkshop}
+                onChange={(e) => setIsWorkshop(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300"
+              />
+              <Label htmlFor="is_workshop" className="font-semibold text-base">
+                Habilitar Funcionalidades de Workshop Avançado
+              </Label>
+            </div>
+
+            {isWorkshop && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                <div>
+                  <Label>Valor do Patrocínio (R$)</Label>
+                  <Input
+                    name="sponsorship_value"
+                    type="number"
+                    step="0.01"
+                    defaultValue={editingEvent?.sponsorship_value}
+                  />
+                </div>
+                <div>
+                  <Label>Palestrantes (Um por linha, formato: Nome | Tópico)</Label>
+                  <Textarea
+                    name="speakers_raw"
+                    defaultValue={editingEvent?.speakers
+                      ?.map((s) => `${s.name} | ${s.topic}`)
+                      .join('\n')}
+                    placeholder="Ex: Mateus | Introdução à NR 01"
+                  />
+                </div>
+                <div>
+                  <Label>Estrutura do Evento (Um por linha)</Label>
+                  <Textarea
+                    name="structure_raw"
+                    defaultValue={editingEvent?.structure?.join('\n')}
+                    placeholder="Ex: Café da manhã&#10;Palestras&#10;Encerramento"
+                  />
+                </div>
+                <div>
+                  <Label>Objetivos (Um por linha)</Label>
+                  <Textarea
+                    name="objectives_raw"
+                    defaultValue={editingEvent?.objectives?.join('\n')}
+                    placeholder="Ex: Promover networking&#10;Discutir saúde mental"
+                  />
+                </div>
+                <div>
+                  <Label>Importância HWAW / Descrição do Patrocínio</Label>
+                  <Textarea
+                    name="importance"
+                    className="h-24"
+                    defaultValue={editingEvent?.importance}
+                    placeholder="Texto detalhando a importância do evento para potenciais patrocinadores."
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>

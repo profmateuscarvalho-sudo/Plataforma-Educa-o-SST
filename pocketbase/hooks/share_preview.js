@@ -51,6 +51,14 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       }
       redirectUrl = `${frontendUrl}/simulados/${id}`
       ogType = 'website'
+    } else if (type === 'convite') {
+      record = $app.findFirstRecordByData('workshop_invitations', 'slug', id)
+      const eventRec = $app.findRecordById('events', record.getString('event'))
+      title = `Convite para ${record.getString('guest_name')} - Workshop SST`
+      description = `Você foi convidado para o ${eventRec.getString('title')}. Confira a programação e confirme sua presença!`
+      image = 'https://img.usecurling.com/p/1200/600?q=corporate%20workshop&color=blue'
+      redirectUrl = `${frontendUrl}/convite/${id}`
+      ogType = 'website'
     } else {
       return e.redirect(302, frontendUrl)
     }

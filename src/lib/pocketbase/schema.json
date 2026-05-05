@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-05T21:13:57.740Z",
+  "generatedAt": "2026-05-05T21:40:56.356Z",
   "collections": [
     {
       "name": "users",
@@ -2175,6 +2175,130 @@
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_workshop_inv_token ON workshop_invitations (token)"]
+    },
+    {
+      "name": "smtp_settings",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "host",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "port",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "password",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "sender_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "sender_email",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "encryption",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["SSL", "TLS", "None"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "email_campaigns",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "subject",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "content",
+          "type": "editor",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "total_recipients",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["sent", "failed"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
     }
   ]
 }

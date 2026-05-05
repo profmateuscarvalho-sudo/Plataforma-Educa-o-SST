@@ -2,17 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getLeads } from '@/services/leads'
 import { Lead } from '@/types'
+import { LeadList } from '@/components/admin/leads/LeadList'
+import { SmtpSettingsForm } from '@/components/admin/leads/SmtpSettingsForm'
+import { EmailCampaigns } from '@/components/admin/leads/EmailCampaigns'
 
 export default function AdminLeads() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -26,9 +21,7 @@ export default function AdminLeads() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-serif font-bold text-secondary">Leads & Contatos</h2>
-          <p className="text-slate-500 mt-1">
-            Gerencie contatos recebidos através das landing pages e formulários da plataforma.
-          </p>
+          <p className="text-slate-500 mt-1">Gerencie contatos e dispare campanhas de e-mail.</p>
         </div>
         <Button asChild>
           <Link to="/admin/leads/import">
@@ -37,47 +30,26 @@ export default function AdminLeads() {
           </Link>
         </Button>
       </div>
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Mensagem/Interesse</TableHead>
-                <TableHead>Data</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leads.map((l) => (
-                <TableRow key={l.id}>
-                  <TableCell className="font-medium text-slate-800">{l.name}</TableCell>
-                  <TableCell>
-                    <div className="text-sm">{l.email}</div>
-                    <div className="text-xs text-slate-500">{l.phone}</div>
-                  </TableCell>
-                  <TableCell
-                    className="max-w-xs truncate text-slate-600"
-                    title={l.message || 'Interesse geral / Notificações'}
-                  >
-                    {l.message || 'Interesse geral / Notificações'}
-                  </TableCell>
-                  <TableCell className="text-sm text-slate-500">
-                    {new Date(l.created).toLocaleDateString('pt-BR')}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {leads.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-slate-500">
-                    Nenhum lead recebido ainda.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+
+      <Tabs defaultValue="list" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="list">Lista de Leads</TabsTrigger>
+          <TabsTrigger value="campaigns">Campanhas de E-mail</TabsTrigger>
+          <TabsTrigger value="smtp">Configurações SMTP</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list" className="mt-0">
+          <LeadList leads={leads} />
+        </TabsContent>
+
+        <TabsContent value="campaigns" className="mt-0">
+          <EmailCampaigns />
+        </TabsContent>
+
+        <TabsContent value="smtp" className="mt-0">
+          <SmtpSettingsForm />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

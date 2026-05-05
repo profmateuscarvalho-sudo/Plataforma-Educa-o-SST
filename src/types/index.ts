@@ -127,6 +127,23 @@ export interface Lead extends RecordModel {
   message: string
 }
 
+export interface SmtpSettings extends RecordModel {
+  host: string
+  port: number
+  user: string
+  password?: string
+  sender_name: string
+  sender_email: string
+  encryption: 'SSL' | 'TLS' | 'None'
+}
+
+export interface EmailCampaign extends RecordModel {
+  subject: string
+  content: string
+  total_recipients: number
+  status: 'sent' | 'failed'
+}
+
 export interface PlatformEvent extends RecordModel {
   title: string
   description: string

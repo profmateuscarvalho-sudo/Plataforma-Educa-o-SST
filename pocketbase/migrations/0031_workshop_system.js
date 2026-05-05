@@ -12,34 +12,46 @@ migrate(
       app.save(events)
     }
 
-    const invites = new Collection({
-      name: 'workshop_invitations',
-      type: 'base',
-      listRule: '',
-      viewRule: '',
-      createRule: "@request.auth.role = 'admin'",
-      updateRule: '',
-      deleteRule: "@request.auth.role = 'admin'",
-      fields: [
-        { name: 'event', type: 'relation', required: true, collectionId: events.id, maxSelect: 1 },
-        { name: 'guest_name', type: 'text', required: true },
-        { name: 'slug', type: 'text', required: true },
-        {
-          name: 'status',
-          type: 'select',
-          required: true,
-          values: ['pending', 'confirmed', 'declined'],
-          maxSelect: 1,
-        },
-        { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
-        { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
-      ],
-      indexes: ['CREATE UNIQUE INDEX idx_workshop_inv_slug ON workshop_invitations (slug)'],
-    })
-    app.save(invites)
+    try {
+      app.findCollectionByNameOrId('workshop_invitations')
+    } catch (_) {
+      const invites = new Collection({
+        name: 'workshop_invitations',
+        type: 'base',
+        listRule: '',
+        viewRule: '',
+        createRule: "@request.auth.role = 'admin'",
+        updateRule: '',
+        deleteRule: "@request.auth.role = 'admin'",
+        fields: [
+          {
+            name: 'event',
+            type: 'relation',
+            required: true,
+            collectionId: events.id,
+            maxSelect: 1,
+          },
+          { name: 'guest_name', type: 'text', required: true },
+          { name: 'slug', type: 'text', required: true },
+          {
+            name: 'status',
+            type: 'select',
+            required: true,
+            values: ['pending', 'confirmed', 'declined'],
+            maxSelect: 1,
+          },
+          { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
+          { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
+        ],
+        indexes: ['CREATE UNIQUE INDEX idx_workshop_inv_slug ON workshop_invitations (slug)'],
+      })
+      app.save(invites)
+    }
   },
   (app) => {
-    const invites = app.findCollectionByNameOrId('workshop_invitations')
-    app.delete(invites)
+    try {
+      const invites = app.findCollectionByNameOrId('workshop_invitations')
+      app.delete(invites)
+    } catch (_) {}
   },
 )

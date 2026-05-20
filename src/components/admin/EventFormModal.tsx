@@ -30,6 +30,7 @@ type SpeakerForm = {
   topic: string
   bio: string
   photo: string
+  photoFile?: File
 }
 
 export function EventFormModal({
@@ -82,6 +83,7 @@ export function EventFormModal({
     reader.onload = (e) => {
       const newSpeakers = [...speakers]
       newSpeakers[index].photo = e.target?.result as string
+      newSpeakers[index].photoFile = file
       setSpeakers(newSpeakers)
     }
     reader.readAsDataURL(file)
@@ -93,51 +95,58 @@ export function EventFormModal({
     setFieldErrors({})
     const form = new FormData(e.currentTarget)
 
-    const file = form.get('thumbnail') as File
-    if (!file || file.size === 0) form.delete('thumbnail')
+    const dateVal = form.get('date') as string
+    const endDateVal = form.get('end_date') as string
 
-    const logos = form.getAll('partner_logos')
-    if (logos.length > 0 && (logos[0] as File).size === 0) {
-      form.delete('partner_logos')
-    }
-
-    const dateVal = form.get('date')
-    const endDateVal = form.get('end_date')
+    let finalDate = null
+    let finalEndDate = null
 
     if (dateVal) {
-      const start = new Date(dateVal as string)
-      form.set('date', start.toISOString())
+      const start = new Date(dateVal)
+      finalDate = start.toISOString()
 
       if (endDateVal) {
-        const end = new Date(endDateVal as string)
+        const end = new Date(endDateVal)
         if (end <= start) {
           setFieldErrors({ end_date: 'A data de término deve ser posterior à data de início.' })
           setIsSubmitting(false)
           return
         }
-        form.set('end_date', end.toISOString())
+        finalEndDate = end.toISOString()
       }
     }
-
-    form.set('speakers', JSON.stringify(speakers))
 
     const struct = ((form.get('structure_raw') as string) || '')
       .split('\n')
       .filter(Boolean)
       .map((l) => l.trim())
-    form.set('structure', JSON.stringify(struct))
-    form.delete('structure_raw')
 
     const obj = ((form.get('objectives_raw') as string) || '')
       .split('\n')
       .filter(Boolean)
       .map((l) => l.trim())
-    form.set('objectives', JSON.stringify(obj))
-    form.delete('objectives_raw')
 
-    form.set('is_workshop', isWorkshop.toString())
+    const data: Record<string, any> = {
+      title: form.get('title'),
+      subtitle: form.get('subtitle') || null,
+      type: selectedType,
+      description: form.get('description'),
+      date: finalDate,
+      end_date: finalEndDate,
+      price: form.get('price') ? Number(form.get('price')) : null,
+      location: form.get('location') || null,
+      meeting_link: form.get('meeting_link') || null,
+      structure: struct,
+      objectives: obj,
+      is_workshop: isWorkshop,
+    }
 
     if (isWorkshop) {
+      data.sponsorship_value = form.get('sponsorship_value')
+        ? Number(form.get('sponsorship_value'))
+        : null
+      data.importance = form.get('importance') || null
+
       const tiers = ((form.get('tiers_raw') as string) || '')
         .split('\n')
         .filter(Boolean)
@@ -149,20 +158,58 @@ export function EventFormModal({
             benefits: (parts[2] || '').split(',').map((b) => b.trim()),
           }
         })
-      form.set('sponsorship_tiers', JSON.stringify(tiers))
-      form.delete('tiers_raw')
+      data.sponsorship_tiers = tiers
     } else {
-      form.delete('sponsorship_value')
-      form.delete('importance')
-      form.delete('tiers_raw')
+      data.sponsorship_value = null
+      data.importance = null
+      data.sponsorship_tiers = null
+    }
+
+    const file = form.get('thumbnail') as File
+    if (file && file.size > 0) {
+      data.thumbnail = file
+    } else if (!editingEvent) {
+      data.thumbnail = null
+    }
+
+    const logos = form.getAll('partner_logos') as File[]
+    const validLogos = logos.filter((l) => l.size > 0)
+    if (validLogos.length > 0) {
+      const existingLogos = editingEvent?.partner_logos || []
+      data.partner_logos = [...existingLogos, ...validLogos]
+    }
+
+    const speakerPhotosArray: any[] = editingEvent?.speaker_photos
+      ? [...editingEvent.speaker_photos]
+      : []
+    const speakersJson = speakers.map((spk, idx) => {
+      let photoRef = spk.photo
+      if (spk.photoFile) {
+        const ext = spk.photoFile.name.split('.').pop()
+        const newName = `speaker_${idx}_${Date.now()}.${ext}`
+        const renamedFile = new File([spk.photoFile], newName, { type: spk.photoFile.type })
+        speakerPhotosArray.push(renamedFile)
+        photoRef = ''
+      }
+      return {
+        name: spk.name,
+        topic: spk.topic,
+        bio: spk.bio,
+        photo: photoRef,
+      }
+    })
+
+    data.speakers = speakersJson
+    if (speakerPhotosArray.length > 0) {
+      data.speaker_photos = speakerPhotosArray
     }
 
     try {
       if (editingEvent) {
-        await updateEvent(editingEvent.id, form)
+        await updateEvent(editingEvent.id, data)
         toast({ title: 'Evento atualizado com sucesso' })
       } else {
-        await createEvent(form)
+        await createEvent(data)
         toast({ title: 'Evento adicionado com sucesso' })
       }
       onSuccess()
@@ -244,6 +291,9 @@ export function EventFormModal({
                 type="datetime-local"
                 defaultValue={formatForInput(editingEvent?.end_date)}
               />
+              {fieldErrors.end_date && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.end_date}</p>
+              )}
             </div>
             <div>
               <Label>Preço (R$ - Opcional)</Label>

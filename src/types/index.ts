@@ -164,6 +164,7 @@ export interface PlatformEvent extends RecordModel {
   sponsorship_value?: number
   sponsorship_tiers?: { name: string; price: number; benefits: string[] }[]
   partner_logos?: string[]
+  speaker_photos?: string[]
 }
 
 export interface WorkshopInvitation extends RecordModel {

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-20T13:46:33.831Z",
+  "generatedAt": "2026-05-20T18:19:32.679Z",
   "collections": [
     {
       "name": "users",
@@ -649,6 +649,12 @@
         },
         {
           "name": "partner_logos",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "speaker_photos",
           "type": "file",
           "required": false,
           "system": false

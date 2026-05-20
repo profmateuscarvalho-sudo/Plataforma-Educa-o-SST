@@ -17,7 +17,14 @@ import {
   Trash2,
   ShieldCheck,
 } from 'lucide-react'
-import { WorkshopInvitation } from '@/types'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { WorkshopInvitation, PlatformEvent } from '@/types'
 import { updateInvitationStatus } from '@/services/workshop'
 import { createEventRegistration } from '@/services/event_registrations'
 import pb from '@/lib/pocketbase/client'
@@ -25,6 +32,15 @@ import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
 
 type ExtraGuest = { name: string; position: string; phone: string }
+
+const getSpeakerPhotoUrl = (event: PlatformEvent, index: number) => {
+  if (!event.speaker_photos || event.speaker_photos.length === 0) return null
+  const prefix = `speaker_${index}_`
+  const photos = event.speaker_photos.filter((p) => p.startsWith(prefix))
+  if (photos.length === 0) return null
+  const latestPhoto = photos[photos.length - 1]
+  return pb.files.getUrl(event, latestPhoto)
+}
 
 export default function WorkshopInvitationPage() {
   const { token } = useParams()
@@ -34,7 +50,8 @@ export default function WorkshopInvitationPage() {
   const { toast } = useToast()
 
   // RSVP Flow State
-  const [rsvpStep, setRsvpStep] = useState<'initial' | 'details' | 'verify' | 'success'>('initial')
+  const [rsvpStep, setRsvpStep] = useState<'initial' | 'details' | 'success'>('initial')
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const [formData, setFormData] = useState({ email: '', phone: '', position: '' })
   const [extraGuests, setExtraGuests] = useState<ExtraGuest[]>([])
   const [confirmPhone, setConfirmPhone] = useState('')
@@ -84,7 +101,7 @@ export default function WorkshopInvitationPage() {
       toast({ title: 'Preencha todos os campos obrigatórios', variant: 'destructive' })
       return
     }
-    setRsvpStep('verify')
+    setIsConfirmModalOpen(true)
   }
 
   const handleFinalizeRegistration = async () => {
@@ -109,6 +126,7 @@ export default function WorkshopInvitationPage() {
       await updateInvitationStatus(invite.id, 'confirmed')
       setInvite({ ...invite, status: 'confirmed' })
       setRsvpStep('success')
+      setIsConfirmModalOpen(false)
       toast({ title: 'Presença confirmada com sucesso!' })
     } catch (err) {
       toast({ title: 'Erro ao processar inscrição', variant: 'destructive' })
@@ -150,16 +168,15 @@ export default function WorkshopInvitationPage() {
   const eventDate = new Date(event.date)
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-amber-500 selection:text-zinc-950 pb-20">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-32 px-6 text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
-        <div className="absolute inset-0 opacity-20 bg-[url('https://img.usecurling.com/p/1920/1080?q=spirituality%20light&color=black')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/50 via-zinc-950/80 to-zinc-950" />
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-amber-500 selection:text-zinc-950 pb-20 relative">
+      <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-amber-500/10 via-zinc-950 to-zinc-950 pointer-events-none" />
 
+      {/* Hero Section */}
+      <section className="relative overflow-hidden pt-32 pb-16 px-6 text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="relative z-10 max-w-4xl mx-auto space-y-8">
           <Badge
             variant="outline"
-            className="border-amber-500/30 text-amber-400 px-6 py-1.5 text-sm rounded-full mb-4 uppercase tracking-widest"
+            className="border-amber-500/30 text-amber-400 px-6 py-1.5 text-sm rounded-full mb-4 uppercase tracking-widest bg-zinc-950"
           >
             <Sparkles className="w-4 h-4 mr-2 inline" /> Convite VIP Exclusivo
           </Badge>
@@ -179,7 +196,7 @@ export default function WorkshopInvitationPage() {
         </div>
       </section>
 
-      <main className="max-w-5xl mx-auto px-6 py-16 space-y-24">
+      <main className="max-w-5xl mx-auto px-6 py-12 space-y-24">
         {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-20">
           <Card className="shadow-2xl border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm hover:border-amber-500/50 transition-colors duration-500">
@@ -268,33 +285,36 @@ export default function WorkshopInvitationPage() {
               <div className="w-16 h-1 bg-amber-500/50 mx-auto rounded-full" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {event.speakers.map((spk, i) => (
-                <Card
-                  key={i}
-                  className="bg-zinc-900 border-zinc-800 hover:border-amber-500/30 transition-all group overflow-hidden"
-                >
-                  <CardContent className="p-8 text-center space-y-4">
-                    <div className="w-24 h-24 mx-auto bg-zinc-800 rounded-full flex items-center justify-center group-hover:ring-4 ring-amber-500/20 transition-all overflow-hidden">
-                      {spk.photo ? (
-                        <img
-                          src={spk.photo}
-                          alt={spk.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-10 h-10 text-zinc-500" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-xl text-zinc-100">{spk.name}</h4>
-                      <p className="text-amber-400 font-medium mt-1">{spk.topic}</p>
-                      {spk.bio && (
-                        <p className="text-sm text-zinc-400 mt-4 leading-relaxed">{spk.bio}</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {event.speakers.map((spk, i) => {
+                const photoSrc = spk.photo || getSpeakerPhotoUrl(event, i)
+                return (
+                  <Card
+                    key={i}
+                    className="bg-zinc-900 border-zinc-800 hover:border-amber-500/30 transition-all group overflow-hidden"
+                  >
+                    <CardContent className="p-8 text-center space-y-4">
+                      <div className="w-24 h-24 mx-auto bg-zinc-800 rounded-full flex items-center justify-center group-hover:ring-4 ring-amber-500/20 transition-all overflow-hidden">
+                        {photoSrc ? (
+                          <img
+                            src={photoSrc}
+                            alt={spk.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-10 h-10 text-zinc-500" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-xl text-zinc-100">{spk.name}</h4>
+                        <p className="text-amber-400 font-medium mt-1">{spk.topic}</p>
+                        {spk.bio && (
+                          <p className="text-sm text-zinc-400 mt-4 leading-relaxed">{spk.bio}</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           </section>
         )}
@@ -340,7 +360,7 @@ export default function WorkshopInvitationPage() {
                   <p className="text-2xl font-serif text-amber-100">Presença Confirmada!</p>
                   <p className="text-zinc-400">
                     Aguardamos você no dia {eventDate.toLocaleDateString('pt-BR')}. Sua vaga e de
-                    seus acompanhantes (se aplicável) estão garantidas.
+                    seus convidados estão garantidas.
                   </p>
                 </div>
               ) : rsvpStep === 'initial' ? (
@@ -370,14 +390,14 @@ export default function WorkshopInvitationPage() {
                     </Button>
                   </div>
                 </div>
-              ) : rsvpStep === 'details' ? (
+              ) : (
                 <div className="space-y-6 animate-in fade-in zoom-in-95">
                   <div className="text-center mb-6">
                     <h3 className="text-2xl font-serif font-bold text-zinc-50">
                       Detalhes da Inscrição
                     </h3>
                     <p className="text-zinc-400 text-sm mt-2">
-                      Complete seus dados e adicione membros da sua equipe.
+                      Complete seus dados e adicione convidados extras da sua empresa.
                     </p>
                   </div>
 
@@ -425,7 +445,7 @@ export default function WorkshopInvitationPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <Label className="text-zinc-200 text-lg font-serif">
-                        Acompanhantes da Empresa
+                        Convidados da Empresa
                       </Label>
                       <Button
                         type="button"
@@ -434,14 +454,12 @@ export default function WorkshopInvitationPage() {
                         onClick={addGuest}
                         className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
                       >
-                        <Plus className="w-4 h-4 mr-1" /> Adicionar
+                        <Plus className="w-4 h-4 mr-1" /> Adicionar convidado
                       </Button>
                     </div>
 
                     {extraGuests.length === 0 ? (
-                      <p className="text-zinc-500 text-sm italic">
-                        Nenhum acompanhante adicionado.
-                      </p>
+                      <p className="text-zinc-500 text-sm italic">Nenhum convidado adicionado.</p>
                     ) : (
                       <div className="space-y-4">
                         {extraGuests.map((guest, i) => (
@@ -459,7 +477,7 @@ export default function WorkshopInvitationPage() {
                               <Trash2 className="w-4 h-4" />
                             </Button>
                             <div>
-                              <Label className="text-xs text-zinc-400">Nome do Acompanhante</Label>
+                              <Label className="text-xs text-zinc-400">Nome do Convidado</Label>
                               <Input
                                 value={guest.name}
                                 onChange={(e) => updateGuest(i, 'name', e.target.value)}
@@ -502,50 +520,7 @@ export default function WorkshopInvitationPage() {
                       className="flex-1 bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold"
                       onClick={handleProceedToVerify}
                     >
-                      Avançar
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-8 py-6 animate-in fade-in slide-in-from-right-8">
-                  <div className="text-center space-y-4">
-                    <div className="w-16 h-16 mx-auto bg-amber-500/10 rounded-full flex items-center justify-center">
-                      <ShieldCheck className="w-8 h-8 text-amber-500" />
-                    </div>
-                    <h3 className="text-2xl font-serif font-bold text-zinc-50">
-                      Confirmação de Segurança
-                    </h3>
-                    <p className="text-zinc-400">
-                      Para validar sua inscrição e garantir sua segurança, por favor, redigite o
-                      número de telefone informado:
-                    </p>
-                  </div>
-
-                  <div className="max-w-xs mx-auto space-y-4">
-                    <Input
-                      value={confirmPhone}
-                      onChange={(e) => setConfirmPhone(e.target.value)}
-                      className="bg-zinc-950 border-amber-500/30 focus-visible:ring-amber-500 text-center text-lg tracking-wider"
-                      placeholder="(00) 00000-0000"
-                    />
-                    <Button
-                      className="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold h-12"
-                      onClick={handleFinalizeRegistration}
-                      disabled={isSubmitting || !confirmPhone}
-                    >
-                      {isSubmitting ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        'Finalizar Inscrição'
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full text-zinc-400"
-                      onClick={() => setRsvpStep('details')}
-                      disabled={isSubmitting}
-                    >
-                      Corrigir Dados
+                      Confirmar Participação
                     </Button>
                   </div>
                 </div>
@@ -575,6 +550,38 @@ export default function WorkshopInvitationPage() {
           </section>
         )}
       </main>
+
+      <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+        <DialogContent className="sm:max-w-md bg-zinc-950 border-amber-500/20 text-zinc-50">
+          <DialogHeader>
+            <div className="w-16 h-16 mx-auto bg-amber-500/10 rounded-full flex items-center justify-center mb-4">
+              <ShieldCheck className="w-8 h-8 text-amber-500" />
+            </div>
+            <DialogTitle className="text-2xl font-serif text-center">
+              Confirmação de Segurança
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400 text-center">
+              Para validar sua inscrição e garantir sua segurança, por favor, redigite o número de
+              telefone informado:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              value={confirmPhone}
+              onChange={(e) => setConfirmPhone(e.target.value)}
+              className="bg-zinc-900 border-zinc-800 focus-visible:ring-amber-500 text-center text-lg tracking-wider"
+              placeholder="(00) 00000-0000"
+            />
+            <Button
+              className="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold h-12"
+              onClick={handleFinalizeRegistration}
+              disabled={isSubmitting || !confirmPhone}
+            >
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Finalizar Inscrição'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -136,11 +136,18 @@ export function EventFormModal({
 
     if (finalDate) formData.append('date', finalDate)
 
-    if (finalEndDate) formData.append('end_date', finalEndDate)
-    else formData.append('end_date', '')
+    if (finalEndDate) {
+      formData.append('end_date', finalEndDate)
+    } else {
+      formData.append('end_date', 'null')
+    }
 
     const price = form.get('price')
-    if (price) formData.append('price', price as string)
+    if (price) {
+      formData.append('price', price as string)
+    } else {
+      formData.append('price', 'null')
+    }
 
     if (form.get('location')) formData.append('location', form.get('location') as string)
     else formData.append('location', '')
@@ -155,7 +162,11 @@ export function EventFormModal({
 
     if (isWorkshop) {
       const sponsorshipValue = form.get('sponsorship_value')
-      if (sponsorshipValue) formData.append('sponsorship_value', sponsorshipValue as string)
+      if (sponsorshipValue) {
+        formData.append('sponsorship_value', sponsorshipValue as string)
+      } else {
+        formData.append('sponsorship_value', 'null')
+      }
 
       if (form.get('importance')) formData.append('importance', form.get('importance') as string)
       else formData.append('importance', '')

@@ -197,7 +197,19 @@ export default function WorkshopInvitationPage() {
       </section>
 
       <main className="max-w-5xl mx-auto px-6 py-12 space-y-24">
-        {/* Info Cards */}
+        {/* Description / Importance */}
+        {event.importance && (
+          <section className="relative z-20 bg-zinc-900/50 border border-zinc-800 rounded-3xl p-8 md:p-12 shadow-2xl backdrop-blur-sm animate-in fade-in duration-1000">
+            <h2 className="text-3xl font-serif font-bold text-amber-100 mb-6 text-center">
+              Por que participar?
+            </h2>
+            <div
+              className="prose prose-invert prose-amber max-w-none text-zinc-300 leading-relaxed font-light"
+              dangerouslySetInnerHTML={{ __html: event.importance }}
+            />
+          </section>
+        )}
+        {/* Info Cards */}{' '}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-20">
           <Card className="shadow-2xl border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm hover:border-amber-500/50 transition-colors duration-500">
             <CardContent className="p-8 flex flex-col items-center text-center space-y-4">
@@ -247,7 +259,6 @@ export default function WorkshopInvitationPage() {
             </CardContent>
           </Card>
         </div>
-
         {/* Objectives */}
         {event.objectives && event.objectives.length > 0 && (
           <section className="space-y-12 animate-in fade-in duration-1000">
@@ -274,7 +285,6 @@ export default function WorkshopInvitationPage() {
             </div>
           </section>
         )}
-
         {/* Speakers */}
         {event.speakers && event.speakers.length > 0 && (
           <section className="space-y-12 animate-in fade-in duration-1000">
@@ -318,7 +328,6 @@ export default function WorkshopInvitationPage() {
             </div>
           </section>
         )}
-
         {/* Structure & RSVP */}
         <section
           className={`grid ${event.structure && event.structure.length > 0 ? 'lg:grid-cols-2' : 'max-w-2xl mx-auto'} gap-16 items-start animate-in fade-in duration-1000`}
@@ -528,7 +537,6 @@ export default function WorkshopInvitationPage() {
             </CardContent>
           </Card>
         </section>
-
         {/* Partner Logos */}
         {event.partner_logos && event.partner_logos.length > 0 && (
           <section className="pt-16 border-t border-zinc-800/50 animate-in fade-in duration-1000 delay-500">

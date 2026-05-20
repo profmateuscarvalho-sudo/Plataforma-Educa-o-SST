@@ -146,22 +146,24 @@ export interface EmailCampaign extends RecordModel {
 
 export interface PlatformEvent extends RecordModel {
   title: string
+  subtitle?: string
   description: string
   type: 'Workshop' | 'Aula Online' | 'Aula Presencial'
   date: string
   end_date?: string
-  price: number
+  price?: number
   location?: string
   meeting_link?: string
   thumbnail?: string
   panda_video_id?: string
   is_workshop?: boolean
-  speakers?: { name: string; topic: string; bio?: string; photo_url?: string }[]
+  speakers?: { name: string; topic: string; bio?: string; photo?: string }[]
   structure?: string[]
   importance?: string
   objectives?: string[]
   sponsorship_value?: number
   sponsorship_tiers?: { name: string; price: number; benefits: string[] }[]
+  partner_logos?: string[]
 }
 
 export interface WorkshopInvitation extends RecordModel {
@@ -177,6 +179,8 @@ export interface EventRegistration extends RecordModel {
   name: string
   email: string
   phone?: string
+  position?: string
+  extra_guests?: { name: string; position: string; phone: string }[]
   status: 'confirmed' | 'pending' | 'cancelled'
 }
 

@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Trash2, UserPlus, Loader2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { EventRegistration, PlatformEvent } from '@/types'
 import {
   getEventRegistrations,
@@ -131,8 +132,9 @@ export function EventSubscribersModal({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>E-mail / Telefone</TableHead>
+                  <TableHead>Nome / Cargo</TableHead>
+                  <TableHead>Contato</TableHead>
+                  <TableHead>Acompanhantes</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -153,11 +155,25 @@ export function EventSubscribersModal({
                 ) : (
                   registrations.map((reg) => (
                     <TableRow key={reg.id}>
-                      <TableCell className="font-medium">{reg.name}</TableCell>
+                      <TableCell>
+                        <div className="font-medium">{reg.name}</div>
+                        {reg.position && (
+                          <div className="text-xs text-muted-foreground">{reg.position}</div>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <div className="text-sm">{reg.email}</div>
                         {reg.phone && (
                           <div className="text-xs text-muted-foreground">{reg.phone}</div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {reg.extra_guests && reg.extra_guests.length > 0 ? (
+                          <Badge variant="secondary" className="text-xs">
+                            {reg.extra_guests.length} convidados
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
                         )}
                       </TableCell>
                       <TableCell>

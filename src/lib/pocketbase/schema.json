@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-05T21:40:56.356Z",
+  "generatedAt": "2026-05-20T13:46:33.831Z",
   "collections": [
     {
       "name": "users",
@@ -552,7 +552,7 @@
         {
           "name": "price",
           "type": "number",
-          "required": true,
+          "required": false,
           "system": false
         },
         {
@@ -640,6 +640,18 @@
           "type": "json",
           "required": false,
           "system": false
+        },
+        {
+          "name": "subtitle",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "partner_logos",
+          "type": "file",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -700,6 +712,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "position",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "extra_guests",
+          "type": "json",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

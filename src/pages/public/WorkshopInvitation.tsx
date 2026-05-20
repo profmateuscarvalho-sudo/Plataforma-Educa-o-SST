@@ -2,18 +2,42 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Calendar, Clock, MapPin, User, CheckCircle2, XCircle, Sparkles } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  CheckCircle2,
+  XCircle,
+  Sparkles,
+  Loader2,
+  Plus,
+  Trash2,
+  ShieldCheck,
+} from 'lucide-react'
 import { WorkshopInvitation } from '@/types'
 import { updateInvitationStatus } from '@/services/workshop'
+import { createEventRegistration } from '@/services/event_registrations'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
+
+type ExtraGuest = { name: string; position: string; phone: string }
 
 export default function WorkshopInvitationPage() {
   const { token } = useParams()
   const [invite, setInvite] = useState<WorkshopInvitation | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+
+  // RSVP Flow State
+  const [rsvpStep, setRsvpStep] = useState<'initial' | 'details' | 'verify' | 'success'>('initial')
+  const [formData, setFormData] = useState({ email: '', phone: '', position: '' })
+  const [extraGuests, setExtraGuests] = useState<ExtraGuest[]>([])
+  const [confirmPhone, setConfirmPhone] = useState('')
 
   useEffect(() => {
     const fetchInvite = async () => {
@@ -30,6 +54,8 @@ export default function WorkshopInvitationPage() {
           await updateInvitationStatus(record.id, 'viewed')
           setInvite({ ...record, status: 'viewed' })
         }
+
+        if (record.status === 'confirmed') setRsvpStep('success')
       } catch (err) {
         console.error(err)
       } finally {
@@ -39,23 +65,73 @@ export default function WorkshopInvitationPage() {
     if (token) fetchInvite()
   }, [token])
 
-  const handleRSVP = async (status: 'confirmed' | 'declined') => {
+  const handleDecline = async () => {
     if (!invite) return
+    setIsSubmitting(true)
     try {
-      await updateInvitationStatus(invite.id, status)
-      setInvite({ ...invite, status })
-      toast({ title: status === 'confirmed' ? 'Presença confirmada!' : 'Agradecemos o aviso.' })
+      await updateInvitationStatus(invite.id, 'declined')
+      setInvite({ ...invite, status: 'declined' })
+      toast({ title: 'Agradecemos o aviso.' })
     } catch {
       toast({ title: 'Erro ao atualizar status.', variant: 'destructive' })
+    } finally {
+      setIsSubmitting(false)
     }
+  }
+
+  const handleProceedToVerify = () => {
+    if (!formData.email || !formData.phone || !formData.position) {
+      toast({ title: 'Preencha todos os campos obrigatórios', variant: 'destructive' })
+      return
+    }
+    setRsvpStep('verify')
+  }
+
+  const handleFinalizeRegistration = async () => {
+    if (!invite || !invite.expand?.event) return
+
+    if (confirmPhone.replace(/\D/g, '') !== formData.phone.replace(/\D/g, '')) {
+      toast({ title: 'O número de confirmação não confere', variant: 'destructive' })
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await createEventRegistration({
+        event: invite.expand.event.id,
+        name: invite.guest_name,
+        email: formData.email,
+        phone: formData.phone,
+        position: formData.position,
+        extra_guests: extraGuests.filter((g) => g.name && g.phone),
+        status: 'confirmed',
+      })
+      await updateInvitationStatus(invite.id, 'confirmed')
+      setInvite({ ...invite, status: 'confirmed' })
+      setRsvpStep('success')
+      toast({ title: 'Presença confirmada com sucesso!' })
+    } catch (err) {
+      toast({ title: 'Erro ao processar inscrição', variant: 'destructive' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const addGuest = () => setExtraGuests([...extraGuests, { name: '', position: '', phone: '' }])
+  const removeGuest = (i: number) => setExtraGuests(extraGuests.filter((_, idx) => idx !== i))
+  const updateGuest = (i: number, field: keyof ExtraGuest, val: string) => {
+    const updated = [...extraGuests]
+    updated[i][field] = val
+    setExtraGuests(updated)
   }
 
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-amber-50">
-        Carregando...
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
       </div>
     )
+
   if (!invite || !invite.expand?.event)
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-50">
@@ -90,6 +166,11 @@ export default function WorkshopInvitationPage() {
           <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200">
             {event.title}
           </h1>
+          {event.subtitle && (
+            <p className="text-2xl text-amber-200 mt-4 font-serif italic max-w-3xl mx-auto opacity-90">
+              {event.subtitle}
+            </p>
+          )}
           <div className="w-24 h-1 bg-amber-500/50 mx-auto rounded-full mt-8" />
           <p className="text-xl md:text-2xl text-zinc-300 font-light mt-8 leading-relaxed max-w-2xl mx-auto">
             Olá, <span className="font-semibold text-amber-400">{invite.guest_name}</span>. Você é
@@ -144,28 +225,15 @@ export default function WorkshopInvitationPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-lg text-zinc-100">Local</h3>
-                <p className="text-zinc-400">{event.location}</p>
+                <p className="text-zinc-400">{event.location || 'Online'}</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* The "Why" or Importance Section */}
-        {event.importance && (
-          <section className="bg-zinc-900/30 border border-zinc-800/50 rounded-3xl p-10 md:p-16 text-center space-y-6 animate-in fade-in duration-1000">
-            <Sparkles className="w-8 h-8 text-amber-400 mx-auto opacity-50" />
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-amber-100">
-              O Propósito
-            </h2>
-            <div className="prose prose-invert prose-lg mx-auto text-zinc-300 font-light leading-relaxed">
-              <div dangerouslySetInnerHTML={{ __html: event.importance }} />
-            </div>
-          </section>
-        )}
-
         {/* Objectives */}
         {event.objectives && event.objectives.length > 0 && (
-          <section className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+          <section className="space-y-12 animate-in fade-in duration-1000">
             <div className="text-center space-y-4">
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-amber-100">
                 Objetivos do Encontro
@@ -192,10 +260,10 @@ export default function WorkshopInvitationPage() {
 
         {/* Speakers */}
         {event.speakers && event.speakers.length > 0 && (
-          <section className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+          <section className="space-y-12 animate-in fade-in duration-1000">
             <div className="text-center space-y-4">
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-amber-100">
-                Líderes e Especialistas
+                Especialistas Convidados
               </h2>
               <div className="w-16 h-1 bg-amber-500/50 mx-auto rounded-full" />
             </div>
@@ -203,11 +271,19 @@ export default function WorkshopInvitationPage() {
               {event.speakers.map((spk, i) => (
                 <Card
                   key={i}
-                  className="bg-zinc-900 border-zinc-800 hover:border-amber-500/30 transition-all group"
+                  className="bg-zinc-900 border-zinc-800 hover:border-amber-500/30 transition-all group overflow-hidden"
                 >
                   <CardContent className="p-8 text-center space-y-4">
-                    <div className="w-20 h-20 mx-auto bg-zinc-800 rounded-full flex items-center justify-center group-hover:bg-amber-500/10 transition-colors">
-                      <User className="w-10 h-10 text-zinc-500 group-hover:text-amber-400 transition-colors" />
+                    <div className="w-24 h-24 mx-auto bg-zinc-800 rounded-full flex items-center justify-center group-hover:ring-4 ring-amber-500/20 transition-all overflow-hidden">
+                      {spk.photo ? (
+                        <img
+                          src={spk.photo}
+                          alt={spk.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-10 h-10 text-zinc-500" />
+                      )}
                     </div>
                     <div>
                       <h4 className="font-semibold text-xl text-zinc-100">{spk.name}</h4>
@@ -224,15 +300,15 @@ export default function WorkshopInvitationPage() {
         )}
 
         {/* Structure & RSVP */}
-        <section className="grid lg:grid-cols-2 gap-16 items-center animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-          {event.structure && event.structure.length > 0 ? (
+        <section
+          className={`grid ${event.structure && event.structure.length > 0 ? 'lg:grid-cols-2' : 'max-w-2xl mx-auto'} gap-16 items-start animate-in fade-in duration-1000`}
+        >
+          {event.structure && event.structure.length > 0 && (
             <div className="space-y-8">
-              <h3 className="text-3xl font-bold font-serif text-amber-100 mb-8">
-                Jornada do Encontro
-              </h3>
+              <h3 className="text-3xl font-bold font-serif text-amber-100 mb-8">Cronograma</h3>
               <ul className="space-y-6 relative before:absolute before:inset-0 before:ml-3 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-amber-500/50 before:via-zinc-800 before:to-transparent">
                 {event.structure.map((item, i) => (
-                  <li key={i} className="relative flex items-center group is-active pl-10">
+                  <li key={i} className="relative flex items-center group pl-10">
                     <div className="absolute left-0 flex items-center justify-center w-6 h-6 rounded-full border-2 border-zinc-950 bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20">
                       <div className="w-2 h-2 rounded-full bg-zinc-950" />
                     </div>
@@ -243,75 +319,261 @@ export default function WorkshopInvitationPage() {
                 ))}
               </ul>
             </div>
-          ) : (
-            <div className="hidden lg:block relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/20 to-transparent rounded-3xl blur-2xl" />
-              <img
-                src="https://img.usecurling.com/p/600/800?q=meditation%20corporate&color=black"
-                alt="Meeting"
-                className="rounded-3xl shadow-2xl relative z-10 border border-zinc-800 object-cover"
-              />
-            </div>
           )}
 
           <Card className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-amber-500/20 shadow-2xl shadow-amber-500/5 overflow-hidden relative">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600" />
-            <CardContent className="p-10 space-y-8 text-center relative z-10">
-              <h3 className="text-3xl font-serif font-bold text-zinc-50">
-                Confirmação de Presença
-              </h3>
-              <p className="text-zinc-400">
-                Sua presença é fundamental para nós. Por favor, confirme se poderá participar desta
-                experiência.
-              </p>
+            <CardContent className="p-8 md:p-10 relative z-10">
+              {invite.status === 'declined' ? (
+                <div className="text-center space-y-4 py-8">
+                  <div className="w-20 h-20 mx-auto bg-rose-500/10 rounded-full flex items-center justify-center">
+                    <XCircle className="w-10 h-10 text-rose-500" />
+                  </div>
+                  <p className="text-2xl font-serif text-rose-200">Agradecemos o aviso.</p>
+                  <p className="text-zinc-400">Sentiremos sua falta nesta edição.</p>
+                </div>
+              ) : rsvpStep === 'success' ? (
+                <div className="text-center space-y-4 py-8">
+                  <div className="w-20 h-20 mx-auto bg-amber-500/10 rounded-full flex items-center justify-center">
+                    <CheckCircle2 className="w-10 h-10 text-amber-500" />
+                  </div>
+                  <p className="text-2xl font-serif text-amber-100">Presença Confirmada!</p>
+                  <p className="text-zinc-400">
+                    Aguardamos você no dia {eventDate.toLocaleDateString('pt-BR')}. Sua vaga e de
+                    seus acompanhantes (se aplicável) estão garantidas.
+                  </p>
+                </div>
+              ) : rsvpStep === 'initial' ? (
+                <div className="text-center space-y-8 py-4">
+                  <h3 className="text-3xl font-serif font-bold text-zinc-50">
+                    Confirmação de Presença
+                  </h3>
+                  <p className="text-zinc-400">
+                    Sua presença é fundamental para nós. Por favor, confirme se poderá participar.
+                  </p>
+                  <div className="flex flex-col gap-4 mt-8">
+                    <Button
+                      size="lg"
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold h-14 text-lg"
+                      onClick={() => setRsvpStep('details')}
+                    >
+                      <CheckCircle2 className="w-6 h-6 mr-2" /> Sim, eu estarei presente
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full border-zinc-700 hover:bg-zinc-800 text-zinc-300 h-14"
+                      onClick={handleDecline}
+                      disabled={isSubmitting}
+                    >
+                      <XCircle className="w-5 h-5 mr-2" /> Não poderei comparecer
+                    </Button>
+                  </div>
+                </div>
+              ) : rsvpStep === 'details' ? (
+                <div className="space-y-6 animate-in fade-in zoom-in-95">
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-serif font-bold text-zinc-50">
+                      Detalhes da Inscrição
+                    </h3>
+                    <p className="text-zinc-400 text-sm mt-2">
+                      Complete seus dados e adicione membros da sua equipe.
+                    </p>
+                  </div>
 
-              {invite.status === 'viewed' || invite.status === 'pending' ? (
-                <div className="flex flex-col gap-4">
-                  <Button
-                    size="lg"
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold h-14 text-lg transition-all shadow-lg shadow-amber-500/20"
-                    onClick={() => handleRSVP('confirmed')}
-                  >
-                    <CheckCircle2 className="w-6 h-6 mr-2" /> Sim, eu estarei presente
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full border-zinc-700 hover:bg-zinc-800 text-zinc-300 h-14"
-                    onClick={() => handleRSVP('declined')}
-                  >
-                    <XCircle className="w-5 h-5 mr-2" /> Não poderei comparecer
-                  </Button>
+                  <div className="space-y-4 bg-zinc-900/50 p-5 rounded-xl border border-zinc-800">
+                    <div>
+                      <Label className="text-zinc-300">Nome Principal</Label>
+                      <Input
+                        value={invite.guest_name}
+                        disabled
+                        className="bg-zinc-900 border-zinc-800 text-zinc-400"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-zinc-300">E-mail *</Label>
+                        <Input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="bg-zinc-950 border-zinc-800"
+                          placeholder="seu@email.com"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-zinc-300">Telefone *</Label>
+                        <Input
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="bg-zinc-950 border-zinc-800"
+                          placeholder="(00) 00000-0000"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-zinc-300">Cargo / Função *</Label>
+                      <Input
+                        value={formData.position}
+                        onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                        className="bg-zinc-950 border-zinc-800"
+                        placeholder="Ex: Diretor de RH"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-zinc-200 text-lg font-serif">
+                        Acompanhantes da Empresa
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addGuest}
+                        className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Adicionar
+                      </Button>
+                    </div>
+
+                    {extraGuests.length === 0 ? (
+                      <p className="text-zinc-500 text-sm italic">
+                        Nenhum acompanhante adicionado.
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {extraGuests.map((guest, i) => (
+                          <div
+                            key={i}
+                            className="p-4 bg-zinc-900/30 border border-zinc-800 rounded-lg relative grid gap-4"
+                          >
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeGuest(i)}
+                              className="absolute top-2 right-2 text-zinc-500 hover:text-red-400"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                            <div>
+                              <Label className="text-xs text-zinc-400">Nome do Acompanhante</Label>
+                              <Input
+                                value={guest.name}
+                                onChange={(e) => updateGuest(i, 'name', e.target.value)}
+                                className="bg-zinc-950 border-zinc-800 h-9"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label className="text-xs text-zinc-400">Cargo</Label>
+                                <Input
+                                  value={guest.position}
+                                  onChange={(e) => updateGuest(i, 'position', e.target.value)}
+                                  className="bg-zinc-950 border-zinc-800 h-9"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-zinc-400">Telefone</Label>
+                                <Input
+                                  value={guest.phone}
+                                  onChange={(e) => updateGuest(i, 'phone', e.target.value)}
+                                  className="bg-zinc-950 border-zinc-800 h-9"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-6 flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-zinc-700 hover:bg-zinc-800"
+                      onClick={() => setRsvpStep('initial')}
+                    >
+                      Voltar
+                    </Button>
+                    <Button
+                      className="flex-1 bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold"
+                      onClick={handleProceedToVerify}
+                    >
+                      Avançar
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <div className="p-8 bg-zinc-900/80 border border-zinc-800 rounded-2xl space-y-4">
-                  {invite.status === 'confirmed' ? (
-                    <>
-                      <div className="w-20 h-20 mx-auto bg-amber-500/10 rounded-full flex items-center justify-center">
-                        <CheckCircle2 className="w-10 h-10 text-amber-500" />
-                      </div>
-                      <p className="text-2xl font-serif text-amber-100">Presença Confirmada!</p>
-                      <p className="text-zinc-400">
-                        Aguardamos você no dia {eventDate.toLocaleDateString('pt-BR')}. Um lembrete
-                        será enviado próximo à data.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-20 h-20 mx-auto bg-rose-500/10 rounded-full flex items-center justify-center">
-                        <XCircle className="w-10 h-10 text-rose-500" />
-                      </div>
-                      <p className="text-2xl font-serif text-rose-200">Agradecemos o aviso.</p>
-                      <p className="text-zinc-400">
-                        Sentiremos sua falta, mas esperamos vê-lo em uma próxima oportunidade.
-                      </p>
-                    </>
-                  )}
+                <div className="space-y-8 py-6 animate-in fade-in slide-in-from-right-8">
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 mx-auto bg-amber-500/10 rounded-full flex items-center justify-center">
+                      <ShieldCheck className="w-8 h-8 text-amber-500" />
+                    </div>
+                    <h3 className="text-2xl font-serif font-bold text-zinc-50">
+                      Confirmação de Segurança
+                    </h3>
+                    <p className="text-zinc-400">
+                      Para validar sua inscrição e garantir sua segurança, por favor, redigite o
+                      número de telefone informado:
+                    </p>
+                  </div>
+
+                  <div className="max-w-xs mx-auto space-y-4">
+                    <Input
+                      value={confirmPhone}
+                      onChange={(e) => setConfirmPhone(e.target.value)}
+                      className="bg-zinc-950 border-amber-500/30 focus-visible:ring-amber-500 text-center text-lg tracking-wider"
+                      placeholder="(00) 00000-0000"
+                    />
+                    <Button
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold h-12"
+                      onClick={handleFinalizeRegistration}
+                      disabled={isSubmitting || !confirmPhone}
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        'Finalizar Inscrição'
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full text-zinc-400"
+                      onClick={() => setRsvpStep('details')}
+                      disabled={isSubmitting}
+                    >
+                      Corrigir Dados
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </section>
+
+        {/* Partner Logos */}
+        {event.partner_logos && event.partner_logos.length > 0 && (
+          <section className="pt-16 border-t border-zinc-800/50 animate-in fade-in duration-1000 delay-500">
+            <div className="text-center space-y-10">
+              <h3 className="text-2xl font-serif text-zinc-500 font-medium tracking-wide uppercase">
+                Apoiadores & Parceiros
+              </h3>
+              <div className="flex flex-wrap justify-center gap-12 items-center opacity-60 hover:opacity-100 transition-opacity duration-500">
+                {event.partner_logos.map((logo, i) => (
+                  <img
+                    key={i}
+                    src={pb.files.getUrl(event, logo)}
+                    alt="Logo Parceiro"
+                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition-all duration-300 transform hover:scale-105"
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   )

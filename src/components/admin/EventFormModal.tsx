@@ -126,26 +126,39 @@ export function EventFormModal({
       .filter(Boolean)
       .map((l) => l.trim())
 
-    const data: Record<string, any> = {
-      title: form.get('title'),
-      subtitle: form.get('subtitle') || null,
-      type: selectedType,
-      description: form.get('description'),
-      date: finalDate,
-      end_date: finalEndDate,
-      price: form.get('price') ? Number(form.get('price')) : null,
-      location: form.get('location') || null,
-      meeting_link: form.get('meeting_link') || null,
-      structure: struct,
-      objectives: obj,
-      is_workshop: isWorkshop,
-    }
+    const formData = new FormData()
+
+    formData.append('title', form.get('title') as string)
+    if (form.get('subtitle')) formData.append('subtitle', form.get('subtitle') as string)
+
+    formData.append('type', selectedType)
+    formData.append('description', form.get('description') as string)
+
+    if (finalDate) formData.append('date', finalDate)
+
+    if (finalEndDate) formData.append('end_date', finalEndDate)
+    else formData.append('end_date', '')
+
+    const price = form.get('price')
+    if (price) formData.append('price', price as string)
+
+    if (form.get('location')) formData.append('location', form.get('location') as string)
+    else formData.append('location', '')
+
+    if (form.get('meeting_link'))
+      formData.append('meeting_link', form.get('meeting_link') as string)
+    else formData.append('meeting_link', '')
+
+    formData.append('structure', JSON.stringify(struct))
+    formData.append('objectives', JSON.stringify(obj))
+    formData.append('is_workshop', isWorkshop ? 'true' : 'false')
 
     if (isWorkshop) {
-      data.sponsorship_value = form.get('sponsorship_value')
-        ? Number(form.get('sponsorship_value'))
-        : null
-      data.importance = form.get('importance') || null
+      const sponsorshipValue = form.get('sponsorship_value')
+      if (sponsorshipValue) formData.append('sponsorship_value', sponsorshipValue as string)
+
+      if (form.get('importance')) formData.append('importance', form.get('importance') as string)
+      else formData.append('importance', '')
 
       const tiers = ((form.get('tiers_raw') as string) || '')
         .split('\n')
@@ -158,30 +171,30 @@ export function EventFormModal({
             benefits: (parts[2] || '').split(',').map((b) => b.trim()),
           }
         })
-      data.sponsorship_tiers = tiers
+      formData.append('sponsorship_tiers', JSON.stringify(tiers))
     } else {
-      data.sponsorship_value = null
-      data.importance = null
-      data.sponsorship_tiers = null
+      formData.append('importance', '')
+      formData.append('sponsorship_tiers', JSON.stringify([]))
     }
 
     const file = form.get('thumbnail') as File
     if (file && file.size > 0) {
-      data.thumbnail = file
-    } else if (!editingEvent) {
-      data.thumbnail = null
+      formData.append('thumbnail', file)
     }
 
     const logos = form.getAll('partner_logos') as File[]
     const validLogos = logos.filter((l) => l.size > 0)
-    if (validLogos.length > 0) {
+
+    if (
+      validLogos.length > 0 ||
+      (editingEvent?.partner_logos && editingEvent.partner_logos.length > 0)
+    ) {
       const existingLogos = editingEvent?.partner_logos || []
-      data.partner_logos = [...existingLogos, ...validLogos]
+      existingLogos.forEach((logo) => formData.append('partner_logos', logo))
+      validLogos.forEach((logo) => formData.append('partner_logos', logo))
     }
 
-    const speakerPhotosArray: any[] = editingEvent?.speaker_photos
-      ? [...editingEvent.speaker_photos]
-      : []
+    const speakerPhotosArray: File[] = []
     const speakersJson = speakers.map((spk, idx) => {
       let photoRef = spk.photo
       if (spk.photoFile) {
@@ -199,17 +212,23 @@ export function EventFormModal({
       }
     })
 
-    data.speakers = speakersJson
-    if (speakerPhotosArray.length > 0) {
-      data.speaker_photos = speakerPhotosArray
+    formData.append('speakers', JSON.stringify(speakersJson))
+
+    if (
+      speakerPhotosArray.length > 0 ||
+      (editingEvent?.speaker_photos && editingEvent.speaker_photos.length > 0)
+    ) {
+      const existingSpeakerPhotos = editingEvent?.speaker_photos || []
+      existingSpeakerPhotos.forEach((photo) => formData.append('speaker_photos', photo))
+      speakerPhotosArray.forEach((photo) => formData.append('speaker_photos', photo))
     }
 
     try {
       if (editingEvent) {
-        await updateEvent(editingEvent.id, data)
+        await updateEvent(editingEvent.id, formData)
         toast({ title: 'Evento atualizado com sucesso' })
       } else {
-        await createEvent(data)
+        await createEvent(formData)
         toast({ title: 'Evento adicionado com sucesso' })
       }
       onSuccess()

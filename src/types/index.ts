@@ -148,7 +148,7 @@ export interface PlatformEvent extends RecordModel {
   title: string
   subtitle?: string
   description: string
-  type: 'Workshop' | 'Aula Online' | 'Aula Presencial'
+  type: 'Workshop' | 'Aula Online' | 'Aula Presencial' | 'Summit'
   date: string
   end_date?: string
   price?: number

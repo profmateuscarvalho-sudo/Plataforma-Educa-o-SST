@@ -16,6 +16,16 @@ import { createEvent, updateEvent } from '@/services/events'
 import { PlatformEvent } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
+import pb from '@/lib/pocketbase/client'
+
+const getSpeakerPhotoUrl = (event: PlatformEvent, index: number) => {
+  if (!event.speaker_photos || event.speaker_photos.length === 0) return null
+  const prefix = `speaker_${index}_`
+  const photos = event.speaker_photos.filter((p) => p.startsWith(prefix))
+  if (photos.length === 0) return null
+  const latestPhoto = photos[photos.length - 1]
+  return pb.files.getUrl(event, latestPhoto)
+}
 
 const formatForInput = (isoString?: string) => {
   if (!isoString) return ''
@@ -277,6 +287,7 @@ export function EventFormModal({
                   <SelectItem value="Workshop">Workshop</SelectItem>
                   <SelectItem value="Aula Online">Aula Online</SelectItem>
                   <SelectItem value="Aula Presencial">Aula Presencial</SelectItem>
+                  <SelectItem value="Summit">Summit</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -350,13 +361,38 @@ export function EventFormModal({
             <div>
               <Label>Capa (Thumbnail)</Label>
               <Input name="thumbnail" type="file" accept="image/*" />
+              {editingEvent?.thumbnail && (
+                <div className="mt-2">
+                  <p className="text-xs text-muted-foreground mb-1">Capa Atual:</p>
+                  <img
+                    src={pb.files.getUrl(editingEvent, editingEvent.thumbnail)}
+                    alt="Thumbnail"
+                    className="h-20 rounded border object-cover"
+                  />
+                </div>
+              )}
             </div>
             <div>
               <Label>Logos de Parceiros (Opcional)</Label>
               <Input name="partner_logos" type="file" accept="image/*" multiple />
               <p className="text-xs text-muted-foreground mt-1">
-                Selecione múltiplos arquivos para exibir no rodapé do convite.
+                Selecione múltiplos arquivos para adicionar ao evento.
               </p>
+              {editingEvent?.partner_logos && editingEvent.partner_logos.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-muted-foreground mb-1">Logos Atuais:</p>
+                  <div className="flex gap-2 flex-wrap bg-slate-100 p-2 rounded border">
+                    {editingEvent.partner_logos.map((logo, i) => (
+                      <img
+                        key={i}
+                        src={pb.files.getUrl(editingEvent, logo)}
+                        alt="Logo"
+                        className="h-10 w-16 object-contain mix-blend-multiply"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -412,9 +448,9 @@ export function EventFormModal({
                         onChange={(e) => handleSpeakerPhoto(index, e.target.files?.[0] || null)}
                       />
                     </div>
-                    {spk.photo && (
+                    {(spk.photo || (editingEvent && getSpeakerPhotoUrl(editingEvent, index))) && (
                       <img
-                        src={spk.photo}
+                        src={spk.photo || getSpeakerPhotoUrl(editingEvent!, index)!}
                         alt="Preview"
                         className="w-10 h-10 rounded-full object-cover border"
                       />
@@ -465,7 +501,7 @@ export function EventFormModal({
                 className="w-4 h-4 rounded border-gray-300"
               />
               <Label htmlFor="is_workshop" className="font-semibold text-base">
-                Habilitar Captação de Patrocínios
+                Evento VIP (Habilitar Convites Individuais e Patrocínios)
               </Label>
             </div>
 

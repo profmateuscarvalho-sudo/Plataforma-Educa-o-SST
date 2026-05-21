@@ -539,19 +539,28 @@ export default function WorkshopInvitationPage() {
         </section>
         {/* Partner Logos */}
         {event.partner_logos && event.partner_logos.length > 0 && (
-          <section className="pt-16 border-t border-zinc-800/50 animate-in fade-in duration-1000 delay-500">
-            <div className="text-center space-y-10">
-              <h3 className="text-2xl font-serif text-zinc-500 font-medium tracking-wide uppercase">
-                Apoiadores & Parceiros
-              </h3>
-              <div className="flex flex-wrap justify-center gap-12 items-center opacity-60 hover:opacity-100 transition-opacity duration-500">
+          <section className="mt-24 p-12 md:p-20 bg-gradient-to-br from-zinc-900 to-black border border-amber-500/20 rounded-3xl shadow-2xl relative overflow-hidden animate-in fade-in duration-1000">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600" />
+            <div className="relative z-10 text-center space-y-12">
+              <div className="inline-flex items-center justify-center space-x-4 w-full">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-amber-500/50 max-w-[100px]" />
+                <h3 className="text-2xl md:text-3xl font-serif text-amber-100 font-bold tracking-widest uppercase">
+                  Parceiros Oficiais
+                </h3>
+                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-500/50 max-w-[100px]" />
+              </div>
+              <div className="flex flex-wrap justify-center gap-10 md:gap-16 items-center">
                 {event.partner_logos.map((logo, i) => (
-                  <img
+                  <div
                     key={i}
-                    src={pb.files.getUrl(event, logo)}
-                    alt="Logo Parceiro"
-                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition-all duration-300 transform hover:scale-105"
-                  />
+                    className="bg-white/5 p-6 md:p-8 rounded-2xl border border-white/10 hover:border-amber-500/50 transition-colors duration-500 hover:bg-white/10 shadow-xl"
+                  >
+                    <img
+                      src={pb.files.getUrl(event, logo)}
+                      alt="Logo Parceiro"
+                      className="h-16 md:h-24 object-contain transition-transform duration-500 transform hover:scale-110 drop-shadow-2xl"
+                    />
+                  </div>
                 ))}
               </div>
             </div>

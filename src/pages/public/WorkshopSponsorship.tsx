@@ -112,6 +112,36 @@ export default function WorkshopSponsorship() {
           </div>
         </section>
 
+        {/* Existing Sponsors / Partners */}
+        {event.partner_logos && event.partner_logos.length > 0 && (
+          <section className="bg-slate-950 text-white rounded-3xl p-10 md:p-16 shadow-2xl border border-amber-500/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600" />
+            <div className="text-center mb-12 relative z-10">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-amber-100">
+                Parceiros e Apoiadores
+              </h2>
+              <div className="w-16 h-1 bg-amber-500 mx-auto mt-6 rounded-full" />
+              <p className="text-slate-400 mt-4 max-w-2xl mx-auto font-light">
+                Marcas líderes que já garantiram seu espaço de destaque neste evento exclusivo.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-12 relative z-10">
+              {event.partner_logos.map((logo, i) => (
+                <div
+                  key={i}
+                  className="bg-white/10 p-6 rounded-2xl shadow-xl hover:shadow-2xl hover:bg-white/15 transition-all duration-300 transform hover:-translate-y-2 border border-white/10 backdrop-blur-sm"
+                >
+                  <img
+                    src={pb.files.getUrl(event, logo)}
+                    alt="Logo Parceiro"
+                    className="h-20 md:h-24 object-contain filter brightness-0 invert drop-shadow-lg"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Objectives */}
         {event.objectives && event.objectives.length > 0 && (
           <section className="bg-white rounded-3xl p-10 md:p-16 shadow-xl border border-slate-100 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">

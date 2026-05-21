@@ -101,17 +101,17 @@ export default function AdminWorkshops() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <div>
-        <h2 className="text-3xl font-serif font-bold text-secondary">Gestão de Workshops VIP</h2>
+        <h2 className="text-3xl font-serif font-bold text-secondary">Gestão de Eventos VIP</h2>
         <p className="text-muted-foreground mt-1">
-          Gere convites nominais de alto impacto para enviar via WhatsApp.
+          Gere convites nominais de alto impacto para Workshops e Summits via WhatsApp.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Gerador de Convites</CardTitle>
+          <CardTitle>Gerador de Convites VIP</CardTitle>
           <CardDescription>
-            Selecione o workshop e informe o nome do convidado para gerar o link exclusivo.
+            Selecione o evento VIP e informe o nome do convidado para gerar o link exclusivo.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -120,7 +120,7 @@ export default function AdminWorkshops() {
             className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
           >
             <div className="md:col-span-4">
-              <Label>Workshop</Label>
+              <Label>Evento</Label>
               <Select value={selectedWorkshopId} onValueChange={setSelectedWorkshopId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione..." />
@@ -133,7 +133,7 @@ export default function AdminWorkshops() {
                   ))}
                   {workshops.length === 0 && (
                     <SelectItem value="none" disabled>
-                      Nenhum workshop encontrado
+                      Nenhum evento VIP encontrado
                     </SelectItem>
                   )}
                 </SelectContent>

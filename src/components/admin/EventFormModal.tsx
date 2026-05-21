@@ -59,6 +59,7 @@ export function EventFormModal({
   const [selectedType, setSelectedType] = useState<string>('Workshop')
   const [isWorkshop, setIsWorkshop] = useState(false)
   const [speakers, setSpeakers] = useState<SpeakerForm[]>([])
+  const [existingLogos, setExistingLogos] = useState<string[]>([])
   const { toast } = useToast()
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export function EventFormModal({
       setFieldErrors({})
       setSelectedType(editingEvent?.type || 'Workshop')
       setIsWorkshop(!!editingEvent?.is_workshop)
+      setExistingLogos(editingEvent?.partner_logos || [])
       setSpeakers(
         editingEvent?.speakers?.map((s) => ({
           name: s.name || '',
@@ -76,6 +78,10 @@ export function EventFormModal({
       )
     }
   }, [open, editingEvent])
+
+  const handleRemoveExistingLogo = (index: number) => {
+    setExistingLogos(existingLogos.filter((_, i) => i !== index))
+  }
 
   const handleAddSpeaker = () =>
     setSpeakers([...speakers, { name: '', topic: '', bio: '', photo: '' }])
@@ -149,14 +155,14 @@ export function EventFormModal({
     if (finalEndDate) {
       formData.append('end_date', finalEndDate)
     } else {
-      formData.append('end_date', 'null')
+      formData.append('end_date', '')
     }
 
     const price = form.get('price')
     if (price) {
       formData.append('price', price as string)
     } else {
-      formData.append('price', 'null')
+      formData.append('price', '')
     }
 
     if (form.get('location')) formData.append('location', form.get('location') as string)
@@ -175,7 +181,7 @@ export function EventFormModal({
       if (sponsorshipValue) {
         formData.append('sponsorship_value', sponsorshipValue as string)
       } else {
-        formData.append('sponsorship_value', 'null')
+        formData.append('sponsorship_value', '')
       }
 
       if (form.get('importance')) formData.append('importance', form.get('importance') as string)
@@ -203,16 +209,18 @@ export function EventFormModal({
       formData.append('thumbnail', file)
     }
 
-    const logos = form.getAll('partner_logos') as File[]
+    const logos = form.getAll('partner_logos_new') as File[]
     const validLogos = logos.filter((l) => l.size > 0)
 
+    existingLogos.forEach((logo) => formData.append('partner_logos', logo))
+    validLogos.forEach((logo) => formData.append('partner_logos', logo))
+
     if (
-      validLogos.length > 0 ||
-      (editingEvent?.partner_logos && editingEvent.partner_logos.length > 0)
+      existingLogos.length === 0 &&
+      validLogos.length === 0 &&
+      editingEvent?.partner_logos?.length
     ) {
-      const existingLogos = editingEvent?.partner_logos || []
-      existingLogos.forEach((logo) => formData.append('partner_logos', logo))
-      validLogos.forEach((logo) => formData.append('partner_logos', logo))
+      formData.append('partner_logos', '')
     }
 
     const speakerPhotosArray: File[] = []
@@ -374,21 +382,30 @@ export function EventFormModal({
             </div>
             <div>
               <Label>Logos de Parceiros (Opcional)</Label>
-              <Input name="partner_logos" type="file" accept="image/*" multiple />
+              <Input name="partner_logos_new" type="file" accept="image/*" multiple />
               <p className="text-xs text-muted-foreground mt-1">
                 Selecione múltiplos arquivos para adicionar ao evento.
               </p>
-              {editingEvent?.partner_logos && editingEvent.partner_logos.length > 0 && (
+              {existingLogos.length > 0 && (
                 <div className="mt-2">
                   <p className="text-xs text-muted-foreground mb-1">Logos Atuais:</p>
                   <div className="flex gap-2 flex-wrap bg-slate-100 p-2 rounded border">
-                    {editingEvent.partner_logos.map((logo, i) => (
-                      <img
-                        key={i}
-                        src={pb.files.getUrl(editingEvent, logo)}
-                        alt="Logo"
-                        className="h-10 w-16 object-contain mix-blend-multiply"
-                      />
+                    {existingLogos.map((logo, i) => (
+                      <div key={i} className="relative group inline-block">
+                        <img
+                          src={editingEvent ? pb.files.getUrl(editingEvent, logo) : ''}
+                          alt="Logo"
+                          className="h-10 w-16 object-contain mix-blend-multiply"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingLogo(i)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          title="Remover logo"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>

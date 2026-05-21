@@ -120,7 +120,14 @@ export default function EventDetails() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-amber-500 selection:text-zinc-950 pb-20 relative">
-      <div className="absolute top-0 left-0 right-0 h-[600px] bg-gradient-to-b from-amber-500/10 via-zinc-950 to-zinc-950 pointer-events-none z-0" />
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <img
+          src="https://img.usecurling.com/p/1920/1080?q=corporate%20conference%20audience&color=black"
+          className="w-full h-full object-cover opacity-[0.15] mix-blend-luminosity"
+          alt=""
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/50 via-zinc-950/95 to-zinc-950" />
+      </div>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-32 pb-16 px-6 text-center animate-in fade-in slide-in-from-bottom-8 duration-1000 z-10">
@@ -443,17 +450,24 @@ export default function EventDetails() {
         {evt.partner_logos && evt.partner_logos.length > 0 && (
           <section className="pt-16 border-t border-zinc-800/50 animate-in fade-in duration-1000 delay-500">
             <div className="text-center space-y-10">
-              <h3 className="text-2xl font-serif text-zinc-500 font-medium tracking-wide uppercase">
-                Apoiadores & Parceiros
-              </h3>
-              <div className="flex flex-wrap justify-center gap-12 items-center opacity-60 hover:opacity-100 transition-opacity duration-500">
+              <div className="space-y-4">
+                <h3 className="text-3xl md:text-4xl font-serif font-bold text-amber-100">
+                  Apoiadores & Parceiros
+                </h3>
+                <div className="w-16 h-1 bg-amber-500/50 mx-auto rounded-full" />
+              </div>
+              <div className="flex flex-wrap justify-center gap-6 items-center">
                 {evt.partner_logos.map((logo, i) => (
-                  <img
+                  <div
                     key={i}
-                    src={pb.files.getUrl(evt, logo)}
-                    alt="Logo Parceiro"
-                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition-all duration-300 transform hover:scale-105"
-                  />
+                    className="w-40 h-28 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-zinc-800 flex items-center justify-center p-5 hover:scale-105 hover:shadow-amber-500/20 transition-all duration-300"
+                  >
+                    <img
+                      src={pb.files.getUrl(evt, logo)}
+                      alt={`Parceiro ${i + 1}`}
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
                 ))}
               </div>
             </div>

@@ -351,13 +351,17 @@ export function EventFormModal({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(selectedType === 'Aula Presencial' || selectedType === 'Workshop') && (
+            {(selectedType === 'Aula Presencial' ||
+              selectedType === 'Workshop' ||
+              selectedType === 'Summit') && (
               <div className="col-span-1 md:col-span-2">
                 <Label>Localização (Endereço)</Label>
                 <Input name="location" defaultValue={editingEvent?.location} />
               </div>
             )}
-            {(selectedType === 'Aula Online' || selectedType === 'Workshop') && (
+            {(selectedType === 'Aula Online' ||
+              selectedType === 'Workshop' ||
+              selectedType === 'Summit') && (
               <div className="col-span-1 md:col-span-2">
                 <Label>Link da Transmissão (Meet, Zoom)</Label>
                 <Input name="meeting_link" type="url" defaultValue={editingEvent?.meeting_link} />

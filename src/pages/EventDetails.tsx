@@ -114,15 +114,16 @@ export default function EventDetails() {
     : 'https://img.usecurling.com/p/1200/600?q=luxury%20event&color=black'
   const startDate = new Date(evt.date)
   const endDate = evt.end_date ? new Date(evt.end_date) : null
-  const isOnline = evt.type === 'Aula Online' || evt.type === 'Workshop'
-  const isPresencial = evt.type === 'Aula Presencial' || evt.type === 'Workshop'
+  const isOnline = evt.type === 'Aula Online' || evt.type === 'Workshop' || evt.type === 'Summit'
+  const isPresencial =
+    evt.type === 'Aula Presencial' || evt.type === 'Workshop' || evt.type === 'Summit'
   const iframeUrl = evt.panda_video_id ? getPandaUrl(evt.panda_video_id) : null
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-amber-500 selection:text-zinc-950 pb-20 relative">
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img
-          src="https://img.usecurling.com/p/1920/1080?q=corporate%20conference%20audience&color=black"
+          src="https://img.usecurling.com/p/1920/1080?q=executive%20summit%20professional&color=black"
           className="w-full h-full object-cover opacity-[0.15] mix-blend-luminosity"
           alt=""
         />

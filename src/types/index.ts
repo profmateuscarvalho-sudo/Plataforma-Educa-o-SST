@@ -170,6 +170,7 @@ export interface PlatformEvent extends RecordModel {
 export interface WorkshopInvitation extends RecordModel {
   event: string
   guest_name: string
+  guest_email?: string
   token: string
   status: 'pending' | 'viewed' | 'confirmed' | 'declined'
   expand?: { event?: PlatformEvent }
@@ -181,6 +182,7 @@ export interface EventRegistration extends RecordModel {
   email: string
   phone?: string
   position?: string
+  company_name?: string
   extra_guests?: { name: string; position: string; phone: string }[]
   status: 'confirmed' | 'pending' | 'cancelled'
 }

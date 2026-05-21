@@ -52,7 +52,7 @@ export default function WorkshopInvitationPage() {
   // RSVP Flow State
   const [rsvpStep, setRsvpStep] = useState<'initial' | 'details' | 'success'>('initial')
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
-  const [formData, setFormData] = useState({ email: '', phone: '', position: '' })
+  const [formData, setFormData] = useState({ email: '', phone: '', position: '', company_name: '' })
   const [extraGuests, setExtraGuests] = useState<ExtraGuest[]>([])
   const [confirmPhone, setConfirmPhone] = useState('')
 
@@ -97,7 +97,7 @@ export default function WorkshopInvitationPage() {
   }
 
   const handleProceedToVerify = () => {
-    if (!formData.email || !formData.phone || !formData.position) {
+    if (!formData.email || !formData.phone || !formData.position || !formData.company_name) {
       toast({ title: 'Preencha todos os campos obrigatórios', variant: 'destructive' })
       return
     }
@@ -120,6 +120,7 @@ export default function WorkshopInvitationPage() {
         email: formData.email,
         phone: formData.phone,
         position: formData.position,
+        company_name: formData.company_name,
         extra_guests: extraGuests.filter((g) => g.name && g.phone),
         status: 'confirmed',
       })
@@ -440,14 +441,27 @@ export default function WorkshopInvitationPage() {
                         />
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-zinc-300">Cargo / Função *</Label>
-                      <Input
-                        value={formData.position}
-                        onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                        className="bg-zinc-950 border-zinc-800"
-                        placeholder="Ex: Diretor de RH"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-zinc-300">Cargo / Função *</Label>
+                        <Input
+                          value={formData.position}
+                          onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                          className="bg-zinc-950 border-zinc-800"
+                          placeholder="Ex: Diretor de RH"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-zinc-300">Nome da Empresa *</Label>
+                        <Input
+                          value={formData.company_name}
+                          onChange={(e) =>
+                            setFormData({ ...formData, company_name: e.target.value })
+                          }
+                          className="bg-zinc-950 border-zinc-800"
+                          placeholder="Ex: Indústria X"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -553,12 +567,12 @@ export default function WorkshopInvitationPage() {
                 {event.partner_logos.map((logo, i) => (
                   <div
                     key={i}
-                    className="bg-white/5 p-6 md:p-8 rounded-2xl border border-white/10 hover:border-amber-500/50 transition-colors duration-500 hover:bg-white/10 shadow-xl"
+                    className="w-60 h-40 bg-white rounded-2xl border border-white/10 hover:border-amber-500/50 transition-colors duration-500 hover:bg-white/90 shadow-xl flex items-center justify-center p-8"
                   >
                     <img
                       src={pb.files.getUrl(event, logo)}
                       alt="Logo Parceiro"
-                      className="h-16 md:h-24 object-contain transition-transform duration-500 transform hover:scale-110 drop-shadow-2xl"
+                      className="w-full h-full object-contain transition-transform duration-500 transform hover:scale-110 drop-shadow-2xl mix-blend-multiply"
                     />
                   </div>
                 ))}

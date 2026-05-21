@@ -85,6 +85,7 @@ export default function EventDetails() {
         email: fd.get('email') as string,
         phone: fd.get('phone') as string,
         position: fd.get('position') as string,
+        company_name: fd.get('company_name') as string,
         status: evt.price && evt.price > 0 ? 'pending' : 'confirmed',
       })
       setRegistered(true)
@@ -422,6 +423,15 @@ export default function EventDetails() {
                         />
                       </div>
                     </div>
+                    <div>
+                      <Label className="text-zinc-300">Nome da Empresa *</Label>
+                      <Input
+                        name="company_name"
+                        required
+                        placeholder="Ex: Sua Empresa"
+                        className="h-12 mt-1 bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600"
+                      />
+                    </div>
 
                     <Button
                       type="submit"
@@ -457,16 +467,16 @@ export default function EventDetails() {
                 </h3>
                 <div className="w-16 h-1 bg-amber-500/50 mx-auto rounded-full" />
               </div>
-              <div className="flex flex-wrap justify-center gap-6 items-center">
+              <div className="flex flex-wrap justify-center gap-8 items-center">
                 {evt.partner_logos.map((logo, i) => (
                   <div
                     key={i}
-                    className="w-40 h-28 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-zinc-800 flex items-center justify-center p-5 hover:scale-105 hover:shadow-amber-500/20 transition-all duration-300"
+                    className="w-60 h-40 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-zinc-800 flex items-center justify-center p-8 hover:scale-105 hover:shadow-amber-500/20 transition-all duration-300"
                   >
                     <img
                       src={pb.files.getUrl(evt, logo)}
                       alt={`Parceiro ${i + 1}`}
-                      className="max-w-full max-h-full object-contain"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 ))}

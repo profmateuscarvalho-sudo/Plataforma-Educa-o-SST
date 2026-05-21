@@ -29,6 +29,7 @@ export default function AdminWorkshops() {
   const [selectedWorkshopId, setSelectedWorkshopId] = useState<string>('')
   const [invites, setInvites] = useState<WorkshopInvitation[]>([])
   const [newGuestName, setNewGuestName] = useState('')
+  const [newGuestEmail, setNewGuestEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
@@ -67,11 +68,13 @@ export default function AdminWorkshops() {
       const newInv = await pb.collection('workshop_invitations').create<WorkshopInvitation>({
         event: selectedWorkshopId,
         guest_name: newGuestName.trim(),
+        guest_email: newGuestEmail.trim(),
         token,
         status: 'pending',
       })
       setInvites([newInv, ...invites])
       setNewGuestName('')
+      setNewGuestEmail('')
       toast({ title: 'Convite gerado com sucesso!' })
     } catch (err) {
       toast({ title: 'Erro ao gerar convite', variant: 'destructive' })
@@ -85,6 +88,15 @@ export default function AdminWorkshops() {
     const text = `Olá ${inv.guest_name}, você é nosso convidado especial! Acesse seu convite VIP aqui:\n${url}`
     navigator.clipboard.writeText(text)
     toast({ title: 'Mensagem copiada!', description: 'Cole no WhatsApp do convidado.' })
+  }
+
+  const handleSendEmail = async (inv: WorkshopInvitation) => {
+    try {
+      await pb.send(`/backend/v1/workshop-invitations/${inv.id}/send`, { method: 'POST' })
+      toast({ title: 'E-mail enviado com sucesso!' })
+    } catch (err) {
+      toast({ title: 'Erro ao enviar e-mail', variant: 'destructive' })
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -139,8 +151,8 @@ export default function AdminWorkshops() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="md:col-span-5">
-              <Label>Nome do Convidado (Ex: Mateus Carvalho)</Label>
+            <div className="md:col-span-3">
+              <Label>Nome do Convidado</Label>
               <Input
                 value={newGuestName}
                 onChange={(e) => setNewGuestName(e.target.value)}
@@ -148,6 +160,15 @@ export default function AdminWorkshops() {
               />
             </div>
             <div className="md:col-span-3">
+              <Label>E-mail (Opcional)</Label>
+              <Input
+                type="email"
+                value={newGuestEmail}
+                onChange={(e) => setNewGuestEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+              />
+            </div>
+            <div className="md:col-span-2">
               <Button
                 type="submit"
                 disabled={loading || !newGuestName.trim() || !selectedWorkshopId}
@@ -205,8 +226,13 @@ export default function AdminWorkshops() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">
+                    {inv.guest_email && (
+                      <Button variant="outline" size="sm" onClick={() => handleSendEmail(inv)}>
+                        <Send className="w-4 h-4 mr-2" /> E-mail
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" onClick={() => copyToWhatsApp(inv)}>
-                      <Copy className="w-4 h-4 mr-2" /> Copiar para WhatsApp
+                      <Copy className="w-4 h-4 mr-2" /> WhatsApp
                     </Button>
                     <Button
                       variant="ghost"

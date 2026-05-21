@@ -41,6 +41,7 @@ export function EventSubscribersModal({
   const [isLoading, setIsLoading] = useState(false)
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
+  const [newCompany, setNewCompany] = useState('')
   const { toast } = useToast()
 
   const load = async () => {
@@ -67,10 +68,12 @@ export function EventSubscribersModal({
         event: event.id,
         name: newName,
         email: newEmail,
+        company_name: newCompany,
         status: 'confirmed',
       })
       setNewName('')
       setNewEmail('')
+      setNewCompany('')
       toast({ title: 'Inscrito adicionado' })
       load()
     } catch (err) {
@@ -123,6 +126,13 @@ export function EventSubscribersModal({
                 onChange={(e) => setNewEmail(e.target.value)}
               />
             </div>
+            <div className="flex-1">
+              <Input
+                placeholder="Empresa"
+                value={newCompany}
+                onChange={(e) => setNewCompany(e.target.value)}
+              />
+            </div>
             <Button onClick={handleAdd} disabled={!newName || !newEmail}>
               <UserPlus className="w-4 h-4 mr-2" /> Adicionar
             </Button>
@@ -132,7 +142,7 @@ export function EventSubscribersModal({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome / Cargo</TableHead>
+                  <TableHead>Nome / Empresa</TableHead>
                   <TableHead>Contato</TableHead>
                   <TableHead>Acompanhantes</TableHead>
                   <TableHead>Status</TableHead>
@@ -157,9 +167,9 @@ export function EventSubscribersModal({
                     <TableRow key={reg.id}>
                       <TableCell>
                         <div className="font-medium">{reg.name}</div>
-                        {reg.position && (
-                          <div className="text-xs text-muted-foreground">{reg.position}</div>
-                        )}
+                        <div className="text-xs text-muted-foreground">
+                          {reg.position} {reg.company_name ? `• ${reg.company_name}` : ''}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">{reg.email}</div>

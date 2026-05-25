@@ -567,7 +567,7 @@ export default function WorkshopInvitationPage() {
                 {event.partner_logos.map((logo, i) => (
                   <div
                     key={i}
-                    className="w-60 h-40 bg-white rounded-2xl border border-white/10 hover:border-amber-500/50 transition-colors duration-500 hover:bg-white/90 shadow-xl flex items-center justify-center p-8"
+                    className="w-[360px] h-[240px] bg-white rounded-2xl border border-white/10 hover:border-amber-500/50 transition-colors duration-500 hover:bg-white/90 shadow-xl flex items-center justify-center p-12"
                   >
                     <img
                       src={pb.files.getUrl(event, logo)}

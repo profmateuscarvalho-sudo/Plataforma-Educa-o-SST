@@ -17,9 +17,10 @@ import { useToast } from '@/hooks/use-toast'
 import { useRealtime } from '@/hooks/use-realtime'
 import { EventFormModal } from '@/components/admin/EventFormModal'
 import { EventSubscribersModal } from '@/components/admin/EventSubscribersModal'
+import { EventVipModal } from '@/components/admin/EventVipModal'
 import pb from '@/lib/pocketbase/client'
 import { Link } from 'react-router-dom'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, Mail } from 'lucide-react'
 
 export default function AdminEvents() {
   const [events, setEvents] = useState<PlatformEvent[]>([])
@@ -27,6 +28,7 @@ export default function AdminEvents() {
 
   const [formOpen, setFormOpen] = useState(false)
   const [subsOpen, setSubsOpen] = useState(false)
+  const [vipOpen, setVipOpen] = useState(false)
   const [activeEvent, setActiveEvent] = useState<PlatformEvent | null>(null)
 
   const { toast } = useToast()
@@ -73,6 +75,11 @@ export default function AdminEvents() {
   const handleOpenSubs = (evt: PlatformEvent) => {
     setActiveEvent(evt)
     setSubsOpen(true)
+  }
+
+  const handleOpenVip = (evt: PlatformEvent) => {
+    setActiveEvent(evt)
+    setVipOpen(true)
   }
 
   const copyLink = (id: string) => {
@@ -142,8 +149,16 @@ export default function AdminEvents() {
                     >
                       <Users className="w-4 h-4 text-emerald-600" />
                     </Button>
-                    {evt.is_workshop && (
+                    {(evt.is_workshop || evt.type === 'Workshop' || evt.type === 'Summit') && (
                       <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Enviar Convite VIP"
+                          onClick={() => handleOpenVip(evt)}
+                        >
+                          <Mail className="w-4 h-4 text-purple-600" />
+                        </Button>
                         <Button variant="ghost" size="icon" title="Página de Patrocínio" asChild>
                           <Link to={`/workshop/patrocinio/${evt.id}`} target="_blank">
                             <ExternalLink className="w-4 h-4 text-orange-600" />
@@ -189,6 +204,7 @@ export default function AdminEvents() {
         onSuccess={load}
       />
       <EventSubscribersModal open={subsOpen} setOpen={setSubsOpen} event={activeEvent} />
+      <EventVipModal open={vipOpen} setOpen={setVipOpen} event={activeEvent} />
     </div>
   )
 }

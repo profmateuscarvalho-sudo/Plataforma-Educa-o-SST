@@ -174,9 +174,10 @@ export function EventFormModal({
 
     formData.append('structure', JSON.stringify(struct))
     formData.append('objectives', JSON.stringify(obj))
-    formData.append('is_workshop', isWorkshop ? 'true' : 'false')
+    const isVipEvent = isWorkshop || selectedType === 'Workshop' || selectedType === 'Summit'
+    formData.append('is_workshop', isVipEvent ? 'true' : 'false')
 
-    if (isWorkshop) {
+    if (isVipEvent) {
       const sponsorshipValue = form.get('sponsorship_value')
       if (sponsorshipValue) {
         formData.append('sponsorship_value', sponsorshipValue as string)
@@ -517,16 +518,17 @@ export function EventFormModal({
               <input
                 type="checkbox"
                 id="is_workshop"
-                checked={isWorkshop}
+                checked={isWorkshop || selectedType === 'Workshop' || selectedType === 'Summit'}
                 onChange={(e) => setIsWorkshop(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300"
+                disabled={selectedType === 'Workshop' || selectedType === 'Summit'}
+                className="w-4 h-4 rounded border-gray-300 disabled:opacity-50"
               />
               <Label htmlFor="is_workshop" className="font-semibold text-base">
                 Evento VIP (Habilitar Convites Individuais e Patrocínios)
               </Label>
             </div>
 
-            {isWorkshop && (
+            {(isWorkshop || selectedType === 'Workshop' || selectedType === 'Summit') && (
               <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300 bg-amber-50/50 p-4 rounded-lg border border-amber-100">
                 <div>
                   <Label>Valor Total do Patrocínio Almejado (R$)</Label>

@@ -112,7 +112,7 @@ export default function EventDetails() {
 
   const imgUrl = evt.thumbnail
     ? pb.files.getUrl(evt, evt.thumbnail)
-    : 'https://img.usecurling.com/p/1200/600?q=luxury%20event&color=black'
+    : 'https://img.usecurling.com/p/1200/600?q=corporate%20conference%20stage&color=black'
   const startDate = new Date(evt.date)
   const endDate = evt.end_date ? new Date(evt.end_date) : null
   const isOnline = evt.type === 'Aula Online' || evt.type === 'Workshop' || evt.type === 'Summit'
@@ -124,8 +124,8 @@ export default function EventDetails() {
     <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-amber-500 selection:text-zinc-950 pb-20 relative">
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img
-          src="https://img.usecurling.com/p/1920/1080?q=executive%20summit%20professional&color=black"
-          className="w-full h-full object-cover opacity-[0.15] mix-blend-luminosity"
+          src="https://img.usecurling.com/p/1920/1080?q=corporate%20summit%20executive&color=black&dpr=2"
+          className="w-full h-full object-cover opacity-20 mix-blend-luminosity"
           alt=""
         />
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/50 via-zinc-950/95 to-zinc-950" />
@@ -471,7 +471,7 @@ export default function EventDetails() {
                 {evt.partner_logos.map((logo, i) => (
                   <div
                     key={i}
-                    className="w-60 h-40 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-zinc-800 flex items-center justify-center p-8 hover:scale-105 hover:shadow-amber-500/20 transition-all duration-300"
+                    className="w-[360px] h-[240px] bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-zinc-800 flex items-center justify-center p-12 hover:scale-105 hover:shadow-amber-500/20 transition-all duration-300"
                   >
                     <img
                       src={pb.files.getUrl(evt, logo)}

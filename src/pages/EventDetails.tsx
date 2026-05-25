@@ -16,9 +16,11 @@ import {
   Sparkles,
   User,
   Calendar,
+  MessageCircle,
 } from 'lucide-react'
 import { getEvent } from '@/services/events'
 import { createEventRegistration } from '@/services/event_registrations'
+import { getMagazineLandingPage } from '@/services/magazine_management'
 import { PlatformEvent } from '@/types'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
@@ -49,15 +51,23 @@ export default function EventDetails() {
   const [notFound, setNotFound] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [registered, setRegistered] = useState(false)
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('')
   const { toast } = useToast()
 
   const formRef = useRef<HTMLDivElement>(null)
 
-  const loadEvent = () => {
+  const loadEvent = async () => {
     if (id) {
-      getEvent(id)
-        .then(setEvt)
-        .catch(() => setNotFound(true))
+      try {
+        const data = await getEvent(id)
+        setEvt(data)
+        const magData = await getMagazineLandingPage()
+        if (magData?.whatsapp_number) {
+          setWhatsappNumber(magData.whatsapp_number)
+        }
+      } catch {
+        setNotFound(true)
+      }
     }
   }
 
@@ -112,7 +122,7 @@ export default function EventDetails() {
 
   const imgUrl = evt.thumbnail
     ? pb.files.getUrl(evt, evt.thumbnail)
-    : 'https://img.usecurling.com/p/1200/600?q=corporate%20conference%20stage&color=black'
+    : 'https://img.usecurling.com/p/1200/600?q=abstract%20corporate%20architecture&color=black'
   const startDate = new Date(evt.date)
   const endDate = evt.end_date ? new Date(evt.end_date) : null
   const isOnline = evt.type === 'Aula Online' || evt.type === 'Workshop' || evt.type === 'Summit'
@@ -124,7 +134,7 @@ export default function EventDetails() {
     <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-amber-500 selection:text-zinc-950 pb-20 relative">
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img
-          src="https://img.usecurling.com/p/1920/1080?q=corporate%20summit%20executive&color=black&dpr=2"
+          src="https://img.usecurling.com/p/1920/1080?q=modern%20office%20interior&color=black&dpr=2"
           className="w-full h-full object-cover opacity-20 mix-blend-luminosity"
           alt=""
         />
@@ -445,6 +455,22 @@ export default function EventDetails() {
                       )}
                       Solicitar Inscrição VIP
                     </Button>
+                    {whatsappNumber && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-14 text-lg font-bold mt-3 border-emerald-600/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400"
+                        onClick={() =>
+                          window.open(
+                            `https://wa.me/${whatsappNumber.replace(/\D/g, '')}`,
+                            '_blank',
+                          )
+                        }
+                      >
+                        <MessageCircle className="w-6 h-6 mr-2" />
+                        Dúvidas? Fale conosco via WhatsApp
+                      </Button>
+                    )}
                     {evt.price && evt.price > 0 && (
                       <p className="text-xs text-center text-zinc-500 mt-4">
                         Ao confirmar, você receberá as instruções de pagamento de forma segura.

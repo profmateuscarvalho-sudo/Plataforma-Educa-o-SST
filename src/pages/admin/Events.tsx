@@ -20,7 +20,7 @@ import { EventSubscribersModal } from '@/components/admin/EventSubscribersModal'
 import { EventVipModal } from '@/components/admin/EventVipModal'
 import pb from '@/lib/pocketbase/client'
 import { Link } from 'react-router-dom'
-import { ExternalLink, Mail } from 'lucide-react'
+import { ExternalLink, Mail, MessageSquare } from 'lucide-react'
 
 export default function AdminEvents() {
   const [events, setEvents] = useState<PlatformEvent[]>([])
@@ -148,6 +148,11 @@ export default function AdminEvents() {
                       onClick={() => handleOpenSubs(evt)}
                     >
                       <Users className="w-4 h-4 text-emerald-600" />
+                    </Button>
+                    <Button variant="ghost" size="icon" title="Q&A ao Vivo" asChild>
+                      <Link to={`/admin/eventos/${evt.id}/qa`}>
+                        <MessageSquare className="w-4 h-4 text-indigo-600" />
+                      </Link>
                     </Button>
                     {(evt.is_workshop || evt.type === 'Workshop' || evt.type === 'Summit') && (
                       <>

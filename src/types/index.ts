@@ -91,11 +91,15 @@ export interface LiveSession extends RecordModel {
 }
 
 export interface LiveMessage extends RecordModel {
-  user: string
-  session: string
+  user?: string
+  session?: string
+  event?: string
   content: string
   is_question: boolean
-  expand?: { user?: User }
+  speaker_name?: string
+  author_name?: string
+  status?: 'pending' | 'active' | 'answered' | 'hidden'
+  expand?: { user?: User; event?: PlatformEvent }
 }
 
 export interface LessonCompletion extends RecordModel {

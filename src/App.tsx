@@ -56,6 +56,8 @@ import DocumentaryPitch from './pages/public/DocumentaryPitch'
 import WorkshopInvitation from './pages/public/WorkshopInvitation'
 import WorkshopSponsorship from './pages/public/WorkshopSponsorship'
 import AdminWorkshops from './pages/admin/Workshops'
+import AdminEventQA from './pages/admin/EventQA'
+import PublicEventQA from './pages/public/EventQA'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -86,6 +88,7 @@ const App = () => (
             <Route path="/simulados" element={<PublicSimulados />} />
             <Route path="/simulados/:id" element={<SimuladoSession />} />
             <Route path="/anuncie-na-revista" element={<Anuncie />} />
+            <Route path="/eventos/:id/qa" element={<PublicEventQA />} />
 
             <Route path="/aluno" element={<StudentDashboard />} />
             <Route path="/aluno/curso/:id/aula" element={<CourseLesson />} />
@@ -99,6 +102,7 @@ const App = () => (
             <Route path="/admin/alunos" element={<AdminStudents />} />
             <Route path="/admin/mentorias" element={<AdminMentorships />} />
             <Route path="/admin/eventos" element={<AdminEvents />} />
+            <Route path="/admin/eventos/:id/qa" element={<AdminEventQA />} />
             <Route path="/admin/documentarios" element={<AdminDocumentaries />} />
             <Route path="/admin/documentarios/novo" element={<AdminDocumentaryWizard />} />
             <Route path="/admin/documentarios/:id/editar" element={<AdminDocumentaryWizard />} />

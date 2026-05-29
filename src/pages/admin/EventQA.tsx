@@ -31,7 +31,7 @@ export default function AdminEventQA() {
   const { id } = useParams()
   const [event, setEvent] = useState<PlatformEvent | null>(null)
   const [messages, setMessages] = useState<LiveMessage[]>([])
-  const [speakerFilter, setSpeakerFilter] = useState<string>('all')
+  const [speakerFilter, setSpeakerFilter] = useState<string>('')
   const { toast } = useToast()
 
   const loadEvent = async () => {
@@ -39,6 +39,9 @@ export default function AdminEventQA() {
     try {
       const ev = await pb.collection('events').getOne<PlatformEvent>(id)
       setEvent(ev)
+      if (ev.speakers && ev.speakers.length > 0) {
+        setSpeakerFilter(ev.speakers[0].name)
+      }
     } catch (err) {
       toast({ title: 'Erro ao carregar evento', variant: 'destructive' })
     }
@@ -85,7 +88,7 @@ export default function AdminEventQA() {
   }
 
   const filteredMessages = useMemo(() => {
-    if (speakerFilter === 'all') return messages
+    if (!speakerFilter) return []
     return messages.filter((m) => m.speaker_name === speakerFilter)
   }, [messages, speakerFilter])
 
@@ -111,7 +114,7 @@ export default function AdminEventQA() {
 
   if (!event) return null
 
-  const speakersList = Array.from(new Set(messages.map((m) => m.speaker_name).filter(Boolean)))
+  const speakersList = event.speakers?.map((s) => s.name) || []
 
   return (
     <div className="space-y-6">
@@ -139,19 +142,18 @@ export default function AdminEventQA() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg border shadow-sm">
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="px-3 py-1 text-sm">
-                {messages.length} Perguntas
+                {filteredMessages.length} Perguntas
               </Badge>
               <Badge variant="default" className="px-3 py-1 text-sm bg-amber-500">
-                {messages.filter((m) => m.status === 'pending').length} Pendentes
+                {filteredMessages.filter((m) => m.status === 'pending').length} Pendentes
               </Badge>
             </div>
             <div className="w-full sm:w-64">
               <Select value={speakerFilter} onValueChange={setSpeakerFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por Palestrante" />
+                  <SelectValue placeholder="Selecione um Palestrante" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os Palestrantes</SelectItem>
                   {speakersList.map((s) => (
                     <SelectItem key={s} value={s}>
                       {s}
@@ -165,7 +167,9 @@ export default function AdminEventQA() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMessages.length === 0 ? (
               <div className="col-span-full py-12 text-center text-muted-foreground bg-slate-50 rounded-xl border border-dashed">
-                Nenhuma pergunta recebida ainda.
+                {!speakerFilter
+                  ? 'Selecione um palestrante para visualizar as perguntas.'
+                  : 'Nenhuma pergunta recebida ainda para este palestrante.'}
               </div>
             ) : (
               filteredMessages.map((msg) => (

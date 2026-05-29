@@ -36,6 +36,13 @@ export default function PublicEventQA() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!content.trim() || !speakerName) return
+
+    const isValidSpeaker = event?.speakers?.some((s: any) => s.name === speakerName)
+    if (!isValidSpeaker) {
+      toast({ title: 'Selecione um palestrante válido', variant: 'destructive' })
+      return
+    }
+
     setSubmitting(true)
     try {
       await pb.collection('live_messages').create({
@@ -75,10 +82,7 @@ export default function PublicEventQA() {
     return pb.files.getUrl(event, photos[photos.length - 1])
   }
 
-  const allSpeakers = [
-    ...(event.speakers || []),
-    { name: 'Painel Geral', topic: 'Para todos os palestrantes', photo: '' },
-  ]
+  const allSpeakers = event.speakers || []
 
   if (submitted) {
     return (
@@ -134,10 +138,8 @@ export default function PublicEventQA() {
                   >
                     <img
                       src={
-                        spk.name === 'Painel Geral'
-                          ? 'https://img.usecurling.com/i?q=people&color=multicolor&shape=fill'
-                          : getSpeakerPhoto(idx) ||
-                            `https://img.usecurling.com/ppl/thumbnail?seed=${idx}`
+                        getSpeakerPhoto(idx) ||
+                        `https://img.usecurling.com/ppl/thumbnail?seed=${idx}`
                       }
                       alt={spk.name}
                       className="w-12 h-12 rounded-full object-cover border bg-white"

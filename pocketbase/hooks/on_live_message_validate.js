@@ -17,22 +17,20 @@ onRecordValidate((e) => {
         } catch (_) {}
       }
 
-      let isValid = false
-      for (let i = 0; i < speakers.length; i++) {
-        if (speakers[i] && speakers[i].name === speakerName) {
-          isValid = true
-          break
+      let isValid = speakerName === 'Painel Geral'
+      if (!isValid) {
+        for (let i = 0; i < speakers.length; i++) {
+          if (speakers[i] && speakers[i].name === speakerName) {
+            isValid = true
+            break
+          }
         }
       }
 
       if (!isValid && speakers.length > 0) {
-        const errors = {}
-        const { ValidationError } = require('pocketbase')
-        errors['speaker_name'] = new ValidationError(
-          'invalid_speaker',
-          'Palestrante inválido para este evento.',
-        )
-        throw new BadRequestError('Palestrante inválido', errors)
+        throw new BadRequestError('Palestrante inválido', {
+          speaker_name: 'Palestrante inválido para este evento.',
+        })
       }
     } catch (err) {
       if (err.name === 'BadRequestError') throw err

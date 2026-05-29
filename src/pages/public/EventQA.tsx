@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, Send, MessageCircleQuestion, CheckCircle2 } from 'lucide-react'
+import { Loader2, Send, MessageCircleQuestion, CheckCircle2, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function PublicEventQA() {
@@ -37,7 +37,8 @@ export default function PublicEventQA() {
     e.preventDefault()
     if (!content.trim() || !speakerName) return
 
-    const isValidSpeaker = event?.speakers?.some((s: any) => s.name === speakerName)
+    const isValidSpeaker =
+      speakerName === 'Painel Geral' || event?.speakers?.some((s: any) => s.name === speakerName)
     if (!isValidSpeaker) {
       toast({ title: 'Selecione um palestrante válido', variant: 'destructive' })
       return
@@ -125,6 +126,25 @@ export default function PublicEventQA() {
             <div className="space-y-3">
               <Label className="text-base">1. Para quem é a pergunta?</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div
+                  onClick={() => setSpeakerName('Painel Geral')}
+                  className={cn(
+                    'flex items-center gap-4 p-3 rounded-xl border-2 cursor-pointer transition-all',
+                    speakerName === 'Painel Geral'
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                      : 'border-border hover:border-primary/50 hover:bg-slate-50',
+                  )}
+                >
+                  <div className="w-12 h-12 shrink-0 rounded-full flex items-center justify-center bg-blue-100 text-blue-600 border">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm leading-tight">Painel Geral</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      Para todos os palestrantes
+                    </p>
+                  </div>
+                </div>
                 {allSpeakers.map((spk, idx) => (
                   <div
                     key={idx}

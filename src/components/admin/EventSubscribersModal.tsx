@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Trash2, UserPlus, Loader2 } from 'lucide-react'
+import { Trash2, UserPlus, Loader2, Download } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { EventRegistration, PlatformEvent } from '@/types'
 import {
@@ -42,6 +42,7 @@ export function EventSubscribersModal({
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newCompany, setNewCompany] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
   const { toast } = useToast()
 
   const load = async () => {
@@ -102,11 +103,74 @@ export function EventSubscribersModal({
     }
   }
 
+  const handleExportCsv = () => {
+    if (!registrations.length) return
+    setIsExporting(true)
+
+    setTimeout(() => {
+      try {
+        const headers = [
+          'Nome',
+          'E-mail',
+          'Telefone',
+          'Status',
+          'Cargo',
+          'Empresa',
+          'Data de Inscrição',
+        ]
+        const rows = registrations.map((reg) => {
+          const statusMap: Record<string, string> = {
+            confirmed: 'Confirmado',
+            pending: 'Pendente',
+            cancelled: 'Cancelado',
+          }
+          return [
+            `"${(reg.name || '').replace(/"/g, '""')}"`,
+            `"${(reg.email || '').replace(/"/g, '""')}"`,
+            `"${(reg.phone || '').replace(/"/g, '""')}"`,
+            `"${(statusMap[reg.status] || reg.status || '').replace(/"/g, '""')}"`,
+            `"${(reg.position || '').replace(/"/g, '""')}"`,
+            `"${(reg.company_name || '').replace(/"/g, '""')}"`,
+            `"${new Date(reg.created).toLocaleDateString('pt-BR')}"`,
+          ]
+        })
+
+        const csvContent = [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\n')
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.setAttribute('href', url)
+        link.setAttribute(
+          'download',
+          `inscritos-${event?.title?.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'evento'}.csv`,
+        )
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      } finally {
+        setIsExporting(false)
+      }
+    }, 100)
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        <DialogHeader className="flex flex-row items-start justify-between sm:items-center pr-6 space-y-0">
           <DialogTitle>Gerenciar Inscritos - {event?.title}</DialogTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={registrations.length === 0 || isLoading || isExporting}
+          >
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {isExporting ? 'Exportando...' : 'Exportar Excel'}
+          </Button>
         </DialogHeader>
 
         <div className="space-y-6 pt-4">

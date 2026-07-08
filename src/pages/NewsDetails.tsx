@@ -14,6 +14,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel'
 import { setMetaTags, stripHtml } from '@/lib/utils'
+import { PUBLIC_URL } from '@/lib/constants'
 
 const injectOGTags = (title: string, desc: string, image: string, url: string) => {
   document.title = title
@@ -50,11 +51,16 @@ export default function NewsDetails() {
         ? pb.files.getUrl(news, galleryImages[0])
         : 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
     : ''
+  const ogImageUrl = news
+    ? news.image
+      ? `${PUBLIC_URL}/api/files/${news.collectionId}/${news.id}/${news.image}`
+      : galleryImages.length > 0
+        ? `${PUBLIC_URL}/api/files/${news.collectionId}/${news.id}/${galleryImages[0]}`
+        : 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
+    : ''
 
-  const shareUrl = news
-    ? `${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/share/noticias/${news.id}`
-    : window.location.href
-  const actualUrl = window.location.href
+  const shareUrl = news ? `${PUBLIC_URL}/noticias/${news.id}` : window.location.href
+  const actualUrl = news ? `${PUBLIC_URL}/noticias/${news.id}` : window.location.href
 
   useEffect(() => {
     if (news) {
@@ -65,12 +71,12 @@ export default function NewsDetails() {
       setMetaTags({
         title: news.title,
         description: plainText,
-        image: coverUrl,
+        image: ogImageUrl,
         url: actualUrl,
       })
-      injectOGTags(news.title, plainText, coverUrl, actualUrl)
+      injectOGTags(news.title, plainText, ogImageUrl, actualUrl)
     }
-  }, [news, coverUrl, actualUrl])
+  }, [news, ogImageUrl, actualUrl])
 
   if (!news)
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>

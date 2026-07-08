@@ -10,11 +10,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Plus, Trash2, Edit } from 'lucide-react'
+import { Plus, Trash2, Edit, Share2 } from 'lucide-react'
 import { getNews, createNews, updateNews, deleteNews } from '@/services/news'
 import { News } from '@/types'
 import { toast } from '@/hooks/use-toast'
 import { RichTextEditor } from '@/components/RichTextEditor'
+import { PUBLIC_URL } from '@/lib/constants'
 
 export default function AdminNews() {
   const [news, setNews] = useState<News[]>([])
@@ -99,6 +100,19 @@ export default function AdminNews() {
                 <p className="text-xs text-slate-500">{new Date(n.created).toLocaleString()}</p>
               </div>
               <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${PUBLIC_URL}/noticias/${n.id}`)
+                    toast({
+                      title: 'Link de compartilhamento copiado!',
+                      description: `${PUBLIC_URL}/noticias/${n.id}`,
+                    })
+                  }}
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"

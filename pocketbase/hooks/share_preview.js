@@ -1,16 +1,13 @@
 routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
   const type = e.request.pathValue('type')
   const id = e.request.pathValue('id')
-  const frontendUrl = 'https://educacaosst.goskip.app'
-  const pbUrl =
-    $secrets.get('PB_INSTANCE_URL') ||
-    'https://educacao-sst-premium-969c2.shrd00.internal.goskip.dev'
+  const siteUrl = $secrets.get('SITE_URL') || 'https://educacaosst.goskip.app'
 
   let record
   let title = ''
   let description = ''
   let image = ''
-  let redirectUrl = frontendUrl
+  let redirectUrl = siteUrl
   let ogType = 'website'
 
   try {
@@ -27,11 +24,11 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
 
       const imgField = record.getString('image')
       if (imgField) {
-        image = `${pbUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
+        image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
       } else {
         image = 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
       }
-      redirectUrl = `${frontendUrl}/noticias/${id}`
+      redirectUrl = `${siteUrl}/noticias/${id}`
       ogType = 'article'
     } else if (type === 'simulados') {
       record = $app.findRecordById('simulados', id)
@@ -45,11 +42,11 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
 
       const imgField = record.getString('banner')
       if (imgField) {
-        image = `${pbUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
+        image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
       } else {
         image = 'https://img.usecurling.com/p/1200/600?q=education&color=blue'
       }
-      redirectUrl = `${frontendUrl}/simulados/${id}`
+      redirectUrl = `${siteUrl}/simulados/${id}`
       ogType = 'website'
     } else if (type === 'convite') {
       record = $app.findFirstRecordByData('workshop_invitations', 'token', id)
@@ -57,13 +54,13 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       title = `Convite para ${record.getString('guest_name')} - Workshop SST`
       description = `Você foi convidado para o ${eventRec.getString('title')}. Confira a programação e confirme sua presença!`
       image = 'https://img.usecurling.com/p/1200/600?q=corporate%20workshop&color=blue'
-      redirectUrl = `${frontendUrl}/convite/${id}`
+      redirectUrl = `${siteUrl}/convite/${id}`
       ogType = 'website'
     } else {
-      return e.redirect(302, frontendUrl)
+      return e.redirect(302, siteUrl)
     }
   } catch (err) {
-    return e.redirect(302, frontendUrl)
+    return e.redirect(302, siteUrl)
   }
 
   const escapeHtml = (unsafe) => {
@@ -90,6 +87,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
   <meta property="og:image" content="${safeImage}">
   <meta property="og:url" content="${safeUrl}">
   <meta property="og:type" content="${ogType}">
+  <meta property="og:site_name" content="Educação SST">
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${safeTitle}">

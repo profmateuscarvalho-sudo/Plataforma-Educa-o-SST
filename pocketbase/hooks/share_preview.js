@@ -1,7 +1,7 @@
 routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
   const type = e.request.pathValue('type')
   const id = e.request.pathValue('id')
-  const siteUrl = $secrets.get('SITE_URL') || 'https://educacaosst.goskip.app'
+  const siteUrl = $secrets.get('SITE_URL') || 'https://www.educacaosst.com.br'
 
   let record
   let title = ''
@@ -26,7 +26,12 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       if (imgField) {
         image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
       } else {
-        image = 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
+        const galleryField = record.getString('images')
+        if (galleryField) {
+          image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${galleryField}`
+        } else {
+          image = 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
+        }
       }
       redirectUrl = `${siteUrl}/noticias/${id}`
       ogType = 'article'

@@ -1,1 +1,1 @@
-export const PUBLIC_URL = 'https://educacaosst.goskip.app'
+export const PUBLIC_URL = 'https://www.educacaosst.com.br'

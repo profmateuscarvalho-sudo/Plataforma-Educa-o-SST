@@ -53,7 +53,7 @@ export default function NewsDetails() {
     : ''
   const ogImageUrl = news
     ? news.image
-      ? `${PUBLIC_URL}/api/files/${news.collectionId}/${news.id}/${news.image}`
+      ? `${PUBLIC_URL}/api/files/${news.collectionId}/${news.id}/${news.image as string}`
       : galleryImages.length > 0
         ? `${PUBLIC_URL}/api/files/${news.collectionId}/${news.id}/${galleryImages[0]}`
         : 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'

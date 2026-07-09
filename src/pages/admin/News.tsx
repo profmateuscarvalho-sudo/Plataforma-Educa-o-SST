@@ -15,7 +15,7 @@ import { getNews, createNews, updateNews, deleteNews } from '@/services/news'
 import { News } from '@/types'
 import { toast } from '@/hooks/use-toast'
 import { RichTextEditor } from '@/components/RichTextEditor'
-import { PUBLIC_URL } from '@/lib/constants'
+import { getSharePreviewUrl } from '@/lib/constants'
 
 export default function AdminNews() {
   const [news, setNews] = useState<News[]>([])
@@ -104,10 +104,11 @@ export default function AdminNews() {
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    navigator.clipboard.writeText(`${PUBLIC_URL}/noticias/${n.id}`)
+                    const shareUrl = getSharePreviewUrl('news', n.id)
+                    navigator.clipboard.writeText(shareUrl)
                     toast({
                       title: 'Link de compartilhamento copiado!',
-                      description: `${PUBLIC_URL}/noticias/${n.id}`,
+                      description: shareUrl,
                     })
                   }}
                 >

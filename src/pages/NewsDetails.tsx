@@ -14,7 +14,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel'
 import { setMetaTags, stripHtml } from '@/lib/utils'
-import { PUBLIC_URL } from '@/lib/constants'
+import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
 
 const injectOGTags = (title: string, desc: string, image: string, url: string) => {
   document.title = title
@@ -59,7 +59,7 @@ export default function NewsDetails() {
         : 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
     : ''
 
-  const shareUrl = `${PUBLIC_URL}/noticias/${id}`
+  const shareUrl = getSharePreviewUrl('news', id || '')
   const actualUrl = `${PUBLIC_URL}/noticias/${id}`
 
   useEffect(() => {

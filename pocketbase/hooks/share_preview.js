@@ -2,6 +2,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
   const type = e.request.pathValue('type')
   const id = e.request.pathValue('id')
   const siteUrl = $secrets.get('SITE_URL') || 'https://www.educacaosst.com.br'
+  const pbUrl = $secrets.get('PB_INSTANCE_URL') || siteUrl
 
   let record
   let title = ''
@@ -11,7 +12,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
   let ogType = 'website'
 
   try {
-    if (type === 'noticias') {
+    if (type === 'noticias' || type === 'news') {
       record = $app.findRecordById('news', id)
       title = record.getString('title')
       const content = record.getString('content') || ''
@@ -24,7 +25,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
 
       const imgField = record.getString('image')
       if (imgField) {
-        image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
+        image = `${pbUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
       } else {
         const galleryField = record.get('images')
         let firstImage = ''
@@ -40,7 +41,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
         }
 
         if (firstImage) {
-          image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${firstImage}`
+          image = `${pbUrl}/api/files/${record.collectionId()}/${record.getId()}/${firstImage}`
         } else {
           image = 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
         }
@@ -60,7 +61,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
 
       const imgField = record.getString('banner')
       if (imgField) {
-        image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
+        image = `${pbUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
       } else {
         image = 'https://img.usecurling.com/p/1200/600?q=education&color=blue'
       }

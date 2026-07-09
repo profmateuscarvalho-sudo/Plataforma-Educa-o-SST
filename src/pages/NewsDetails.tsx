@@ -59,8 +59,8 @@ export default function NewsDetails() {
         : 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
     : ''
 
-  const shareUrl = news ? `${PUBLIC_URL}/noticias/${news.id}` : window.location.href
-  const actualUrl = news ? `${PUBLIC_URL}/noticias/${news.id}` : window.location.href
+  const shareUrl = `${PUBLIC_URL}/noticias/${id}`
+  const actualUrl = `${PUBLIC_URL}/noticias/${id}`
 
   useEffect(() => {
     if (news) {

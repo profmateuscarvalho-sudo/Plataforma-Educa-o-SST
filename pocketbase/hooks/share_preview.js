@@ -15,20 +15,32 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       record = $app.findRecordById('news', id)
       title = record.getString('title')
       const content = record.getString('content') || ''
-      description = content
+      let plainText = content
         .replace(/<[^>]*>?/gm, '')
         .replace(/&nbsp;/g, ' ')
         .trim()
-        .substring(0, 160)
-      if (content.length > 160) description += '...'
+      description = plainText.substring(0, 160)
+      if (plainText.length > 160) description += '...'
 
       const imgField = record.getString('image')
       if (imgField) {
         image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${imgField}`
       } else {
-        const galleryField = record.getString('images')
-        if (galleryField) {
-          image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${galleryField}`
+        const galleryField = record.get('images')
+        let firstImage = ''
+        if (Array.isArray(galleryField) && galleryField.length > 0) {
+          firstImage = galleryField[0]
+        } else if (typeof galleryField === 'string' && galleryField.trim()) {
+          try {
+            const parsed = JSON.parse(galleryField)
+            if (Array.isArray(parsed) && parsed.length > 0) firstImage = parsed[0]
+          } catch (err) {
+            firstImage = galleryField
+          }
+        }
+
+        if (firstImage) {
+          image = `${siteUrl}/api/files/${record.collectionId()}/${record.getId()}/${firstImage}`
         } else {
           image = 'https://img.usecurling.com/p/1200/600?q=industry&color=gray'
         }
@@ -39,11 +51,12 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       record = $app.findRecordById('simulados', id)
       title = record.getString('title')
       const content = record.getString('description') || ''
-      description = content
+      let plainText = content
         .replace(/<[^>]*>?/gm, '')
         .replace(/&nbsp;/g, ' ')
         .trim()
-        .substring(0, 160)
+      description = plainText.substring(0, 160)
+      if (plainText.length > 160) description += '...'
 
       const imgField = record.getString('banner')
       if (imgField) {

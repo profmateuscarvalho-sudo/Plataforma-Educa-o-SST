@@ -6,12 +6,15 @@ import { ArrowRight, BookOpen, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getCourses } from '@/services/courses'
 import { getMagazines } from '@/services/magazines'
-import { Course, Magazine } from '@/types'
+import { getNews } from '@/services/news'
+import { Course, Magazine, News } from '@/types'
 import pb from '@/lib/pocketbase/client'
+import { NewsCard } from '@/components/NewsCard'
 
 export default function Index() {
   const [courses, setCourses] = useState<Course[]>([])
   const [featuredMag, setFeaturedMag] = useState<Magazine | null>(null)
+  const [latestNews, setLatestNews] = useState<News[]>([])
 
   useEffect(() => {
     getCourses()
@@ -23,6 +26,10 @@ export default function Index() {
         const featured = mags.find((m) => m.is_featured) || mags[0]
         if (featured) setFeaturedMag(featured)
       })
+      .catch(console.error)
+
+    getNews()
+      .then((res) => setLatestNews(res.slice(0, 3)))
       .catch(console.error)
   }, [])
 
@@ -119,6 +126,37 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {latestNews.length > 0 && (
+        <section className="py-24 bg-white relative z-20">
+          <div className="container px-4">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+              <div className="max-w-2xl">
+                <h2 className="text-4xl font-serif font-bold text-secondary mb-4">
+                  Últimas Notícias
+                </h2>
+                <p className="text-slate-600 text-lg">
+                  Acompanhe as novidades e atualizações do mercado de Segurança e Saúde no Trabalho.
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                className="text-primary hover:text-primary/80 font-bold"
+                asChild
+              >
+                <Link to="/noticias">
+                  Ver todas <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {latestNews.map((n) => (
+                <NewsCard key={n.id} news={n} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Floating Featured Magazine Widget */}
       {featuredMag && (

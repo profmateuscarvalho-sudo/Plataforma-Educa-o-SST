@@ -96,6 +96,25 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
   const safeImage = escapeHtml(image)
   const safeUrl = escapeHtml(redirectUrl)
 
+  const ua = (e.request.header.get('User-Agent') || '').toLowerCase()
+  const isBot =
+    ua.includes('whatsapp') ||
+    ua.includes('facebookexternalhit') ||
+    ua.includes('linkedinbot') ||
+    ua.includes('twitterbot') ||
+    ua.includes('telegrambot') ||
+    ua.includes('bot') ||
+    ua.includes('crawler') ||
+    ua.includes('spider')
+
+  if (!isBot && redirectUrl) {
+    return e.redirect(302, redirectUrl)
+  }
+
+  e.response.header().set('Cache-Control', 'no-cache, no-store, must-revalidate')
+  e.response.header().set('Pragma', 'no-cache')
+  e.response.header().set('Expires', '0')
+
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>

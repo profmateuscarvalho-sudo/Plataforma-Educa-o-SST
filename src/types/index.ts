@@ -69,6 +69,7 @@ export interface SupportMessage extends RecordModel {
 export interface News extends RecordModel {
   title: string
   content: string
+  category?: string
   image: string | string[]
   images?: string[]
 }

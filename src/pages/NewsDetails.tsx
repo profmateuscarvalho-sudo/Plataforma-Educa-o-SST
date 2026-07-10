@@ -97,9 +97,16 @@ export default function NewsDetails() {
                 <ChevronLeft className="w-4 h-4 mr-2" /> Voltar para Notícias
               </Link>
             </Button>
-            <p className="text-accent font-bold mb-4">
-              {new Date(news.created).toLocaleDateString('pt-BR')}
-            </p>
+            <div className="flex flex-wrap gap-3 items-center mb-4">
+              {news.category && (
+                <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  {news.category}
+                </span>
+              )}
+              <p className="text-accent font-bold">
+                {new Date(news.created).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-white leading-tight">
               {news.title}
             </h1>

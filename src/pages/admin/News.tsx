@@ -16,12 +16,14 @@ import { News } from '@/types'
 import { toast } from '@/hooks/use-toast'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { getSharePreviewUrl } from '@/lib/constants'
+import { extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
 
 export default function AdminNews() {
   const [news, setNews] = useState<News[]>([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<News | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
   const load = () => getNews().then(setNews)
   useEffect(() => {
@@ -31,7 +33,16 @@ export default function AdminNews() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = new FormData(e.currentTarget)
+
+    // Frontend validation for editor
+    const content = form.get('content')
+    if (!content || content.toString().trim() === '' || content === '<p><br></p>') {
+      setFieldErrors({ content: 'O conteúdo é obrigatório.' })
+      return
+    }
+
     setIsSubmitting(true)
+    setFieldErrors({})
     try {
       if (editing?.id) await updateNews(editing.id, form)
       else await createNews(form)
@@ -40,7 +51,17 @@ export default function AdminNews() {
       setEditing(null)
       load()
     } catch (err) {
-      toast({ title: 'Erro', variant: 'destructive' })
+      const errs = extractFieldErrors(err)
+      if (Object.keys(errs).length > 0) {
+        setFieldErrors(errs)
+      } else {
+        toast({
+          title: 'Erro ao salvar',
+          variant: 'destructive',
+          description:
+            'Verifique se a imagem excede o limite de tamanho (5MB) ou se os campos estão corretos.',
+        })
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -54,7 +75,10 @@ export default function AdminNews() {
           open={open}
           onOpenChange={(v) => {
             setOpen(v)
-            if (!v) setEditing(null)
+            if (!v) {
+              setEditing(null)
+              setFieldErrors({})
+            }
           }}
         >
           <DialogTrigger asChild>
@@ -70,18 +94,43 @@ export default function AdminNews() {
               <div>
                 <Label>Título</Label>
                 <Input name="title" defaultValue={editing?.title} required />
+                {fieldErrors.title && (
+                  <p className="text-sm text-red-500 mt-1">{fieldErrors.title}</p>
+                )}
+              </div>
+              <div>
+                <Label>Categoria</Label>
+                <Input
+                  name="category"
+                  defaultValue={editing?.category}
+                  required
+                  placeholder="Ex: LEGISLATIVO • PLATAFORMAS DIGITAIS"
+                />
+                {fieldErrors.category && (
+                  <p className="text-sm text-red-500 mt-1">{fieldErrors.category}</p>
+                )}
               </div>
               <div>
                 <Label>Conteúdo (HTML suportado)</Label>
                 <RichTextEditor name="content" defaultValue={editing?.content} />
+                {fieldErrors.content && (
+                  <p className="text-sm text-red-500 mt-1">{fieldErrors.content}</p>
+                )}
               </div>
               <div>
                 <Label>Foto Destaque</Label>
                 <Input name="image" type="file" accept="image/*" />
+                {fieldErrors.image && (
+                  <p className="text-sm text-red-500 mt-1">{fieldErrors.image}</p>
+                )}
+                <p className="text-xs text-slate-500 mt-1">Recomendado: 1200x600px. Máximo: 5MB.</p>
               </div>
               <div>
                 <Label>Fotos da Galeria (Opcional, múltiplas)</Label>
                 <Input name="images" type="file" accept="image/*" multiple />
+                {fieldErrors.images && (
+                  <p className="text-sm text-red-500 mt-1">{fieldErrors.images}</p>
+                )}
               </div>
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 Salvar
@@ -97,7 +146,12 @@ export default function AdminNews() {
             <div key={n.id} className="flex justify-between items-center p-4 hover:bg-slate-50">
               <div>
                 <p className="font-bold">{n.title}</p>
-                <p className="text-xs text-slate-500">{new Date(n.created).toLocaleString()}</p>
+                <p className="text-xs text-slate-500">
+                  {n.category && (
+                    <span className="font-medium text-slate-700 mr-2">{n.category}</span>
+                  )}
+                  {new Date(n.created).toLocaleString()}
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button

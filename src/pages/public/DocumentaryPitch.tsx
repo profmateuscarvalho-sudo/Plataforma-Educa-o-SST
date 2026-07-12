@@ -4,7 +4,8 @@ import pb from '@/lib/pocketbase/client'
 import { DocProject } from '@/types'
 import { getDocProject } from '@/services/doc_projects'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Film } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { ArrowLeft, Film, Home, Sparkles } from 'lucide-react'
 import { Logo } from '@/components/ui/Logos'
 
 const getPandaUrl = (val?: string) => {
@@ -32,7 +33,7 @@ export default function DocumentaryPitch() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-amber-500 animate-pulse">
+      <div className="min-h-screen bg-black flex items-center justify-center text-amber-500 animate-pulse">
         Carregando...
       </div>
     )
@@ -40,72 +41,83 @@ export default function DocumentaryPitch() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-white flex-col gap-6">
+      <div className="min-h-screen bg-black flex items-center justify-center text-white flex-col gap-6">
         <h1 className="text-3xl font-light">Documentário não encontrado</h1>
         <Button variant="outline" className="border-amber-500 text-amber-500" asChild>
-          <Link to="/">Voltar</Link>
+          <Link to="/aluno/documentarios">Voltar</Link>
         </Button>
       </div>
     )
   }
 
   const videoUrl = getPandaUrl(project.panda_video_id)
-  const coverImage = project.presentation_photos?.[0]
-    ? pb.files.getUrl(project, project.presentation_photos[0])
-    : null
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 pb-20">
-      <div className="absolute top-6 left-6 z-50">
+    <div className="min-h-screen bg-black text-zinc-50 flex flex-col">
+      <header className="absolute top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-5 bg-gradient-to-b from-black/80 to-transparent">
         <Logo className="text-white drop-shadow-md" />
-      </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            className="text-zinc-300 hover:text-white hover:bg-white/10 rounded-full"
+            asChild
+          >
+            <Link to="/aluno/documentarios">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Documentários
+            </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            className="text-zinc-300 hover:text-white hover:bg-white/10 rounded-full"
+            asChild
+          >
+            <Link to="/aluno">
+              <Home className="w-4 h-4 mr-2" /> Dashboard
+            </Link>
+          </Button>
+        </div>
+      </header>
 
-      <div className="container max-w-5xl mx-auto px-6 pt-32">
-        <Button
-          variant="ghost"
-          className="mb-8 text-zinc-400 hover:text-white"
-          onClick={() => window.history.back()}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
-        </Button>
-
-        <div className="space-y-8">
-          {coverImage && (
-            <div className="relative aspect-video rounded-2xl overflow-hidden border border-zinc-800">
-              <img
-                src={coverImage}
-                alt={project.title}
-                className="w-full h-full object-cover opacity-60"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+      <div className="flex-1 flex flex-col justify-center w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12">
+        {videoUrl ? (
+          <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/10">
+            <iframe
+              src={videoUrl}
+              className="w-full h-full border-none"
+              allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        ) : (
+          <div className="w-full aspect-video bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-white/10">
+            <div className="text-center space-y-3">
+              <Film className="w-16 h-16 text-zinc-700 mx-auto" />
+              <p className="text-zinc-500 text-lg font-light">Vídeo não disponível</p>
             </div>
-          )}
+          </div>
+        )}
 
-          <div className="text-center space-y-4">
+        <div className="mt-8 max-w-4xl mx-auto w-full space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="inline-flex items-center gap-2 text-amber-500 text-sm font-medium uppercase tracking-widest">
               <Film className="w-4 h-4" /> Documentário
             </div>
-            <h1 className="text-4xl md:text-6xl font-serif font-bold tracking-tight">
-              {project.title}
-            </h1>
-            {project.description && (
-              <p className="text-lg text-zinc-300 max-w-3xl mx-auto leading-relaxed font-light">
-                {project.description}
-              </p>
+            {project.is_free && (
+              <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 text-xs font-bold uppercase tracking-widest px-3 py-1">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Acesso Liberado
+              </Badge>
             )}
           </div>
 
-          {videoUrl && (
-            <div className="bg-black rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
-              <div className="aspect-video w-full">
-                <iframe
-                  src={videoUrl}
-                  className="w-full h-full border-none"
-                  allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            </div>
+          <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight leading-tight">
+            {project.title}
+          </h1>
+
+          {project.description && (
+            <p className="text-base md:text-lg text-zinc-400 leading-relaxed font-light">
+              {project.description}
+            </p>
           )}
         </div>
       </div>

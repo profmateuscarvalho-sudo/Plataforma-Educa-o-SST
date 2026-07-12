@@ -1,105 +1,160 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { ArrowLeft, Save } from 'lucide-react'
 import { DocProject } from '@/types'
 import { getDocProject, createDocProject, updateDocProject } from '@/services/doc_projects'
 import { toast } from 'sonner'
-import TabIdea from './Tabs/TabIdea'
-import TabCosts from './Tabs/TabCosts'
-import TabPlanning from './Tabs/TabPlanning'
-import TabManagement from './Tabs/TabManagement'
-import TabPresentation from './Tabs/TabPresentation'
-import TabGuests from './Tabs/TabGuests'
-import { ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
+import pb from '@/lib/pocketbase/client'
 
 export default function AdminDocumentaryWizard() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [project, setProject] = useState<Partial<DocProject>>({ status: 'Novo' })
-  const [activeTab, setActiveTab] = useState('idea')
+  const [project, setProject] = useState<Partial<DocProject>>({ is_free: true })
+  const [loading, setLoading] = useState(false)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
 
   useEffect(() => {
     if (id) {
       getDocProject(id)
         .then(setProject)
-        .catch(() => toast.error('Projeto não encontrado'))
+        .catch(() => toast.error('Documentário não encontrado'))
     }
   }, [id])
 
   const handleSave = async () => {
+    if (!project.title) {
+      toast.error('Título é obrigatório')
+      return
+    }
+    setLoading(true)
     try {
       if (id) {
-        await updateDocProject(id, project)
-        toast.success('Projeto atualizado!')
+        const fd = new FormData()
+        fd.append('title', project.title || '')
+        fd.append('description', project.description || '')
+        fd.append('panda_video_id', project.panda_video_id || '')
+        fd.append('is_free', String(project.is_free ?? true))
+        if (photoFile) fd.append('presentation_photos', photoFile)
+        await updateDocProject(id, fd as any)
+        toast.success('Documentário atualizado!')
       } else {
-        const res = await createDocProject(project)
-        toast.success('Projeto criado com sucesso!')
+        const res = await createDocProject({
+          title: project.title || '',
+          description: project.description || '',
+          panda_video_id: project.panda_video_id || '',
+          is_free: project.is_free ?? true,
+        })
+        if (photoFile) {
+          const fd = new FormData()
+          fd.append('presentation_photos', photoFile)
+          await updateDocProject(res.id, fd as any)
+        }
+        toast.success('Documentário criado!')
         navigate(`/admin/documentarios/${res.id}/editar`)
       }
-    } catch (e) {
-      toast.error('Erro ao salvar projeto')
+    } catch {
+      toast.error('Erro ao salvar')
+    } finally {
+      setLoading(false)
     }
   }
 
+  const coverUrl =
+    project.presentation_photos?.length && !photoFile
+      ? pb.files.getUrl(project as any, project.presentation_photos[0])
+      : null
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-10">
+    <div className="space-y-6 max-w-3xl mx-auto pb-10">
       <div className="flex items-center gap-4 border-b pb-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/admin/documentarios')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
           <h2 className="text-2xl font-bold text-secondary">
-            {id ? 'Editar Projeto' : 'Novo Projeto de Documentário'}
+            {id ? 'Editar Documentário' : 'Novo Documentário'}
           </h2>
-          <p className="text-muted-foreground">Assistente de estruturação de produção</p>
+          <p className="text-muted-foreground">Preencha as informações do conteúdo</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 bg-slate-50 p-4 rounded-lg border">
-        <Switch
-          checked={project.is_free || false}
-          onCheckedChange={(checked) => setProject({ ...project, is_free: checked })}
-        />
-        <Label>Acesso Gratuito (documentário livre para todos os usuários)</Label>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6 h-auto p-1 text-sm overflow-x-auto">
-          <TabsTrigger value="idea">Ideia</TabsTrigger>
-          <TabsTrigger value="costs" disabled={!id}>
-            Custos
-          </TabsTrigger>
-          <TabsTrigger value="planning" disabled={!id}>
-            Planejamento
-          </TabsTrigger>
-          <TabsTrigger value="guests" disabled={!id}>
-            Participantes
-          </TabsTrigger>
-          <TabsTrigger value="management" disabled={!id}>
-            Gerenciamento
-          </TabsTrigger>
-          <TabsTrigger value="presentation" disabled={!id}>
-            Apresentação
-          </TabsTrigger>
-        </TabsList>
-        <div className="mt-8 bg-white p-6 rounded-lg border shadow-sm">
-          <TabsContent value="idea">
-            <TabIdea project={project} onChange={setProject} onSave={handleSave} />
-          </TabsContent>
-          <TabsContent value="costs">{id && <TabCosts projectId={id} />}</TabsContent>
-          <TabsContent value="planning">{id && <TabPlanning projectId={id} />}</TabsContent>
-          <TabsContent value="guests">{id && <TabGuests projectId={id} />}</TabsContent>
-          <TabsContent value="management">
-            {id && <TabManagement project={project} onChange={setProject} onSave={handleSave} />}
-          </TabsContent>
-          <TabsContent value="presentation">
-            {id && <TabPresentation project={project} onChange={setProject} />}
-          </TabsContent>
+      <div className="space-y-6 bg-white p-6 rounded-lg border shadow-sm">
+        <div className="space-y-2">
+          <Label>Título *</Label>
+          <Input
+            value={project.title || ''}
+            onChange={(e) => setProject({ ...project, title: e.target.value })}
+            placeholder="Título do documentário"
+          />
         </div>
-      </Tabs>
+
+        <div className="space-y-2">
+          <Label>Descrição</Label>
+          <Textarea
+            className="min-h-[120px]"
+            value={project.description || ''}
+            onChange={(e) => setProject({ ...project, description: e.target.value })}
+            placeholder="Descrição do documentário"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>ID do Vídeo (Panda Video)</Label>
+          <Input
+            value={project.panda_video_id || ''}
+            onChange={(e) => setProject({ ...project, panda_video_id: e.target.value })}
+            placeholder="ID do vídeo ou URL de embed"
+          />
+          <p className="text-xs text-muted-foreground">
+            Insira o ID do vídeo ou a URL de embed da Panda Video.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Capa / Thumbnail</Label>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+            className="cursor-pointer"
+          />
+          {coverUrl && (
+            <div className="mt-2">
+              <p className="text-xs text-muted-foreground mb-1">Capa atual:</p>
+              <img
+                src={coverUrl}
+                alt="Capa atual"
+                className="h-32 rounded-lg border object-cover"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={project.is_free ?? true}
+            onCheckedChange={(checked) => setProject({ ...project, is_free: checked })}
+          />
+          <Label>Acesso Gratuito</Label>
+        </div>
+
+        <div className="flex justify-end pt-4 border-t">
+          <Button onClick={handleSave} disabled={loading || !project.title}>
+            {loading ? (
+              'Salvando...'
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" /> Salvar
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

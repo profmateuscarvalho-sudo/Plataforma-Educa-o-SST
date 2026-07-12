@@ -96,13 +96,12 @@ export interface LiveSession extends RecordModel {
 export interface LiveMessage extends RecordModel {
   user?: string
   session?: string
-  event?: string
   content: string
   is_question: boolean
   speaker_name?: string
   author_name?: string
   status?: 'pending' | 'active' | 'answered' | 'hidden'
-  expand?: { user?: User; event?: PlatformEvent }
+  expand?: { user?: User }
 }
 
 export interface LessonCompletion extends RecordModel {
@@ -150,49 +149,6 @@ export interface EmailCampaign extends RecordModel {
   content: string
   total_recipients: number
   status: 'sent' | 'failed'
-}
-
-export interface PlatformEvent extends RecordModel {
-  title: string
-  subtitle?: string
-  description: string
-  type: 'Workshop' | 'Aula Online' | 'Aula Presencial' | 'Summit'
-  date: string
-  end_date?: string
-  price?: number
-  location?: string
-  meeting_link?: string
-  thumbnail?: string
-  panda_video_id?: string
-  is_workshop?: boolean
-  speakers?: { name: string; topic: string; bio?: string; photo?: string }[]
-  structure?: string[]
-  importance?: string
-  objectives?: string[]
-  sponsorship_value?: number
-  sponsorship_tiers?: { name: string; price: number; benefits: string[] }[]
-  partner_logos?: string[]
-  speaker_photos?: string[]
-}
-
-export interface WorkshopInvitation extends RecordModel {
-  event: string
-  guest_name: string
-  guest_email?: string
-  token: string
-  status: 'pending' | 'viewed' | 'confirmed' | 'declined'
-  expand?: { event?: PlatformEvent }
-}
-
-export interface EventRegistration extends RecordModel {
-  event: string
-  name: string
-  email: string
-  phone?: string
-  position?: string
-  company_name?: string
-  extra_guests?: { name: string; position: string; phone: string }[]
-  status: 'confirmed' | 'pending' | 'cancelled'
 }
 
 export interface Author extends RecordModel {
@@ -258,59 +214,9 @@ export interface SubmissionToken extends RecordModel {
 export interface DocProject extends RecordModel {
   title: string
   description: string
-  objectives: string[]
-  target_audience: string
-  estimated_duration: number
-  episodes: number
-  script_structure: string
-  status: string
-  notes: string
-  topics?: string[]
-  is_free?: boolean
-  responsible: string
-  attachments?: string[]
-  total_budget: number
-  slug?: string
-  methodology?: string
-  investment_quota?: number
+  panda_video_id?: string
   presentation_photos?: string[]
-  estimated_release_date?: string
-  expand?: { responsible?: User }
-}
-
-export interface DocProjectCost extends RecordModel {
-  project: string
-  category: 'Pré-produção' | 'Produção' | 'Equipamentos' | 'Pós-produção' | 'Outros'
-  description: string
-  estimated_value: number
-}
-
-export interface DocProjectRecording extends RecordModel {
-  project: string
-  date: string
-  location: string
-}
-
-export interface DocProjectTeam extends RecordModel {
-  project: string
-  name: string
-  role: string
-  photo?: string
-}
-
-export interface DocProjectGuest extends RecordModel {
-  project: string
-  name: string
-  bio: string
-  photo?: string
-}
-
-export interface DocProjectTask extends RecordModel {
-  project: string
-  title: string
-  deadline: string
-  responsible: string
-  status: 'A Fazer' | 'Em Andamento' | 'Concluído'
+  is_free?: boolean
 }
 
 export interface Simulado extends RecordModel {

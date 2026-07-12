@@ -175,7 +175,7 @@ export default function StudentDashboard() {
         return contentGrid(
           cat.documentaries,
           'Documentário',
-          (d) => `/documentarios/projeto/${d.slug || d.id}`,
+          (d) => `/documentarios/${d.id}`,
           imgDoc,
         )
       case 'revistas':

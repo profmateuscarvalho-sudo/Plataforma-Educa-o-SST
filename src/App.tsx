@@ -13,7 +13,6 @@ import CourseDetails from './pages/CourseDetails'
 import Mentorias from './pages/Mentorias'
 import Revistas from './pages/Revistas'
 import Noticias from './pages/Noticias'
-import EventDetails from './pages/EventDetails'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import NotFound from './pages/NotFound'
@@ -45,21 +44,14 @@ import AdminNews from './pages/admin/News'
 import AdminLeads from './pages/admin/Leads'
 import AdminLeadImport from './pages/admin/LeadImport'
 import AdminMentorships from './pages/admin/Mentorships'
-import AdminEvents from './pages/admin/Events'
 import AdminStudents from './pages/admin/Students'
 import AdminDocumentaries from './pages/admin/Documentaries/List'
 import AdminDocumentaryWizard from './pages/admin/Documentaries/Wizard'
 import AdminSimulados from './pages/admin/Simulados/List'
 import AdminSimuladoWizard from './pages/admin/Simulados/Wizard'
 import AdminMagazineLanding from './pages/admin/MagazineLandingConfig'
-import InvestorSummary from './pages/public/InvestorSummary'
 import DocumentaryPitch from './pages/public/DocumentaryPitch'
-import WorkshopInvitation from './pages/public/WorkshopInvitation'
-import WorkshopSponsorship from './pages/public/WorkshopSponsorship'
-import AdminWorkshops from './pages/admin/Workshops'
 import AdminSubscriptionPlans from './pages/admin/SubscriptionPlans'
-import AdminEventQA from './pages/admin/EventQA'
-import PublicEventQA from './pages/public/EventQA'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -72,7 +64,6 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/cursos" element={<Cursos />} />
             <Route path="/cursos/:id" element={<CourseDetails />} />
-            <Route path="/eventos/:id" element={<EventDetails />} />
             <Route path="/mentorias" element={<Mentorias />} />
             <Route path="/revistas" element={<Revistas />} />
             <Route path="/noticias" element={<Noticias />} />
@@ -84,19 +75,16 @@ const App = () => (
             <Route path="/conexao-profissional/:token" element={<ProfessionalConnection />} />
             <Route path="/meu-local-trabalho" element={<WorkplaceSubmission />} />
 
-            <Route path="/resumo-investidor/:id" element={<InvestorSummary />} />
-            <Route path="/convite/:token" element={<WorkshopInvitation />} />
-            <Route path="/workshop/patrocinio/:id" element={<WorkshopSponsorship />} />
             <Route path="/simulados" element={<PublicSimulados />} />
             <Route path="/simulados/:id" element={<SimuladoSession />} />
             <Route path="/anuncie-na-revista" element={<Anuncie />} />
             <Route path="/planos" element={<Planos />} />
             <Route path="/dashboard" element={<StudentDashboard />} />
-            <Route path="/eventos/:id/qa" element={<PublicEventQA />} />
 
             <Route path="/aluno" element={<StudentDashboard />} />
             <Route path="/aluno/curso/:id/aula" element={<CourseLesson />} />
             <Route path="/aluno/live/:id" element={<StudentLive />} />
+            <Route path="/documentarios/:id" element={<DocumentaryPitch />} />
           </Route>
 
           <Route element={<AdminLayout />}>
@@ -105,8 +93,6 @@ const App = () => (
             <Route path="/admin/cursos/:id" element={<AdminCourseBuilder />} />
             <Route path="/admin/alunos" element={<AdminStudents />} />
             <Route path="/admin/mentorias" element={<AdminMentorships />} />
-            <Route path="/admin/eventos" element={<AdminEvents />} />
-            <Route path="/admin/eventos/:id/qa" element={<AdminEventQA />} />
             <Route path="/admin/documentarios" element={<AdminDocumentaries />} />
             <Route path="/admin/documentarios/novo" element={<AdminDocumentaryWizard />} />
             <Route path="/admin/documentarios/:id/editar" element={<AdminDocumentaryWizard />} />
@@ -123,11 +109,8 @@ const App = () => (
             <Route path="/admin/leads/import" element={<AdminLeadImport />} />
             <Route path="/admin/pagamentos" element={<AdminPayments />} />
             <Route path="/admin/lives" element={<AdminLives />} />
-            <Route path="/admin/workshops" element={<AdminWorkshops />} />
             <Route path="/admin/planos" element={<AdminSubscriptionPlans />} />
           </Route>
-
-          <Route path="/documentarios/projeto/:slug" element={<DocumentaryPitch />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>{' '}

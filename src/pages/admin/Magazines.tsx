@@ -29,7 +29,7 @@ export default function AdminMagazines() {
   const [embedCode, setEmbedCode] = useState('')
   const [flipLink, setFlipLink] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [isFree, setIsFree] = useState(false)
+  const [isFree, setIsFree] = useState(true)
 
   const load = () => getMagazines().then(setMagazines)
   useEffect(() => {
@@ -124,9 +124,9 @@ export default function AdminMagazines() {
             } else if (editing) {
               setEmbedCode(editing.embed_code || '')
               setFlipLink(editing.fliphtml5_link || '')
-              setIsFree(editing.is_free || false)
+              setIsFree(editing.is_free ?? true)
             } else {
-              setIsFree(false)
+              setIsFree(true)
             }
           }}
         >

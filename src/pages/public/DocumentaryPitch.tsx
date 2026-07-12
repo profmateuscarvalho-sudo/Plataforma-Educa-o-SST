@@ -111,15 +111,16 @@ export default function DocumentaryPitch() {
               )}
             </div>
 
-          <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight leading-tight">
-            {project.title}
-          </h1>
+            <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight leading-tight">
+              {project.title}
+            </h1>
 
-          {project.description && (
-            <p className="text-base md:text-lg text-zinc-400 leading-relaxed font-light">
-              {project.description}
-            </p>
-          )}
+            {project.description && (
+              <p className="text-base md:text-lg text-zinc-400 leading-relaxed font-light">
+                {project.description}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

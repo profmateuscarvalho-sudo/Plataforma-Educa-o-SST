@@ -9,6 +9,7 @@ interface AuthContextType {
   signUp: (name: string, email: string, pass: string) => Promise<{ error: any }>
   signOut: () => void
   refreshUser: () => Promise<void>
+  updateProfile: (data: FormData | Record<string, any>) => Promise<{ error: any }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -68,8 +69,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const updateProfile = async (data: FormData | Record<string, any>) => {
+    try {
+      const updated = await pb.collection('users').update(user!.id, data)
+      await pb.collection('users').authRefresh()
+      setUser(updated as User)
+      return { error: null }
+    } catch (error) {
+      return { error }
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, refreshUser }}>
+    <AuthContext.Provider
+      value={{ user, loading, signIn, signUp, signOut, refreshUser, updateProfile }}
+    >
       {children}
     </AuthContext.Provider>
   )

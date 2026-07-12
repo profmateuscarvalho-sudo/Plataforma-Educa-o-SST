@@ -16,6 +16,7 @@ import { useEffect } from 'react'
 import { Logo, SquareLogo } from './ui/Logos'
 import { useAuth } from '@/hooks/use-auth'
 import { LeadForm } from './LeadForm'
+import pb from '@/lib/pocketbase/client'
 
 export default function Layout() {
   const location = useLocation()
@@ -64,6 +65,22 @@ export default function Layout() {
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
+                <Link
+                  to={user.role === 'admin' ? '/admin' : '/aluno'}
+                  className="flex items-center gap-2"
+                >
+                  {user.avatar ? (
+                    <img
+                      src={pb.files.getUrl(user, user.avatar)}
+                      alt={user.name}
+                      className="w-9 h-9 rounded-full object-cover border-2 border-primary/20"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                      {user.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </Link>
                 <Button variant="ghost" asChild className="text-primary font-semibold">
                   <Link to={user.role === 'admin' ? '/admin' : '/aluno'}>
                     <LayoutDashboard className="w-4 h-4 mr-2" /> Painel
@@ -120,6 +137,23 @@ export default function Layout() {
                 <div className="flex flex-col gap-3">
                   {user ? (
                     <>
+                      <Link
+                        to={user.role === 'admin' ? '/admin' : '/aluno'}
+                        className="flex items-center gap-3 mb-2"
+                      >
+                        {user.avatar ? (
+                          <img
+                            src={pb.files.getUrl(user, user.avatar)}
+                            alt={user.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                            {user.name?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span className="font-medium text-slate-700">{user.name}</span>
+                      </Link>
                       <Button className="w-full justify-start text-lg h-12" asChild>
                         <Link to={user.role === 'admin' ? '/admin' : '/aluno'}>
                           <LayoutDashboard className="mr-2" /> Painel

@@ -28,6 +28,7 @@ import Planos from './pages/Planos'
 
 import StudentDashboard from './pages/student/Dashboard'
 import CourseLesson from './pages/student/Lesson'
+import StudentDocumentaries from './pages/student/Documentaries'
 
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminCourses from './pages/admin/Courses'
@@ -83,6 +84,7 @@ const App = () => (
 
             <Route path="/aluno" element={<StudentDashboard />} />
             <Route path="/aluno/curso/:id/aula" element={<CourseLesson />} />
+            <Route path="/aluno/documentarios" element={<StudentDocumentaries />} />
             <Route path="/aluno/live/:id" element={<StudentLive />} />
             <Route path="/documentarios/:id" element={<DocumentaryPitch />} />
           </Route>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { useStudentCatalog } from '@/hooks/use-student-catalog'
 import { useStudentAccess } from '@/hooks/use-student-access'
@@ -46,6 +46,7 @@ export default function StudentDashboard() {
   const [view, setView] = useState<ViewType>('hub')
   const [checkout, setCheckout] = useState<{ title: string; price: number } | null>(null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const navigate = useNavigate()
 
   if (loading) return <div className="p-12 text-center text-slate-500">Carregando...</div>
   if (!user) return <Navigate to="/login" />
@@ -311,7 +312,13 @@ export default function StudentDashboard() {
                   imageUrl={c.img}
                   count={c.count}
                   gradient={c.gradient}
-                  onClick={() => setView(c.id)}
+                  onClick={() => {
+                    if (c.id === 'documentarios') {
+                      navigate('/aluno/documentarios')
+                    } else {
+                      setView(c.id)
+                    }
+                  }}
                 />
               ))}
             </div>

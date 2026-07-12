@@ -4,6 +4,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Table,
   TableBody,
   TableCell,
@@ -13,23 +22,66 @@ import {
 } from '@/components/ui/table'
 import { useToast } from '@/components/ui/use-toast'
 import { RichTextEditor } from '@/components/RichTextEditor'
-import { EmailCampaign } from '@/types'
+import { EmailCampaign, Course, Magazine } from '@/types'
 import { getEmailCampaigns, sendEmailCampaign } from '@/services/email-campaigns'
+import { getCourses } from '@/services/courses'
+import { getMagazines } from '@/services/magazines'
 import { Loader2, Send } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export function EmailCampaigns() {
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([])
+  const [courses, setCourses] = useState<Course[]>([])
+  const [magazines, setMagazines] = useState<Magazine[]>([])
   const [loading, setLoading] = useState(false)
+  const [editorKey, setEditorKey] = useState(0)
+  const [templateContent, setTemplateContent] = useState('')
   const { toast } = useToast()
 
   const loadCampaigns = () =>
     getEmailCampaigns()
       .then(setCampaigns)
       .catch(() => {})
+
   useEffect(() => {
     loadCampaigns()
+    getCourses()
+      .then(setCourses)
+      .catch(() => {})
+    getMagazines()
+      .then(setMagazines)
+      .catch(() => {})
   }, [])
+
+  const handleContentSelect = (val: string) => {
+    if (!val) return
+    const [type, id] = val.split(':')
+    let title = ''
+    let desc = ''
+    let link = ''
+
+    if (type === 'course') {
+      const c = courses.find((x) => x.id === id)
+      if (c) {
+        title = c.title
+        desc = c.description || ''
+        link = `https://www.educacaosst.com.br/cursos/${c.id}`
+      }
+    } else {
+      const m = magazines.find((x) => x.id === id)
+      if (m) {
+        title = m.title
+        desc = m.summary || ''
+        link = `https://www.educacaosst.com.br/revistas`
+      }
+    }
+
+    if (title) {
+      const html = `<h2>${title}</h2><p>${desc}</p><p><br></p><p><a href="${link}" style="display:inline-block;padding:12px 24px;background-color:#059669;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Acessar Conteúdo</a></p><p><br></p>`
+      setTemplateContent(html)
+      setEditorKey((k) => k + 1)
+    }
+  }
 
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -78,8 +130,34 @@ export function EmailCampaigns() {
               <Input name="subject" required placeholder="Novidades da Educação SST!" />
             </div>
             <div className="space-y-2">
+              <Label>Anexar Conteúdo (Opcional - substitui o texto atual)</Label>
+              <Select onValueChange={handleContentSelect}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um curso ou revista para gerar o template..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Cursos</SelectLabel>
+                    {courses.map((c) => (
+                      <SelectItem key={`course:${c.id}`} value={`course:${c.id}`}>
+                        {c.title}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Revistas</SelectLabel>
+                    {magazines.map((m) => (
+                      <SelectItem key={`mag:${m.id}`} value={`mag:${m.id}`}>
+                        {m.title}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label>Conteúdo (HTML)</Label>
-              <RichTextEditor name="content" defaultValue="" />
+              <RichTextEditor key={editorKey} name="content" defaultValue={templateContent} />
             </div>
             <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? (

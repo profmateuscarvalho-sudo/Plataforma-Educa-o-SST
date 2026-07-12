@@ -38,7 +38,7 @@ export default function StudentDocumentaries() {
         <Button
           variant="ghost"
           className="text-white hover:bg-white/20 px-4 h-10 rounded-full bg-black/30 backdrop-blur border border-white/10"
-          onClick={() => navigate('/aluno')}
+          onClick={() => navigate('/plataforma')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
         </Button>

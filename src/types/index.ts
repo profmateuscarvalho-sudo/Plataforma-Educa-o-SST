@@ -5,6 +5,9 @@ export interface User extends RecordModel {
   email: string
   role: 'admin' | 'student'
   contract_end_date?: string
+  phone?: string
+  professional_profile?: string
+  avatar?: string
 }
 
 export interface Course extends RecordModel {

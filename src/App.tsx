@@ -6,6 +6,8 @@ import { AuthProvider } from '@/hooks/use-auth'
 
 import Layout from './components/Layout'
 import AdminLayout from './components/AdminLayout'
+import StudentLayout from './components/StudentLayout'
+import StudentProfile from './pages/student/Profile'
 
 import Index from './pages/Index'
 import Cursos from './pages/Cursos'
@@ -80,13 +82,15 @@ const App = () => (
             <Route path="/simulados/:id" element={<SimuladoSession />} />
             <Route path="/anuncie-na-revista" element={<Anuncie />} />
             <Route path="/planos" element={<Planos />} />
-            <Route path="/dashboard" element={<StudentDashboard />} />
-
-            <Route path="/aluno" element={<StudentDashboard />} />
-            <Route path="/aluno/curso/:id/aula" element={<CourseLesson />} />
-            <Route path="/aluno/documentarios" element={<StudentDocumentaries />} />
-            <Route path="/aluno/live/:id" element={<StudentLive />} />
             <Route path="/documentarios/:id" element={<DocumentaryPitch />} />
+          </Route>
+
+          <Route element={<StudentLayout />}>
+            <Route path="/plataforma" element={<StudentDashboard />} />
+            <Route path="/plataforma/curso/:id/aula" element={<CourseLesson />} />
+            <Route path="/plataforma/documentarios" element={<StudentDocumentaries />} />
+            <Route path="/plataforma/live/:id" element={<StudentLive />} />
+            <Route path="/plataforma/perfil" element={<StudentProfile />} />
           </Route>
 
           <Route element={<AdminLayout />}>

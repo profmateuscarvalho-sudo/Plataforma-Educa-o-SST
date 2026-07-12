@@ -66,7 +66,7 @@ export default function Layout() {
             {user ? (
               <>
                 <Link
-                  to={user.role === 'admin' ? '/admin' : '/aluno'}
+                  to={user.role === 'admin' ? '/admin' : '/plataforma'}
                   className="flex items-center gap-2"
                 >
                   {user.avatar ? (
@@ -82,10 +82,10 @@ export default function Layout() {
                   )}
                 </Link>
                 <Button variant="ghost" asChild className="text-primary font-semibold">
-                  <Link to={user.role === 'admin' ? '/admin' : '/aluno'}>
+                  <Link to={user.role === 'admin' ? '/admin' : '/plataforma'}>
                     <LayoutDashboard className="w-4 h-4 mr-2" /> Painel
                   </Link>
-                </Button>
+                </Button>{' '}
                 <Button
                   variant="outline"
                   size="sm"
@@ -138,7 +138,7 @@ export default function Layout() {
                   {user ? (
                     <>
                       <Link
-                        to={user.role === 'admin' ? '/admin' : '/aluno'}
+                        to={user.role === 'admin' ? '/admin' : '/plataforma'}
                         className="flex items-center gap-3 mb-2"
                       >
                         {user.avatar ? (
@@ -155,7 +155,7 @@ export default function Layout() {
                         <span className="font-medium text-slate-700">{user.name}</span>
                       </Link>
                       <Button className="w-full justify-start text-lg h-12" asChild>
-                        <Link to={user.role === 'admin' ? '/admin' : '/aluno'}>
+                        <Link to={user.role === 'admin' ? '/admin' : '/plataforma'}>
                           <LayoutDashboard className="mr-2" /> Painel
                         </Link>
                       </Button>

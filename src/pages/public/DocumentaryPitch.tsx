@@ -1,125 +1,150 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import pb from '@/lib/pocketbase/client'
-import { DocProject } from '@/types'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { getDocProject } from '@/services/doc_projects'
+import { DocProject } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Film, Home, Sparkles } from 'lucide-react'
-import { Logo } from '@/components/ui/Logos'
-
-const getPandaUrl = (val?: string) => {
-  if (!val) return ''
-  if (val.includes('<iframe') || val.includes('src="')) {
-    const match = val.match(/src="([^"]+)"/)
-    return match ? match[1] : ''
-  }
-  if (val.startsWith('http')) return val
-  return `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${val}`
-}
+import { ArrowLeft, Play, Calendar, Clock } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 export default function DocumentaryPitch() {
-  const { id } = useParams()
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [project, setProject] = useState<DocProject | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!id) return
     getDocProject(id)
-      .then(setProject)
+      .then((p) => setProject(p))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [id])
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-amber-500 animate-pulse">
-        Carregando...
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-zinc-500 animate-pulse">Carregando documentário...</div>
       </div>
     )
   }
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white flex-col gap-6">
-        <h1 className="text-3xl font-light">Documentário não encontrado</h1>
-        <Button variant="outline" className="border-amber-500 text-amber-500" asChild>
-          <Link to="/aluno/documentarios">Voltar</Link>
-        </Button>
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-zinc-400 mb-4">Documentário não encontrado.</p>
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            Voltar
+          </Button>
+        </div>
       </div>
     )
   }
 
-  const videoUrl = getPandaUrl(project.panda_video_id)
+  const coverUrl = project.presentation_photos?.length
+    ? pb.files.getUrl(project, project.presentation_photos[0])
+    : `https://img.usecurling.com/p/1280/720?q=documentary%20film`
 
   return (
-    <div className="min-h-screen bg-black text-zinc-50 flex flex-col">
-      <header className="absolute top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-5 bg-gradient-to-b from-black/80 to-transparent">
-        <Logo className="text-white drop-shadow-md" />
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-zinc-950 text-zinc-50">
+      <div className="sticky top-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-white/5">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Button
             variant="ghost"
-            className="text-zinc-300 hover:text-white hover:bg-white/10 rounded-full"
-            asChild
+            className="text-white hover:bg-white/10"
+            onClick={() => navigate(-1)}
           >
-            <Link to="/aluno/documentarios">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Documentários
-            </Link>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
           </Button>
-          <Button
-            variant="ghost"
-            className="text-zinc-300 hover:text-white hover:bg-white/10 rounded-full"
-            asChild
-          >
-            <Link to="/aluno">
-              <Home className="w-4 h-4 mr-2" /> Dashboard
-            </Link>
-          </Button>
+          {project.is_free && (
+            <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/50">
+              Acesso Liberado
+            </Badge>
+          )}
         </div>
-      </header>
+      </div>
 
-      <div className="flex-1 flex flex-col w-full pt-28 pb-12">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {videoUrl ? (
-            <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/10">
-              <iframe
-                src={videoUrl}
-                className="w-full h-full border-none"
-                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-                allowFullScreen
-              />
-            </div>
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
+          {project.panda_video_id ? (
+            <iframe
+              src={`https://player-vz-${project.panda_video_id}.tv.pandavideo.com.br/embed/?v=${project.panda_video_id}`}
+              className="w-full h-full"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              allowFullScreen
+              title={project.title}
+            />
           ) : (
-            <div className="w-full aspect-video bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-white/10">
-              <div className="text-center space-y-3">
-                <Film className="w-16 h-16 text-zinc-700 mx-auto" />
-                <p className="text-zinc-500 text-lg font-light">Vídeo não disponível</p>
+            <div className="w-full h-full flex items-center justify-center relative">
+              <img
+                src={coverUrl}
+                alt={project.title}
+                className="absolute inset-0 w-full h-full object-cover opacity-50"
+              />
+              <div className="relative z-10 text-center">
+                <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center mx-auto mb-4">
+                  <Play className="w-8 h-8 text-white fill-white ml-1" />
+                </div>
+                <p className="text-zinc-400">Vídeo em breve</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 space-y-6">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-3">
+              {project.title}
+            </h1>
+            <div className="flex items-center gap-4 text-sm text-zinc-400">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                {format(new Date(project.created), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              </span>
+              {project.is_free && (
+                <span className="flex items-center gap-1 text-emerald-400">
+                  <Play className="w-4 h-4" /> Acesso Liberado
+                </span>
+              )}
+            </div>
+          </div>
+
+          {project.description && (
+            <div className="prose prose-invert max-w-none">
+              <p className="text-zinc-300 text-lg leading-relaxed">{project.description}</p>
+            </div>
+          )}
+
+          {project.presentation_photos && project.presentation_photos.length > 1 && (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-4">Galeria</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {project.presentation_photos.slice(1).map((photo, idx) => (
+                  <div key={idx} className="aspect-video rounded-lg overflow-hidden bg-zinc-800">
+                    <img
+                      src={pb.files.getUrl(project, photo)}
+                      alt={`Foto ${idx + 2}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          <div className="mt-8 w-full space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex items-center gap-2 text-amber-500 text-sm font-medium uppercase tracking-widest">
-                <Film className="w-4 h-4" /> Documentário
-              </div>
-              {project.is_free && (
-                <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 text-xs font-bold uppercase tracking-widest px-3 py-1">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Acesso Liberado
-                </Badge>
-              )}
-            </div>
-
-            <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight leading-tight">
-              {project.title}
-            </h1>
-
-            {project.description && (
-              <p className="text-base md:text-lg text-zinc-400 leading-relaxed font-light">
-                {project.description}
-              </p>
-            )}
+          <div className="pt-6 border-t border-white/10">
+            <Button
+              variant="outline"
+              className="text-white border-white/20 hover:bg-white/10"
+              asChild
+            >
+              <Link to="/plataforma/documentarios">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Ver todos os documentários
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

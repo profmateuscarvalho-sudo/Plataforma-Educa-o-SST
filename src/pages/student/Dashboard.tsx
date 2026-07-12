@@ -49,7 +49,7 @@ export default function StudentDashboard() {
   const navigate = useNavigate()
 
   if (loading) return <div className="p-12 text-center text-slate-500">Carregando...</div>
-  if (!user) return <Navigate to="/login" />
+  if (!user) return <Navigate to="/login" replace />
 
   const buy = (item: any, category: string) => {
     if (category === 'Mentoria') {
@@ -314,7 +314,7 @@ export default function StudentDashboard() {
                   gradient={c.gradient}
                   onClick={() => {
                     if (c.id === 'documentarios') {
-                      navigate('/aluno/documentarios')
+                      navigate('/plataforma/documentarios')
                     } else {
                       setView(c.id)
                     }

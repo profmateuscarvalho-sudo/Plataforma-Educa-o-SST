@@ -6,7 +6,13 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   signIn: (email: string, pass: string) => Promise<{ error: any }>
-  signUp: (name: string, email: string, pass: string) => Promise<{ error: any }>
+  signUp: (
+    name: string,
+    email: string,
+    pass: string,
+    phone?: string,
+    professionalProfile?: string,
+  ) => Promise<{ error: any }>
   signOut: () => void
   refreshUser: () => Promise<void>
   updateProfile: (data: FormData | Record<string, any>) => Promise<{ error: any }>
@@ -41,7 +47,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const signUp = async (name: string, email: string, pass: string) => {
+  const signUp = async (
+    name: string,
+    email: string,
+    pass: string,
+    phone?: string,
+    professionalProfile?: string,
+  ) => {
     try {
       await pb.collection('users').create({
         name,
@@ -49,6 +61,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password: pass,
         passwordConfirm: pass,
         role: 'student',
+        phone,
+        professional_profile: professionalProfile,
       })
       await pb.collection('users').authWithPassword(email, pass)
       return { error: null }
@@ -72,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateProfile = async (data: FormData | Record<string, any>) => {
     try {
       const updated = await pb.collection('users').update(user!.id, data)
-      await pb.collection('users').authRefresh()
+      pb.authStore.save(pb.authStore.token, updated)
       setUser(updated as User)
       return { error: null }
     } catch (error) {

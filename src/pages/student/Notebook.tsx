@@ -121,16 +121,16 @@ export default function StudentNotebook() {
     })
 
   return (
-    <div className="min-h-[calc(100vh-56px)] bg-zinc-950 text-white">
-      <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 border-b border-white/10 py-6 px-4">
+    <div className="min-h-[calc(100vh-56px)] bg-slate-50 text-slate-800">
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 py-6 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
               <Notebook className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-serif font-bold text-white">Caderno Virtual</h1>
-              <p className="text-white/50 text-sm">Suas anotações de estudo</p>
+              <h1 className="text-2xl font-serif font-bold text-slate-800">Caderno Virtual</h1>
+              <p className="text-slate-500 text-sm">Suas anotações de estudo</p>
             </div>
           </div>
           <BackToHub />
@@ -148,7 +148,7 @@ export default function StudentNotebook() {
             </Button>
             <div className="space-y-1.5 max-h-[60vh] overflow-y-auto pr-1">
               {notes.length === 0 ? (
-                <p className="text-sm text-white/30 text-center py-8">Nenhuma nota ainda.</p>
+                <p className="text-sm text-slate-400 text-center py-8">Nenhuma nota ainda.</p>
               ) : (
                 notes.map((n) => (
                   <button
@@ -157,27 +157,27 @@ export default function StudentNotebook() {
                     className={cn(
                       'w-full text-left p-3 rounded-lg border transition-all',
                       selectedId === n.id
-                        ? 'border-amber-500/50 bg-amber-500/10'
-                        : 'border-white/5 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]',
+                        ? 'border-amber-500 bg-amber-50'
+                        : 'border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/50',
                     )}
                   >
-                    <p className="font-medium text-sm text-white/90 truncate">
+                    <p className="font-medium text-sm text-slate-700 truncate">
                       {n.title || 'Sem título'}
                     </p>
-                    <p className="text-xs text-white/30 mt-1">{formatDate(n.updated)}</p>
+                    <p className="text-xs text-slate-400 mt-1">{formatDate(n.updated)}</p>
                   </button>
                 ))
               )}
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between gap-3 p-4 border-b border-white/10">
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-sm">
+            <div className="flex items-center justify-between gap-3 p-4 border-b border-slate-200">
               <Input
                 placeholder="Título da nota..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="text-lg font-semibold border-none bg-transparent text-white placeholder:text-white/30 focus-visible:ring-0 px-0"
+                className="text-lg font-semibold border-none bg-transparent text-slate-800 placeholder:text-slate-300 focus-visible:ring-0 px-0"
               />
               <div className="flex gap-2 shrink-0">
                 {selectedId && (
@@ -185,7 +185,7 @@ export default function StudentNotebook() {
                     variant="ghost"
                     size="icon"
                     onClick={handleDelete}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -193,7 +193,7 @@ export default function StudentNotebook() {
                 <Button
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-amber-500 hover:bg-amber-600 text-black border-none"
+                  className="bg-amber-500 hover:bg-amber-600 text-white border-none"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Salvando...' : 'Salvar'}
@@ -201,7 +201,7 @@ export default function StudentNotebook() {
               </div>
             </div>
 
-            <div className="flex gap-1 p-2 border-b border-white/10 bg-white/[0.01]">
+            <div className="flex gap-1 p-2 border-b border-slate-200 bg-slate-50">
               {(['texto', 'mapa'] as const).map((m) => (
                 <button
                   key={m}
@@ -209,8 +209,8 @@ export default function StudentNotebook() {
                   className={cn(
                     'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors',
                     mode === m
-                      ? 'bg-amber-500/20 text-amber-400'
-                      : 'text-white/40 hover:text-white/70',
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'text-slate-400 hover:text-slate-600',
                   )}
                 >
                   {m === 'texto' ? 'Texto' : 'Mapa Mental'}
@@ -223,7 +223,7 @@ export default function StudentNotebook() {
                 placeholder="Escreva suas anotações aqui..."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="flex-1 min-h-[400px] resize-y border-none bg-transparent text-white/90 placeholder:text-white/30 focus-visible:ring-0 rounded-none"
+                className="flex-1 min-h-[400px] resize-y border-none bg-transparent text-slate-700 placeholder:text-slate-300 focus-visible:ring-0 rounded-none"
               />
             ) : (
               <div className="flex-1 min-h-[400px]">

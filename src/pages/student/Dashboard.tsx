@@ -17,8 +17,10 @@ import {
   User,
   Users,
   ClipboardList,
+  MessagesSquare,
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
+import { ClockDisplay } from '@/components/student/ClockDisplay'
 import { Magazine, Mentorship } from '@/types'
 import { getMentorships } from '@/services/mentorships'
 
@@ -98,6 +100,15 @@ export default function StudentDashboard() {
       action: () => navigate('/plataforma/caderno'),
     },
     {
+      title: 'Feed de Cases',
+      desc: 'Compartilhe experiências',
+      icon: MessagesSquare,
+      count: 0,
+      img: ph('professional%20forum'),
+      gradient: 'from-teal-600 to-emerald-800',
+      action: () => navigate('/plataforma/cases'),
+    },
+    {
       title: 'Meu Perfil',
       desc: 'Gerenciar conta',
       icon: User,
@@ -114,9 +125,14 @@ export default function StudentDashboard() {
   return (
     <div className="min-h-[calc(100vh-56px)] bg-slate-50">
       <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-10">
-        <div className="container px-4 max-w-6xl">
-          <h1 className="text-3xl font-serif font-bold text-yellow-400 mb-1">Olá, {user.name}!</h1>
-          <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
+        <div className="container px-4 max-w-6xl flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-serif font-bold text-yellow-400 mb-1">
+              Olá, {user.name}!
+            </h1>
+            <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
+          </div>
+          <ClockDisplay />
         </div>
       </div>
 

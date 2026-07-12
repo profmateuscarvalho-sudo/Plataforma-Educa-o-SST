@@ -117,7 +117,7 @@ export function MindMapEditor({ data, onChange }: MindMapEditorProps) {
   return (
     <div className="flex flex-col h-full">
       <div
-        className="relative flex-1 min-h-[400px] overflow-hidden bg-[#0a0a0a] bg-[radial-gradient(circle,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[length:20px_20px]"
+        className="relative flex-1 min-h-[400px] overflow-hidden bg-slate-50 bg-[radial-gradient(circle,rgba(0,0,0,0.06)_1px,transparent_1px)] bg-[length:20px_20px]"
         ref={canvasRef}
         onMouseMove={handleMouseMove}
         onMouseUp={() => setDraggingId(null)}
@@ -126,12 +126,12 @@ export function MindMapEditor({ data, onChange }: MindMapEditorProps) {
           if (e.target === e.currentTarget) addNode()
         }}
       >
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-zinc-900/90 border border-white/10 shadow-xl backdrop-blur">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-white/90 border border-slate-200 shadow-lg backdrop-blur">
           <Button
             size="sm"
             variant="ghost"
             onClick={addNode}
-            className="h-8 px-3 text-white hover:bg-white/10"
+            className="h-8 px-3 text-slate-700 hover:bg-slate-100"
             title="Adicionar nó (N)"
           >
             <Plus className="w-4 h-4 mr-1" /> Nó
@@ -144,8 +144,8 @@ export function MindMapEditor({ data, onChange }: MindMapEditorProps) {
               setConnectFrom(null)
             }}
             className={cn(
-              'h-8 px-3 hover:bg-white/10',
-              connectMode ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'text-white',
+              'h-8 px-3 hover:bg-slate-100',
+              connectMode ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'text-slate-700',
             )}
             title="Conectar nós (C)"
           >
@@ -155,16 +155,16 @@ export function MindMapEditor({ data, onChange }: MindMapEditorProps) {
             size="sm"
             variant="ghost"
             onClick={clearAll}
-            className="h-8 px-3 text-red-400 hover:bg-red-500/10"
+            className="h-8 px-3 text-red-500 hover:bg-red-50"
             title="Limpar tudo"
           >
             <Trash className="w-4 h-4" />
           </Button>
-          <span className="text-xs text-white/30 px-2 hidden sm:inline">
+          <span className="text-xs text-slate-400 px-2 hidden sm:inline">
             {data.nodes.length} nós · {data.connections.length} conexões
           </span>
           {connectMode && (
-            <span className="text-xs text-amber-400 px-2">
+            <span className="text-xs text-amber-600 px-2">
               {connectFrom ? 'Selecione o destino...' : 'Selecione a origem...'}
             </span>
           )}
@@ -186,7 +186,7 @@ export function MindMapEditor({ data, onChange }: MindMapEditorProps) {
                   y1={from.y + 18}
                   x2={to.x + 60}
                   y2={to.y + 18}
-                  stroke="rgba(251,191,36,0.5)"
+                  stroke="rgba(217,119,6,0.5)"
                   strokeWidth="2"
                 />
                 <line
@@ -211,13 +211,13 @@ export function MindMapEditor({ data, onChange }: MindMapEditorProps) {
               setEditingId(node.id)
             }}
             className={cn(
-              'absolute z-10 select-none cursor-move rounded-lg px-3 py-1.5 min-w-[120px] max-w-[200px]',
-              'bg-zinc-800/90 border text-sm text-white shadow-lg backdrop-blur transition-colors',
+              'absolute z-10 select-none cursor-move rounded-xl px-3 py-1.5 min-w-[120px] max-w-[200px]',
+              'bg-white border text-sm text-slate-700 shadow-md hover:shadow-lg backdrop-blur transition-all',
               connectFrom === node.id
-                ? 'border-amber-500 ring-2 ring-amber-500/30'
+                ? 'border-amber-500 ring-2 ring-amber-500/20'
                 : connectMode
-                  ? 'border-white/30 hover:border-amber-500/50'
-                  : 'border-white/15 hover:border-white/30',
+                  ? 'border-slate-300 hover:border-amber-400'
+                  : 'border-slate-200 hover:border-slate-300',
               draggingId === node.id && 'opacity-80 cursor-grabbing',
             )}
             style={{ left: node.x, top: node.y }}
@@ -236,7 +236,7 @@ export function MindMapEditor({ data, onChange }: MindMapEditorProps) {
                     setEditingId(null)
                   }
                 }}
-                className="bg-transparent outline-none text-white text-sm w-full"
+                className="bg-transparent outline-none text-slate-700 text-sm w-full"
               />
             ) : (
               <span className="block truncate">{node.text || 'Sem texto'}</span>
@@ -251,7 +251,7 @@ export function MindMapEditor({ data, onChange }: MindMapEditorProps) {
         ))}
 
         {data.nodes.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-white/20 text-sm pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center text-slate-300 text-sm pointer-events-none">
             Clique duas vezes no canvas ou use "Nó" para criar
           </div>
         )}

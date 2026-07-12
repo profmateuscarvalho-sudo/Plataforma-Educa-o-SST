@@ -290,3 +290,17 @@ export interface StudentNote extends RecordModel {
   content: string
   itinerary_data: MindMapData | ItineraryStep[] | null
 }
+
+export interface ProfessionalCase extends RecordModel {
+  user: string
+  title: string
+  content: string
+  expand?: { user?: User }
+}
+
+export interface CaseComment extends RecordModel {
+  case: string
+  user: string
+  content: string
+  expand?: { user?: User }
+}

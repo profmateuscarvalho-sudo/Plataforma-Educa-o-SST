@@ -267,7 +267,7 @@ export default function StudentDashboard() {
                   <Award className="w-8 h-8 text-emerald-500" />
                   <div>
                     <p className="text-2xl font-bold text-secondary">{freeCount}</p>
-                    <p className="text-xs text-slate-500">Conteúdos gratuitos</p>
+                    <p className="text-xs text-slate-500">Acesso Liberado</p>
                   </div>
                 </CardContent>
               </Card>

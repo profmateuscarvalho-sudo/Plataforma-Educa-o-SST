@@ -78,37 +78,38 @@ export default function DocumentaryPitch() {
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col justify-center w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12">
-        {videoUrl ? (
-          <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/10">
-            <iframe
-              src={videoUrl}
-              className="w-full h-full border-none"
-              allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        ) : (
-          <div className="w-full aspect-video bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-white/10">
-            <div className="text-center space-y-3">
-              <Film className="w-16 h-16 text-zinc-700 mx-auto" />
-              <p className="text-zinc-500 text-lg font-light">Vídeo não disponível</p>
+      <div className="flex-1 flex flex-col w-full pt-28 pb-12">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {videoUrl ? (
+            <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/10">
+              <iframe
+                src={videoUrl}
+                className="w-full h-full border-none"
+                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+                allowFullScreen
+              />
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="w-full aspect-video bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-white/10">
+              <div className="text-center space-y-3">
+                <Film className="w-16 h-16 text-zinc-700 mx-auto" />
+                <p className="text-zinc-500 text-lg font-light">Vídeo não disponível</p>
+              </div>
+            </div>
+          )}
 
-        <div className="mt-8 max-w-4xl mx-auto w-full space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 text-amber-500 text-sm font-medium uppercase tracking-widest">
-              <Film className="w-4 h-4" /> Documentário
+          <div className="mt-8 w-full space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-2 text-amber-500 text-sm font-medium uppercase tracking-widest">
+                <Film className="w-4 h-4" /> Documentário
+              </div>
+              {project.is_free && (
+                <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 text-xs font-bold uppercase tracking-widest px-3 py-1">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Acesso Liberado
+                </Badge>
+              )}
             </div>
-            {project.is_free && (
-              <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 text-xs font-bold uppercase tracking-widest px-3 py-1">
-                <Sparkles className="w-3 h-3 mr-1" />
-                Acesso Liberado
-              </Badge>
-            )}
-          </div>
 
           <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight leading-tight">
             {project.title}

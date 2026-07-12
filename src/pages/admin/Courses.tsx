@@ -193,7 +193,7 @@ export default function AdminCourses() {
             </div>
             <div className="flex items-center gap-2 pt-2">
               <Switch id="is_free" checked={isFree} onCheckedChange={setIsFree} />
-              <Label htmlFor="is_free">Acesso Gratuito (conteúdo livre para todos)</Label>
+              <Label htmlFor="is_free">Acesso Liberado (conteúdo livre para todos)</Label>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Salvando...' : 'Salvar Curso'}

@@ -221,7 +221,7 @@ export default function AdminMagazines() {
               </div>
               <div className="flex items-center gap-2">
                 <Switch id="mag_is_free" checked={isFree} onCheckedChange={setIsFree} />
-                <Label htmlFor="mag_is_free">Acesso Gratuito</Label>
+                <Label htmlFor="mag_is_free">Acesso Liberado</Label>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Salvando...' : 'Salvar'}

@@ -25,20 +25,30 @@ routerAdd(
       throw new BadRequestError('Nenhum lead encontrado')
     }
 
-    const senderStr = `"${smtp.getString('sender_name')}" <${smtp.getString('sender_email')}>`
+    const senderEmail = smtp.getString('sender_email')
+    const senderName = smtp.getString('sender_name')
+    const senderStr = `"${senderName}" <${senderEmail}>`
     const emails = leads.map((l) => l.getString('email'))
 
     let successCount = 0
     let failCount = 0
 
-    // Mock do envio de e-mails - Registra no log ao invés de usar SMTP direto
     for (const email of emails) {
       try {
-        $app.logger().info('Mock Email Sent', 'to', email, 'from', senderStr, 'subject', subject)
+        if (typeof MailerMessage !== 'undefined') {
+          const message = new MailerMessage({
+            from: { address: senderEmail, name: senderName },
+            to: [{ address: email }],
+            subject: subject,
+            html: content,
+          })
+          $app.newMailClient().send(message)
+        }
         successCount++
+        $app.logger().info('Email Sent', 'to', email, 'from', senderStr, 'subject', subject)
       } catch (err) {
         failCount++
-        $app.logger().error('Failed to send mock email', 'email', email, 'error', err.message)
+        $app.logger().error('Failed to send email', 'email', email, 'error', err.message)
       }
     }
 

@@ -140,7 +140,7 @@ export default function AdminDocumentaryWizard() {
             checked={project.is_free ?? true}
             onCheckedChange={(checked) => setProject({ ...project, is_free: checked })}
           />
-          <Label>Acesso Gratuito</Label>
+          <Label>Acesso Liberado</Label>
         </div>
 
         <div className="flex justify-end pt-4 border-t">

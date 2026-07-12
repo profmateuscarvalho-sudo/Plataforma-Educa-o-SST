@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import pb from '@/lib/pocketbase/client'
 import type { Simulado } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
-import { Link } from 'react-router-dom'
 
 export default function PublicSimulados() {
   const { user } = useAuth()

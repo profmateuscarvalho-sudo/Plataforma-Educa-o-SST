@@ -32,23 +32,23 @@ export function NewsSidebar() {
 
   return (
     <>
-      <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden flex flex-col max-h-[70vh]">
-        <div className="flex items-center gap-2 p-3 border-b border-white/10">
-          <Newspaper className="w-4 h-4 text-amber-400" />
-          <h3 className="text-sm font-bold text-white/90">Notícias</h3>
+      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col max-h-[70vh] shadow-sm">
+        <div className="flex items-center gap-2 p-3 border-b border-slate-200">
+          <Newspaper className="w-4 h-4 text-amber-500" />
+          <h3 className="text-sm font-bold text-black">Notícias</h3>
         </div>
         <div className="flex-1 overflow-y-auto space-y-1.5 p-2">
           {news.length === 0 ? (
-            <p className="text-xs text-white/30 text-center py-6">Nenhuma notícia.</p>
+            <p className="text-xs text-slate-500 text-center py-6">Nenhuma notícia.</p>
           ) : (
             news.map((n) => (
               <button
                 key={n.id}
                 onClick={() => setSelected(n)}
-                className="w-full text-left p-2.5 rounded-lg border border-white/5 bg-white/[0.02] hover:border-amber-500/30 hover:bg-amber-500/5 transition-all"
+                className="w-full text-left p-2.5 rounded-lg border border-slate-200 bg-white hover:border-amber-500/50 hover:bg-amber-50 transition-all"
               >
-                <p className="text-sm font-medium text-white/80 line-clamp-2">{n.title}</p>
-                <p className="text-xs text-white/30 mt-1">
+                <p className="text-sm font-medium text-black line-clamp-2">{n.title}</p>
+                <p className="text-xs text-slate-500 mt-1">
                   {format(new Date(n.created), 'dd MMM', { locale: ptBR })}
                 </p>
               </button>
@@ -58,8 +58,8 @@ export function NewsSidebar() {
       </div>
 
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-zinc-900 border-white/10">
-          <DialogTitle className="text-xl font-bold text-white">{selected?.title}</DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-white border-slate-200">
+          <DialogTitle className="text-xl font-bold text-black">{selected?.title}</DialogTitle>
           {selected && getImage(selected) && (
             <img
               src={getImage(selected)!}
@@ -69,7 +69,7 @@ export function NewsSidebar() {
           )}
           {selected && (
             <div
-              className="prose prose-invert prose-sm max-w-none text-white/70"
+              className="prose prose-sm max-w-none text-slate-700"
               dangerouslySetInnerHTML={{ __html: selected.content }}
             />
           )}

@@ -95,6 +95,7 @@ export interface LiveSession extends RecordModel {
   panda_video_id: string
   status: 'scheduled' | 'live' | 'finished'
   scheduled_at: string
+  instructor_name?: string
 }
 
 export interface LiveMessage extends RecordModel {
@@ -271,6 +272,8 @@ export interface MindMapNode {
   text: string
   x: number
   y: number
+  parentId?: string
+  color?: string
 }
 
 export interface MindMapConnection {

@@ -14,9 +14,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { BackToHub } from '@/components/student/BackToHub'
 import { MindMapEditor } from '@/components/student/MindMapEditor'
 import { NewsSidebar } from '@/components/student/NewsSidebar'
-import { Plus, Trash2, Save, Notebook } from 'lucide-react'
+import { CaseFeedContent } from '@/components/student/CaseFeedContent'
+import { Plus, Trash2, Save, Notebook, FileText, Share2, Briefcase } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const emptyMindMap: MindMapData = { nodes: [], connections: [] }
 
@@ -28,7 +30,6 @@ export default function StudentNotebook() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [mindMap, setMindMap] = useState<MindMapData>(emptyMindMap)
-  const [mode, setMode] = useState<'texto' | 'mapa'>('texto')
   const [saving, setSaving] = useState(false)
 
   const loadNotes = useCallback(async () => {
@@ -122,31 +123,31 @@ export default function StudentNotebook() {
 
   return (
     <div className="min-h-[calc(100vh-56px)] bg-slate-50 text-slate-800">
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 py-6 px-4">
+      <div className="bg-white border-b border-slate-200 py-6 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-              <Notebook className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+              <Notebook className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <h1 className="text-2xl font-serif font-bold text-slate-800">Caderno Virtual</h1>
-              <p className="text-slate-500 text-sm">Suas anotações de estudo</p>
+              <p className="text-slate-500 text-sm">Suas anotações, mapas mentais e comunidade</p>
             </div>
           </div>
-          <BackToHub />
+          <BackToHub className="bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200" />
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] xl:grid-cols-[220px_1fr_260px] gap-4">
-          <div className="space-y-2">
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_280px] gap-4">
+          <div className="space-y-3">
             <Button
               onClick={handleNewNote}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 border-none"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
             >
               <Plus className="w-4 h-4 mr-2" /> Nova Nota
             </Button>
-            <div className="space-y-1.5 max-h-[60vh] overflow-y-auto pr-1">
+            <div className="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1">
               {notes.length === 0 ? (
                 <p className="text-sm text-slate-400 text-center py-8">Nenhuma nota ainda.</p>
               ) : (
@@ -157,11 +158,11 @@ export default function StudentNotebook() {
                     className={cn(
                       'w-full text-left p-3 rounded-lg border transition-all',
                       selectedId === n.id
-                        ? 'border-amber-500 bg-amber-50'
-                        : 'border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/50',
+                        ? 'border-blue-500 bg-blue-50 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-blue-300',
                     )}
                   >
-                    <p className="font-medium text-sm text-slate-700 truncate">
+                    <p className="font-medium text-sm text-slate-800 truncate">
                       {n.title || 'Sem título'}
                     </p>
                     <p className="text-xs text-slate-400 mt-1">{formatDate(n.updated)}</p>
@@ -171,65 +172,77 @@ export default function StudentNotebook() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-sm">
-            <div className="flex items-center justify-between gap-3 p-4 border-b border-slate-200">
-              <Input
-                placeholder="Título da nota..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="text-lg font-semibold border-none bg-transparent text-slate-800 placeholder:text-slate-300 focus-visible:ring-0 px-0"
-              />
-              <div className="flex gap-2 shrink-0">
-                {selectedId && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleDelete}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="bg-amber-500 hover:bg-amber-600 text-white border-none"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {saving ? 'Salvando...' : 'Salvar'}
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex gap-1 p-2 border-b border-slate-200 bg-slate-50">
-              {(['texto', 'mapa'] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={cn(
-                    'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                    mode === m
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'text-slate-400 hover:text-slate-600',
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-sm min-h-[600px]">
+            <Tabs defaultValue="texto" className="flex flex-col flex-1 h-full">
+              <div className="flex items-center justify-between gap-3 p-3 border-b border-slate-200 bg-slate-50/50">
+                <Input
+                  placeholder="Título da nota..."
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="text-lg font-semibold border-none bg-transparent text-slate-800 placeholder:text-slate-400 focus-visible:ring-0 px-2"
+                />
+                <div className="flex gap-2 shrink-0">
+                  {selectedId && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleDelete}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   )}
-                >
-                  {m === 'texto' ? 'Texto' : 'Mapa Mental'}
-                </button>
-              ))}
-            </div>
-
-            {mode === 'texto' ? (
-              <Textarea
-                placeholder="Escreva suas anotações aqui..."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="flex-1 min-h-[400px] resize-y border-none bg-transparent text-slate-700 placeholder:text-slate-300 focus-visible:ring-0 rounded-none"
-              />
-            ) : (
-              <div className="flex-1 min-h-[400px]">
-                <MindMapEditor data={mindMap} onChange={setMindMap} />
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-slate-800 hover:bg-slate-900 text-white"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? 'Salvando...' : 'Salvar'}
+                  </Button>
+                </div>
               </div>
-            )}
+
+              <div className="border-b border-slate-200 px-4 bg-white">
+                <TabsList className="bg-transparent border-none p-0 h-12 w-full justify-start gap-4">
+                  <TabsTrigger
+                    value="texto"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-2 text-slate-600"
+                  >
+                    <FileText className="w-4 h-4 mr-2" /> Texto
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="mapa"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-2 text-slate-600"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" /> Mapa Mental
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="cases"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 rounded-none px-2 text-slate-600 ml-auto"
+                  >
+                    <Briefcase className="w-4 h-4 mr-2" /> Feed de Cases
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="texto" className="flex-1 m-0 p-4">
+                <Textarea
+                  placeholder="Escreva suas anotações aqui..."
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="w-full h-full min-h-[450px] resize-none border-none bg-transparent text-slate-700 placeholder:text-slate-400 focus-visible:ring-0 rounded-none"
+                />
+              </TabsContent>
+              <TabsContent value="mapa" className="flex-1 m-0 p-0 flex flex-col">
+                <MindMapEditor data={mindMap} onChange={setMindMap} />
+              </TabsContent>
+              <TabsContent value="cases" className="flex-1 m-0 p-0 overflow-y-auto bg-slate-50">
+                <div className="p-4 h-full">
+                  <CaseFeedContent />
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
 
           <div className="hidden xl:block">

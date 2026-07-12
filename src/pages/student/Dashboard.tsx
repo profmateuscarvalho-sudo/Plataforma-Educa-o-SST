@@ -8,6 +8,7 @@ import { ProductCard } from '@/components/student/ProductCard'
 import { MentorshipList } from '@/components/student/MentorshipList'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   ArrowLeft,
   BookOpen,
@@ -17,12 +18,14 @@ import {
   User,
   Users,
   ClipboardList,
-  MessagesSquare,
+  Video,
+  Calendar,
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { ClockDisplay } from '@/components/student/ClockDisplay'
-import { Magazine, Mentorship } from '@/types'
+import { Magazine, Mentorship, LiveSession } from '@/types'
 import { getMentorships } from '@/services/mentorships'
+import { getLiveSessions } from '@/services/live'
 
 const ph = (q: string, w = 800, h = 500) => `https://img.usecurling.com/p/${w}/${h}?q=${q}`
 
@@ -34,15 +37,28 @@ export default function StudentDashboard() {
   const [view, setView] = useState<'hub' | 'cursos' | 'revistas' | 'mentorias'>('hub')
   const [selectedMag, setSelectedMag] = useState<Magazine | null>(null)
   const [mentorships, setMentorships] = useState<Mentorship[]>([])
+  const [liveSessions, setLiveSessions] = useState<LiveSession[]>([])
 
   useEffect(() => {
     getMentorships()
       .then(setMentorships)
       .catch(() => {})
+    getLiveSessions()
+      .then(setLiveSessions)
+      .catch(() => {})
   }, [])
 
   if (loading) return <div className="p-12 text-center text-slate-500">Carregando...</div>
   if (!user) return <Navigate to="/login" replace />
+
+  const getGreeting = () => {
+    const h = new Date().getHours()
+    if (h >= 5 && h < 12) return 'Bom dia'
+    if (h >= 12 && h < 18) return 'Boa tarde'
+    return 'Boa noite'
+  }
+
+  const upcomingLives = liveSessions.filter((l) => l.status === 'scheduled')
 
   const cards = [
     {
@@ -92,21 +108,12 @@ export default function StudentDashboard() {
     },
     {
       title: 'Caderno Virtual',
-      desc: 'Suas anotações',
+      desc: 'Mapas, Notas e Cases',
       icon: BookMarked,
       count: 0,
       img: ph('notebook%20study'),
       gradient: 'from-amber-600 to-orange-800',
       action: () => navigate('/plataforma/caderno'),
-    },
-    {
-      title: 'Feed de Cases',
-      desc: 'Compartilhe experiências',
-      icon: MessagesSquare,
-      count: 0,
-      img: ph('professional%20forum'),
-      gradient: 'from-teal-600 to-emerald-800',
-      action: () => navigate('/plataforma/cases'),
     },
     {
       title: 'Meu Perfil',
@@ -126,31 +133,98 @@ export default function StudentDashboard() {
     <div className="min-h-[calc(100vh-56px)] bg-slate-50">
       <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-10">
         <div className="container px-4 max-w-6xl flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-serif font-bold text-yellow-400 mb-1">
-              Olá, {user.name}!
-            </h1>
-            <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
+          <div className="flex items-center gap-5">
+            <Avatar className="w-16 h-16 border-2 border-yellow-400 bg-slate-800 shadow-xl">
+              {user.avatar ? (
+                <AvatarImage
+                  src={pb.files.getUrl(user, user.avatar)}
+                  alt={user.name}
+                  className="object-cover"
+                />
+              ) : null}
+              <AvatarFallback className="bg-slate-800 text-yellow-400 text-2xl font-bold">
+                {user.name?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-3xl font-serif font-bold text-yellow-400 mb-1">
+                {getGreeting()}, {user.name}!
+              </h1>
+              <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
+            </div>
           </div>
-          <ClockDisplay />
+          <div className="hidden md:block">
+            <ClockDisplay />
+          </div>
         </div>
       </div>
 
       <div className="container px-4 max-w-6xl py-8">
         {view === 'hub' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-            {cards.map((c) => (
-              <CategoryCard
-                key={c.title}
-                title={c.title}
-                description={c.desc}
-                icon={c.icon}
-                imageUrl={c.img}
-                count={c.count}
-                gradient={c.gradient}
-                onClick={c.action}
-              />
-            ))}
+          <div className="animate-fade-in space-y-10">
+            {upcomingLives.length > 0 && (
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
+                  <Video className="w-5 h-5 text-red-500" /> Aulas Ao Vivo Programadas
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {upcomingLives.map((live) => (
+                    <div
+                      key={live.id}
+                      className="bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-red-200 transition-colors flex flex-col h-full"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-bold text-slate-800 line-clamp-2">{live.title}</h3>
+                          <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                            Ao Vivo
+                          </span>
+                        </div>
+                        <div className="space-y-1 mt-3">
+                          <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4 text-slate-400" />
+                            {new Date(live.scheduled_at).toLocaleString('pt-BR', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })}
+                          </p>
+                          {live.instructor_name && (
+                            <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                              <User className="w-4 h-4 text-slate-400" />
+                              Instrutor: {live.instructor_name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => navigate(`/plataforma/live/${live.id}`)}
+                        className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white shadow-sm"
+                      >
+                        Acessar Transmissão
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <h2 className="text-xl font-bold text-slate-800 mb-5">Seu Acervo</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {cards.map((c) => (
+                  <CategoryCard
+                    key={c.title}
+                    title={c.title}
+                    description={c.desc}
+                    icon={c.icon}
+                    imageUrl={c.img}
+                    count={c.count}
+                    gradient={c.gradient}
+                    onClick={c.action}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="animate-fade-in">

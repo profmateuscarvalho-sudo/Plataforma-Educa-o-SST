@@ -5,17 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { SquareLogo } from '@/components/ui/Logos'
 import { toast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
+import { Check } from 'lucide-react'
 
-const PROFESSIONAL_PROFILES = [
+const PROFESSIONAL_TAGS = [
   'Estudante',
   'Técnico em Segurança',
   'Engenheiro de Segurança',
@@ -37,15 +32,27 @@ export default function Register() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [professionalProfile, setProfessionalProfile] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [pass, setPass] = useState('')
   const [passConfirm, setPassConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [passError, setPassError] = useState('')
+  const [tagsError, setTagsError] = useState('')
+
+  const toggleTag = (tag: string) => {
+    setTagsError('')
+    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
+  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setPassError('')
+    setTagsError('')
+
+    if (selectedTags.length === 0) {
+      setTagsError('Selecione pelo menos um perfil profissional.')
+      return
+    }
 
     if (pass !== passConfirm) {
       setPassError('As senhas não coincidem.')
@@ -58,7 +65,7 @@ export default function Register() {
     }
 
     setLoading(true)
-    const { error } = await signUp(name, email, pass, phone, professionalProfile)
+    const { error } = await signUp(name, email, pass, phone, selectedTags)
     setLoading(false)
 
     if (error) {
@@ -124,18 +131,28 @@ export default function Register() {
             </div>
             <div className="space-y-2">
               <Label>Perfil Profissional</Label>
-              <Select value={professionalProfile} onValueChange={setProfessionalProfile} required>
-                <SelectTrigger className="h-11 bg-slate-50">
-                  <SelectValue placeholder="Selecione seu perfil" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROFESSIONAL_PROFILES.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <p className="text-xs text-slate-400">Selecione uma ou mais opções</p>
+              <div className="flex flex-wrap gap-2">
+                {PROFESSIONAL_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      'px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5',
+                      selectedTags.includes(tag)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                    )}
+                  >
+                    {selectedTags.includes(tag) && <Check className="w-3.5 h-3.5" />}
+                    {tag}
+                  </button>
+                ))}
+              </div>
+              {tagsError && (
+                <p className="text-sm font-medium text-destructive mt-1">{tagsError}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>

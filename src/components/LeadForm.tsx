@@ -21,7 +21,6 @@ const formSchema = z.object({
   name: z.string().min(2, 'Nome muito curto.'),
   email: z.string().email('E-mail inválido.'),
   phone: z.string().min(10, 'Telefone inválido.'),
-  message: z.string().optional(),
 })
 
 export function LeadForm({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
@@ -30,7 +29,7 @@ export function LeadForm({ variant = 'light' }: { variant?: 'light' | 'dark' }) 
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', email: '', phone: '', message: '' },
+    defaultValues: { name: '', email: '', phone: '' },
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -119,28 +118,6 @@ export function LeadForm({ variant = 'light' }: { variant?: 'light' | 'dark' }) 
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="message"
-          render={({ field }) => (
-            <FormItem className="space-y-1">
-              <FormLabel className={cn(isDark && 'text-slate-300 text-xs')}>
-                Mensagem (Opcional)
-              </FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Como podemos ajudar?"
-                  {...field}
-                  className={cn(
-                    isDark &&
-                      'bg-white/10 border-white/20 text-white placeholder:text-slate-500 min-h-[60px]',
-                  )}
-                />
-              </FormControl>
-              <FormMessage className="text-xs" />
-            </FormItem>
-          )}
-        />
         <Button
           type="submit"
           className={cn(

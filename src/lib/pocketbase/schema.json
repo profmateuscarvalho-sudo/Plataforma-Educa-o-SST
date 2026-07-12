@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-12T19:02:17.179Z",
+  "generatedAt": "2026-07-12T20:26:56.281Z",
   "collections": [
     {
       "name": "users",
@@ -70,6 +70,12 @@
             "Médico do Trabalho",
             "Outros"
           ]
+        },
+        {
+          "name": "professional_tags",
+          "type": "json",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -1818,6 +1824,59 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "name": "student_notes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && user = @request.auth.id",
+        "view": "@request.auth.id != \"\" && user = @request.auth.id",
+        "create": "@request.auth.id != \"\" && user = @request.auth.id",
+        "update": "@request.auth.id != \"\" && user = @request.auth.id",
+        "delete": "@request.auth.id != \"\" && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "content",
+          "type": "editor",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "itinerary_data",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_student_notes_user ON student_notes (user)"]
     }
   ]
 }

@@ -4,14 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import { ProfileAvatar } from '@/components/student/ProfileAvatar'
+import { Check } from 'lucide-react'
 import { getUserPayments } from '@/services/payments'
 import { getSubscriptionPlans } from '@/services/subscription-plans'
 import { Payment, SubscriptionPlan } from '@/types'
@@ -44,7 +39,7 @@ export default function StudentProfile() {
   const [name, setName] = useState(user?.name || '')
   const [email, setEmail] = useState(user?.email || '')
   const [phone, setPhone] = useState(user?.phone || '')
-  const [profile, setProfile] = useState(user?.professional_profile || '')
+  const [tags, setTags] = useState<string[]>(user?.professional_tags || [])
   const [savingInfo, setSavingInfo] = useState(false)
 
   const [newPass, setNewPass] = useState('')
@@ -72,7 +67,7 @@ export default function StudentProfile() {
       name,
       email,
       phone,
-      professional_profile: profile,
+      professional_tags: tags,
     })
     setSavingInfo(false)
     if (error) {
@@ -168,18 +163,28 @@ export default function StudentProfile() {
               </div>
               <div className="space-y-2">
                 <Label>Perfil Profissional</Label>
-                <Select value={profile} onValueChange={setProfile}>
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Selecione seu perfil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROFESSIONAL_PROFILES.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-2">
+                  {PROFESSIONAL_PROFILES.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() =>
+                        setTags((prev) =>
+                          prev.includes(p) ? prev.filter((t) => t !== p) : [...prev, p],
+                        )
+                      }
+                      className={cn(
+                        'px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5',
+                        tags.includes(p)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                      )}
+                    >
+                      {tags.includes(p) && <Check className="w-3.5 h-3.5" />}
+                      {p}
+                    </button>
+                  ))}
+                </div>
               </div>
               <Button type="submit" disabled={savingInfo} className="h-11">
                 {savingInfo ? 'Salvando...' : 'Salvar Alterações'}

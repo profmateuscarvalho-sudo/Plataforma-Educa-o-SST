@@ -74,7 +74,7 @@ export default function StudentDocumentaries() {
                 className="bg-white text-black hover:bg-zinc-200 text-lg font-bold px-8 h-14 rounded-full"
                 asChild
               >
-                <Link to={`/documentarios/${featured.id}`}>
+                <Link to={`/plataforma/documentarios/${featured.id}`}>
                   <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
                 </Link>
               </Button>
@@ -103,7 +103,7 @@ export default function StudentDocumentaries() {
                   className="pl-4 basis-[85%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
                 >
                   <Link
-                    to={`/documentarios/${p.id}`}
+                    to={`/plataforma/documentarios/${p.id}`}
                     className="group relative block aspect-video rounded-xl overflow-hidden bg-zinc-800 transition-all hover:scale-105 hover:z-30 duration-500 border border-zinc-800 hover:border-zinc-500 hover:shadow-2xl hover:shadow-black/50"
                   >
                     <img

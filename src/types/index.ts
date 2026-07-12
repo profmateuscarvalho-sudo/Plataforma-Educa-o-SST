@@ -7,6 +7,7 @@ export interface User extends RecordModel {
   contract_end_date?: string
   phone?: string
   professional_profile?: string
+  professional_tags?: string[]
   avatar?: string
 }
 
@@ -257,4 +258,17 @@ export interface SubscriptionPlan extends RecordModel {
   price: number
   interval: 'monthly' | 'yearly'
   features: string[]
+}
+
+export interface ItineraryStep {
+  id: string
+  title: string
+  done: boolean
+}
+
+export interface StudentNote extends RecordModel {
+  user: string
+  title: string
+  content: string
+  itinerary_data: ItineraryStep[]
 }

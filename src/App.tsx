@@ -31,6 +31,8 @@ import Planos from './pages/Planos'
 import StudentDashboard from './pages/student/Dashboard'
 import CourseLesson from './pages/student/Lesson'
 import StudentDocumentaries from './pages/student/Documentaries'
+import DocumentaryViewer from './pages/student/DocumentaryViewer'
+import StudentNotebook from './pages/student/Notebook'
 
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminCourses from './pages/admin/Courses'
@@ -85,10 +87,13 @@ const App = () => (
             <Route path="/documentarios/:id" element={<DocumentaryPitch />} />
           </Route>
 
+          <Route path="/plataforma/documentarios/:id" element={<DocumentaryViewer />} />
+
           <Route element={<StudentLayout />}>
             <Route path="/plataforma" element={<StudentDashboard />} />
             <Route path="/plataforma/curso/:id/aula" element={<CourseLesson />} />
             <Route path="/plataforma/documentarios" element={<StudentDocumentaries />} />
+            <Route path="/plataforma/caderno" element={<StudentNotebook />} />
             <Route path="/plataforma/live/:id" element={<StudentLive />} />
             <Route path="/plataforma/perfil" element={<StudentProfile />} />
           </Route>

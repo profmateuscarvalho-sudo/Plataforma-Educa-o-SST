@@ -266,9 +266,27 @@ export interface ItineraryStep {
   done: boolean
 }
 
+export interface MindMapNode {
+  id: string
+  text: string
+  x: number
+  y: number
+}
+
+export interface MindMapConnection {
+  id: string
+  from: string
+  to: string
+}
+
+export interface MindMapData {
+  nodes: MindMapNode[]
+  connections: MindMapConnection[]
+}
+
 export interface StudentNote extends RecordModel {
   user: string
   title: string
   content: string
-  itinerary_data: ItineraryStep[]
+  itinerary_data: MindMapData | ItineraryStep[] | null
 }

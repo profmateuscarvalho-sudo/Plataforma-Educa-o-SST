@@ -4,6 +4,7 @@ import { getDocProject } from '@/services/doc_projects'
 import { DocProject } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
 import { ArrowLeft, Film } from 'lucide-react'
+import { BackToHub } from '@/components/student/BackToHub'
 import pb from '@/lib/pocketbase/client'
 
 const getPandaUrl = (val?: string) => {
@@ -51,17 +52,18 @@ export default function DocumentaryViewer() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur border-b border-white/10 px-4 h-14 flex items-center">
+      <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur border-b border-white/10 px-4 h-14 flex items-center justify-between">
         <button
           onClick={() => navigate('/plataforma/documentarios')}
           className="flex items-center gap-2 text-white/80 hover:text-white text-sm"
         >
           <ArrowLeft className="w-4 h-4" /> Voltar
         </button>
+        <BackToHub />
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 p-4 lg:p-6 max-w-[1600px] mx-auto">
-        <div className="flex-1 min-w-0">
+        <div className="lg:w-[56%] min-w-0">
           <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-2xl">
             {videoUrl ? (
               <iframe
@@ -81,7 +83,7 @@ export default function DocumentaryViewer() {
           </div>
         </div>
 
-        <aside className="lg:w-[380px] shrink-0 space-y-5">
+        <aside className="lg:w-[42%] shrink-0 space-y-5">
           <div>
             <h1 className="text-2xl font-serif font-bold text-white mb-3">{project.title}</h1>
             <p className="text-sm text-white/60 leading-relaxed">

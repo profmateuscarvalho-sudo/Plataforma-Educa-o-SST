@@ -7,13 +7,17 @@ import {
   updateStudentNote,
   deleteStudentNote,
 } from '@/services/student-notes'
-import { StudentNote } from '@/types'
+import { StudentNote, MindMapData } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { BackToHub } from '@/components/student/BackToHub'
+import { MindMapEditor } from '@/components/student/MindMapEditor'
 import { Plus, Trash2, Save, Notebook } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+
+const emptyMindMap: MindMapData = { nodes: [], connections: [] }
 
 export default function StudentNotebook() {
   const { user } = useAuth()
@@ -22,6 +26,8 @@ export default function StudentNotebook() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [mindMap, setMindMap] = useState<MindMapData>(emptyMindMap)
+  const [mode, setMode] = useState<'texto' | 'mapa'>('texto')
   const [saving, setSaving] = useState(false)
 
   const loadNotes = useCallback(async () => {
@@ -48,9 +54,12 @@ export default function StudentNotebook() {
     if (selected) {
       setTitle(selected.title || '')
       setContent(selected.content || '')
+      const raw = selected.itinerary_data as any
+      setMindMap(raw && Array.isArray(raw?.nodes) ? (raw as MindMapData) : emptyMindMap)
     } else {
       setTitle('')
       setContent('')
+      setMindMap(emptyMindMap)
     }
   }, [selectedId, notes])
 
@@ -58,11 +67,12 @@ export default function StudentNotebook() {
     setSelectedId(null)
     setTitle('')
     setContent('')
+    setMindMap(emptyMindMap)
   }
 
   const handleSave = async () => {
     if (!user) return
-    if (!title.trim() && !content.trim()) {
+    if (!title.trim() && !content.trim() && mindMap.nodes.length === 0) {
       toast({ title: 'Adicione um título ou conteúdo.', variant: 'destructive' })
       return
     }
@@ -72,6 +82,7 @@ export default function StudentNotebook() {
         user: user.id,
         title: title.trim() || 'Sem título',
         content,
+        itinerary_data: mindMap,
       }
       if (selectedId) {
         await updateStudentNote(selectedId, payload)
@@ -111,14 +122,17 @@ export default function StudentNotebook() {
   return (
     <div className="min-h-[calc(100vh-56px)] bg-zinc-950 text-white">
       <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 border-b border-white/10 py-6 px-4">
-        <div className="max-w-6xl mx-auto flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-            <Notebook className="w-5 h-5 text-white" />
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+              <Notebook className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-serif font-bold text-white">Caderno Virtual</h1>
+              <p className="text-white/50 text-sm">Suas anotações de estudo</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-serif font-bold text-white">Caderno Virtual</h1>
-            <p className="text-white/50 text-sm">Suas anotações de estudo</p>
-          </div>
+          <BackToHub />
         </div>
       </div>
 
@@ -156,7 +170,7 @@ export default function StudentNotebook() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+          <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between gap-3 p-4 border-b border-white/10">
               <Input
                 placeholder="Título da nota..."
@@ -185,12 +199,36 @@ export default function StudentNotebook() {
                 </Button>
               </div>
             </div>
-            <Textarea
-              placeholder="Escreva suas anotações aqui..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[400px] resize-y border-none bg-transparent text-white/90 placeholder:text-white/30 focus-visible:ring-0 rounded-none"
-            />
+
+            <div className="flex gap-1 p-2 border-b border-white/10 bg-white/[0.01]">
+              {(['texto', 'mapa'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={cn(
+                    'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                    mode === m
+                      ? 'bg-amber-500/20 text-amber-400'
+                      : 'text-white/40 hover:text-white/70',
+                  )}
+                >
+                  {m === 'texto' ? 'Texto' : 'Mapa Mental'}
+                </button>
+              ))}
+            </div>
+
+            {mode === 'texto' ? (
+              <Textarea
+                placeholder="Escreva suas anotações aqui..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="flex-1 min-h-[400px] resize-y border-none bg-transparent text-white/90 placeholder:text-white/30 focus-visible:ring-0 rounded-none"
+              />
+            ) : (
+              <div className="flex-1 min-h-[400px]">
+                <MindMapEditor data={mindMap} onChange={setMindMap} />
+              </div>
+            )}
           </div>
         </div>
       </div>

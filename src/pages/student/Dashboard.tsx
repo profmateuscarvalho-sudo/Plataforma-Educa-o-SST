@@ -1,15 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { useStudentCatalog } from '@/hooks/use-student-catalog'
 import { useStudentAccess } from '@/hooks/use-student-access'
 import { CategoryCard } from '@/components/student/CategoryCard'
 import { ProductCard } from '@/components/student/ProductCard'
+import { MentorshipList } from '@/components/student/MentorshipList'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { ArrowLeft, BookOpen, Newspaper, Film, BookMarked, User } from 'lucide-react'
+import { ArrowLeft, BookOpen, Newspaper, Film, BookMarked, User, Users } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
-import { Magazine } from '@/types'
+import { Magazine, Mentorship } from '@/types'
+import { getMentorships } from '@/services/mentorships'
 
 const ph = (q: string, w = 800, h = 500) => `https://img.usecurling.com/p/${w}/${h}?q=${q}`
 
@@ -18,8 +20,15 @@ export default function StudentDashboard() {
   const cat = useStudentCatalog()
   const access = useStudentAccess()
   const navigate = useNavigate()
-  const [view, setView] = useState<'hub' | 'cursos' | 'revistas'>('hub')
+  const [view, setView] = useState<'hub' | 'cursos' | 'revistas' | 'mentorias'>('hub')
   const [selectedMag, setSelectedMag] = useState<Magazine | null>(null)
+  const [mentorships, setMentorships] = useState<Mentorship[]>([])
+
+  useEffect(() => {
+    getMentorships()
+      .then(setMentorships)
+      .catch(() => {})
+  }, [])
 
   if (loading) return <div className="p-12 text-center text-slate-500">Carregando...</div>
   if (!user) return <Navigate to="/login" replace />
@@ -42,6 +51,15 @@ export default function StudentDashboard() {
       img: ph('digital%20magazine'),
       gradient: 'from-blue-600 to-cyan-800',
       action: () => setView('revistas'),
+    },
+    {
+      title: 'Mentorias',
+      desc: 'Sessões com especialistas',
+      icon: Users,
+      count: mentorships.length,
+      img: ph('mentorship%20meeting'),
+      gradient: 'from-rose-600 to-pink-800',
+      action: () => setView('mentorias'),
     },
     {
       title: 'Documentários',
@@ -170,6 +188,7 @@ export default function StudentDashboard() {
                 )}
               </div>
             )}
+            {view === 'mentorias' && <MentorshipList mentorships={mentorships} />}
           </div>
         )}
       </div>

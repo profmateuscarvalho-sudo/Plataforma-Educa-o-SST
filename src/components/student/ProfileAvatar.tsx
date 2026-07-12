@@ -12,6 +12,7 @@ import { Camera, Loader2, Upload } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { User } from '@/types'
 
 interface ProfileAvatarProps {
@@ -51,7 +52,11 @@ export function ProfileAvatar({ user, size = 'md', editable = false }: ProfileAv
     const { error } = await updateProfile(formData)
     setLoading(false)
     if (error) {
-      toast({ title: 'Erro ao atualizar foto', variant: 'destructive' })
+      toast({
+        title: 'Erro ao atualizar foto',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      })
     } else {
       toast({ title: 'Foto atualizada com sucesso!' })
       setOpen(false)

@@ -14,6 +14,7 @@ export interface Course extends RecordModel {
   panda_video_id: string
   price: number
   thumbnail: string
+  is_free?: boolean
 }
 
 export interface Module extends RecordModel {
@@ -56,6 +57,7 @@ export interface Magazine extends RecordModel {
   embed_code?: string
   thumbnail: string
   is_featured: boolean
+  is_free?: boolean
 }
 
 export interface SupportMessage extends RecordModel {
@@ -123,6 +125,7 @@ export interface Mentorship extends RecordModel {
   scheduling_link: string
   mentor_name: string
   available_dates: string
+  is_free?: boolean
 }
 
 export interface Lead extends RecordModel {
@@ -263,6 +266,7 @@ export interface DocProject extends RecordModel {
   status: string
   notes: string
   topics?: string[]
+  is_free?: boolean
   responsible: string
   attachments?: string[]
   total_budget: number
@@ -315,6 +319,7 @@ export interface Simulado extends RecordModel {
   banner: string
   active: boolean
   access_count?: number
+  is_free?: boolean
 }
 
 export interface SimuladoQuestion extends RecordModel {

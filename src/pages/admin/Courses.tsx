@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Trash2, ListTree, Edit } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import { getCourses, createCourse, updateCourse, deleteCourse } from '@/services/courses'
 import { Course } from '@/types'
 import { toast } from '@/hooks/use-toast'
@@ -31,6 +32,7 @@ export default function AdminCourses() {
   const [isLoading, setIsLoading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [category, setCategory] = useState<string>('Segurança do Trabalho')
+  const [isFree, setIsFree] = useState(false)
 
   const load = () => getCourses().then(setCourses)
   useEffect(() => {
@@ -40,8 +42,10 @@ export default function AdminCourses() {
   useEffect(() => {
     if (editingCourse) {
       setCategory(editingCourse.category || 'Segurança do Trabalho')
+      setIsFree(editingCourse.is_free || false)
     } else {
       setCategory('Segurança do Trabalho')
+      setIsFree(false)
     }
   }, [editingCourse])
 
@@ -56,6 +60,7 @@ export default function AdminCourses() {
     }
 
     form.set('category', category)
+    form.set('is_free', isFree ? 'true' : 'false')
 
     const price = form.get('price') as string
     if (price) {
@@ -185,6 +190,10 @@ export default function AdminCourses() {
                   Deixe vazio para manter a capa atual.
                 </p>
               )}
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <Switch id="is_free" checked={isFree} onCheckedChange={setIsFree} />
+              <Label htmlFor="is_free">Acesso Gratuito (conteúdo livre para todos)</Label>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Salvando...' : 'Salvar Curso'}

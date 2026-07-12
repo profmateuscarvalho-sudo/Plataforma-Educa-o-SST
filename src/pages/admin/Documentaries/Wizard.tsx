@@ -12,6 +12,8 @@ import TabPresentation from './Tabs/TabPresentation'
 import TabGuests from './Tabs/TabGuests'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 
 export default function AdminDocumentaryWizard() {
   const { id } = useParams()
@@ -54,6 +56,14 @@ export default function AdminDocumentaryWizard() {
           </h2>
           <p className="text-muted-foreground">Assistente de estruturação de produção</p>
         </div>
+      </div>
+
+      <div className="flex items-center gap-2 bg-slate-50 p-4 rounded-lg border">
+        <Switch
+          checked={project.is_free || false}
+          onCheckedChange={(checked) => setProject({ ...project, is_free: checked })}
+        />
+        <Label>Acesso Gratuito (documentário livre para todos os usuários)</Label>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

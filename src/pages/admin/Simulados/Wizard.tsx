@@ -29,6 +29,7 @@ const schema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   description: z.string().min(1, 'Descrição é obrigatória'),
   active: z.boolean().default(true),
+  is_free: z.boolean().default(false),
   banner: z.any().optional(),
 })
 
@@ -45,7 +46,7 @@ export default function AdminSimuladoWizard() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', description: '', active: true },
+    defaultValues: { title: '', description: '', active: true, is_free: false },
   })
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function AdminSimuladoWizard() {
             title: data.title || '',
             description: data.description || '',
             active: data.active,
+            is_free: data.is_free || false,
           })
         })
         .catch(() => toast.error('Simulado não encontrado'))
@@ -76,6 +78,7 @@ export default function AdminSimuladoWizard() {
       formData.append('title', values.title.trim())
       formData.append('description', values.description.trim())
       formData.append('active', values.active ? 'true' : 'false')
+      formData.append('is_free', values.is_free ? 'true' : 'false')
 
       if (values.banner instanceof File) {
         formData.append('banner', values.banner)
@@ -203,6 +206,18 @@ export default function AdminSimuladoWizard() {
                           <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                         <FormLabel>Simulado Ativo (Visível para os usuários)</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="is_free"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel>Acesso Gratuito (livre para todos)</FormLabel>
                       </FormItem>
                     )}
                   />

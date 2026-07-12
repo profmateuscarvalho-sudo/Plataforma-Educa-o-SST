@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-12T17:14:48.619Z",
+  "generatedAt": "2026-07-12T17:37:08.530Z",
   "collections": [
     {
       "name": "users",
@@ -118,6 +118,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "is_free",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -186,6 +192,12 @@
         {
           "name": "embed_code",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_free",
+          "type": "bool",
           "required": false,
           "system": false
         }
@@ -308,6 +320,12 @@
         {
           "name": "available_dates",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_free",
+          "type": "bool",
           "required": false,
           "system": false
         }
@@ -1635,6 +1653,12 @@
           "type": "json",
           "required": false,
           "system": false
+        },
+        {
+          "name": "is_free",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX `idx_doc_projects_slug` ON `doc_projects` (slug)"]
@@ -1914,6 +1938,12 @@
         {
           "name": "access_count",
           "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_free",
+          "type": "bool",
           "required": false,
           "system": false
         }

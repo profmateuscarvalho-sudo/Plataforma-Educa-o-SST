@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Plus, Trash2, Edit, ImageIcon } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import { getMagazines, createMagazine, updateMagazine, deleteMagazine } from '@/services/magazines'
 import { Magazine } from '@/types'
 import { toast } from '@/hooks/use-toast'
@@ -28,6 +29,7 @@ export default function AdminMagazines() {
   const [embedCode, setEmbedCode] = useState('')
   const [flipLink, setFlipLink] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [isFree, setIsFree] = useState(false)
 
   const load = () => getMagazines().then(setMagazines)
   useEffect(() => {
@@ -82,6 +84,8 @@ export default function AdminMagazines() {
       }
     }
 
+    form.set('is_free', isFree ? 'true' : 'false')
+
     try {
       if (editing) {
         await updateMagazine(editing.id, form)
@@ -120,6 +124,9 @@ export default function AdminMagazines() {
             } else if (editing) {
               setEmbedCode(editing.embed_code || '')
               setFlipLink(editing.fliphtml5_link || '')
+              setIsFree(editing.is_free || false)
+            } else {
+              setIsFree(false)
             }
           }}
         >
@@ -211,6 +218,10 @@ export default function AdminMagazines() {
                 {fieldErrors.thumbnail && (
                   <p className="text-xs text-red-500 mt-1">{fieldErrors.thumbnail}</p>
                 )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch id="mag_is_free" checked={isFree} onCheckedChange={setIsFree} />
+                <Label htmlFor="mag_is_free">Acesso Gratuito</Label>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Salvando...' : 'Salvar'}

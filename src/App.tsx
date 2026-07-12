@@ -25,6 +25,7 @@ import WorkplaceSubmission from './pages/public/WorkplaceSubmission'
 import PublicSimulados from './pages/public/Simulados'
 import SimuladoSession from './pages/public/SimuladoSession'
 import Anuncie from './pages/public/Anuncie'
+import Planos from './pages/Planos'
 
 import StudentDashboard from './pages/student/Dashboard'
 import CourseLesson from './pages/student/Lesson'
@@ -89,7 +90,8 @@ const App = () => (
             <Route path="/simulados" element={<PublicSimulados />} />
             <Route path="/simulados/:id" element={<SimuladoSession />} />
             <Route path="/anuncie-na-revista" element={<Anuncie />} />
-            <Route path="/planos" element={<Navigate to="/" replace />} />
+            <Route path="/planos" element={<Planos />} />
+            <Route path="/dashboard" element={<StudentDashboard />} />
             <Route path="/eventos/:id/qa" element={<PublicEventQA />} />
 
             <Route path="/aluno" element={<StudentDashboard />} />

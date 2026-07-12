@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Plus, Trash2, Edit, Send } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import {
   getMentorships,
   createMentorship,
@@ -31,6 +32,7 @@ export default function AdminMentorships() {
   const [open, setOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<Mentorship | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [isFree, setIsFree] = useState(false)
   const { toast } = useToast()
 
   const load = () => getMentorships().then(setMentorships).catch(console.error)
@@ -45,12 +47,14 @@ export default function AdminMentorships() {
   const handleOpenNew = () => {
     setEditingItem(null)
     setFieldErrors({})
+    setIsFree(false)
     setOpen(true)
   }
 
   const handleOpenEdit = (m: Mentorship) => {
     setEditingItem(m)
     setFieldErrors({})
+    setIsFree(m.is_free || false)
     setOpen(true)
   }
 
@@ -59,6 +63,7 @@ export default function AdminMentorships() {
     setFieldErrors({})
     const fd = new FormData(e.currentTarget)
     const data = Object.fromEntries(fd.entries()) as Partial<Mentorship>
+    data.is_free = isFree
 
     try {
       if (editingItem) {
@@ -147,6 +152,10 @@ export default function AdminMentorships() {
           placeholder="Ex: Segundas às 14h, Quartas às 10h..."
           className="h-20"
         />
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch id="ment_is_free" checked={isFree} onCheckedChange={setIsFree} />
+        <Label htmlFor="ment_is_free">Acesso Gratuito</Label>
       </div>
       <Button type="submit" className="w-full">
         {editingItem ? 'Salvar Alterações' : 'Criar Mentoria'}

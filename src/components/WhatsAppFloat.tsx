@@ -1,23 +1,7 @@
-import { useEffect, useState } from 'react'
-import { getMagazineLandingPage } from '@/services/magazine_management'
-
 export function WhatsAppFloat() {
-  const [phoneNumber, setPhoneNumber] = useState('')
-
-  useEffect(() => {
-    getMagazineLandingPage()
-      .then((data: any) => {
-        const landing = Array.isArray(data) ? data[0] : data
-        if (landing?.whatsapp_number) setPhoneNumber(landing.whatsapp_number)
-      })
-      .catch(() => {})
-  }, [])
-
-  if (!phoneNumber) return null
-
   return (
     <a
-      href={`https://wa.me/${phoneNumber}`}
+      href="https://wa.me/5518997425195"
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1da851] shadow-lg flex items-center justify-center transition-transform hover:scale-110"

@@ -41,9 +41,11 @@ export function CategoryCard({
           <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <Icon className="w-6 h-6 text-white" />
           </div>
-          <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">
-            {count} {count === 1 ? 'item' : 'itens'}
-          </span>
+          {count > 0 && (
+            <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">
+              {count} {count === 1 ? 'item' : 'itens'}
+            </span>
+          )}
         </div>
         <h3 className="text-xl font-serif font-bold text-white mb-1">{title}</h3>
         <p className="text-sm text-white/70 line-clamp-2">{description}</p>

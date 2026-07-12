@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { LeadForm } from '@/components/LeadForm'
 import { CourseCard } from '@/components/CourseCard'
-import { ArrowRight, BookOpen, Star } from 'lucide-react'
+import { ArrowRight, BookOpen, Star, Check } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getCourses } from '@/services/courses'
 import { getMagazines } from '@/services/magazines'
@@ -86,13 +85,25 @@ export default function Index() {
             style={{ animationDelay: '0.2s' }}
           >
             <h3 className="text-2xl font-serif font-bold text-secondary mb-2">
-              Cadastre na Educação SST
+              Cadastre-se gratuitamente
             </h3>
             <p className="text-slate-500 text-sm mb-6">
-              e dê um passo a mais para o seu desenvolvimento na área. Receba novidades e
-              atualizações.
+              Crie sua conta e tenha acesso a cursos, revistas, documentários e muito mais.
             </p>
-            <LeadForm />
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <Check className="w-4 h-4 text-primary" /> Cursos em SST
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <Check className="w-4 h-4 text-primary" /> Revistas científicas
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <Check className="w-4 h-4 text-primary" /> Documentários exclusivos
+              </div>
+            </div>
+            <Button asChild className="w-full h-12 text-lg font-bold">
+              <Link to="/register">Cadastrar</Link>
+            </Button>
           </div>
         </div>
       </section>

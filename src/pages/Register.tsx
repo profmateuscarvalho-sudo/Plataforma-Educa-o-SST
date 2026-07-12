@@ -79,7 +79,7 @@ export default function Register() {
         title: 'Cadastro realizado com sucesso!',
         description: 'Bem-vindo à plataforma. Um e-mail de confirmação foi enviado.',
       })
-      navigate('/')
+      navigate('/plataforma')
     }
   }
 

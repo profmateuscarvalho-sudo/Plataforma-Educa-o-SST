@@ -28,7 +28,10 @@ export default function AdminStudents() {
       s.name?.toLowerCase().includes(q) ||
       s.email?.toLowerCase().includes(q) ||
       s.phone?.toLowerCase().includes(q) ||
-      s.professional_profile?.toLowerCase().includes(q)
+      s.professional_profile?.toLowerCase().includes(q) ||
+      JSON.stringify(s.professional_tags || [])
+        .toLowerCase()
+        .includes(q)
     )
   })
 
@@ -62,7 +65,7 @@ export default function AdminStudents() {
                 <TableHead>Nome</TableHead>
                 <TableHead>E-mail</TableHead>
                 <TableHead>Telefone</TableHead>
-                <TableHead>Perfil Profissional</TableHead>
+                <TableHead>Perfis Profissionais</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead>Validade</TableHead>
                 <TableHead>Status</TableHead>
@@ -79,7 +82,15 @@ export default function AdminStudents() {
                     <TableCell className="text-slate-600">{s.email}</TableCell>
                     <TableCell className="text-slate-600">{s.phone || '-'}</TableCell>
                     <TableCell>
-                      {s.professional_profile ? (
+                      {s.professional_tags && s.professional_tags.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {s.professional_tags.map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-slate-600 text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : s.professional_profile ? (
                         <Badge variant="outline" className="text-slate-600">
                           {s.professional_profile}
                         </Badge>

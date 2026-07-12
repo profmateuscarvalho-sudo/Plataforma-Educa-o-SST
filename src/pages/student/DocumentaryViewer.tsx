@@ -3,7 +3,8 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { getDocProject } from '@/services/doc_projects'
 import { DocProject } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Film } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
 
 const getPandaUrl = (val?: string) => {
   if (!val) return ''
@@ -32,7 +33,7 @@ export default function DocumentaryViewer() {
 
   if (loading || fetching)
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-white">
         Carregando...
       </div>
     )
@@ -40,36 +41,79 @@ export default function DocumentaryViewer() {
   if (!user) return <Navigate to="/login" replace />
   if (!project)
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-white">
         Documentário não encontrado.
       </div>
     )
 
   const videoUrl = getPandaUrl(project.panda_video_id)
+  const photos = project.presentation_photos || []
 
   return (
-    <div className="min-h-screen bg-black relative">
-      <button
-        onClick={() => navigate('/plataforma/documentarios')}
-        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur text-white/80 hover:text-white hover:bg-black/60 transition-all text-sm"
-      >
-        <ArrowLeft className="w-4 h-4" /> Voltar
-      </button>
+    <div className="min-h-screen bg-zinc-950 text-white">
+      <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur border-b border-white/10 px-4 h-14 flex items-center">
+        <button
+          onClick={() => navigate('/plataforma/documentarios')}
+          className="flex items-center gap-2 text-white/80 hover:text-white text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" /> Voltar
+        </button>
+      </div>
 
-      <div className="w-full h-screen flex items-center justify-center">
-        {videoUrl ? (
-          <iframe
-            src={videoUrl}
-            className="w-full h-full border-none"
-            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-            allowFullScreen
-          />
-        ) : (
-          <div className="text-center px-8">
-            <h1 className="text-2xl font-serif font-bold text-white mb-2">{project.title}</h1>
-            <p className="text-white/50">Vídeo não disponível.</p>
+      <div className="flex flex-col lg:flex-row gap-6 p-4 lg:p-6 max-w-[1600px] mx-auto">
+        <div className="flex-1 min-w-0">
+          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-2xl">
+            {videoUrl ? (
+              <iframe
+                src={videoUrl}
+                className="w-full h-full border-none"
+                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <Film className="w-16 h-16 text-white/20 mx-auto mb-3" />
+                  <p className="text-white/50">Vídeo não disponível.</p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        <aside className="lg:w-[380px] shrink-0 space-y-5">
+          <div>
+            <h1 className="text-2xl font-serif font-bold text-white mb-3">{project.title}</h1>
+            <p className="text-sm text-white/60 leading-relaxed">
+              {project.description || 'Sem descrição disponível.'}
+            </p>
+          </div>
+
+          {project.is_free && (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+              Acesso Liberado
+            </div>
+          )}
+
+          {photos.length > 0 && (
+            <div>
+              <h3 className="text-sm font-bold text-white/80 mb-3 uppercase tracking-wider">
+                Galeria
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {photos.map((photo, i) => (
+                  <div key={i} className="aspect-video rounded-lg overflow-hidden bg-white/5">
+                    <img
+                      src={pb.files.getUrl(project, photo)}
+                      alt={`Foto ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   )

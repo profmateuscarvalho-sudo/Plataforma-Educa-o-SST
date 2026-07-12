@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ClipboardList, ChevronRight, Share2 } from 'lucide-react'
+import { ClipboardList, ChevronRight, Share2, LayoutDashboard } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { getSimulados } from '@/services/simulados'
 import { Badge } from '@/components/ui/badge'
 import pb from '@/lib/pocketbase/client'
 import type { Simulado } from '@/types'
+import { useAuth } from '@/hooks/use-auth'
+import { Link } from 'react-router-dom'
 
 export default function PublicSimulados() {
+  const { user } = useAuth()
   const [simulados, setSimulados] = useState<Simulado[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -35,6 +38,15 @@ export default function PublicSimulados() {
               Acesse simulados interativos criados por especialistas. Pratique para concursos,
               certificações e aprimore sua base teórica.
             </p>
+            {user && (
+              <Link
+                to="/plataforma"
+                className="inline-flex items-center gap-2 mt-4 px-4 h-10 rounded-lg bg-white/15 hover:bg-white/25 text-white text-sm font-medium backdrop-blur transition-colors"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Voltar ao Hub
+              </Link>
+            )}
           </div>
         </div>
       </div>

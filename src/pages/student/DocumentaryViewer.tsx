@@ -3,8 +3,9 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { getDocProject } from '@/services/doc_projects'
 import { DocProject } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
-import { ArrowLeft, Film } from 'lucide-react'
+import { ArrowLeft, Play, Film } from 'lucide-react'
 import { BackToHub } from '@/components/student/BackToHub'
+import { Button } from '@/components/ui/button'
 import pb from '@/lib/pocketbase/client'
 
 const getPandaUrl = (val?: string) => {
@@ -23,6 +24,7 @@ export default function DocumentaryViewer() {
   const { user, loading } = useAuth()
   const [project, setProject] = useState<DocProject | null>(null)
   const [fetching, setFetching] = useState(true)
+  const [mode, setMode] = useState<'details' | 'player'>('details')
 
   useEffect(() => {
     if (!id) return
@@ -50,6 +52,32 @@ export default function DocumentaryViewer() {
   const videoUrl = getPandaUrl(project.panda_video_id)
   const photos = project.presentation_photos || []
 
+  if (mode === 'player') {
+    return (
+      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+        <button
+          onClick={() => setMode('details')}
+          className="absolute top-4 left-4 z-10 flex items-center gap-2 text-white/80 hover:text-white bg-black/50 px-4 h-10 rounded-full backdrop-blur transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Voltar aos detalhes
+        </button>
+        {videoUrl ? (
+          <iframe
+            src={videoUrl}
+            className="w-full h-full border-none"
+            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen"
+            allowFullScreen
+          />
+        ) : (
+          <div className="text-center text-white/50">
+            <Film className="w-16 h-16 mx-auto mb-3 opacity-20" />
+            <p>Vídeo não disponível.</p>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur border-b border-white/10 px-4 h-14 flex items-center justify-between">
@@ -62,60 +90,54 @@ export default function DocumentaryViewer() {
         <BackToHub />
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 p-4 lg:p-6 max-w-[1600px] mx-auto">
-        <div className="lg:w-[56%] min-w-0">
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-2xl">
-            {videoUrl ? (
-              <iframe
-                src={videoUrl}
-                className="w-full h-full border-none"
-                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center">
-                  <Film className="w-16 h-16 text-white/20 mx-auto mb-3" />
-                  <p className="text-white/50">Vídeo não disponível.</p>
-                </div>
-              </div>
-            )}
-          </div>
+      <div className="max-w-5xl mx-auto px-4 py-8 lg:py-12">
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-4">
+            {project.title}
+          </h1>
+          <p className="text-base text-white/60 leading-relaxed max-w-3xl">
+            {project.description || 'Sem descrição disponível.'}
+          </p>
         </div>
 
-        <aside className="lg:w-[42%] shrink-0 space-y-5">
-          <div>
-            <h1 className="text-2xl font-serif font-bold text-white mb-3">{project.title}</h1>
-            <p className="text-sm text-white/60 leading-relaxed">
-              {project.description || 'Sem descrição disponível.'}
-            </p>
+        {project.is_free && (
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-6">
+            Acesso Liberado
           </div>
+        )}
 
-          {project.is_free && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-              Acesso Liberado
+        {photos.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-sm font-bold text-white/80 mb-3 uppercase tracking-wider">
+              Galeria de Imagens
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {photos.map((photo, i) => (
+                <div
+                  key={i}
+                  className="aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5"
+                >
+                  <img
+                    src={pb.files.getUrl(project, photo)}
+                    alt={`Foto ${i + 1}`}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {photos.length > 0 && (
-            <div>
-              <h3 className="text-sm font-bold text-white/80 mb-3 uppercase tracking-wider">
-                Galeria
-              </h3>
-              <div className="grid grid-cols-2 gap-2">
-                {photos.map((photo, i) => (
-                  <div key={i} className="aspect-video rounded-lg overflow-hidden bg-white/5">
-                    <img
-                      src={pb.files.getUrl(project, photo)}
-                      alt={`Foto ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </aside>
+        <div className="flex flex-col sm:flex-row gap-4 items-center pt-4 border-t border-white/10">
+          <Button
+            size="lg"
+            onClick={() => setMode('player')}
+            className="bg-white text-black hover:bg-zinc-200 text-lg font-bold px-8 h-14 rounded-full w-full sm:w-auto"
+          >
+            <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
+          </Button>
+          {!videoUrl && <p className="text-sm text-white/40">Vídeo não disponível no momento.</p>}
+        </div>
       </div>
     </div>
   )

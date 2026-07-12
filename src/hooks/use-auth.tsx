@@ -84,8 +84,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const updateProfile = async (data: FormData | Record<string, any>) => {
+    if (!user) return { error: new Error('Usuário não autenticado') }
     try {
-      const updated = await pb.collection('users').update(user!.id, data)
+      const updated = await pb.collection('users').update(user.id, data)
       pb.authStore.save(pb.authStore.token, updated)
       setUser(updated as User)
       return { error: null }

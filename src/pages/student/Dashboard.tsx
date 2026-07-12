@@ -8,7 +8,16 @@ import { ProductCard } from '@/components/student/ProductCard'
 import { MentorshipList } from '@/components/student/MentorshipList'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { ArrowLeft, BookOpen, Newspaper, Film, BookMarked, User, Users } from 'lucide-react'
+import {
+  ArrowLeft,
+  BookOpen,
+  Newspaper,
+  Film,
+  BookMarked,
+  User,
+  Users,
+  ClipboardList,
+} from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { Magazine, Mentorship } from '@/types'
 import { getMentorships } from '@/services/mentorships'
@@ -69,6 +78,15 @@ export default function StudentDashboard() {
       img: ph('documentary%20film'),
       gradient: 'from-purple-600 to-indigo-800',
       action: () => navigate('/plataforma/documentarios'),
+    },
+    {
+      title: 'Simulados',
+      desc: 'Teste seus conhecimentos',
+      icon: ClipboardList,
+      count: cat.simulados.length,
+      img: ph('exam%20test'),
+      gradient: 'from-cyan-600 to-blue-800',
+      action: () => navigate('/simulados'),
     },
     {
       title: 'Caderno Virtual',

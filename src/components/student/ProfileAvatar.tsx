@@ -36,8 +36,13 @@ export function ProfileAvatar({ user, size = 'md', editable = false }: ProfileAv
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0]
     if (!selected) return
-    if (!selected.type.startsWith('image/')) {
-      toast({ title: 'Selecione um arquivo de imagem.', variant: 'destructive' })
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
+    if (!allowedTypes.includes(selected.type)) {
+      toast({ title: 'Formato não suportado. Use PNG ou JPG.', variant: 'destructive' })
+      return
+    }
+    if (selected.size > 5 * 1024 * 1024) {
+      toast({ title: 'A imagem deve ter no máximo 5MB.', variant: 'destructive' })
       return
     }
     setFile(selected)
@@ -47,21 +52,30 @@ export function ProfileAvatar({ user, size = 'md', editable = false }: ProfileAv
   const handleUpload = async () => {
     if (!file) return
     setLoading(true)
-    const formData = new FormData()
-    formData.append('avatar', file)
-    const { error } = await updateProfile(formData)
-    setLoading(false)
-    if (error) {
+    try {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      const { error } = await updateProfile(formData)
+      if (error) {
+        toast({
+          title: 'Erro ao atualizar foto',
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        })
+      } else {
+        toast({ title: 'Foto atualizada com sucesso!' })
+        setOpen(false)
+        setPreview(null)
+        setFile(null)
+      }
+    } catch (err) {
       toast({
-        title: 'Erro ao atualizar foto',
-        description: getErrorMessage(error),
+        title: 'Erro ao enviar foto',
+        description: 'Verifique sua conexão e tente novamente.',
         variant: 'destructive',
       })
-    } else {
-      toast({ title: 'Foto atualizada com sucesso!' })
-      setOpen(false)
-      setPreview(null)
-      setFile(null)
+    } finally {
+      setLoading(false)
     }
   }
 

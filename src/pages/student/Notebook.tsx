@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { BackToHub } from '@/components/student/BackToHub'
 import { MindMapEditor } from '@/components/student/MindMapEditor'
+import { NewsSidebar } from '@/components/student/NewsSidebar'
 import { Plus, Trash2, Save, Notebook } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -122,7 +123,7 @@ export default function StudentNotebook() {
   return (
     <div className="min-h-[calc(100vh-56px)] bg-zinc-950 text-white">
       <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 border-b border-white/10 py-6 px-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
               <Notebook className="w-5 h-5 text-white" />
@@ -136,8 +137,8 @@ export default function StudentNotebook() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] xl:grid-cols-[220px_1fr_260px] gap-4">
           <div className="space-y-2">
             <Button
               onClick={handleNewNote}
@@ -229,6 +230,10 @@ export default function StudentNotebook() {
                 <MindMapEditor data={mindMap} onChange={setMindMap} />
               </div>
             )}
+          </div>
+
+          <div className="hidden xl:block">
+            <NewsSidebar />
           </div>
         </div>
       </div>

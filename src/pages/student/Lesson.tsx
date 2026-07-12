@@ -91,6 +91,13 @@ export default function CourseLesson() {
 
   if (loading) return null
   if (!user || (user.role !== 'student' && user.role !== 'admin')) return <Navigate to="/login" />
+
+  const isSubscriptionExpired =
+    !user.contract_end_date || new Date(user.contract_end_date) < new Date()
+  if (user.role === 'student' && isSubscriptionExpired) {
+    return <Navigate to="/planos?expired=1" />
+  }
+
   if (!course) return <div className="p-8 text-white">Carregando aula...</div>
 
   const progress = lessons.length ? (completions.length / lessons.length) * 100 : 0

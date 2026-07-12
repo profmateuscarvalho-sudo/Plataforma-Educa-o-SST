@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table'
 import { getStudents } from '@/services/users'
 import { User } from '@/types'
+import { Badge } from '@/components/ui/badge'
 
 export default function AdminStudents() {
   const [students, setStudents] = useState<User[]>([])
@@ -33,23 +34,45 @@ export default function AdminStudents() {
                 <TableHead>Nome</TableHead>
                 <TableHead>E-mail</TableHead>
                 <TableHead>Data de Cadastro</TableHead>
+                <TableHead>Validade</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell className="font-medium text-slate-800">
-                    {s.name || 'Sem nome'}
-                  </TableCell>
-                  <TableCell className="text-slate-600">{s.email}</TableCell>
-                  <TableCell className="text-slate-500">
-                    {new Date(s.created).toLocaleDateString('pt-BR')}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {students.map((s) => {
+                const isActive = s.contract_end_date && new Date(s.contract_end_date) >= new Date()
+                return (
+                  <TableRow key={s.id}>
+                    <TableCell className="font-medium text-slate-800">
+                      {s.name || 'Sem nome'}
+                    </TableCell>
+                    <TableCell className="text-slate-600">{s.email}</TableCell>
+                    <TableCell className="text-slate-500">
+                      {new Date(s.created).toLocaleDateString('pt-BR')}
+                    </TableCell>
+                    <TableCell className="text-slate-500">
+                      {s.contract_end_date
+                        ? new Date(s.contract_end_date).toLocaleDateString('pt-BR')
+                        : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={isActive ? 'default' : 'outline'}
+                        className={
+                          isActive
+                            ? 'bg-emerald-500 hover:bg-emerald-600 border-transparent text-white'
+                            : 'text-slate-500'
+                        }
+                      >
+                        {isActive ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
               {students.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={5} className="text-center py-8 text-slate-500">
                     Nenhum aluno encontrado.
                   </TableCell>
                 </TableRow>

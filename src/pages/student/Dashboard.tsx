@@ -83,10 +83,10 @@ export default function StudentDashboard() {
           </p>
         </div>
 
-        {user.contract_end_date && (
+        {user.contract_end_date && new Date(user.contract_end_date) >= new Date() ? (
           <div className="relative z-10 bg-white/10 px-5 py-3 rounded-xl border border-white/20 flex flex-col items-start md:items-end w-full md:w-auto">
             <span className="text-emerald-200 text-xs uppercase tracking-wider font-bold mb-1">
-              Período de Contrato
+              Assinatura Ativa
             </span>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-yellow-400" />
@@ -95,6 +95,21 @@ export default function StudentDashboard() {
                 {format(new Date(user.contract_end_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
               </span>
             </div>
+          </div>
+        ) : (
+          <div className="relative z-10 bg-white/10 px-5 py-3 rounded-xl border border-white/20 flex flex-col items-start md:items-end w-full md:w-auto">
+            <span className="text-red-300 text-xs uppercase tracking-wider font-bold mb-1">
+              {user.contract_end_date ? 'Assinatura Expirada' : 'Sem Assinatura'}
+            </span>
+            <Button
+              asChild
+              size="sm"
+              className="mt-1 bg-yellow-400 text-secondary hover:bg-yellow-500"
+            >
+              <Link to={user.contract_end_date ? '/planos?expired=1' : '/planos'}>
+                {user.contract_end_date ? 'Renovar Assinatura' : 'Ver Planos'}
+              </Link>
+            </Button>
           </div>
         )}
       </div>

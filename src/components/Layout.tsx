@@ -31,6 +31,7 @@ export default function Layout() {
     { name: 'Cursos', href: '/cursos' },
     { name: 'Mentorias', href: '/mentorias' },
     { name: 'Simulados', href: '/simulados' },
+    { name: 'Planos', href: '/planos' },
     { name: 'Revistas', href: '/revistas' },
     { name: 'Notícias', href: '/noticias' },
     { name: 'Anuncie', href: '/anuncie-na-revista' },

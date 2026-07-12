@@ -336,3 +336,11 @@ export interface Workplace extends RecordModel {
   description: string
   photos?: string[]
 }
+
+export interface SubscriptionPlan extends RecordModel {
+  name: string
+  description: string
+  price: number
+  interval: 'monthly' | 'yearly'
+  features: string[]
+}

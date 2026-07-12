@@ -6,15 +6,20 @@ import { getCourses } from '@/services/courses'
 import { getStudents } from '@/services/users'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ leads: 0, courses: 0, students: 0 })
+  const [stats, setStats] = useState({ leads: 0, courses: 0, students: 0, activeSubscribers: 0 })
 
   useEffect(() => {
     Promise.all([getLeads(), getCourses(), getStudents()]).then(
       ([leadsRes, coursesRes, studentsRes]) => {
+        const now = new Date()
+        const active = studentsRes.filter(
+          (s) => s.contract_end_date && new Date(s.contract_end_date) > now,
+        ).length
         setStats({
           leads: leadsRes.length,
           courses: coursesRes.length,
           students: studentsRes.length,
+          activeSubscribers: active,
         })
       },
     )
@@ -41,7 +46,12 @@ export default function AdminDashboard() {
             icon: BookOpen,
             color: 'text-primary',
           },
-          { label: 'Revistas Publicadas', val: '12', icon: FileText, color: 'text-green-600' },
+          {
+            label: 'Assinantes Ativos',
+            val: stats.activeSubscribers.toString(),
+            icon: FileText,
+            color: 'text-green-600',
+          },
           {
             label: 'Leads Capturados',
             val: stats.leads.toString(),

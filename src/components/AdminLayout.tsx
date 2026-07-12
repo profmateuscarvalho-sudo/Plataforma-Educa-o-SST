@@ -15,6 +15,7 @@ import {
   Film,
   ClipboardList,
   Settings,
+  BadgeCent,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -40,6 +41,7 @@ export default function AdminLayout() {
     { label: 'Simulados', icon: ClipboardList, path: '/admin/simulados' },
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },
     { label: 'Anúncios Revista', icon: Settings, path: '/admin/configuracoes/anuncio-revista' },
+    { label: 'Planos de Assinatura', icon: BadgeCent, path: '/admin/planos' },
     { label: 'Notícias', icon: Newspaper, path: '/admin/noticias' },
     { label: 'Leads', icon: Users, path: '/admin/leads' },
     { label: 'Pagamentos', icon: BookOpen, path: '/admin/pagamentos' },

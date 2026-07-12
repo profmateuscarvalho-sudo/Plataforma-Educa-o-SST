@@ -57,6 +57,7 @@ import DocumentaryPitch from './pages/public/DocumentaryPitch'
 import WorkshopInvitation from './pages/public/WorkshopInvitation'
 import WorkshopSponsorship from './pages/public/WorkshopSponsorship'
 import AdminWorkshops from './pages/admin/Workshops'
+import AdminSubscriptionPlans from './pages/admin/SubscriptionPlans'
 import AdminEventQA from './pages/admin/EventQA'
 import PublicEventQA from './pages/public/EventQA'
 
@@ -122,6 +123,7 @@ const App = () => (
             <Route path="/admin/pagamentos" element={<AdminPayments />} />
             <Route path="/admin/lives" element={<AdminLives />} />
             <Route path="/admin/workshops" element={<AdminWorkshops />} />
+            <Route path="/admin/planos" element={<AdminSubscriptionPlans />} />
           </Route>
 
           <Route path="/documentarios/projeto/:slug" element={<DocumentaryPitch />} />

@@ -14,6 +14,7 @@ interface ProductCardProps {
   accessUrl?: string
   price?: number
   onBuy?: () => void
+  isFree?: boolean
 }
 
 const statusMap: Record<AccessStatus, { label: string; cls: string; Icon: typeof Lock }> = {
@@ -32,6 +33,7 @@ export function ProductCard({
   accessUrl,
   price,
   onBuy,
+  isFree,
 }: ProductCardProps) {
   const { label, cls, Icon } = statusMap[status]
   const fmt = (v: number) =>
@@ -47,11 +49,16 @@ export function ProductCard({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         )}
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           <Badge className={`${cls} font-bold shadow-sm border-none px-2.5 py-1`}>
             <Icon className="w-3.5 h-3.5 mr-1.5" />
             {label}
           </Badge>
+          {isFree === false && (
+            <Badge className="bg-amber-100 text-amber-800 font-bold shadow-sm border-none px-2.5 py-1">
+              Acesso para assinantes
+            </Badge>
+          )}
         </div>
       </div>
       <CardHeader className="pb-2">

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { CourseCard } from '@/components/CourseCard'
-import { ArrowRight, BookOpen, Star, Check } from 'lucide-react'
+import { ArrowRight, BookOpen, Star, Check, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getCourses } from '@/services/courses'
 import { getMagazines } from '@/services/magazines'
@@ -14,6 +14,13 @@ export default function Index() {
   const [courses, setCourses] = useState<Course[]>([])
   const [featuredMag, setFeaturedMag] = useState<Magazine | null>(null)
   const [latestNews, setLatestNews] = useState<News[]>([])
+  const [magBannerDismissed, setMagBannerDismissed] = useState(false)
+
+  useEffect(() => {
+    if (sessionStorage.getItem('mag_banner_dismissed') === 'true') {
+      setMagBannerDismissed(true)
+    }
+  }, [])
 
   useEffect(() => {
     getCourses()
@@ -84,6 +91,13 @@ export default function Index() {
             className="w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl animate-fade-in-up"
             style={{ animationDelay: '0.2s' }}
           >
+            <div className="mb-6 rounded-xl overflow-hidden shadow-lg border border-slate-100">
+              <img
+                src="https://img.usecurling.com/p/600/350?q=online%20learning%20dashboard&color=blue"
+                alt="Portal do Aluno"
+                className="w-full h-auto"
+              />
+            </div>
             <h3 className="text-2xl font-serif font-bold text-secondary mb-2">
               Cadastre-se gratuitamente
             </h3>
@@ -170,8 +184,18 @@ export default function Index() {
       )}
 
       {/* Floating Featured Magazine Widget */}
-      {featuredMag && (
+      {featuredMag && !magBannerDismissed && (
         <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up max-w-[calc(100vw-3rem)]">
+          <button
+            onClick={() => {
+              setMagBannerDismissed(true)
+              sessionStorage.setItem('mag_banner_dismissed', 'true')
+            }}
+            className="absolute -top-2 -right-2 z-10 bg-white rounded-full p-1.5 shadow-md hover:bg-slate-100 transition-colors"
+            aria-label="Fechar"
+          >
+            <X className="w-4 h-4 text-slate-600" />
+          </button>
           <Link
             to="/revistas"
             className="group flex flex-col items-center bg-white p-4 rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] border-2 border-primary/20 hover:border-primary/60 transition-all hover:-translate-y-2 w-[240px] sm:w-[280px] gap-4"

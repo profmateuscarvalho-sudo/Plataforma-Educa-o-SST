@@ -4,17 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { CheckoutModal } from '@/components/CheckoutModal'
 import { getMentorships } from '@/services/mentorships'
 import { Mentorship } from '@/types'
-import { Calendar, Video, GraduationCap, ArrowRight } from 'lucide-react'
+import { Calendar, Video, GraduationCap, ArrowRight, Star } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { stripHtml } from '@/lib/utils'
+import { getMentors } from '@/services/mentors'
+import { Mentor } from '@/types'
 
 export default function Mentorias() {
   const [mentorships, setMentorships] = useState<Mentorship[]>([])
+  const [mentors, setMentors] = useState<Mentor[]>([])
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [selectedMentorship, setSelectedMentorship] = useState<Mentorship | null>(null)
 
   useEffect(() => {
     getMentorships().then(setMentorships).catch(console.error)
+    getMentors().then(setMentors).catch(console.error)
   }, [])
 
   const formatBRL = (v: number) =>
@@ -135,6 +139,46 @@ export default function Mentorias() {
           </div>
         )}
       </section>
+
+      {mentors.length > 0 && (
+        <section className="container px-4 mt-16 max-w-6xl mx-auto">
+          <h2 className="text-3xl font-serif font-bold text-secondary mb-2 text-center">
+            Nossos Mentores
+          </h2>
+          <p className="text-slate-500 text-center mb-8">
+            Conheca os profissionais que irao guiar sua jornada em SST
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {mentors.map((m) => (
+              <div
+                key={m.id}
+                className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+              >
+                {m.photo && (
+                  <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                    <img
+                      src={pb.files.getUrl(m, m.photo)}
+                      alt={m.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="w-4 h-4 text-accent fill-current" />
+                    <h3 className="text-xl font-serif font-bold text-secondary">{m.name}</h3>
+                  </div>
+                  <p className="text-sm text-primary font-medium mb-3">{m.topics}</p>
+                  <div
+                    className="text-sm text-slate-600 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: m.mini_cv }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <CheckoutModal
         isOpen={isCheckoutOpen}

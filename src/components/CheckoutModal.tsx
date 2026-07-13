@@ -12,6 +12,25 @@ import { Label } from '@/components/ui/label'
 import { CreditCard, Loader2, CheckCircle2 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
+import { AvailableSlot } from '@/types'
+
+interface CheckoutModalProps {
+  open?: boolean
+  isOpen?: boolean
+  setOpen?: (v: boolean) => void
+  setIsOpen?: (v: boolean) => void
+  onOpenChange?: (v: boolean) => void
+  onClose?: () => void
+  title?: string
+  itemTitle?: string
+  course?: any
+  item?: any
+  price?: number
+  itemPrice?: number
+  mentorshipId?: string
+  selectedSlots?: AvailableSlot[]
+  slotPrice?: number
+}
 
 export function CheckoutModal({
   open,
@@ -26,8 +45,11 @@ export function CheckoutModal({
   item,
   price,
   itemPrice,
-}: any) {
-  const isModalOpen = open !== undefined ? open : isOpen
+  mentorshipId,
+  selectedSlots,
+  slotPrice,
+}: CheckoutModalProps) {
+  const isModalOpen = open !== undefined ? open : isOpen || false
   const handleOpen = setIsOpen || setOpen
 
   const handleOpenChange = (val: boolean) => {
@@ -37,7 +59,13 @@ export function CheckoutModal({
   }
 
   const displayTitle = title || itemTitle || course?.title || item?.title || 'Item selecionado'
-  const displayPrice = price ?? itemPrice ?? course?.price ?? item?.price ?? 0
+  const slots = selectedSlots || []
+  const slotCount = slots.length
+  const hasMentorship = !!mentorshipId && slotCount > 0
+  const baseDisplayPrice = price ?? itemPrice ?? course?.price ?? item?.price ?? 0
+  const subtotal = hasMentorship ? (slotPrice || 0) * slotCount : baseDisplayPrice
+  const discount = hasMentorship && slotCount >= 2 ? subtotal * 0.2 : 0
+  const finalPrice = subtotal - discount
 
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -53,37 +81,36 @@ export function CheckoutModal({
   const handleCheckout = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
-
     const formData = new FormData(e.currentTarget)
-    const payload = {
-      amount: displayPrice,
+    const payload: Record<string, any> = {
+      amount: finalPrice,
       item: displayTitle,
       card_name: formData.get('card_name'),
       card_number: formData.get('card_number'),
       expiry: formData.get('expiry'),
       cvv: formData.get('cvv'),
+      product_type: mentorshipId ? 'mentorship' : 'course',
     }
+    if (mentorshipId) payload.mentorship_id = mentorshipId
+    if (hasMentorship) payload.selected_slots = slots
 
     try {
       const response = await pb.send('/backend/v1/ipag/pay', {
         method: 'POST',
-        body: payload,
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
       })
-
       if (response && response.status === 'approved') {
         setIsSuccess(true)
         toast({ title: 'Pagamento processado com sucesso!' })
-        setTimeout(() => {
-          handleOpenChange(false)
-        }, 3000)
+        setTimeout(() => handleOpenChange(false), 3000)
       } else {
         throw new Error('Falha no processamento.')
       }
     } catch (err: any) {
-      console.error(err)
       toast({
         title: 'Erro ao processar pagamento',
-        description: err?.message || 'Verifique os dados do cartão e tente novamente.',
+        description: err?.message || 'Verifique os dados do cartao e tente novamente.',
         variant: 'destructive',
       })
     } finally {
@@ -99,8 +126,9 @@ export function CheckoutModal({
             <CheckCircle2 className="w-16 h-16 text-emerald-500" />
             <DialogTitle className="text-2xl">Compra Aprovada!</DialogTitle>
             <p className="text-muted-foreground">
-              Sua transação foi concluída com sucesso via iPag. Você receberá o comprovante por
-              e-mail.
+              {mentorshipId
+                ? 'Sua mentoria foi confirmada! Voce recebera um email com o link de acesso em instantes.'
+                : 'Sua transacao foi concluida com sucesso via iPag.'}
             </p>
           </div>
         ) : (
@@ -108,26 +136,69 @@ export function CheckoutModal({
             <DialogHeader>
               <DialogTitle>Finalizar Compra</DialogTitle>
               <DialogDescription>
-                Você está adquirindo:{' '}
+                Voce esta adquirindo:{' '}
                 <span className="font-semibold text-foreground">{displayTitle}</span>
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              <div className="mb-6 text-center bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground font-medium">Total a pagar</p>
-                <p className="text-3xl font-bold text-primary">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                    displayPrice,
+              {hasMentorship && (
+                <div className="mb-4 space-y-1.5 text-sm bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <div className="flex justify-between text-slate-600">
+                    <span>
+                      {slotCount}x Sessao (
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(slotPrice || 0)}
+                      )
+                    </span>
+                    <span>
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(subtotal)}
+                    </span>
+                  </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-emerald-600 font-medium">
+                      <span>Desconto (20%)</span>
+                      <span>
+                        -{' '}
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(discount)}
+                      </span>
+                    </div>
                   )}
-                </p>
-              </div>
+                  <div className="flex justify-between font-bold pt-1 border-t border-slate-200">
+                    <span>Total</span>
+                    <span>
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(finalPrice)}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {!hasMentorship && (
+                <div className="mb-6 text-center bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground font-medium">Total a pagar</p>
+                  <p className="text-3xl font-bold text-primary">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      finalPrice,
+                    )}
+                  </p>
+                </div>
+              )}
               <form onSubmit={handleCheckout} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Nome Impresso no Cartão</Label>
-                  <Input name="card_name" required placeholder="JOÃO M SILVA" />
+                  <Label>Nome Impresso no Cartao</Label>
+                  <Input name="card_name" required placeholder="JOAO M SILVA" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Número do Cartão</Label>
+                  <Label>Numero do Cartao</Label>
                   <Input
                     name="card_number"
                     required
@@ -157,7 +228,7 @@ export function CheckoutModal({
                   )}
                   Pagar de Forma Segura
                 </Button>
-                <p className="text-xs text-center text-slate-400 mt-4 flex items-center justify-center gap-1">
+                <p className="text-xs text-center text-slate-400 mt-4">
                   Processamento seguro via iPag Gateway
                 </p>
               </form>

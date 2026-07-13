@@ -88,6 +88,8 @@ export interface Payment extends RecordModel {
   status: 'pending' | 'paid' | 'failed'
   ipag_id: string
   product_type: string
+  mentorship_id?: string
+  selected_slots?: AvailableSlot[]
   expand?: { user?: User }
 }
 
@@ -101,7 +103,8 @@ export interface LiveSession extends RecordModel {
   instructor_bio?: string
   instructor_photo?: string
   mentor?: string
-  expand?: { mentor?: Mentor }
+  instructor?: string
+  expand?: { mentor?: Mentor; instructor?: Instructor }
 }
 
 export interface LiveMessage extends RecordModel {
@@ -138,6 +141,13 @@ export interface Mentor extends RecordModel {
   mini_cv: string
   topics: string
   photo: string
+}
+
+export interface Instructor extends RecordModel {
+  name: string
+  bio: string
+  photo: string
+  topics: string
 }
 
 export interface Mentorship extends RecordModel {

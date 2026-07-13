@@ -19,10 +19,15 @@ export function CourseCard({ course }: { course: Course }) {
           alt={course.title}
           className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
           <Badge variant="secondary" className="bg-white/95 text-secondary font-bold shadow-sm">
             {course.category}
           </Badge>
+          {!course.is_free && (
+            <Badge className="bg-amber-100 text-amber-800 font-bold shadow-sm border-none">
+              Acesso para assinantes
+            </Badge>
+          )}
         </div>
       </div>
       <CardHeader className="flex-none pb-2">

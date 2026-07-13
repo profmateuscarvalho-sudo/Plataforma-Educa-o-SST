@@ -4,9 +4,9 @@ import { LiveSession, LiveMessage } from '@/types'
 export const getLiveSessions = async () =>
   pb
     .collection('live_sessions')
-    .getFullList<LiveSession>({ sort: '-scheduled_at', expand: 'mentor' })
+    .getFullList<LiveSession>({ sort: '-scheduled_at', expand: 'mentor,instructor' })
 export const getLiveSession = async (id: string) =>
-  pb.collection('live_sessions').getOne<LiveSession>(id, { expand: 'mentor' })
+  pb.collection('live_sessions').getOne<LiveSession>(id, { expand: 'mentor,instructor' })
 export const createLiveSession = async (data: Partial<LiveSession> | Record<string, any>) =>
   pb.collection('live_sessions').create<LiveSession>(data)
 export const updateLiveSession = async (

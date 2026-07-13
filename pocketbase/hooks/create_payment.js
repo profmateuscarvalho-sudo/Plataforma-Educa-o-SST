@@ -147,6 +147,13 @@ routerAdd(
       }
     }
 
+    var debugApiIdLength = apiId && typeof apiId === 'string' ? apiId.length : 0
+    var debugApiIdPreview =
+      apiId && typeof apiId === 'string' && apiId.length > 0
+        ? apiId.substring(0, 4) + '***'
+        : 'vazio'
+    var debugApiKeyLength = apiKey && typeof apiKey === 'string' ? apiKey.length : 0
+
     var res
     try {
       res = $http.send({
@@ -166,6 +173,9 @@ routerAdd(
         error: 'Failed to connect to iPag gateway',
         details: err.message,
         debug_base_url: baseUrl,
+        debug_api_id_length: debugApiIdLength,
+        debug_api_id_preview: debugApiIdPreview,
+        debug_api_key_length: debugApiKeyLength,
       })
     }
 
@@ -184,6 +194,9 @@ routerAdd(
         error: 'iPag API error',
         details: errorBody,
         debug_base_url: baseUrl,
+        debug_api_id_length: debugApiIdLength,
+        debug_api_id_preview: debugApiIdPreview,
+        debug_api_key_length: debugApiKeyLength,
       })
     }
 

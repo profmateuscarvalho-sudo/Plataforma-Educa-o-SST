@@ -7,22 +7,7 @@ import { cn } from '@/lib/utils'
 import { getSubscriptionPlans } from '@/services/subscription-plans'
 import { SubscriptionPlan } from '@/types'
 
-interface PlanDef {
-  name: string
-  icon: typeof Sparkles
-  monthlyPrice: number
-  yearlyPrice: number
-  features: string[]
-  accent: string
-  iconColor: string
-  highlighted?: boolean
-  shipping?: boolean
-  cta: string
-  ctaLink: string
-  isComingSoon: boolean
-}
-
-const DEFAULT_PLANS: PlanDef[] = [
+const DEFAULT_PLANS = [
   {
     name: 'Free',
     icon: Sparkles,
@@ -46,7 +31,7 @@ const DEFAULT_PLANS: PlanDef[] = [
     name: 'Prata',
     icon: Award,
     monthlyPrice: 49.9,
-    yearlyPrice: 358.8,
+    yearlyPrice: 499.9,
     features: [
       'Hub do aluno',
       'Revista Educação SST digital',
@@ -62,13 +47,13 @@ const DEFAULT_PLANS: PlanDef[] = [
     highlighted: true,
     cta: 'Assine',
     ctaLink: '/planos',
-    isComingSoon: false,
+    isComingSoon: true,
   },
   {
     name: 'Ouro',
     icon: Crown,
     monthlyPrice: 89.9,
-    yearlyPrice: 838.8,
+    yearlyPrice: 899.9,
     shipping: true,
     features: [
       'Todos os benefícios do Prata',
@@ -78,7 +63,7 @@ const DEFAULT_PLANS: PlanDef[] = [
     iconColor: 'text-amber-500',
     cta: 'Assine',
     ctaLink: '/planos',
-    isComingSoon: false,
+    isComingSoon: true,
   },
 ]
 
@@ -108,8 +93,6 @@ export function PricingSection() {
 
     const dbPlan = findPlan(matchNames)
 
-    if (!dbPlan) return def
-
     const yearlyFallback =
       def.name === 'Prata'
         ? findPlan(['Prata Anual'])?.price
@@ -119,9 +102,10 @@ export function PricingSection() {
 
     return {
       ...def,
-      monthlyPrice: dbPlan.price ?? def.monthlyPrice,
-      yearlyPrice: dbPlan.price_yearly ?? yearlyFallback ?? def.yearlyPrice,
-      isComingSoon: dbPlan.is_coming_soon ?? false,
+      dbPlan,
+      monthlyPrice: dbPlan?.price ?? def.monthlyPrice,
+      yearlyPrice: dbPlan?.price_yearly ?? yearlyFallback ?? def.yearlyPrice,
+      isComingSoon: dbPlan?.is_coming_soon ?? def.isComingSoon,
     }
   })
 
@@ -149,17 +133,20 @@ export function PricingSection() {
                 className={cn('relative overflow-hidden flex flex-col', plan.accent)}
               >
                 {plan.isComingSoon ? (
-                  <div className="absolute top-0 left-0 right-0 bg-amber-500 text-white text-xs font-bold py-1.5 text-center">
+                  <div className="absolute top-0 left-0 z-10 w-full bg-amber-500 text-white text-xs font-bold py-1.5 text-center">
                     Em breve
                   </div>
                 ) : plan.highlighted ? (
-                  <div className="absolute top-0 left-0 right-0 bg-blue-600 text-white text-xs font-bold py-1.5 text-center">
+                  <div className="absolute top-0 left-0 z-10 w-full bg-blue-600 text-white text-xs font-bold py-1.5 text-center">
                     MAIS POPULAR
                   </div>
                 ) : null}
 
                 <CardHeader
-                  className={cn('pb-4', (plan.highlighted || plan.isComingSoon) && 'pt-8')}
+                  className={cn(
+                    'relative z-0 pb-4',
+                    plan.highlighted || plan.isComingSoon ? 'pt-8' : 'pt-6',
+                  )}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <plan.icon className={cn('w-6 h-6', plan.iconColor)} />
@@ -167,35 +154,35 @@ export function PricingSection() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="flex-1 flex flex-col">
+                <CardContent className="flex-1 flex flex-col relative z-0">
                   <div className="mb-2 space-y-1.5">
                     {plan.monthlyPrice === 0 ? (
-                      <span className="text-4xl font-bold text-secondary">Grátis</span>
+                      <span className="text-4xl font-bold text-slate-900">Grátis</span>
                     ) : (
                       <>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-primary">
+                          <span className="text-4xl font-bold text-emerald-500">
                             {fmt(plan.monthlyPrice)}
                           </span>
                           <span className="text-slate-500 text-sm">/mês</span>
                         </div>
                         {plan.yearlyPrice > 0 && (
-                          <div className="flex flex-col gap-0.5">
+                          <div className="flex flex-col gap-1 mt-1">
                             <div className="flex items-baseline gap-1">
-                              <span className="text-lg font-semibold text-slate-600">
+                              <span className="text-sm font-medium text-slate-500">
                                 {fmt(plan.yearlyPrice)}
                               </span>
                               <span className="text-slate-400 text-xs">/ano</span>
                             </div>
                             {savings > 0 && (
-                              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full inline-block w-fit">
+                              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full inline-block w-fit font-medium">
                                 Economize {savings}%
                               </span>
                             )}
                           </div>
                         )}
                         {plan.shipping && (
-                          <p className="text-xs text-slate-400 mt-0.5">+ custos de frete</p>
+                          <p className="text-xs text-slate-400 mt-1">+ custos de frete</p>
                         )}
                       </>
                     )}
@@ -211,12 +198,32 @@ export function PricingSection() {
                   </ul>
 
                   {plan.isComingSoon ? (
-                    <Button size="lg" className="w-full" disabled>
+                    <Button
+                      size="lg"
+                      className="w-full bg-[#7ce2a6] hover:bg-[#7ce2a6] text-white cursor-not-allowed opacity-80"
+                      disabled
+                    >
                       <Clock className="mr-2 w-4 h-4" />
                       Indisponível
                     </Button>
+                  ) : plan.monthlyPrice === 0 ? (
+                    <Button
+                      size="lg"
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                      asChild
+                    >
+                      {plan.ctaLink.startsWith('#') ? (
+                        <a href={plan.ctaLink}>{plan.cta}</a>
+                      ) : (
+                        <Link to={plan.ctaLink}>{plan.cta}</Link>
+                      )}
+                    </Button>
                   ) : (
-                    <Button size="lg" className="w-full" asChild>
+                    <Button
+                      size="lg"
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                      asChild
+                    >
                       {plan.ctaLink.startsWith('#') ? (
                         <a href={plan.ctaLink}>{plan.cta}</a>
                       ) : (

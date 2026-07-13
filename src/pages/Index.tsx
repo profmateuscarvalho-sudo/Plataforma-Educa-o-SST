@@ -61,7 +61,7 @@ export default function Index() {
             <div className="lg:col-span-5 space-y-5 animate-fade-in-up">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary backdrop-blur-sm font-medium text-sm">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                Plataforma para profissionais e estudantes em SST
+                #SejaEducaçãoSST
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-serif font-bold text-white leading-tight">
                 Educação e desenvolvimento em <span className="text-accent">SST</span>

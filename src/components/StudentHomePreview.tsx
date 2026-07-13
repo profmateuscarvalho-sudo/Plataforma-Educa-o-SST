@@ -23,7 +23,7 @@ export function StudentHomePreview() {
   return (
     <div className="relative">
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap">
-        Preview da Home do Aluno
+        Preview da Home do Assinante
       </div>
       <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-slate-50 mt-3">
         <div className="bg-slate-800 px-3 py-2 flex items-center gap-2">

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Check, AlertCircle, Crown, Award, Sparkles } from 'lucide-react'
+import { Check, AlertCircle, Crown, Award, Sparkles, Clock } from 'lucide-react'
 import { getSubscriptionPlans } from '@/services/subscription-plans'
 import { useAuth } from '@/hooks/use-auth'
 import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
@@ -12,26 +12,78 @@ import { cn } from '@/lib/utils'
 
 const tierRank: Record<string, number> = { free: 1, prata: 2, ouro: 3 }
 
+const DEFAULT_PLANS = [
+  {
+    name: 'Free',
+    icon: Sparkles,
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    features: [
+      'Hub do aluno',
+      'Revista Educação SST digital',
+      'Cursos selecionados',
+      'Aulas ao vivo (toda quarta feira)',
+      'Caderno de Estudos Digital',
+      'Feed de Cases',
+    ],
+    accent: 'border-slate-200',
+    iconColor: 'text-slate-400',
+    cta: 'Assine Gratuitamente',
+    isComingSoon: false,
+  },
+  {
+    name: 'Prata',
+    icon: Award,
+    monthlyPrice: 49.9,
+    yearlyPrice: 499.9,
+    features: [
+      'Hub do aluno',
+      'Revista Educação SST digital',
+      'Todos os cursos da plataforma',
+      'Aulas ao vivo (toda quarta feira) + Gravações',
+      'Caderno de Estudos Digital',
+      'Feed de Cases',
+      'Documentários',
+      'Desconto exclusivo em mentorias',
+    ],
+    accent: 'border-blue-300 ring-2 ring-blue-200',
+    iconColor: 'text-blue-500',
+    highlighted: true,
+    cta: 'Assine',
+    isComingSoon: true,
+  },
+  {
+    name: 'Ouro',
+    icon: Crown,
+    monthlyPrice: 89.9,
+    yearlyPrice: 899.9,
+    shipping: true,
+    features: [
+      'Todos os benefícios do Prata',
+      'Box+ com edição física/impressa da Revista Educação SST',
+    ],
+    accent: 'border-amber-300',
+    iconColor: 'text-amber-500',
+    cta: 'Assine',
+    isComingSoon: true,
+  },
+]
+
+const fmt = (v: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+
 export default function Planos() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
-  const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly')
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const isExpired = searchParams.get('expired') === '1'
 
   useEffect(() => {
     getSubscriptionPlans().then(setPlans).catch(console.error)
   }, [])
-
-  const freePlan = plans.find((p) => p.name.toLowerCase().includes('free'))
-  const prataPlan = plans.find(
-    (p) => p.name.toLowerCase().includes('prata') && p.interval === billing,
-  )
-  const ouroPlan = plans.find(
-    (p) => p.name.toLowerCase().includes('ouro') && p.interval === billing,
-  )
 
   const userTier = user?.plan_tier || 'free'
   const isActive = user?.contract_end_date && new Date(user.contract_end_date) >= new Date()
@@ -39,7 +91,7 @@ export default function Planos() {
 
   const handleSelectPlan = (plan: SubscriptionPlan | undefined) => {
     if (!user) {
-      window.location.href = '/login'
+      navigate('/login')
       return
     }
     if (!plan || plan.price === 0) return
@@ -47,44 +99,35 @@ export default function Planos() {
     setIsCheckoutOpen(true)
   }
 
-  const fmt = (v: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+  const findPlan = (names: string[]) => plans.find((p) => names.includes(p.name))
 
-  const tiers = [
-    {
-      name: 'Free',
-      tier: 'free',
-      icon: Sparkles,
-      plan: freePlan,
-      monthlyPrice: 0,
-      features: freePlan?.features || [],
-      accent: 'border-slate-200',
-      iconColor: 'text-slate-400',
-    },
-    {
-      name: 'Prata',
-      tier: 'prata',
-      icon: Award,
-      plan: prataPlan,
-      monthlyPrice: billing === 'monthly' ? 49.9 : 29.9,
-      totalPrice: prataPlan?.price,
-      features: prataPlan?.features || [],
-      accent: 'border-blue-300 ring-2 ring-blue-200',
-      iconColor: 'text-blue-500',
-      highlighted: true,
-    },
-    {
-      name: 'Ouro',
-      tier: 'ouro',
-      icon: Crown,
-      plan: ouroPlan,
-      monthlyPrice: billing === 'monthly' ? 89.9 : 69.9,
-      totalPrice: ouroPlan?.price,
-      features: ouroPlan?.features || [],
-      accent: 'border-amber-300',
-      iconColor: 'text-amber-500',
-    },
-  ]
+  const displayPlans = DEFAULT_PLANS.map((def) => {
+    const matchNames =
+      def.name === 'Free'
+        ? ['Free']
+        : def.name === 'Prata'
+          ? ['Prata Mensal', 'Prata']
+          : def.name === 'Ouro'
+            ? ['Ouro Mensal', 'Ouro']
+            : []
+
+    const dbPlan = findPlan(matchNames)
+
+    const yearlyFallback =
+      def.name === 'Prata'
+        ? findPlan(['Prata Anual'])?.price
+        : def.name === 'Ouro'
+          ? findPlan(['Ouro Anual'])?.price
+          : undefined
+
+    return {
+      ...def,
+      dbPlan,
+      monthlyPrice: dbPlan?.price ?? def.monthlyPrice,
+      yearlyPrice: dbPlan?.price_yearly ?? yearlyFallback ?? def.yearlyPrice,
+      isComingSoon: dbPlan?.is_coming_soon ?? def.isComingSoon,
+    }
+  })
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -112,98 +155,121 @@ export default function Planos() {
       )}
 
       <section className="container px-4 mt-12">
-        <div className="flex justify-center mb-10">
-          <div className="inline-flex rounded-xl border bg-white p-1 shadow-sm">
-            <button
-              onClick={() => setBilling('monthly')}
-              className={cn(
-                'px-6 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                billing === 'monthly' ? 'bg-secondary text-white' : 'text-slate-500',
-              )}
-            >
-              Mensal
-            </button>
-            <button
-              onClick={() => setBilling('yearly')}
-              className={cn(
-                'px-6 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
-                billing === 'yearly' ? 'bg-secondary text-white' : 'text-slate-500',
-              )}
-            >
-              Anual
-              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                Economize 40%
-              </span>
-            </button>
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {tiers.map((t) => {
-            const isCurrent = activeTier === t.tier
-            const hasHigher = tierRank[activeTier] >= tierRank[t.tier]
+          {displayPlans.map((plan) => {
+            const yearlyPerMonth = plan.yearlyPrice > 0 ? plan.yearlyPrice / 12 : 0
+            const savings =
+              plan.monthlyPrice > 0 && yearlyPerMonth > 0
+                ? Math.round((1 - yearlyPerMonth / plan.monthlyPrice) * 100)
+                : 0
+
+            const isCurrent = activeTier === plan.name.toLowerCase()
+            const hasHigher = tierRank[activeTier] >= tierRank[plan.name.toLowerCase()]
+
             return (
-              <Card key={t.tier} className={cn('relative overflow-hidden flex flex-col', t.accent)}>
-                {t.highlighted && (
-                  <div className="absolute top-0 left-0 right-0 bg-blue-600 text-white text-xs font-bold py-1.5 text-center">
+              <Card
+                key={plan.name}
+                className={cn('relative overflow-hidden flex flex-col', plan.accent)}
+              >
+                {plan.isComingSoon ? (
+                  <div className="absolute top-0 left-0 z-10 w-full bg-amber-500 text-white text-xs font-bold py-1.5 text-center">
+                    Em breve
+                  </div>
+                ) : plan.highlighted ? (
+                  <div className="absolute top-0 left-0 z-10 w-full bg-blue-600 text-white text-xs font-bold py-1.5 text-center">
                     MAIS POPULAR
                   </div>
-                )}
-                <CardHeader className={cn('pb-4', t.highlighted && 'pt-8')}>
+                ) : null}
+
+                <CardHeader
+                  className={cn(
+                    'relative z-0 pb-4',
+                    plan.highlighted || plan.isComingSoon ? 'pt-8' : 'pt-6',
+                  )}
+                >
                   <div className="flex items-center gap-2 mb-1">
-                    <t.icon className={cn('w-6 h-6', t.iconColor)} />
-                    <CardTitle className="text-2xl font-serif">{t.name}</CardTitle>
+                    <plan.icon className={cn('w-6 h-6', plan.iconColor)} />
+                    <CardTitle className="text-2xl font-serif">{plan.name}</CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                  <div className="mb-2">
-                    {t.monthlyPrice === 0 ? (
-                      <span className="text-4xl font-bold text-secondary">Grátis</span>
+
+                <CardContent className="flex-1 flex flex-col relative z-0">
+                  <div className="mb-2 space-y-1.5">
+                    {plan.monthlyPrice === 0 ? (
+                      <span className="text-4xl font-bold text-slate-900">Grátis</span>
                     ) : (
                       <>
-                        <span className="text-4xl font-bold text-primary">
-                          {fmt(t.monthlyPrice)}
-                        </span>
-                        <span className="text-slate-500 ml-1 text-sm">/mês</span>
-                        {billing === 'yearly' && t.totalPrice && (
-                          <p className="text-xs text-slate-400 mt-1">
-                            Cobrado {fmt(t.totalPrice)} por ano
-                            {t.tier === 'ouro' && ' + frete'}
-                          </p>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-bold text-emerald-500">
+                            {fmt(plan.monthlyPrice)}
+                          </span>
+                          <span className="text-slate-500 text-sm">/mês</span>
+                        </div>
+                        {plan.yearlyPrice > 0 && (
+                          <div className="flex flex-col gap-1 mt-1">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-sm font-medium text-slate-500">
+                                {fmt(plan.yearlyPrice)}
+                              </span>
+                              <span className="text-slate-400 text-xs">/ano</span>
+                            </div>
+                            {savings > 0 && (
+                              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full inline-block w-fit font-medium">
+                                Economize {savings}%
+                              </span>
+                            )}
+                          </div>
                         )}
-                        {billing === 'monthly' && t.tier === 'ouro' && (
+                        {plan.shipping && (
                           <p className="text-xs text-slate-400 mt-1">+ custos de frete</p>
                         )}
                       </>
                     )}
                   </div>
+
                   <ul className="space-y-2.5 mb-6 flex-1 mt-4">
-                    {(t.features || []).map((f, i) => (
+                    {plan.features.map((f, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
                         <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                         {f}
                       </li>
                     ))}
                   </ul>
-                  <Button
-                    size="lg"
-                    className="w-full"
-                    variant={isCurrent ? 'outline' : hasHigher ? 'outline' : 'default'}
-                    disabled={isCurrent || hasHigher}
-                    onClick={() => handleSelectPlan(t.plan)}
-                  >
-                    {isCurrent
-                      ? 'Plano Atual'
-                      : hasHigher
-                        ? 'Incluso no seu plano'
-                        : t.monthlyPrice === 0
-                          ? 'Começar Grátis'
-                          : tierRank[activeTier] >= tierRank[t.tier]
-                            ? 'Plano Atual'
-                            : tierRank[activeTier] > 0 && tierRank[activeTier] < tierRank[t.tier]
-                              ? 'Fazer Upgrade'
-                              : 'Assinar Agora'}
-                  </Button>
+
+                  {plan.isComingSoon ? (
+                    <Button
+                      size="lg"
+                      className="w-full bg-[#7ce2a6] hover:bg-[#7ce2a6] text-white cursor-not-allowed opacity-80"
+                      disabled
+                    >
+                      <Clock className="mr-2 w-4 h-4" />
+                      Indisponível
+                    </Button>
+                  ) : plan.monthlyPrice === 0 ? (
+                    <Button
+                      size="lg"
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                      disabled={isCurrent || hasHigher}
+                      onClick={() => {
+                        if (!user) navigate('/register')
+                      }}
+                    >
+                      {isCurrent ? 'Plano Atual' : hasHigher ? 'Incluso no seu plano' : plan.cta}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="lg"
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                      disabled={isCurrent || hasHigher}
+                      onClick={() => handleSelectPlan(plan.dbPlan)}
+                    >
+                      {isCurrent
+                        ? 'Plano Atual'
+                        : hasHigher
+                          ? 'Incluso no seu plano'
+                          : 'Assinar Agora'}
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )
@@ -211,7 +277,7 @@ export default function Planos() {
         </div>
 
         {!user && (
-          <p className="text-center mt-8 text-sm text-slate-500">
+          <p className="text-center mt-12 text-sm text-slate-500">
             Já tem conta?{' '}
             <Link to="/login" className="text-primary font-medium hover:underline">
               Faça login

@@ -101,7 +101,7 @@ export default function Layout() {
             ) : (
               <>
                 <Button variant="ghost" asChild className="font-medium text-slate-600">
-                  <Link to="/login">Área do Aluno</Link>
+                  <Link to="/login">Área do Assinante</Link>
                 </Button>
                 <Button asChild className="font-medium shadow-sm">
                   <Link to="/planos">Assine</Link>
@@ -173,7 +173,7 @@ export default function Layout() {
                     </>
                   ) : (
                     <Button variant="outline" className="w-full justify-start text-lg h-12" asChild>
-                      <Link to="/login">Área do Aluno</Link>
+                      <Link to="/login">Área do Assinante</Link>
                     </Button>
                   )}
                 </div>

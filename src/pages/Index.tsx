@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import previewImg from '@/assets/image-8463c.png'
+import { StudentHomePreview } from '@/components/StudentHomePreview'
+import { LandingRegisterForm } from '@/components/LandingRegisterForm'
 import { CourseCard } from '@/components/CourseCard'
 import { ArrowRight, BookOpen, Star, Check, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -42,18 +43,18 @@ export default function Index() {
 
   return (
     <div className="flex flex-col min-h-screen relative">
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-secondary">
+      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden bg-secondary">
         <div className="absolute inset-0 z-0">
           <img
             src="https://img.usecurling.com/p/1920/1080?q=factory&color=black"
             alt="Background"
             className="w-full h-full object-cover opacity-30 mix-blend-overlay"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-secondary via-secondary/90 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-secondary via-secondary/90 to-secondary/80" />
         </div>
 
-        <div className="container relative z-10 px-4 py-20 flex flex-col lg:flex-row items-center gap-12">
-          <div className="flex-1 space-y-8 animate-fade-in-up">
+        <div className="container relative z-10 px-4 py-20 max-w-4xl text-center">
+          <div className="space-y-8 animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary backdrop-blur-sm font-medium text-sm">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               &nbsp;Plataforma para profissionais e estudantes em SST
@@ -69,7 +70,7 @@ export default function Index() {
               Segurança e Saúde no Trabalho e construa um itinerário profissional de forma sólida
               com foco na prática e na sua realidade de trabalho.&nbsp;&nbsp;
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center">
               <Button
                 size="lg"
                 className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-white"
@@ -87,34 +88,37 @@ export default function Index() {
               </Button>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div
-            className="w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl animate-fade-in-up"
-            style={{ animationDelay: '0.2s' }}
-          >
-            <div className="mb-6 rounded-xl overflow-hidden shadow-lg border border-slate-100">
-              <img src={previewImg} alt="Portal do Aluno" className="w-full h-auto" />
-            </div>
-            <h3 className="text-2xl font-serif font-bold text-secondary mb-2">
+      <section className="py-20 bg-slate-50 relative z-20">
+        <div className="container px-4 max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-serif font-bold text-secondary mb-4">
               Cadastre-se gratuitamente
-            </h3>
-            <p className="text-slate-500 text-sm mb-6">
+            </h2>
+            <p className="text-slate-600 text-lg max-w-2xl mx-auto">
               Crie sua conta e tenha acesso a cursos, revistas, documentários e muito mais.
             </p>
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center gap-2 text-sm text-slate-600">
+            <div className="flex flex-wrap justify-center gap-4 mt-6">
+              <div className="flex items-center gap-1.5 text-sm text-slate-600">
                 <Check className="w-4 h-4 text-primary" /> Cursos em SST
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
+              <div className="flex items-center gap-1.5 text-sm text-slate-600">
                 <Check className="w-4 h-4 text-primary" /> Revistas científicas
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
+              <div className="flex items-center gap-1.5 text-sm text-slate-600">
                 <Check className="w-4 h-4 text-primary" /> Documentários exclusivos
               </div>
             </div>
-            <Button asChild className="w-full h-12 text-lg font-bold">
-              <Link to="/register">Cadastrar</Link>
-            </Button>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-5xl mx-auto">
+            <div className="order-1 lg:order-1">
+              <StudentHomePreview />
+            </div>
+            <div className="order-2 lg:order-2">
+              <LandingRegisterForm />
+            </div>
           </div>
         </div>
       </section>

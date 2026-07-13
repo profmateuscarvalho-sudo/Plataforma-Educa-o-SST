@@ -140,8 +140,8 @@ export default function StudentNotebook() {
       </div>
 
       <div className="max-w-[1600px] mx-auto p-4">
-        <div className="grid grid-cols-1 xl:grid-cols-[260px_1fr_280px] gap-4">
-          <div className="hidden xl:block">
+        <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr_280px] gap-6">
+          <div className="hidden xl:block h-[calc(100vh-140px)] sticky top-[88px]">
             <CaseFeedSidebar />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
@@ -222,12 +222,6 @@ export default function StudentNotebook() {
                     >
                       <Share2 className="w-4 h-4 mr-2" /> Mapa Mental
                     </TabsTrigger>
-                    <TabsTrigger
-                      value="cases"
-                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 rounded-none px-2 text-slate-600 ml-auto"
-                    >
-                      <Briefcase className="w-4 h-4 mr-2" /> Feed de Cases
-                    </TabsTrigger>
                   </TabsList>
                 </div>
 
@@ -241,11 +235,6 @@ export default function StudentNotebook() {
                 </TabsContent>
                 <TabsContent value="mapa" className="flex-1 m-0 p-0 flex flex-col">
                   <MindMapEditor data={mindMap} onChange={setMindMap} />
-                </TabsContent>
-                <TabsContent value="cases" className="flex-1 m-0 p-0 overflow-y-auto bg-slate-50">
-                  <div className="p-4 h-full">
-                    <CaseFeedContent />
-                  </div>
                 </TabsContent>
               </Tabs>
             </div>

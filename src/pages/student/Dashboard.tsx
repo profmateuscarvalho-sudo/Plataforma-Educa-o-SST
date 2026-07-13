@@ -23,9 +23,11 @@ import {
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { ClockDisplay } from '@/components/student/ClockDisplay'
-import { Magazine, Mentorship, LiveSession } from '@/types'
+import { Magazine, Mentorship, LiveSession, DocProject } from '@/types'
 import { getMentorships } from '@/services/mentorships'
 import { getLiveSessions } from '@/services/live'
+import { getDocProjects } from '@/services/doc_projects'
+import { BellRing, Radio } from 'lucide-react'
 
 const ph = (q: string, w = 800, h = 500) => `https://img.usecurling.com/p/${w}/${h}?q=${q}`
 
@@ -38,6 +40,7 @@ export default function StudentDashboard() {
   const [selectedMag, setSelectedMag] = useState<Magazine | null>(null)
   const [mentorships, setMentorships] = useState<Mentorship[]>([])
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([])
+  const [docProjects, setDocProjects] = useState<DocProject[]>([])
 
   useEffect(() => {
     getMentorships()
@@ -45,6 +48,9 @@ export default function StudentDashboard() {
       .catch(() => {})
     getLiveSessions()
       .then(setLiveSessions)
+      .catch(() => {})
+    getDocProjects()
+      .then(setDocProjects)
       .catch(() => {})
   }, [])
 
@@ -161,81 +167,167 @@ export default function StudentDashboard() {
 
       <div className="container px-4 max-w-6xl py-8">
         {view === 'hub' ? (
-          <div className="animate-fade-in space-y-10">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-              <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
-                <Video className="w-5 h-5 text-red-500" /> Aulas Ao Vivo
-              </h2>
-              {upcomingLives.length === 0 ? (
-                <p className="text-slate-500 text-center py-8">
-                  Nenhuma aula programada no momento
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {upcomingLives.map((live) => {
-                    const d = new Date(live.scheduled_at)
-                    const dateStr = d.toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    })
-                    const timeStr = d.toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                    return (
-                      <div
-                        key={live.id}
-                        className="bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-red-200 transition-colors flex flex-col h-full"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <h3 className="font-bold text-slate-800 line-clamp-2">{live.title}</h3>
-                            <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                              Ao Vivo
-                            </span>
+          <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+            <div className="space-y-10">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
+                  <Video className="w-5 h-5 text-red-500" /> Aulas Ao Vivo
+                </h2>
+                {upcomingLives.length === 0 ? (
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <p className="text-slate-500 text-center py-8">
+                      Nenhuma aula programada no momento
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {upcomingLives.map((live) => {
+                      const d = new Date(live.scheduled_at)
+                      const dateStr = d.toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                      })
+                      const timeStr = d.toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                      return (
+                        <div
+                          key={live.id}
+                          className="overflow-hidden flex flex-col h-full border border-slate-200 rounded-xl bg-white hover:shadow-lg transition-shadow group"
+                        >
+                          <div className="relative aspect-[3/2] overflow-hidden bg-slate-100">
+                            <img
+                              src={
+                                live.thumbnail
+                                  ? pb.files.getUrl(live, live.thumbnail)
+                                  : ph('live%20streaming%20class')
+                              }
+                              alt={live.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute top-3 left-3">
+                              <div className="bg-red-600 text-white text-xs font-bold shadow-sm border-none px-2.5 py-1 rounded-full flex items-center">
+                                <Radio className="w-3.5 h-3.5 mr-1.5 animate-pulse" />
+                                Ao Vivo
+                              </div>
+                            </div>
                           </div>
-                          <div className="space-y-1 mt-3">
-                            <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                              <Calendar className="w-4 h-4 text-slate-400" />
-                              {dateStr} às {timeStr}
-                            </p>
-                            {live.instructor_name && (
+                          <div className="p-5 flex-grow flex flex-col">
+                            <h3 className="font-serif text-lg font-bold line-clamp-2 leading-tight text-slate-800 mb-3">
+                              {live.title}
+                            </h3>
+                            <div className="space-y-1.5 mt-auto">
                               <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                                <User className="w-4 h-4 text-slate-400" />
-                                Instrutor: {live.instructor_name}
+                                <Calendar className="w-4 h-4 text-slate-400" /> {dateStr} às{' '}
+                                {timeStr}
                               </p>
-                            )}
+                              {live.instructor_name && (
+                                <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                                  <User className="w-4 h-4 text-slate-400" /> Instrutor:{' '}
+                                  {live.instructor_name}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="p-5 pt-0 mt-auto flex justify-end">
+                            <Button
+                              onClick={() => navigate(`/plataforma/live/${live.id}`)}
+                              className="w-full bg-red-600 hover:bg-red-700 text-white"
+                            >
+                              Acessar Transmissão
+                            </Button>
                           </div>
                         </div>
-                        <Button
-                          onClick={() => navigate(`/plataforma/live/${live.id}`)}
-                          className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white shadow-sm"
-                        >
-                          Acessar Transmissão
-                        </Button>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 mb-5">Sua plataforma</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {cards.map((c) => (
+                    <CategoryCard
+                      key={c.title}
+                      title={c.title}
+                      description={c.desc}
+                      icon={c.icon}
+                      imageUrl={c.img}
+                      count={c.count}
+                      gradient={c.gradient}
+                      onClick={c.action}
+                    />
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
 
-            <div>
-              <h2 className="text-xl font-bold text-slate-800 mb-5">Sua plataforma</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {cards.map((c) => (
-                  <CategoryCard
-                    key={c.title}
-                    title={c.title}
-                    description={c.desc}
-                    icon={c.icon}
-                    imageUrl={c.img}
-                    count={c.count}
-                    gradient={c.gradient}
-                    onClick={c.action}
-                  />
-                ))}
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-24">
+                <h2 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                  <BellRing className="w-5 h-5 text-amber-500" /> Quadro de Avisos
+                </h2>
+                <div className="space-y-4">
+                  {upcomingLives.length > 0 && (
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg bg-red-50 text-red-900 cursor-pointer hover:bg-red-100 transition-colors"
+                      onClick={() => navigate(`/plataforma/live/${upcomingLives[0].id}`)}
+                    >
+                      <Radio className="w-5 h-5 text-red-600 shrink-0 mt-0.5 animate-pulse" />
+                      <div>
+                        <p className="text-sm font-bold">Próxima Aula ao Vivo</p>
+                        <p className="text-sm line-clamp-2">{upcomingLives[0].title}</p>
+                      </div>
+                    </div>
+                  )}
+                  {cat.courses.length > 0 && (
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg bg-emerald-50 text-emerald-900 cursor-pointer hover:bg-emerald-100 transition-colors"
+                      onClick={() => setView('cursos')}
+                    >
+                      <BookOpen className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-bold">Novo Curso Adicionado</p>
+                        <p className="text-sm line-clamp-2">{cat.courses[0].title}</p>
+                      </div>
+                    </div>
+                  )}
+                  {docProjects.length > 0 && (
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg bg-purple-50 text-purple-900 cursor-pointer hover:bg-purple-100 transition-colors"
+                      onClick={() => navigate('/plataforma/documentarios')}
+                    >
+                      <Film className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-bold">Novo Documentário</p>
+                        <p className="text-sm line-clamp-2">{docProjects[0].title}</p>
+                      </div>
+                    </div>
+                  )}
+                  {mentorships.length > 0 && (
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 text-blue-900 cursor-pointer hover:bg-blue-100 transition-colors"
+                      onClick={() => setView('mentorias')}
+                    >
+                      <Users className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-bold">Mentoria Disponível</p>
+                        <p className="text-sm line-clamp-2">{mentorships[0].title}</p>
+                      </div>
+                    </div>
+                  )}
+                  {upcomingLives.length === 0 &&
+                    cat.courses.length === 0 &&
+                    docProjects.length === 0 &&
+                    mentorships.length === 0 && (
+                      <p className="text-sm text-slate-500 text-center py-4">
+                        Nenhum aviso no momento.
+                      </p>
+                    )}
+                </div>
               </div>
             </div>
           </div>

@@ -292,6 +292,8 @@ export interface SubscriptionPlan extends RecordModel {
   name: string
   description: string
   price: number
+  price_yearly?: number
+  is_coming_soon?: boolean
   interval: 'monthly' | 'yearly'
   features: string[]
 }

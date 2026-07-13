@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -11,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Plus, Trash2, X } from 'lucide-react'
+import { Loader2, Plus, X } from 'lucide-react'
 import { createSubscriptionPlan, updateSubscriptionPlan } from '@/services/subscription-plans'
 import { SubscriptionPlan } from '@/types'
 import { useToast } from '@/hooks/use-toast'
@@ -33,7 +34,9 @@ export function SubscriptionPlanFormModal({
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
+  const [priceYearly, setPriceYearly] = useState('')
   const [interval, setInterval] = useState<'monthly' | 'yearly'>('monthly')
+  const [isComingSoon, setIsComingSoon] = useState(false)
   const [features, setFeatures] = useState<string[]>([])
   const [newFeature, setNewFeature] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -45,7 +48,9 @@ export function SubscriptionPlanFormModal({
       setName(editingPlan?.name || '')
       setDescription(editingPlan?.description || '')
       setPrice(editingPlan?.price != null ? String(editingPlan.price) : '')
+      setPriceYearly(editingPlan?.price_yearly != null ? String(editingPlan.price_yearly) : '')
       setInterval(editingPlan?.interval || 'monthly')
+      setIsComingSoon(editingPlan?.is_coming_soon ?? false)
       setFeatures(Array.isArray(editingPlan?.features) ? (editingPlan!.features as string[]) : [])
       setNewFeature('')
     }
@@ -73,7 +78,12 @@ export function SubscriptionPlanFormModal({
     const errs: Record<string, string> = {}
     if (!name.trim()) errs.name = 'O nome é obrigatório.'
     const numPrice = parseFloat(price)
-    if (isNaN(numPrice) || numPrice <= 0) errs.price = 'O preço deve ser um número positivo.'
+    if (isNaN(numPrice) || numPrice < 0) errs.price = 'O preço deve ser um número válido.'
+    if (priceYearly) {
+      const numYearly = parseFloat(priceYearly)
+      if (isNaN(numYearly) || numYearly < 0)
+        errs.priceYearly = 'O preço anual deve ser um número válido.'
+    }
     return errs
   }
 
@@ -87,12 +97,17 @@ export function SubscriptionPlanFormModal({
 
     setIsSubmitting(true)
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         name: name.trim(),
         description: description.trim(),
         price: parseFloat(price),
         interval,
         features: JSON.stringify(features),
+        is_coming_soon: isComingSoon,
+      }
+
+      if (priceYearly) {
+        payload.price_yearly = parseFloat(priceYearly)
       }
 
       if (editingPlan) {
@@ -138,9 +153,9 @@ export function SubscriptionPlanFormModal({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>Preço (R$) *</Label>
+              <Label>Preço Mensal (R$) *</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -150,6 +165,20 @@ export function SubscriptionPlanFormModal({
                 placeholder="Ex: 49.90"
               />
               {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
+            </div>
+            <div>
+              <Label>Preço Anual (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={priceYearly}
+                onChange={(e) => setPriceYearly(e.target.value)}
+                placeholder="Ex: 358.80"
+              />
+              {errors.priceYearly && (
+                <p className="text-xs text-red-500 mt-1">{errors.priceYearly}</p>
+              )}
             </div>
             <div>
               <Label>Intervalo *</Label>
@@ -166,6 +195,17 @@ export function SubscriptionPlanFormModal({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div>
+              <Label className="text-base font-semibold">Em breve</Label>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Marque este plano como "Em breve" para exibir o selo na página inicial e desabilitar
+                o botão de assinatura.
+              </p>
+            </div>
+            <Switch checked={isComingSoon} onCheckedChange={setIsComingSoon} />
           </div>
 
           <div className="space-y-3">

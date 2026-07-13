@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T04:05:08.923Z",
+  "generatedAt": "2026-07-13T04:27:00.451Z",
   "collections": [
     {
       "name": "users",
@@ -1916,6 +1916,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "price_yearly",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_coming_soon",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

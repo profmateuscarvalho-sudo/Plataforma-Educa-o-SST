@@ -11,6 +11,8 @@ export interface User extends RecordModel {
   avatar?: string
   city?: string
   state?: string
+  plan_tier?: 'free' | 'prata' | 'ouro'
+  subscription_billing?: 'monthly' | 'yearly' | 'none'
 }
 
 export interface Course extends RecordModel {

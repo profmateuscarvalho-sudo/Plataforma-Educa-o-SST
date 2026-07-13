@@ -12,11 +12,15 @@ import { getStudents } from '@/services/users'
 import { User } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Search, Users } from 'lucide-react'
+import { Search, Users, Edit } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { UserPlanDialog } from '@/components/admin/UserPlanDialog'
 
 export default function AdminStudents() {
   const [students, setStudents] = useState<User[]>([])
   const [search, setSearch] = useState('')
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [planDialogOpen, setPlanDialogOpen] = useState(false)
 
   useEffect(() => {
     getStudents().then(setStudents).catch(console.error)
@@ -68,6 +72,7 @@ export default function AdminStudents() {
                 <TableHead>Perfis Profissionais</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead>Validade</TableHead>
+                <TableHead>Plano</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -107,6 +112,35 @@ export default function AdminStudents() {
                         : '-'}
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Badge
+                          variant="outline"
+                          className={
+                            s.plan_tier === 'ouro'
+                              ? 'bg-amber-100 text-amber-700 border-amber-200'
+                              : s.plan_tier === 'prata'
+                                ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                          }
+                        >
+                          {s.plan_tier
+                            ? s.plan_tier.charAt(0).toUpperCase() + s.plan_tier.slice(1)
+                            : 'Free'}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setEditingUser(s)
+                            setPlanDialogOpen(true)
+                          }}
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <Badge
                         variant={isActive ? 'default' : 'outline'}
                         className={
@@ -123,7 +157,7 @@ export default function AdminStudents() {
               })}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-slate-500">
                     {search ? 'Nenhum aluno encontrado na busca.' : 'Nenhum aluno cadastrado.'}
                   </TableCell>
                 </TableRow>
@@ -132,6 +166,13 @@ export default function AdminStudents() {
           </Table>
         </CardContent>
       </Card>
+
+      <UserPlanDialog
+        user={editingUser}
+        open={planDialogOpen}
+        setOpen={setPlanDialogOpen}
+        onSuccess={() => getStudents().then(setStudents).catch(console.error)}
+      />
     </div>
   )
 }

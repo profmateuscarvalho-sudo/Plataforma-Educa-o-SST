@@ -69,6 +69,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         professional_tags: professionalTags,
         city,
         state,
+        plan_tier: 'free',
+        subscription_billing: 'none',
       })
       await pb.collection('users').authWithPassword(email, pass)
       return { error: null }

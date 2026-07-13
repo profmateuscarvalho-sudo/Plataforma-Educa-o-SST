@@ -25,6 +25,14 @@ routerAdd(
     payment.set('product_type', 'Assinatura: ' + planName)
     $app.save(payment)
 
+    var planNameLower = planName.toLowerCase()
+    var tier = 'free'
+    if (planNameLower.indexOf('ouro') !== -1) {
+      tier = 'ouro'
+    } else if (planNameLower.indexOf('prata') !== -1) {
+      tier = 'prata'
+    }
+
     var user = $app.findRecordById('users', userId)
     var currentEndDateStr = user.getString('contract_end_date')
 
@@ -52,6 +60,8 @@ routerAdd(
       (day < 10 ? '0' + day : '' + day)
 
     user.set('contract_end_date', dateStr)
+    user.set('plan_tier', tier)
+    user.set('subscription_billing', interval)
     $app.save(user)
 
     return e.json(200, {
@@ -59,6 +69,7 @@ routerAdd(
       transaction_id: transactionId,
       message: 'Pagamento processado com sucesso via iPag.',
       contract_end_date: dateStr,
+      plan_tier: tier,
     })
   },
   $apis.requireAuth(),

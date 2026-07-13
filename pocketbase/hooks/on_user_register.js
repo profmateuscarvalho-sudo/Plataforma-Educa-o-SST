@@ -1,4 +1,13 @@
 onRecordAfterCreateSuccess((e) => {
+  if (!e.record.getString('plan_tier')) {
+    try {
+      const userRecord = $app.findRecordById('users', e.record.id)
+      userRecord.set('plan_tier', 'free')
+      userRecord.set('subscription_billing', 'none')
+      $app.saveNoValidate(userRecord)
+    } catch (_) {}
+  }
+
   if (e.record.getString('role') !== 'student') return e.next()
 
   try {

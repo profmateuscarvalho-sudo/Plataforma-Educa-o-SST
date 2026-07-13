@@ -88,7 +88,7 @@ migrate(
         record.set('price', planData.price)
         record.set('interval', planData.interval)
         record.set('features', planData.features)
-        app.save(record)
+        app.saveNoValidate(record)
       }
     }
   },

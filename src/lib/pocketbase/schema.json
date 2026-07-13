@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T02:56:29.908Z",
+  "generatedAt": "2026-07-13T03:08:57.944Z",
   "collections": [
     {
       "name": "users",
@@ -8,7 +8,7 @@
         "list": "id = @request.auth.id || @request.auth.role = 'admin'",
         "view": "id = @request.auth.id || @request.auth.role = 'admin'",
         "create": "",
-        "update": "id = @request.auth.id",
+        "update": "id = @request.auth.id || @request.auth.role = 'admin'",
         "delete": "id = @request.auth.id"
       },
       "fields": [
@@ -88,6 +88,20 @@
           "type": "text",
           "required": false,
           "system": false
+        },
+        {
+          "name": "plan_tier",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["free", "prata", "ouro"]
+        },
+        {
+          "name": "subscription_billing",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["monthly", "yearly", "none"]
         }
       ],
       "indexes": [

@@ -30,3 +30,10 @@ export const createSubscription = async (userId: string, planId: string) => {
     body: { user_id: userId, plan_id: planId },
   })
 }
+
+export const getUserSubscriptions = (userId: string) =>
+  pb.collection('subscriptions').getFullList({
+    filter: `user = "${userId}"`,
+    sort: '-created',
+    expand: 'plan',
+  })

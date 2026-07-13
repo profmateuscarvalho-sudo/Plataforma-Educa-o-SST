@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { SquareLogo } from '@/components/ui/Logos'
 import { toast } from '@/hooks/use-toast'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
+import pb from '@/lib/pocketbase/client'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -36,7 +37,8 @@ export default function Login() {
       })
     } else {
       toast({ title: 'Bem-vindo!' })
-      navigate('/')
+      const record = pb.authStore.record as { role?: string } | null
+      navigate(record?.role === 'admin' ? '/admin' : '/plataforma')
     }
   }
 

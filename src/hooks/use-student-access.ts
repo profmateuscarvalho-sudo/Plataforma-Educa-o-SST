@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { getUserPayments } from '@/services/payments'
+import { getUserSubscriptions, type Subscription } from '@/services/subscriptions'
 import { Payment } from '@/types'
 
 export type AccessStatus = 'free' | 'owned' | 'subscriber' | 'locked'
-export type PlanTier = 'free' | 'prata' | 'ouro'
+export type PlanTier = 'none' | 'free' | 'prata' | 'ouro'
 
 const tierLevel = (tier: string): number => {
   switch (tier) {
@@ -12,33 +13,47 @@ const tierLevel = (tier: string): number => {
       return 3
     case 'prata':
       return 2
-    default:
+    case 'free':
       return 1
+    default:
+      return 0
   }
 }
 
 export function useStudentAccess() {
   const { user } = useAuth()
   const [payments, setPayments] = useState<Payment[]>([])
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
-    getUserPayments(user.id)
-      .then((p) => setPayments(p.filter((pay) => pay.status === 'paid')))
-      .catch(() => {})
+    if (!user) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    Promise.all([
+      getUserPayments(user.id).catch(() => []),
+      getUserSubscriptions(user.id).catch(() => []),
+    ]).then(([p, subs]) => {
+      setPayments(p.filter((pay: Payment) => pay.status === 'paid'))
+      setSubscriptions(subs as Subscription[])
+      setLoading(false)
+    })
   }, [user])
 
-  const hasActiveSubscription = (): boolean => {
-    if (!user?.contract_end_date) return false
-    return new Date(user.contract_end_date) >= new Date()
-  }
+  const hasSubscriptionAccess = useMemo(() => {
+    if (user?.role === 'admin') return true
+    return subscriptions.some((s) => s.status === 'active')
+  }, [user, subscriptions])
 
   const activeTier = useMemo<PlanTier>(() => {
     if (user?.role === 'admin') return 'ouro'
-    if (!user?.contract_end_date) return 'free'
-    if (new Date(user.contract_end_date) < new Date()) return 'free'
-    return (user?.plan_tier as PlanTier) || 'prata'
-  }, [user])
+    if (!hasSubscriptionAccess) return 'none'
+    return (user?.plan_tier as PlanTier) || 'free'
+  }, [user, hasSubscriptionAccess])
+
+  const hasActiveSubscription = (): boolean => hasSubscriptionAccess
 
   const canAccess = (requiredTier: PlanTier): boolean => {
     return tierLevel(activeTier) >= tierLevel(requiredTier)
@@ -56,6 +71,7 @@ export function useStudentAccess() {
     requiredTier?: PlanTier
   }): AccessStatus => {
     if (item.is_free) return 'free'
+    if (activeTier === 'none') return 'locked'
     const required = item.requiredTier || 'prata'
     if (canAccess(required)) return 'subscriber'
     if (hasPurchased(item.title)) return 'owned'
@@ -70,6 +86,9 @@ export function useStudentAccess() {
 
   return {
     payments,
+    subscriptions,
+    loading,
+    hasSubscriptionAccess,
     hasActiveSubscription,
     hasPurchased,
     getAccessStatus,

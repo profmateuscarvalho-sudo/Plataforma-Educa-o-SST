@@ -1,6 +1,7 @@
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
+import { useStudentAccess } from '@/hooks/use-student-access'
 import { LogOut } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { Logo } from '@/components/ui/Logos'
@@ -8,18 +9,37 @@ import { WhatsAppFloat } from '@/components/WhatsAppFloat'
 
 export default function StudentLayout() {
   const { user, signOut, loading } = useAuth()
+  const access = useStudentAccess()
   const location = useLocation()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!loading && !user) navigate('/login')
-  }, [user, loading, navigate])
+    if (!loading && !user) {
+      navigate('/login')
+      return
+    }
+    if (
+      !loading &&
+      !access.loading &&
+      user &&
+      user.role !== 'admin' &&
+      !access.hasSubscriptionAccess
+    ) {
+      navigate('/ativacao-pendente')
+    }
+  }, [user, loading, access.loading, access.hasSubscriptionAccess, navigate])
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [location.pathname])
 
   if (loading || !user) return null
+  if (user.role !== 'admin' && access.loading)
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-500">Verificando assinatura...</p>
+      </div>
+    )
 
   const handleSignOut = () => {
     signOut()

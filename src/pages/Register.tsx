@@ -79,9 +79,9 @@ export default function Register() {
     } else {
       toast({
         title: 'Cadastro realizado com sucesso!',
-        description: 'Bem-vindo à plataforma. Um e-mail de confirmação foi enviado.',
+        description: 'Verifique seu e-mail para ativar sua assinatura.',
       })
-      navigate('/plataforma')
+      navigate('/ativacao-pendente', { state: { email } })
     }
   }
 

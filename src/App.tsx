@@ -18,6 +18,7 @@ import Noticias from './pages/Noticias'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Ativar from './pages/Ativar'
+import SubscriptionPending from './pages/SubscriptionPending'
 import NotFound from './pages/NotFound'
 
 import ArticleSubmission from './pages/public/ArticleSubmission'
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/ativar" element={<Ativar />} />
+            <Route path="/ativacao-pendente" element={<SubscriptionPending />} />
 
             <Route path="/submeter-artigo" element={<ArticleSubmission />} />
             <Route path="/conexao-profissional/:token" element={<ProfessionalConnection />} />

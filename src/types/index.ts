@@ -9,6 +9,8 @@ export interface User extends RecordModel {
   professional_profile?: string
   professional_tags?: string[]
   avatar?: string
+  city?: string
+  state?: string
 }
 
 export interface Course extends RecordModel {
@@ -130,6 +132,8 @@ export interface Mentorship extends RecordModel {
   mentor_name: string
   available_dates: string
   is_free?: boolean
+  mentor_bio?: string
+  mentor_photo?: string
 }
 
 export interface Lead extends RecordModel {

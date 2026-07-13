@@ -12,6 +12,8 @@ interface AuthContextType {
     pass: string,
     phone?: string,
     professionalTags?: string[],
+    city?: string,
+    state?: string,
   ) => Promise<{ error: any }>
   signOut: () => void
   refreshUser: () => Promise<void>
@@ -53,6 +55,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     pass: string,
     phone?: string,
     professionalTags?: string[],
+    city?: string,
+    state?: string,
   ) => {
     try {
       await pb.collection('users').create({
@@ -63,6 +67,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: 'student',
         phone,
         professional_tags: professionalTags,
+        city,
+        state,
       })
       await pb.collection('users').authWithPassword(email, pass)
       return { error: null }

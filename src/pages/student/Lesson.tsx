@@ -144,7 +144,7 @@ export default function CourseLesson() {
     <div className="flex flex-col min-h-[calc(100vh-80px)] bg-slate-950 text-slate-200">
       <div className="h-16 border-b border-white/10 flex items-center px-4 md:px-8 gap-4 bg-slate-900 shrink-0">
         <Button variant="ghost" size="sm" asChild className="text-slate-400 hover:text-white">
-          <Link to={user.role === 'admin' ? '/admin/cursos' : '/aluno'}>
+          <Link to={user.role === 'admin' ? '/admin/cursos' : '/plataforma'}>
             <ChevronLeft className="mr-2 w-4 h-4" /> Voltar
           </Link>
         </Button>

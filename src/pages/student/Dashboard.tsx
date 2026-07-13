@@ -20,6 +20,7 @@ import {
   ClipboardList,
   Video,
   Calendar,
+  MessagesSquare,
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { ClockDisplay } from '@/components/student/ClockDisplay'
@@ -130,12 +131,21 @@ export default function StudentDashboard() {
     },
     {
       title: 'Caderno Virtual',
-      desc: 'Mapas, Notas e Cases',
+      desc: 'Mapas e Notas',
       icon: BookMarked,
       count: 0,
       img: ph('notebook%20study'),
       gradient: 'from-amber-600 to-orange-800',
       action: () => navigate('/plataforma/caderno'),
+    },
+    {
+      title: 'Feed de Cases',
+      desc: 'Compartilhe experiências',
+      icon: MessagesSquare,
+      count: 0,
+      img: ph('professional%20cases'),
+      gradient: 'from-teal-600 to-emerald-800',
+      action: () => navigate('/plataforma/cases'),
     },
     {
       title: 'Meu Perfil',
@@ -170,7 +180,7 @@ export default function StudentDashboard() {
             </Avatar>
             <div>
               <h1 className="text-3xl font-serif font-bold text-yellow-400 mb-1">
-                {getGreeting()}, {user.name}!
+                {getGreeting()}, {user.name}
               </h1>
               <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
             </div>
@@ -289,7 +299,7 @@ export default function StudentDashboard() {
                       <Radio className="w-5 h-5 text-red-600 shrink-0 mt-0.5 animate-pulse" />
                       <div>
                         <p className="text-sm font-bold">Próxima Aula ao Vivo</p>
-                        <p className="text-sm line-clamp-2">{upcomingLives[0].title}</p>
+                        <p className="text-sm line-clamp-2">{visibleLives[0].title}</p>
                       </div>
                     </div>
                   )}

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { getDocProject } from '@/services/doc_projects'
 import { DocProject } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
-import { ArrowLeft, Play, Film } from 'lucide-react'
+import { ArrowLeft, Play, Film, Lock } from 'lucide-react'
 import { BackToHub } from '@/components/student/BackToHub'
 import { Button } from '@/components/ui/button'
 import pb from '@/lib/pocketbase/client'
@@ -49,10 +49,31 @@ export default function DocumentaryViewer() {
       </div>
     )
 
+  const hasAccess =
+    project.is_free ||
+    user.role === 'admin' ||
+    (!!user.contract_end_date && new Date(user.contract_end_date) >= new Date())
+
   const videoUrl = getPandaUrl(project.panda_video_id)
   const photos = project.presentation_photos || []
 
   if (mode === 'player') {
+    if (!hasAccess) {
+      return (
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-white">
+          <div className="text-center">
+            <Lock className="w-16 h-16 mx-auto mb-4 text-amber-400" />
+            <p className="text-xl font-bold mb-2">Acesso não liberado</p>
+            <Button
+              onClick={() => setMode('details')}
+              className="mt-4 bg-white text-black hover:bg-zinc-200"
+            >
+              Voltar aos detalhes
+            </Button>
+          </div>
+        </div>
+      )
+    }
     return (
       <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
         <button
@@ -129,14 +150,23 @@ export default function DocumentaryViewer() {
         )}
 
         <div className="flex flex-col sm:flex-row gap-4 items-center pt-4 border-t border-white/10">
-          <Button
-            size="lg"
-            onClick={() => setMode('player')}
-            className="bg-white text-black hover:bg-zinc-200 text-lg font-bold px-8 h-14 rounded-full w-full sm:w-auto"
-          >
-            <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
-          </Button>
-          {!videoUrl && <p className="text-sm text-white/40">Vídeo não disponível no momento.</p>}
+          {hasAccess ? (
+            <Button
+              size="lg"
+              onClick={() => setMode('player')}
+              className="bg-white text-black hover:bg-zinc-200 text-lg font-bold px-8 h-14 rounded-full w-full sm:w-auto"
+            >
+              <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 text-amber-400 bg-amber-500/10 border border-amber-500/30 px-6 py-3 rounded-full text-lg font-bold">
+              <Lock className="w-5 h-5" />
+              Acesso não liberado
+            </div>
+          )}
+          {!videoUrl && hasAccess && (
+            <p className="text-sm text-white/40">Vídeo não disponível no momento.</p>
+          )}
         </div>
       </div>
     </div>

@@ -59,6 +59,7 @@ import AdminSimuladoWizard from './pages/admin/Simulados/Wizard'
 import AdminMagazineLanding from './pages/admin/MagazineLandingConfig'
 import DocumentaryPitch from './pages/public/DocumentaryPitch'
 import AdminSubscriptionPlans from './pages/admin/SubscriptionPlans'
+import AdminAnnouncements from './pages/admin/Announcements'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -125,6 +126,7 @@ const App = () => (
             <Route path="/admin/pagamentos" element={<AdminPayments />} />
             <Route path="/admin/lives" element={<AdminLives />} />
             <Route path="/admin/planos" element={<AdminSubscriptionPlans />} />
+            <Route path="/admin/avisos" element={<AdminAnnouncements />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

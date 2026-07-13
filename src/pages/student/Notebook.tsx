@@ -140,10 +140,7 @@ export default function StudentNotebook() {
       </div>
 
       <div className="max-w-[1600px] mx-auto p-4">
-        <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr_280px] gap-6">
-          <div className="hidden xl:block h-[calc(100vh-140px)] sticky top-[88px]">
-            <CaseFeedSidebar />
-          </div>
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-6">
           <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
             <div className="space-y-3">
               <Button

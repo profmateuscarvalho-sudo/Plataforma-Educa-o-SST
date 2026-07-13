@@ -40,6 +40,8 @@ export default function StudentProfile() {
   const [email, setEmail] = useState(user?.email || '')
   const [phone, setPhone] = useState(user?.phone || '')
   const [tags, setTags] = useState<string[]>(user?.professional_tags || [])
+  const [city, setCity] = useState(user?.city || '')
+  const [state, setState] = useState(user?.state || '')
   const [savingInfo, setSavingInfo] = useState(false)
 
   const [newPass, setNewPass] = useState('')
@@ -68,6 +70,8 @@ export default function StudentProfile() {
       email,
       phone,
       professional_tags: tags,
+      city,
+      state,
     })
     setSavingInfo(false)
     if (error) {
@@ -157,6 +161,26 @@ export default function StudentProfile() {
                     value={phone}
                     onChange={(e) => setPhone(formatPhone(e.target.value))}
                     placeholder="(00) 00000-0000"
+                    className="h-11"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">Cidade</Label>
+                  <Input
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">Estado</Label>
+                  <Input
+                    id="state"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
                     className="h-11"
                   />
                 </div>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T01:02:13.727Z",
+  "generatedAt": "2026-07-13T01:22:36.219Z",
   "collections": [
     {
       "name": "users",
@@ -74,6 +74,18 @@
         {
           "name": "professional_tags",
           "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "city",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "state",
+          "type": "text",
           "required": false,
           "system": false
         }

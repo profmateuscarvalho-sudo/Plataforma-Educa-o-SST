@@ -32,6 +32,8 @@ export default function Register() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [pass, setPass] = useState('')
   const [passConfirm, setPassConfirm] = useState('')
@@ -65,7 +67,7 @@ export default function Register() {
     }
 
     setLoading(true)
-    const { error } = await signUp(name, email, pass, phone, selectedTags)
+    const { error } = await signUp(name, email, pass, phone, selectedTags, city, state)
     setLoading(false)
 
     if (error) {
@@ -128,6 +130,26 @@ export default function Register() {
                 required
                 className="h-11 bg-slate-50"
               />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade</Label>
+                <Input
+                  id="city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="h-11 bg-slate-50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state">Estado</Label>
+                <Input
+                  id="state"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  className="h-11 bg-slate-50"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Perfil Profissional</Label>

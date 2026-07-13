@@ -121,8 +121,10 @@ export default function StudentDocumentaries() {
 
                     <div className="absolute bottom-0 inset-x-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                       <h3 className="font-bold text-sm text-white line-clamp-1">{p.title}</h3>
-                      {p.is_free && (
+                      {p.is_free ? (
                         <p className="text-xs text-emerald-400 font-medium mt-1">Acesso Liberado</p>
+                      ) : (
+                        <p className="text-xs text-amber-400 font-medium mt-1">Acesso Restrito</p>
                       )}
                     </div>
                   </Link>

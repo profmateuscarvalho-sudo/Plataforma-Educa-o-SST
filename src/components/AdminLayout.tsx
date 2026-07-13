@@ -17,6 +17,7 @@ import {
   Megaphone,
   UserCog,
   MessagesSquare,
+  FlaskConical,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -48,6 +49,7 @@ export default function AdminLayout() {
     { label: 'Aulas ao Vivo', icon: Presentation, path: '/admin/lives' },
     { label: 'Quadro de Avisos', icon: Megaphone, path: '/admin/avisos' },
     { label: 'Casos Profissionais', icon: MessagesSquare, path: '/admin/casos' },
+    { label: 'Testes iPag', icon: FlaskConical, path: '/admin/testes' },
   ]
 
   return (

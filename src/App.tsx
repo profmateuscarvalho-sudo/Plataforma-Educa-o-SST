@@ -62,6 +62,7 @@ import DocumentaryPitch from './pages/public/DocumentaryPitch'
 import AdminSubscriptionPlans from './pages/admin/SubscriptionPlans'
 import AdminAnnouncements from './pages/admin/Announcements'
 import AdminCases from './pages/admin/Cases'
+import AdminTestes from './pages/admin/Testes'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -131,6 +132,7 @@ const App = () => (
             <Route path="/admin/planos" element={<AdminSubscriptionPlans />} />
             <Route path="/admin/avisos" element={<AdminAnnouncements />} />
             <Route path="/admin/casos" element={<AdminCases />} />
+            <Route path="/admin/testes" element={<AdminTestes />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

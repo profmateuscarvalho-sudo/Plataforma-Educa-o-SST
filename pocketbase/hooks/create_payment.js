@@ -162,7 +162,11 @@ routerAdd(
     } catch (err) {
       $app.logger().error('iPag connection error', 'error', err.message)
       updatePaymentStatus(paymentRecordId, 'failed', '')
-      return e.json(500, { error: 'Failed to connect to iPag gateway', details: err.message })
+      return e.json(500, {
+        error: 'Failed to connect to iPag gateway',
+        details: err.message,
+        debug_base_url: baseUrl,
+      })
     }
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -176,7 +180,11 @@ routerAdd(
       }
       $app.logger().error('iPag API returned error', 'status', res.statusCode, 'body', errorBody)
       updatePaymentStatus(paymentRecordId, 'failed', '')
-      return e.json(res.statusCode, { error: 'iPag API error', details: errorBody })
+      return e.json(res.statusCode, {
+        error: 'iPag API error',
+        details: errorBody,
+        debug_base_url: baseUrl,
+      })
     }
 
     var data

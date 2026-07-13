@@ -162,6 +162,7 @@ routerAdd(
         headers: {
           'Content-Type': 'application/json',
           Authorization: 'Basic ' + authBase64,
+          'x-api-version': '2',
         },
         body: JSON.stringify(paymentData),
         timeout: 30,

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { createPayment, type CreatePaymentPayload } from '@/services/payments'
+import { WebhookSimulator } from '@/components/admin/WebhookSimulator'
 
 interface TestResult {
   success: boolean
@@ -261,6 +262,8 @@ export default function AdminTestes() {
           </Card>
         </div>
       )}
+
+      <WebhookSimulator />
     </div>
   )
 }

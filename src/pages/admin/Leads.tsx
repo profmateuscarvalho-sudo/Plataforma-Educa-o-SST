@@ -2,12 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getLeads } from '@/services/leads'
 import { Lead } from '@/types'
 import { LeadList } from '@/components/admin/leads/LeadList'
-import { SmtpSettingsForm } from '@/components/admin/leads/SmtpSettingsForm'
-import { EmailCampaigns } from '@/components/admin/leads/EmailCampaigns'
 
 export default function AdminLeads() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -31,25 +28,7 @@ export default function AdminLeads() {
         </Button>
       </div>
 
-      <Tabs defaultValue="list" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="list">Lista de Leads</TabsTrigger>
-          <TabsTrigger value="campaigns">Campanhas de E-mail</TabsTrigger>
-          <TabsTrigger value="smtp">Configurações SMTP</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="list" className="mt-0">
-          <LeadList leads={leads} />
-        </TabsContent>
-
-        <TabsContent value="campaigns" className="mt-0">
-          <EmailCampaigns />
-        </TabsContent>
-
-        <TabsContent value="smtp" className="mt-0">
-          <SmtpSettingsForm />
-        </TabsContent>
-      </Tabs>
+      <LeadList leads={leads} />
     </div>
   )
 }

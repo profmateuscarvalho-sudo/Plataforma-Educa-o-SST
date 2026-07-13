@@ -67,7 +67,8 @@ export default function AdminEmailLog() {
   const userMap = useMemo(() => {
     const map = new Map<string, User>()
     users.forEach((u) => {
-      if (u.email) map.set(u.email.toLowerCase(), u)
+      const email = u.email?.toString().trim().toLowerCase()
+      if (email) map.set(email, u)
     })
     return map
   }, [users])
@@ -81,14 +82,14 @@ export default function AdminEmailLog() {
   const rows: LogRow[] = useMemo(() => {
     return logs.map((log) => {
       const expanded = log.expand as { user?: User; subscription?: Subscription }
-      const rawEmail = log.recipient_email ?? ''
+      const rawEmail = log.recipient_email?.toString().trim() ?? ''
       const user = expanded?.user || (rawEmail ? userMap.get(rawEmail.toLowerCase()) : undefined)
       const subscription = expanded?.subscription || (user ? subMap.get(user.id) : undefined)
 
       return {
         id: log.id,
-        name: log.recipient_name || user?.name || '—',
-        email: log.recipient_email || '',
+        name: log.recipient_name?.toString() || user?.name || '—',
+        email: log.recipient_email?.toString() || '',
         emailType: log.email_type,
         sent: log.sent,
         sentAt: log.sent_at,
@@ -194,7 +195,7 @@ export default function AdminEmailLog() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-xs">
-                      {EMAIL_TYPE_LABELS[row.emailType] || row.emailType}
+                      {EMAIL_TYPE_LABELS[row.emailType] || row.emailType || '—'}
                     </Badge>
                   </TableCell>
                   <TableCell>

@@ -11,41 +11,41 @@ onRecordAfterCreateSuccess((e) => {
   if (e.record.getString('role') !== 'student') return e.next()
 
   try {
-    const smtp = $app.findFirstRecordByFilter('smtp_settings', '1=1')
-    const senderStr = `"${smtp.getString('sender_name')}" <${smtp.getString('sender_email')}>`
-    const email = e.record.getString('email')
-    const name = e.record.getString('name')
-
-    const subject = 'Confirme seu cadastro na Educação SST'
-    const content = `Olá ${name}, bem-vindo à Educação SST! Seu cadastro foi realizado com sucesso. Acesse a plataforma para explorar nossos conteúdos.`
-
+    var existingSub = null
     try {
-      if (typeof MailerMessage !== 'undefined') {
-        const message = new MailerMessage({
-          from: {
-            address: smtp.getString('sender_email'),
-            name: smtp.getString('sender_name'),
-          },
-          to: [{ address: email }],
-          subject: subject,
-          text: content,
-          html: `<p>${content}</p>`,
-        })
-        $app.newMailClient().send(message)
-        $app.logger().info('Welcome Email Sent', 'to', email, 'from', senderStr, 'subject', subject)
-      } else {
-        throw new Error('MailerMessage global not available')
+      existingSub = $app.findFirstRecordByFilter('subscriptions', "user = '" + e.record.id + "'")
+    } catch (_) {}
+
+    if (existingSub) return e.next()
+
+    var planId = ''
+    try {
+      var plans = $app.findRecordsByFilter('subscription_plans', '1=1', 'created', 50, 0)
+      for (var i = 0; i < plans.length; i++) {
+        var p = plans[i]
+        var pName = (p.getString('name') || '').toLowerCase()
+        var pPrice = p.getNum('price')
+        if (pName.indexOf('free') !== -1 || pPrice === 0) {
+          planId = p.id
+          break
+        }
       }
-    } catch (mailErr) {
-      $app
-        .logger()
-        .error('Failed to send actual welcome email, falling back to log', 'error', mailErr.message)
-      $app
-        .logger()
-        .info('Mock Welcome Email Sent', 'to', email, 'from', senderStr, 'subject', subject)
+    } catch (_) {}
+
+    var subsCol = $app.findCollectionByNameOrId('subscriptions')
+    var subRecord = new Record(subsCol)
+    subRecord.set('user', e.record.id)
+    subRecord.set('status', 'pending')
+    if (planId) {
+      subRecord.set('plan', planId)
     }
+    $app.save(subRecord)
+
+    $app
+      .logger()
+      .info('Subscription created on user registration', 'userId', e.record.id, 'planId', planId)
   } catch (err) {
-    $app.logger().error('Failed to configure welcome email', 'error', err.message)
+    $app.logger().error('Failed to create subscription on user register', 'error', err.message)
   }
 
   return e.next()

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { StudentHomePreview } from '@/components/StudentHomePreview'
 import { LandingRegisterForm } from '@/components/LandingRegisterForm'
+import { PricingSection } from '@/components/PricingSection'
 import { CourseCard } from '@/components/CourseCard'
 import { ArrowRight, BookOpen, Star, Check, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -43,7 +44,10 @@ export default function Index() {
 
   return (
     <div className="flex flex-col min-h-screen relative">
-      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden bg-secondary">
+      <section
+        id="hero"
+        className="min-h-screen flex items-center overflow-hidden bg-secondary relative pt-20 pb-8 scroll-mt-16"
+      >
         <div className="absolute inset-0 z-0">
           <img
             src="https://img.usecurling.com/p/1920/1080?q=factory&color=black"
@@ -53,77 +57,64 @@ export default function Index() {
           <div className="absolute inset-0 bg-gradient-to-b from-secondary via-secondary/90 to-secondary/80" />
         </div>
 
-        <div className="container relative z-10 px-4 py-20 max-w-4xl text-center">
-          <div className="space-y-8 animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary backdrop-blur-sm font-medium text-sm">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              &nbsp;Plataforma para profissionais e estudantes em SST
-            </div>
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-white leading-tight">
-              Educação e desenvolvimento
-              <div>
-                em <span className="text-accent">SST</span>
+        <div className="container relative z-10 px-4 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+            <div className="lg:col-span-5 space-y-5 animate-fade-in-up">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary backdrop-blur-sm font-medium text-sm">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                Plataforma para profissionais e estudantes em SST
               </div>
-            </h1>
-            <p className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed font-light">
-              Eleve o seu conhecimento a partir de nossos programas educacionais focados em
-              Segurança e Saúde no Trabalho e construa um itinerário profissional de forma sólida
-              com foco na prática e na sua realidade de trabalho.&nbsp;&nbsp;
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center">
-              <Button
-                size="lg"
-                className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-white"
-                asChild
-              >
-                <Link to="/cursos">Explorar Cursos</Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-14 px-8 text-lg font-bold border-accent text-accent hover:bg-accent hover:text-secondary"
-                asChild
-              >
-                <Link to="/mentorias">Agendar Mentoria</Link>
-              </Button>
+              <h1 className="text-4xl md:text-5xl xl:text-6xl font-serif font-bold text-white leading-tight">
+                Educação e desenvolvimento em <span className="text-accent">SST</span>
+              </h1>
+              <p className="text-base md:text-lg text-slate-300 max-w-xl leading-relaxed font-light">
+                Eleve o seu conhecimento a partir de nossos programas educacionais focados em
+                Segurança e Saúde no Trabalho e construa um itinerário profissional de forma sólida
+                com foco na prática e na sua realidade de trabalho.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button
+                  size="lg"
+                  className="h-12 px-7 text-base font-bold bg-primary hover:bg-primary/90 text-white"
+                  asChild
+                >
+                  <a href="#planos">Assine</a>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-12 px-7 text-base font-bold border-accent text-accent hover:bg-accent hover:text-secondary"
+                  asChild
+                >
+                  <Link to="/mentorias">Agendar Mentoria</Link>
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <div className="flex items-center gap-1.5 text-sm text-slate-300">
+                  <Check className="w-4 h-4 text-primary" /> Cursos em SST
+                </div>
+                <div className="flex items-center gap-1.5 text-sm text-slate-300">
+                  <Check className="w-4 h-4 text-primary" /> Revistas científicas
+                </div>
+                <div className="flex items-center gap-1.5 text-sm text-slate-300">
+                  <Check className="w-4 h-4 text-primary" /> Documentários exclusivos
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="order-2 sm:order-1 self-center">
+                <StudentHomePreview />
+              </div>
+              <div className="order-1 sm:order-2">
+                <LandingRegisterForm />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <section className="py-20 bg-slate-50 relative z-20">
-        <div className="container px-4 max-w-6xl">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-serif font-bold text-secondary mb-4">
-              Cadastre-se gratuitamente
-            </h2>
-            <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-              Crie sua conta e tenha acesso a cursos, revistas, documentários e muito mais.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 mt-6">
-              <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                <Check className="w-4 h-4 text-primary" /> Cursos em SST
-              </div>
-              <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                <Check className="w-4 h-4 text-primary" /> Revistas científicas
-              </div>
-              <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                <Check className="w-4 h-4 text-primary" /> Documentários exclusivos
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-5xl mx-auto">
-            <div className="order-1 lg:order-1">
-              <StudentHomePreview />
-            </div>
-            <div className="order-2 lg:order-2">
-              <LandingRegisterForm />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-24 bg-slate-50 relative z-20">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="max-w-2xl">
@@ -131,7 +122,7 @@ export default function Index() {
                 Cursos em Destaque
               </h2>
               <p className="text-slate-600 text-lg">
-                Construa seu itinerário formativa de alto nível com foco na sua realidade e
+                Construa seu itinerário formativo de alto nível com foco na sua realidade e
                 conhecimento prático.
               </p>
             </div>
@@ -184,7 +175,8 @@ export default function Index() {
         </section>
       )}
 
-      {/* Floating Featured Magazine Widget */}
+      <PricingSection />
+
       {featuredMag && !magBannerDismissed && (
         <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up max-w-[calc(100vw-3rem)]">
           <button

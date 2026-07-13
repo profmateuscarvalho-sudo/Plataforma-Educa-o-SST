@@ -74,7 +74,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })
       await pb.collection('users').authWithPassword(email, pass)
       return { error: null }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.status === 400 && error?.response?.data?.email) {
+        try {
+          await pb.collection('users').authWithPassword(email, pass)
+          return { error: null }
+        } catch (loginError) {
+          return { error: loginError }
+        }
+      }
       return { error }
     }
   }

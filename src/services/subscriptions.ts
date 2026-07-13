@@ -23,3 +23,10 @@ export const activateSubscription = async (
     headers: { 'Content-Type': 'application/json' },
   })
 }
+
+export const createSubscription = async (userId: string, planId: string) => {
+  return await pb.send('/backend/v1/create_subscription', {
+    method: 'POST',
+    body: { user_id: userId, plan_id: planId },
+  })
+}

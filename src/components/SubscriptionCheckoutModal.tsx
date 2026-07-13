@@ -21,6 +21,7 @@ import { CreditCard, Loader2, CheckCircle2, Copy, QrCode, ShieldCheck, Zap } fro
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
+import { createSubscription } from '@/services/subscriptions'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -83,6 +84,12 @@ export function SubscriptionCheckoutModal({
     e.preventDefault()
     if (!plan || !user) return
     setIsLoading(true)
+
+    try {
+      await createSubscription(user.id, plan.id)
+    } catch {
+      // Best effort — proceed with payment regardless
+    }
 
     const formData = new FormData(e.currentTarget)
     const cpfCnpj = (formData.get('cpf_cnpj') as string) || ''

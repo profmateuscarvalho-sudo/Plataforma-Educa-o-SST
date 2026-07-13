@@ -252,9 +252,14 @@ export default function Planos() {
                       disabled={isCurrent || hasHigher}
                       onClick={() => {
                         if (!user) navigate('/register')
+                        else navigate('/plataforma')
                       }}
                     >
-                      {isCurrent ? 'Plano Atual' : hasHigher ? 'Incluso no seu plano' : plan.cta}
+                      {isCurrent
+                        ? 'Plano Atual'
+                        : hasHigher
+                          ? 'Incluso no seu plano'
+                          : 'Assine Gratuitamente'}
                     </Button>
                   ) : (
                     <Button

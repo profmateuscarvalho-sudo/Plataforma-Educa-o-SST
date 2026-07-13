@@ -16,6 +16,7 @@ import {
   BadgeCent,
   Megaphone,
   UserCog,
+  MessagesSquare,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -46,6 +47,7 @@ export default function AdminLayout() {
     { label: 'Pagamentos', icon: BookOpen, path: '/admin/pagamentos' },
     { label: 'Aulas ao Vivo', icon: Presentation, path: '/admin/lives' },
     { label: 'Quadro de Avisos', icon: Megaphone, path: '/admin/avisos' },
+    { label: 'Casos Profissionais', icon: MessagesSquare, path: '/admin/casos' },
   ]
 
   return (

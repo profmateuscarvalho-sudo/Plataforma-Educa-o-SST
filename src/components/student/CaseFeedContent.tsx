@@ -14,7 +14,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { CaseDetailModal } from '@/components/student/CaseDetailModal'
-import { MessagesSquare, Plus, MessageCircle, Heart } from 'lucide-react'
+import { MessagesSquare, Plus, MessageCircle, Heart, Clock } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { stripHtml, cn } from '@/lib/utils'
 
@@ -65,7 +65,6 @@ export function CaseFeedContent() {
       setNewTitle('')
       setNewContent('')
       setShowCreate(false)
-      await loadData()
     } catch {
       /* ignore */
     } finally {
@@ -138,8 +137,10 @@ export function CaseFeedContent() {
       {cases.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
           <MessagesSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500">Nenhum case compartilhado ainda.</p>
-          <p className="text-slate-400 text-sm mt-1">Seja o primeiro a compartilhar!</p>
+          <p className="text-slate-500">Nenhum case aprovado ainda.</p>
+          <p className="text-slate-400 text-sm mt-1">
+            Os cases compartilhados aparecem aqui após aprovação.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8">
@@ -201,7 +202,8 @@ export function CaseFeedContent() {
           <DialogHeader>
             <DialogTitle>Compartilhar Case</DialogTitle>
             <DialogDescription>
-              Descreva uma situação profissional para discussão.
+              Descreva uma situação profissional para discussão. Seu case será revisado pela equipe
+              antes de aparecer no feed.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -224,12 +226,16 @@ export function CaseFeedContent() {
                 className="min-h-[150px]"
               />
             </div>
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <Clock className="w-3.5 h-3.5" />
+              Seu case será revisado antes da publicação
+            </div>
             <Button
               onClick={handleCreate}
               disabled={saving || !newTitle.trim() || !newContent.trim()}
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              {saving ? 'Publicando...' : 'Publicar Case'}
+              {saving ? 'Enviando...' : 'Enviar para Moderação'}
             </Button>
           </div>
         </DialogContent>

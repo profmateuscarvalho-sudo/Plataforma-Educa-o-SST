@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T04:33:46.292Z",
+  "generatedAt": "2026-07-13T04:53:25.699Z",
   "collections": [
     {
       "name": "users",
@@ -2028,6 +2028,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["pending", "approved"]
         }
       ],
       "indexes": []

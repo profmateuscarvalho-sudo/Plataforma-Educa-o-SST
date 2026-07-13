@@ -335,6 +335,7 @@ export interface ProfessionalCase extends RecordModel {
   user: string
   title: string
   content: string
+  status?: 'pending' | 'approved'
   expand?: { user?: User }
 }
 

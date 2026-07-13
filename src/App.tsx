@@ -61,6 +61,7 @@ import AdminMagazineLanding from './pages/admin/MagazineLandingConfig'
 import DocumentaryPitch from './pages/public/DocumentaryPitch'
 import AdminSubscriptionPlans from './pages/admin/SubscriptionPlans'
 import AdminAnnouncements from './pages/admin/Announcements'
+import AdminCases from './pages/admin/Cases'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -129,6 +130,7 @@ const App = () => (
             <Route path="/admin/lives" element={<AdminLives />} />
             <Route path="/admin/planos" element={<AdminSubscriptionPlans />} />
             <Route path="/admin/avisos" element={<AdminAnnouncements />} />
+            <Route path="/admin/casos" element={<AdminCases />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

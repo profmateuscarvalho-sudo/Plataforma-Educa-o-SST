@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getDocProjects } from '@/services/doc_projects'
 import { DocProject } from '@/types'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Play, Info } from 'lucide-react'
+import { ArrowLeft, Play, Info, Lock } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
+import { useAuth } from '@/hooks/use-auth'
+import { Link } from 'react-router-dom'
 import {
   Carousel,
   CarouselContent,
@@ -17,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 
 export default function StudentDocumentaries() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [projects, setProjects] = useState<DocProject[]>([])
 
   useEffect(() => {
@@ -24,6 +27,10 @@ export default function StudentDocumentaries() {
       .then(setProjects)
       .catch(() => {})
   }, [])
+
+  const userTier = user?.role === 'admin' ? 'ouro' : user?.plan_tier || 'free'
+  const hasPaidAccess = userTier !== 'free' || user?.role === 'admin'
+  const canWatch = (p: DocProject) => p.is_free || hasPaidAccess
 
   const featured = projects[0]
 
@@ -47,6 +54,11 @@ export default function StudentDocumentaries() {
 
       {featured && (
         <div className="relative h-[85vh] w-full flex items-center">
+          {!canWatch(featured) && (
+            <div className="absolute top-20 left-6 z-30 flex items-center gap-2 bg-amber-500/90 text-white px-4 py-2 rounded-full text-sm font-bold backdrop-blur">
+              <Lock className="w-4 h-4" /> Conteúdo Exclusivo — Faça Upgrade
+            </div>
+          )}
           <div className="absolute inset-0">
             <img
               src={getCover(featured)}
@@ -69,21 +81,36 @@ export default function StudentDocumentaries() {
               {featured.description}
             </p>
             <div className="flex flex-wrap gap-4">
-              <Button
-                size="lg"
-                className="bg-white text-black hover:bg-zinc-200 text-lg font-bold px-8 h-14 rounded-full"
-                asChild
-              >
-                <Link to={`/plataforma/documentarios/${featured.id}`}>
-                  <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
-                </Link>
-              </Button>
+              {canWatch(featured) ? (
+                <Button
+                  size="lg"
+                  className="bg-white text-black hover:bg-zinc-200 text-lg font-bold px-8 h-14 rounded-full"
+                  asChild
+                >
+                  <Link to={`/plataforma/documentarios/${featured.id}`}>
+                    <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  className="bg-amber-500 text-black hover:bg-amber-400 text-lg font-bold px-8 h-14 rounded-full"
+                  asChild
+                >
+                  <Link to="/planos">
+                    <Lock className="w-5 h-5 mr-2" /> Faça Upgrade para Assistir
+                  </Link>
+                </Button>
+              )}
               <Button
                 size="lg"
                 variant="outline"
                 className="bg-zinc-800/60 border-zinc-500/50 text-white hover:bg-zinc-700/80 text-lg px-8 h-14 rounded-full backdrop-blur-sm"
+                asChild
               >
-                <Info className="w-5 h-5 mr-2" /> Mais Detalhes
+                <Link to={`/plataforma/documentarios/${featured.id}`}>
+                  <Info className="w-5 h-5 mr-2" /> Mais Detalhes
+                </Link>
               </Button>
             </div>
           </div>
@@ -113,16 +140,28 @@ export default function StudentDocumentaries() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
 
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-50 group-hover:scale-100">
-                      <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur border border-white/40 flex items-center justify-center">
-                        <Play className="w-6 h-6 text-white fill-white ml-1" />
+                    {!canWatch(p) && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                        <div className="w-14 h-14 rounded-full bg-amber-500/90 flex items-center justify-center">
+                          <Lock className="w-6 h-6 text-white" />
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {canWatch(p) && (
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-50 group-hover:scale-100">
+                        <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur border border-white/40 flex items-center justify-center">
+                          <Play className="w-6 h-6 text-white fill-white ml-1" />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="absolute bottom-0 inset-x-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                       <h3 className="font-bold text-sm text-white line-clamp-1">{p.title}</h3>
                       {p.is_free ? (
                         <p className="text-xs text-emerald-400 font-medium mt-1">Acesso Liberado</p>
+                      ) : canWatch(p) ? (
+                        <p className="text-xs text-zinc-300 font-medium mt-1">Disponível</p>
                       ) : (
                         <p className="text-xs text-amber-400 font-medium mt-1">Acesso Restrito</p>
                       )}

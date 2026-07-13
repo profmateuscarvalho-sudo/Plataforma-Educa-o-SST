@@ -7,6 +7,7 @@ import { ArrowLeft, Play, Film, Lock } from 'lucide-react'
 import { BackToHub } from '@/components/student/BackToHub'
 import { Button } from '@/components/ui/button'
 import pb from '@/lib/pocketbase/client'
+import { Link } from 'react-router-dom'
 
 const getPandaUrl = (val?: string) => {
   if (!val) return ''
@@ -52,6 +53,7 @@ export default function DocumentaryViewer() {
   const hasAccess =
     project.is_free ||
     user.role === 'admin' ||
+    (user.plan_tier && user.plan_tier !== 'free') ||
     (!!user.contract_end_date && new Date(user.contract_end_date) >= new Date())
 
   const videoUrl = getPandaUrl(project.panda_video_id)
@@ -159,9 +161,18 @@ export default function DocumentaryViewer() {
               <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
             </Button>
           ) : (
-            <div className="flex items-center gap-2 text-amber-400 bg-amber-500/10 border border-amber-500/30 px-6 py-3 rounded-full text-lg font-bold">
-              <Lock className="w-5 h-5" />
-              Acesso não liberado
+            <div className="flex flex-col items-center gap-4 w-full sm:w-auto">
+              <div className="flex items-center gap-2 text-amber-400 bg-amber-500/10 border border-amber-500/30 px-6 py-3 rounded-full text-lg font-bold">
+                <Lock className="w-5 h-5" />
+                Acesso não liberado
+              </div>
+              <Button
+                size="lg"
+                className="bg-amber-500 text-black hover:bg-amber-400 text-lg font-bold px-8 h-14 rounded-full"
+                asChild
+              >
+                <Link to="/planos">Fazer Upgrade para Assistir</Link>
+              </Button>
             </div>
           )}
           {!videoUrl && hasAccess && (

@@ -4,6 +4,14 @@ import { ProfessionalCase, CaseComment, CaseLike } from '@/types'
 export const getCases = async () => {
   return await pb.collection('professional_cases').getFullList<ProfessionalCase>({
     sort: '-created',
+    filter: "status='approved'",
+    expand: 'user',
+  })
+}
+
+export const getAllCases = async () => {
+  return await pb.collection('professional_cases').getFullList<ProfessionalCase>({
+    sort: '-created',
     expand: 'user',
   })
 }
@@ -14,8 +22,24 @@ export const getCase = async (id: string) => {
   })
 }
 
-export const createCase = async (data: { user: string; title: string; content: string }) => {
-  return await pb.collection('professional_cases').create<ProfessionalCase>(data)
+export const createCase = async (data: {
+  user: string
+  title: string
+  content: string
+  status?: string
+}) => {
+  return await pb.collection('professional_cases').create<ProfessionalCase>({
+    ...data,
+    status: data.status || 'pending',
+  })
+}
+
+export const updateCaseStatus = async (id: string, status: 'pending' | 'approved') => {
+  return await pb.collection('professional_cases').update<ProfessionalCase>(id, { status })
+}
+
+export const deleteCase = async (id: string) => {
+  return await pb.collection('professional_cases').delete(id)
 }
 
 export const getComments = async (caseId: string) => {

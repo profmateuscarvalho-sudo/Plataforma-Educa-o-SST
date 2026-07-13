@@ -29,7 +29,25 @@ import { getMentorships } from '@/services/mentorships'
 import { getLiveSessions } from '@/services/live'
 import { getDocProjects } from '@/services/doc_projects'
 import { getAnnouncements } from '@/services/announcements'
-import { BellRing, Radio, Megaphone } from 'lucide-react'
+import { BellRing, Radio, Megaphone, Crown, Award, Sparkles } from 'lucide-react'
+
+const tierConfig: Record<string, { label: string; icon: typeof Crown; className: string }> = {
+  free: {
+    label: 'Plano Free',
+    icon: Sparkles,
+    className: 'bg-slate-600 text-slate-200 border-slate-500',
+  },
+  prata: {
+    label: 'Plano Prata',
+    icon: Award,
+    className: 'bg-gradient-to-r from-slate-300 to-slate-400 text-slate-800 border-slate-300',
+  },
+  ouro: {
+    label: 'Plano Ouro',
+    icon: Crown,
+    className: 'bg-gradient-to-r from-yellow-400 to-amber-500 text-amber-950 border-yellow-400',
+  },
+}
 
 const ph = (q: string, w = 800, h = 500) => `https://img.usecurling.com/p/${w}/${h}?q=${q}`
 
@@ -62,6 +80,10 @@ export default function StudentDashboard() {
 
   if (loading) return <div className="p-12 text-center text-slate-500">Carregando...</div>
   if (!user) return <Navigate to="/login" replace />
+
+  const userTier = user.role === 'admin' ? 'ouro' : user.plan_tier || 'free'
+  const tier = tierConfig[userTier] || tierConfig.free
+  const isActive = user.contract_end_date && new Date(user.contract_end_date) >= new Date()
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -187,7 +209,16 @@ export default function StudentDashboard() {
               <h1 className="text-3xl font-serif font-bold text-yellow-400 mb-1">
                 {getGreeting()}, {user.name?.trim() || 'Aluno'}
               </h1>
-              <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
+                <span
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${tier.className}`}
+                >
+                  <tier.icon className="w-3 h-3" />
+                  {tier.label}
+                  {!isActive && userTier !== 'free' ? ' (Expirado)' : ''}
+                </span>
+              </div>
             </div>
           </div>
           <div className="hidden md:block">

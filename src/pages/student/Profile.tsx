@@ -14,7 +14,8 @@ import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Shield, CreditCard, User as UserIcon, Lock } from 'lucide-react'
+import { Shield, CreditCard, User as UserIcon, Lock, Crown, ArrowUpRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const PROFESSIONAL_PROFILES = [
   'Estudante',
@@ -107,6 +108,8 @@ export default function StudentProfile() {
   }
 
   const hasActiveSub = user?.contract_end_date && new Date(user.contract_end_date) >= new Date()
+  const userTier = user?.role === 'admin' ? 'ouro' : user?.plan_tier || 'free'
+  const canUpgrade = userTier !== 'ouro'
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50">
@@ -336,6 +339,29 @@ export default function StudentProfile() {
                 </div>
               )}
             </div>
+
+            {canUpgrade && (
+              <div className="p-4 rounded-lg bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                      <Crown className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800">Fazer Upgrade de Plano</p>
+                      <p className="text-sm text-slate-500">
+                        Desbloqueie documentários, cursos e mais recursos
+                      </p>
+                    </div>
+                  </div>
+                  <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white">
+                    <Link to="/planos">
+                      Fazer Upgrade <ArrowUpRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {plans.length > 0 && (
               <div>

@@ -66,7 +66,9 @@ export default function AdminEmailLog() {
 
   const userMap = useMemo(() => {
     const map = new Map<string, User>()
-    users.forEach((u) => map.set(u.email.toLowerCase(), u))
+    users.forEach((u) => {
+      if (u.email) map.set(u.email.toLowerCase(), u)
+    })
     return map
   }, [users])
 
@@ -79,13 +81,14 @@ export default function AdminEmailLog() {
   const rows: LogRow[] = useMemo(() => {
     return logs.map((log) => {
       const expanded = log.expand as { user?: User; subscription?: Subscription }
-      const user = expanded?.user || userMap.get(log.recipient_email?.toLowerCase())
+      const rawEmail = log.recipient_email ?? ''
+      const user = expanded?.user || (rawEmail ? userMap.get(rawEmail.toLowerCase()) : undefined)
       const subscription = expanded?.subscription || (user ? subMap.get(user.id) : undefined)
 
       return {
         id: log.id,
         name: log.recipient_name || user?.name || '—',
-        email: log.recipient_email,
+        email: log.recipient_email || '',
         emailType: log.email_type,
         sent: log.sent,
         sentAt: log.sent_at,

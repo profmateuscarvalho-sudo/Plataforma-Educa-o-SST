@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T17:21:45.664Z",
+  "generatedAt": "2026-07-13T18:47:03.709Z",
   "collections": [
     {
       "name": "users",
@@ -102,6 +102,12 @@
           "required": false,
           "system": false,
           "selectValues": ["monthly", "yearly", "none"]
+        },
+        {
+          "name": "email_verificado",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -2321,8 +2327,8 @@
       "name": "subscriptions",
       "type": "base",
       "apiRules": {
-        "list": "user = @request.auth.id",
-        "view": "user = @request.auth.id",
+        "list": "user = @request.auth.id || @request.auth.role = 'admin'",
+        "view": "user = @request.auth.id || @request.auth.role = 'admin'",
         "create": null,
         "update": null,
         "delete": null
@@ -2372,6 +2378,113 @@
       ],
       "indexes": [
         "CREATE UNIQUE INDEX idx_subscriptions_token ON subscriptions (token) WHERE token != ''"
+      ]
+    },
+    {
+      "name": "email_logs",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "recipient_email",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "recipient_name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "email_type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "lead",
+            "activation_free",
+            "activation_paid",
+            "payment_confirmed",
+            "upgrade",
+            "brevo_sync"
+          ]
+        },
+        {
+          "name": "sent",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "sent_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "brevo_synced",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "brevo_list_id",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "brevo_status",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "error_message",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "subscription",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "subscriptions"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_email_logs_email ON email_logs (recipient_email)",
+        "CREATE INDEX idx_email_logs_created ON email_logs (created DESC)"
       ]
     }
   ]

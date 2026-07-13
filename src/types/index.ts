@@ -13,6 +13,28 @@ export interface User extends RecordModel {
   state?: string
   plan_tier?: 'free' | 'prata' | 'ouro'
   subscription_billing?: 'monthly' | 'yearly' | 'none'
+  email_verificado?: boolean
+}
+
+export interface EmailLog extends RecordModel {
+  recipient_email: string
+  recipient_name: string
+  email_type:
+    | 'lead'
+    | 'activation_free'
+    | 'activation_paid'
+    | 'payment_confirmed'
+    | 'upgrade'
+    | 'brevo_sync'
+  sent: boolean
+  sent_at: string | null
+  brevo_synced: boolean
+  brevo_list_id: number
+  brevo_status: number
+  error_message: string
+  user?: string
+  subscription?: string
+  expand?: { user?: User; subscription?: RecordModel }
 }
 
 export interface Course extends RecordModel {

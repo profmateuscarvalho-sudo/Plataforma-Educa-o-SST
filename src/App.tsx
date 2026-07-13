@@ -64,6 +64,7 @@ import AdminSubscriptionPlans from './pages/admin/SubscriptionPlans'
 import AdminAnnouncements from './pages/admin/Announcements'
 import AdminCases from './pages/admin/Cases'
 import AdminTestes from './pages/admin/Testes'
+import AdminEmailLog from './pages/admin/EmailLog'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -135,6 +136,7 @@ const App = () => (
             <Route path="/admin/avisos" element={<AdminAnnouncements />} />
             <Route path="/admin/casos" element={<AdminCases />} />
             <Route path="/admin/testes" element={<AdminTestes />} />
+            <Route path="/admin/email-log" element={<AdminEmailLog />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

@@ -5,14 +5,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Loader2, Send, CheckCircle2, XCircle, QrCode } from 'lucide-react'
-import pb from '@/lib/pocketbase/client'
-import { useToast } from '@/hooks/use-toast'
 import {
-  createPayment,
-  type CreatePaymentPayload,
-  type CreatePaymentResponse,
-} from '@/services/payments'
+  Loader2,
+  Send,
+  CheckCircle2,
+  XCircle,
+  QrCode,
+  Copy,
+  ExternalLink,
+  Check,
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { createPayment, type CreatePaymentPayload } from '@/services/payments'
 
 interface TestResult {
   success: boolean
@@ -28,6 +32,7 @@ export default function AdminTestes() {
   const [amount, setAmount] = useState('10.00')
   const [customerName, setCustomerName] = useState('João da Silva Teste')
   const [cpfCnpj, setCpfCnpj] = useState('12345678909')
+  const [copied, setCopied] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,24 +42,16 @@ export default function AdminTestes() {
     const payload: CreatePaymentPayload = {
       type: paymentType,
       amount: parseFloat(amount),
-      customer: {
-        name: customerName,
-        cpf_cnpj: cpfCnpj,
-      },
+      customer: { name: customerName, cpf_cnpj: cpfCnpj },
     }
 
     try {
       const data = await createPayment(payload)
       setResult({ success: true, status: 200, data })
-      toast({
-        title: 'Pagamento processado',
-        description: `Status: ${data.status}`,
-      })
+      toast({ title: 'Pagamento processado', description: `Status: ${data.status}` })
     } catch (err: any) {
       const status = err?.status || 0
-      let errorData: any = err?.response || err?.message || String(err)
-      if (err?.response?.data) errorData = err.response.data
-      else if (err?.response) errorData = err.response
+      let errorData: any = err?.response?.data || err?.response || err?.message || String(err)
       setResult({ success: false, status, data: errorData })
       toast({
         title: 'Erro na requisição',
@@ -66,9 +63,16 @@ export default function AdminTestes() {
     }
   }
 
-  const hasPixQrCode = result?.success && result.data?.pix?.qrcode64
-
+  const pixQrCode = result?.success ? result.data?.pix?.qrcode : null
   const pixLink = result?.success ? result.data?.pix?.link : null
+
+  const handleCopyPixCode = () => {
+    if (!pixQrCode) return
+    navigator.clipboard.writeText(pixQrCode)
+    setCopied(true)
+    toast({ title: 'Código Pix copiado!' })
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -191,7 +195,7 @@ export default function AdminTestes() {
             </AlertDescription>
           </Alert>
 
-          {hasPixQrCode && (
+          {pixQrCode && (
             <Card className="border-primary/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -201,27 +205,44 @@ export default function AdminTestes() {
               </CardHeader>
               <CardContent className="flex flex-col items-center gap-4">
                 <img
-                  src={`data:image/png;base64,${result.data.pix.qrcode64}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(pixQrCode)}`}
                   alt="QR Code Pix"
-                  className="w-64 h-64 border-2 border-slate-200 rounded-lg"
+                  className="border-2 border-slate-200 rounded-lg"
+                  width={220}
+                  height={220}
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleCopyPixCode}
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2 text-emerald-600" />
+                      Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copiar código Pix
+                    </>
+                  )}
+                </Button>
                 {pixLink && (
-                  <div className="w-full">
-                    <Label className="text-xs text-slate-500">Link Pix Copia e Cola</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input readOnly value={pixLink} className="text-xs font-mono" />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(pixLink)
-                          toast({ title: 'Link copiado!' })
-                        }}
-                      >
-                        Copiar
-                      </Button>
-                    </div>
+                  <div className="w-full space-y-2">
+                    <Label className="text-xs text-slate-500">
+                      Página de pagamento alternativa
+                    </Label>
+                    <a
+                      href={pixLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full text-sm text-primary hover:underline"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Abrir página de pagamento iPag
+                    </a>
                   </div>
                 )}
               </CardContent>

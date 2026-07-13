@@ -6,7 +6,12 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import { getMentors, createMentor, updateMentor, deleteMentor } from '@/services/mentors'
@@ -24,8 +29,12 @@ export default function AdminMentors() {
   const formRef = useRef<HTMLFormElement>(null)
 
   const load = () => getMentors().then(setMentors).catch(console.error)
-  useEffect(() => { load() }, [])
-  useRealtime('mentors', () => { load() })
+  useEffect(() => {
+    load()
+  }, [])
+  useRealtime('mentors', () => {
+    load()
+  })
 
   const handleOpen = (m?: Mentor) => {
     setEditing(m || null)
@@ -94,16 +103,27 @@ export default function AdminMentors() {
                 <TableRow key={m.id}>
                   <TableCell>
                     {m.photo && (
-                      <img src={pb.files.getUrl(m, m.photo)} alt={m.name} className="w-10 h-10 rounded-full object-cover" />
+                      <img
+                        src={pb.files.getUrl(m, m.photo)}
+                        alt={m.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{m.name}</TableCell>
-                  <TableCell className="text-sm text-slate-500 max-w-xs truncate">{m.topics}</TableCell>
+                  <TableCell className="text-sm text-slate-500 max-w-xs truncate">
+                    {m.topics}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleOpen(m)}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-red-600" onClick={() => handleDelete(m.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-600"
+                      onClick={() => handleDelete(m.id)}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
@@ -121,7 +141,13 @@ export default function AdminMentors() {
         </CardContent>
       </Card>
 
-      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null) }}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v)
+          if (!v) setEditing(null)
+        }}
+      >
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Editar Mentor' : 'Novo Mentor'}</DialogTitle>
@@ -134,21 +160,36 @@ export default function AdminMentors() {
             </div>
             <div>
               <Label>Tópicos de Atuação *</Label>
-              <Input name="topics" defaultValue={editing?.topics} required placeholder="Ex: Segurança do Trabalho, NR-10, SIPAT" />
-              {fieldErrors.topics && <p className="text-xs text-red-500 mt-1">{fieldErrors.topics}</p>}
+              <Input
+                name="topics"
+                defaultValue={editing?.topics}
+                required
+                placeholder="Ex: Segurança do Trabalho, NR-10, SIPAT"
+              />
+              {fieldErrors.topics && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.topics}</p>
+              )}
             </div>
             <div>
               <Label>Mini CV (Bio) *</Label>
               <RichTextEditor name="mini_cv" defaultValue={editing?.mini_cv} />
-              {fieldErrors.mini_cv && <p className="text-xs text-red-500 mt-1">{fieldErrors.mini_cv}</p>}
+              {fieldErrors.mini_cv && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.mini_cv}</p>
+              )}
             </div>
             <div>
               <Label>Foto *</Label>
-              <Input type="file" name="photo" accept="image/*" {!editing && 'required'} />
+              <Input type="file" name="photo" accept="image/*" required={!editing} />
               {editing?.photo && (
-                <img src={pb.files.getUrl(editing, editing.photo)} alt={editing.name} className="w-20 h-20 rounded-full object-cover mt-2" />
+                <img
+                  src={pb.files.getUrl(editing, editing.photo)}
+                  alt={editing.name}
+                  className="w-20 h-20 rounded-full object-cover mt-2"
+                />
               )}
-              {fieldErrors.photo && <p className="text-xs text-red-500 mt-1">{fieldErrors.photo}</p>}
+              {fieldErrors.photo && (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.photo}</p>
+              )}
             </div>
             <Button type="submit" className="w-full">
               {editing ? 'Salvar Alterações' : 'Criar Mentor'}

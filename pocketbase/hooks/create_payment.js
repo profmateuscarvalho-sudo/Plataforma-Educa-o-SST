@@ -39,7 +39,10 @@ routerAdd(
     const apiKey = $secrets.get('IPAG_API_KEY')
 
     if (!apiId || !apiKey) {
-      return e.json(500, { error: 'iPag credentials are not configured' })
+      return e.json(500, {
+        error: 'iPag credentials are not configured',
+        details: 'IPAG_API_ID or IPAG_API_KEY is missing from secrets',
+      })
     }
 
     let baseUrl = $secrets.get('IPAG_BASE_URL') || 'https://api.ipag.com.br'
@@ -81,7 +84,7 @@ routerAdd(
       paymentRecordId = paymentRecord.id
     } catch (err) {
       $app.logger().error('Failed to create payment record', 'error', err.message)
-      return e.json(500, { error: 'Failed to create payment record' })
+      return e.json(500, { error: 'Failed to create payment record', details: err.message })
     }
 
     var paymentData = {
@@ -148,13 +151,6 @@ routerAdd(
       }
     }
 
-    var debugApiIdLength = apiId && typeof apiId === 'string' ? apiId.length : 0
-    var debugApiIdPreview =
-      apiId && typeof apiId === 'string' && apiId.length > 0
-        ? apiId.substring(0, 4) + '***'
-        : 'vazio'
-    var debugApiKeyLength = apiKey && typeof apiKey === 'string' ? apiKey.length : 0
-
     var res
     try {
       res = $http.send({
@@ -174,10 +170,6 @@ routerAdd(
       return e.json(500, {
         error: 'Failed to connect to iPag gateway',
         details: err.message,
-        debug_base_url: baseUrl,
-        debug_api_id_length: debugApiIdLength,
-        debug_api_id_preview: debugApiIdPreview,
-        debug_api_key_length: debugApiKeyLength,
       })
     }
 
@@ -195,10 +187,6 @@ routerAdd(
       return e.json(res.statusCode, {
         error: 'iPag API error',
         details: errorBody,
-        debug_base_url: baseUrl,
-        debug_api_id_length: debugApiIdLength,
-        debug_api_id_preview: debugApiIdPreview,
-        debug_api_key_length: debugApiKeyLength,
       })
     }
 

@@ -5,7 +5,7 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
 
   const orderId = source.order_id || ''
   if (!orderId) {
-    console.log('[ipag-webhook] Payload received without order_id')
+    $app.logger().warn('[ipag-webhook] Payload received without order_id')
     return e.json(200, { received: true })
   }
 
@@ -35,10 +35,6 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
     mappedStatus = 'failed'
   }
 
-  console.log(
-    '[ipag-webhook] Pedido ' + orderId + ' -> status: ' + rawStatus + ' => ' + mappedStatus,
-  )
-
   try {
     var record = $app.findRecordById('payments', orderId)
     record.set('status', mappedStatus)
@@ -46,10 +42,26 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
       record.set('ipag_id', ipagId)
     }
     $app.save(record)
-    console.log('[ipag-webhook] Payment ' + orderId + ' updated to ' + mappedStatus)
+    $app
+      .logger()
+      .info(
+        '[ipag-webhook] Payment ' + orderId + ' updated to ' + mappedStatus,
+        'rawStatus',
+        rawStatus,
+        'ipagId',
+        ipagId,
+      )
+    return e.json(200, { received: true })
   } catch (err) {
-    console.log('[ipag-webhook] Failed to update payment ' + orderId + ': ' + err.message)
+    $app
+      .logger()
+      .error(
+        '[ipag-webhook] Payment record not found for order_id: ' + orderId,
+        'order_id',
+        orderId,
+        'error',
+        err.message,
+      )
+    return e.json(404, { error: 'payment record not found', order_id: orderId })
   }
-
-  return e.json(200, { received: true })
 })

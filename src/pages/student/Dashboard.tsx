@@ -24,11 +24,12 @@ import {
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { ClockDisplay } from '@/components/student/ClockDisplay'
-import { Magazine, Mentorship, LiveSession, DocProject } from '@/types'
+import { Magazine, Mentorship, LiveSession, DocProject, PlatformAnnouncement } from '@/types'
 import { getMentorships } from '@/services/mentorships'
 import { getLiveSessions } from '@/services/live'
 import { getDocProjects } from '@/services/doc_projects'
-import { BellRing, Radio } from 'lucide-react'
+import { getAnnouncements } from '@/services/announcements'
+import { BellRing, Radio, Megaphone } from 'lucide-react'
 
 const ph = (q: string, w = 800, h = 500) => `https://img.usecurling.com/p/${w}/${h}?q=${q}`
 
@@ -42,6 +43,7 @@ export default function StudentDashboard() {
   const [mentorships, setMentorships] = useState<Mentorship[]>([])
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([])
   const [docProjects, setDocProjects] = useState<DocProject[]>([])
+  const [announcements, setAnnouncements] = useState<PlatformAnnouncement[]>([])
 
   useEffect(() => {
     getMentorships()
@@ -52,6 +54,9 @@ export default function StudentDashboard() {
       .catch(() => {})
     getDocProjects()
       .then(setDocProjects)
+      .catch(() => {})
+    getAnnouncements()
+      .then(setAnnouncements)
       .catch(() => {})
   }, [])
 
@@ -180,7 +185,7 @@ export default function StudentDashboard() {
             </Avatar>
             <div>
               <h1 className="text-3xl font-serif font-bold text-yellow-400 mb-1">
-                {getGreeting()}, {user.name}
+                {getGreeting()}, {user.name?.replace(/!/g, '').trim() || 'Aluno'}
               </h1>
               <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
             </div>
@@ -291,6 +296,23 @@ export default function StudentDashboard() {
                   <BellRing className="w-5 h-5 text-amber-500" /> Quadro de Avisos
                 </h2>
                 <div className="space-y-4">
+                  {announcements.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 text-amber-900 cursor-pointer hover:bg-amber-100 transition-colors"
+                    >
+                      <Megaphone className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold">{a.title}</p>
+                        {a.type === 'Texto Customizado' && a.content && (
+                          <div
+                            className="text-sm prose prose-sm max-w-none mt-1 line-clamp-3"
+                            dangerouslySetInnerHTML={{ __html: a.content }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
                   {visibleLives.length > 0 && (
                     <div
                       className="flex items-start gap-3 p-3 rounded-lg bg-red-50 text-red-900 cursor-pointer hover:bg-red-100 transition-colors"
@@ -342,7 +364,8 @@ export default function StudentDashboard() {
                   {visibleLives.length === 0 &&
                     cat.courses.length === 0 &&
                     docProjects.length === 0 &&
-                    mentorships.length === 0 && (
+                    mentorships.length === 0 &&
+                    announcements.length === 0 && (
                       <p className="text-sm text-slate-500 text-center py-4">
                         Nenhum aviso no momento.
                       </p>

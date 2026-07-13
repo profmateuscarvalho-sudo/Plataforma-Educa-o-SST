@@ -51,6 +51,7 @@ import AdminNews from './pages/admin/News'
 import AdminLeads from './pages/admin/Leads'
 import AdminLeadImport from './pages/admin/LeadImport'
 import AdminMentorships from './pages/admin/Mentorships'
+import AdminMentors from './pages/admin/Mentors'
 import AdminStudents from './pages/admin/Students'
 import AdminDocumentaries from './pages/admin/Documentaries/List'
 import AdminDocumentaryWizard from './pages/admin/Documentaries/Wizard'
@@ -109,6 +110,7 @@ const App = () => (
             <Route path="/admin/cursos/:id" element={<AdminCourseBuilder />} />
             <Route path="/admin/alunos" element={<AdminStudents />} />
             <Route path="/admin/mentorias" element={<AdminMentorships />} />
+            <Route path="/admin/mentores" element={<AdminMentors />} />
             <Route path="/admin/documentarios" element={<AdminDocumentaries />} />
             <Route path="/admin/documentarios/novo" element={<AdminDocumentaryWizard />} />
             <Route path="/admin/documentarios/:id/editar" element={<AdminDocumentaryWizard />} />

@@ -98,6 +98,10 @@ export interface LiveSession extends RecordModel {
   status: 'scheduled' | 'live' | 'finished'
   scheduled_at: string
   instructor_name?: string
+  instructor_bio?: string
+  instructor_photo?: string
+  mentor?: string
+  expand?: { mentor?: Mentor }
 }
 
 export interface LiveMessage extends RecordModel {
@@ -124,6 +128,18 @@ export interface LessonRating extends RecordModel {
   expand?: { user?: User }
 }
 
+export interface AvailableSlot {
+  date: string
+  time: string
+}
+
+export interface Mentor extends RecordModel {
+  name: string
+  mini_cv: string
+  topics: string
+  photo: string
+}
+
 export interface Mentorship extends RecordModel {
   title: string
   description: string
@@ -134,6 +150,9 @@ export interface Mentorship extends RecordModel {
   is_free?: boolean
   mentor_bio?: string
   mentor_photo?: string
+  mentor?: string
+  available_slots?: AvailableSlot[]
+  expand?: { mentor?: Mentor }
 }
 
 export interface Lead extends RecordModel {
@@ -315,4 +334,13 @@ export interface CaseComment extends RecordModel {
 export interface CaseLike extends RecordModel {
   user: string
   case: string
+}
+
+export interface PlatformAnnouncement extends RecordModel {
+  title: string
+  content: string
+  type: 'Texto Customizado' | 'Novo Curso' | 'Documentário' | 'Mentoria' | 'Aula Ao Vivo'
+  reference_id: string
+  active: boolean
+  priority: number
 }

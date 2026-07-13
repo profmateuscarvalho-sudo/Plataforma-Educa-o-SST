@@ -15,6 +15,7 @@ import {
   Settings,
   BadgeCent,
   Megaphone,
+  UserCog,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -34,6 +35,7 @@ export default function AdminLayout() {
     { label: 'Cursos', icon: BookOpen, path: '/admin/cursos' },
     { label: 'Alunos', icon: GraduationCap, path: '/admin/alunos' },
     { label: 'Mentorias', icon: Presentation, path: '/admin/mentorias' },
+    { label: 'Mentores', icon: UserCog, path: '/admin/mentores' },
     { label: 'Documentários', icon: Film, path: '/admin/documentarios' },
     { label: 'Simulados', icon: ClipboardList, path: '/admin/simulados' },
     { label: 'Revistas', icon: FileText, path: '/admin/revistas' },

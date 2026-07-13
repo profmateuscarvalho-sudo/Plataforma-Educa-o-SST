@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T01:22:36.219Z",
+  "generatedAt": "2026-07-13T01:46:38.508Z",
   "collections": [
     {
       "name": "users",
@@ -376,6 +376,19 @@
         {
           "name": "mentor_photo",
           "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "mentor",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "mentors"
+        },
+        {
+          "name": "available_slots",
+          "type": "json",
           "required": false,
           "system": false
         }
@@ -1214,6 +1227,13 @@
           "type": "file",
           "required": false,
           "system": false
+        },
+        {
+          "name": "mentor",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "mentors"
         }
       ],
       "indexes": []
@@ -2108,6 +2128,58 @@
         {
           "name": "priority",
           "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "mentors",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "mini_cv",
+          "type": "editor",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "topics",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "photo",
+          "type": "file",
           "required": false,
           "system": false
         },

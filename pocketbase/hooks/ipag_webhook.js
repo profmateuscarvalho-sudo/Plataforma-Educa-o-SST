@@ -5,19 +5,51 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
 
   const orderId = source.order_id || ''
   if (!orderId) {
-    return e.json(400, { error: 'order_id ausente no payload' })
+    console.log('[ipag-webhook] Payload received without order_id')
+    return e.json(200, { received: true })
   }
 
-  let status = ''
+  let rawStatus = ''
   if (source.status && typeof source.status === 'object' && source.status.message) {
-    status = source.status.message
+    rawStatus = source.status.message
   } else if (source.status != null) {
-    status = String(source.status)
+    rawStatus = String(source.status)
   }
 
-  const amount = source.amount != null ? source.amount : 0
+  var ipagId = source.uuid || source.id || ''
 
-  console.log('[ipag-webhook] Pedido ' + orderId + ' -> status: ' + status + ' (R$ ' + amount + ')')
+  var upper = (rawStatus || '').toUpperCase()
+  var mappedStatus = 'pending'
+  if (
+    upper.indexOf('APPROV') !== -1 ||
+    upper.indexOf('CAPTUR') !== -1 ||
+    upper.indexOf('PAID') !== -1
+  ) {
+    mappedStatus = 'paid'
+  } else if (
+    upper.indexOf('DENIED') !== -1 ||
+    upper.indexOf('REFUS') !== -1 ||
+    upper.indexOf('FAIL') !== -1 ||
+    upper.indexOf('CANCEL') !== -1
+  ) {
+    mappedStatus = 'failed'
+  }
+
+  console.log(
+    '[ipag-webhook] Pedido ' + orderId + ' -> status: ' + rawStatus + ' => ' + mappedStatus,
+  )
+
+  try {
+    var record = $app.findRecordById('payments', orderId)
+    record.set('status', mappedStatus)
+    if (ipagId) {
+      record.set('ipag_id', ipagId)
+    }
+    $app.save(record)
+    console.log('[ipag-webhook] Payment ' + orderId + ' updated to ' + mappedStatus)
+  } catch (err) {
+    console.log('[ipag-webhook] Failed to update payment ' + orderId + ': ' + err.message)
+  }
 
   return e.json(200, { received: true })
 })

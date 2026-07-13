@@ -25,7 +25,7 @@ export default function StudentLayout() {
       user.role !== 'admin' &&
       !access.hasSubscriptionAccess
     ) {
-      navigate('/ativacao-pendente')
+      navigate('/subscription-pending')
     }
   }, [user, loading, access.loading, access.hasSubscriptionAccess, navigate])
 

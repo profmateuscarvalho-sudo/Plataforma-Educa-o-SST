@@ -31,6 +31,25 @@ export const createSubscription = async (userId: string, planId: string) => {
   })
 }
 
+export interface PendingStatus {
+  state: 'pending_activation' | 'manual_verification'
+  subscription: {
+    id: string
+    status: string
+    token: string
+    created: string
+  } | null
+  emailLog: {
+    sent: boolean
+    error_message: string
+    email_type: string
+    created: string
+  } | null
+}
+
+export const getPendingStatus = (): Promise<PendingStatus> =>
+  pb.send('/backend/v1/pending-status', { method: 'GET' })
+
 export const getUserSubscriptions = (userId: string) =>
   pb.collection('subscriptions').getFullList({
     filter: `user = "${userId}"`,

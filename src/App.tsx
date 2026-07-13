@@ -85,7 +85,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/ativar" element={<Ativar />} />
-            <Route path="/ativacao-pendente" element={<SubscriptionPending />} />
+            <Route path="/subscription-pending" element={<SubscriptionPending />} />
 
             <Route path="/submeter-artigo" element={<ArticleSubmission />} />
             <Route path="/conexao-profissional/:token" element={<ProfessionalConnection />} />

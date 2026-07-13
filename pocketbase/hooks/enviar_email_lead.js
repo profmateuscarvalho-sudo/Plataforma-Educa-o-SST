@@ -17,11 +17,14 @@ onRecordAfterCreateSuccess((e) => {
     '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
     '<tr><td align="center">' +
     '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
-    '<tr><td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:40px 48px 36px;text-align:center;">' +
-    '<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#facc15;letter-spacing:-.5px;">Educação SST</h1>' +
+    '<tr><td style="padding:40px 48px 36px;text-align:center;border-top:6px solid #FDBE2D;">' +
+    '<img src="COLOQUE_AQUI_URL_DA_LOGO_HOSPEDADA" alt="Educação SST" style="max-width:200px;height:auto;margin-bottom:12px;" />' +
     '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
     '</td></tr>' +
-    '<tr><td style="padding:48px;">' +
+    '<tr><td style="padding:0 48px 28px;text-align:center;">' +
+    '<span style="display:inline-block;padding:8px 24px;background:#FEF3C7;border-radius:50px;font-size:13px;font-weight:700;color:#B45309;letter-spacing:1px;">CONTATO RECEBIDO</span>' +
+    '</td></tr>' +
+    '<tr><td style="padding:0 48px 48px;">' +
     '<h2 style="margin:0 0 24px;font-size:26px;color:#1e293b;letter-spacing:-.3px;">Bem-vindo à Educação SST!</h2>' +
     '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
     name +

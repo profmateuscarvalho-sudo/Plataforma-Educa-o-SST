@@ -52,18 +52,11 @@ onRecordAfterCreateSuccess((e) => {
       var plan = $app.findRecordById('subscription_plans', planId)
       planName = plan.getString('name')
       var planPrice = plan.getNum('price')
-      if (planName.toLowerCase().indexOf('free') !== -1 || planPrice === 0) {
-        isFreePlan = true
-        planIdentified = true
-      } else {
-        isFreePlan = false
-        planIdentified = true
-      }
+      isFreePlan = planName.toLowerCase().indexOf('free') !== -1 || planPrice === 0
+      planIdentified = true
     } catch (err) {
       planIdentified = false
     }
-  } else {
-    planIdentified = false
   }
 
   if (!planIdentified) {
@@ -116,12 +109,15 @@ onRecordAfterCreateSuccess((e) => {
       '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
       '<tr><td align="center">' +
       '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
-      '<tr><td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:40px 48px 36px;text-align:center;">' +
-      '<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#facc15;letter-spacing:-.5px;">Educação SST</h1>' +
+      '<tr><td style="padding:40px 48px 36px;text-align:center;border-top:6px solid #2E9E6D;">' +
+      '<img src="COLOQUE_AQUI_URL_DA_LOGO_HOSPEDADA" alt="Educação SST" style="max-width:200px;height:auto;margin-bottom:12px;" />' +
       '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
       '</td></tr>' +
-      '<tr><td style="padding:48px;">' +
-      '<h2 style="margin:0 0 24px;font-size:24px;color:#1e293b;letter-spacing:-.3px;">Bem-vindo ao Plano Free</h2>' +
+      '<tr><td style="padding:0 48px 28px;text-align:center;">' +
+      '<span style="display:inline-block;padding:8px 24px;background:#D1FAE5;border-radius:50px;font-size:13px;font-weight:700;color:#065F46;letter-spacing:1px;">PLANO FREE</span>' +
+      '</td></tr>' +
+      '<tr><td style="padding:0 48px 48px;">' +
+      '<h2 style="margin:0 0 24px;font-size:26px;color:#1e293b;letter-spacing:-.3px;">Ative sua assinatura Free</h2>' +
       '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
       userName +
       '</strong>,</p>' +
@@ -129,7 +125,7 @@ onRecordAfterCreateSuccess((e) => {
       '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 0;">' +
       '<a href="' +
       activationLink +
-      '" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Ativar Assinatura</a>' +
+      '" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Ativar meu acesso agora</a>' +
       '</td></tr></table>' +
       '<p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#94a3b8;">Ou copie e cole o link abaixo no seu navegador:</p>' +
       '<p style="margin:0 0 32px;font-size:13px;line-height:1.6;color:#64748b;word-break:break-all;">' +
@@ -152,12 +148,17 @@ onRecordAfterCreateSuccess((e) => {
       '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
       '<tr><td align="center">' +
       '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
-      '<tr><td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:40px 48px 36px;text-align:center;">' +
-      '<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#facc15;letter-spacing:-.5px;">Educação SST</h1>' +
+      '<tr><td style="padding:40px 48px 36px;text-align:center;border-top:6px solid #E8792B;">' +
+      '<img src="COLOQUE_AQUI_URL_DA_LOGO_HOSPEDADA" alt="Educação SST" style="max-width:200px;height:auto;margin-bottom:12px;" />' +
       '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
       '</td></tr>' +
-      '<tr><td style="padding:48px;">' +
-      '<h2 style="margin:0 0 24px;font-size:24px;color:#1e293b;letter-spacing:-.3px;">Verificação de E-mail — ' +
+      '<tr><td style="padding:0 48px 28px;text-align:center;">' +
+      '<span style="display:inline-block;padding:8px 24px;background:#FED7AA;border-radius:50px;font-size:13px;font-weight:700;color:#9A3412;letter-spacing:1px;">PLANO ' +
+      planName +
+      '</span>' +
+      '</td></tr>' +
+      '<tr><td style="padding:0 48px 48px;">' +
+      '<h2 style="margin:0 0 24px;font-size:26px;color:#1e293b;letter-spacing:-.3px;">Verificação de E-mail — ' +
       planName +
       '</h2>' +
       '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
@@ -167,13 +168,13 @@ onRecordAfterCreateSuccess((e) => {
       '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 0;">' +
       '<a href="' +
       activationLink +
-      '" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Verificar E-mail</a>' +
+      '" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Confirmar meu e-mail</a>' +
       '</td></tr></table>' +
       '<p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#94a3b8;">Ou copie e cole o link abaixo no seu navegador:</p>' +
       '<p style="margin:0 0 32px;font-size:13px;line-height:1.6;color:#64748b;word-break:break-all;">' +
       activationLink +
       '</p>' +
-      '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:#fef9c3;border:1px solid #facc15;border-radius:10px;padding:20px 24px;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:#FEF9C3;border:1px solid #facc15;border-radius:10px;padding:20px 24px;">' +
       '<p style="margin:0;font-size:14px;line-height:1.7;color:#713f12;"><strong>Importante:</strong> Seu acesso à plataforma será liberado após a confirmação do pagamento.</p>' +
       '</td></tr></table>' +
       '</td></tr>' +

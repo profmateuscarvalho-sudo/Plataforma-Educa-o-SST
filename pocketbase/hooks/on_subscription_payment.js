@@ -49,8 +49,6 @@ onRecordAfterUpdateSuccess((e) => {
     } catch (err) {
       planIdentified = false
     }
-  } else {
-    planIdentified = false
   }
 
   if (!planIdentified) {
@@ -196,13 +194,16 @@ onRecordAfterUpdateSuccess((e) => {
           '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
           '<tr><td align="center">' +
           '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
-          '<tr><td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:40px 48px 36px;text-align:center;">' +
-          '<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#facc15;letter-spacing:-.5px;">Educação SST</h1>' +
+          '<tr><td style="padding:40px 48px 36px;text-align:center;border-top:6px solid #2E9E6D;">' +
+          '<img src="COLOQUE_AQUI_URL_DA_LOGO_HOSPEDADA" alt="Educação SST" style="max-width:200px;height:auto;margin-bottom:12px;" />' +
           '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
           '</td></tr>' +
-          '<tr><td style="padding:48px;">' +
+          '<tr><td style="padding:0 48px 28px;text-align:center;">' +
+          '<span style="display:inline-block;padding:8px 24px;background:#D1FAE5;border-radius:50px;font-size:13px;font-weight:700;color:#065F46;letter-spacing:1px;">PAGAMENTO CONFIRMADO</span>' +
+          '</td></tr>' +
+          '<tr><td style="padding:0 48px 48px;">' +
           '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:32px;">' +
-          '<div style="width:72px;height:72px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">' +
+          '<div style="width:72px;height:72px;background:#D1FAE5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">' +
           '<span style="font-size:36px;">✓</span>' +
           '</div>' +
           '</td></tr></table>' +

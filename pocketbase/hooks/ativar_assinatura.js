@@ -28,18 +28,11 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       var plan = $app.findRecordById('subscription_plans', planId)
       planName = plan.getString('name')
       var planPrice = plan.getNum('price')
-      if (planName.toLowerCase().indexOf('free') !== -1 || planPrice === 0) {
-        isFreePlan = true
-        planIdentified = true
-      } else {
-        isFreePlan = false
-        planIdentified = true
-      }
+      isFreePlan = planName.toLowerCase().indexOf('free') !== -1 || planPrice === 0
+      planIdentified = true
     } catch (err) {
       planIdentified = false
     }
-  } else {
-    planIdentified = false
   }
 
   var apiKey = $secrets.get('BREVO_API_KEY')
@@ -90,9 +83,7 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       }
     }
 
-    return e.json(422, {
-      error: 'plano não identificado - verificação manual necessária',
-    })
+    return e.json(422, { error: 'plano não identificado - verificação manual necessária' })
   }
 
   try {
@@ -125,6 +116,9 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       $app.save(user)
 
       if (apiKey && userEmail) {
+        var brevoSynced = false
+        var brevoStatus = 0
+
         try {
           var contactRes = $http.send({
             url: 'https://api.brevo.com/v3/contacts',
@@ -139,7 +133,8 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
             timeout: 30,
           })
 
-          var brevoSynced = contactRes.statusCode >= 200 && contactRes.statusCode < 300
+          brevoStatus = contactRes.statusCode
+          brevoSynced = contactRes.statusCode >= 200 && contactRes.statusCode < 300
           if (!brevoSynced) {
             var cBody = contactRes.body
               ? String.fromCharCode.apply(null, new Uint8Array(contactRes.body))
@@ -150,20 +145,30 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
           } else {
             $app.logger().info('Subscriber synced to Brevo List 7', 'email', userEmail)
           }
+        } catch (err) {
+          $app.logger().error('Failed to sync subscriber to Brevo List 7', 'error', err.message)
+        }
 
+        var emailSent = false
+        var errorMsg = ''
+
+        try {
           var htmlContent =
             '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
             '<body style="margin:0;padding:0;font-family:Georgia,serif;background:#0f172a;">' +
             '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
             '<tr><td align="center">' +
             '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
-            '<tr><td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:40px 48px 36px;text-align:center;">' +
-            '<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#facc15;letter-spacing:-.5px;">Educação SST</h1>' +
+            '<tr><td style="padding:40px 48px 36px;text-align:center;border-top:6px solid #2E9E6D;">' +
+            '<img src="COLOQUE_AQUI_URL_DA_LOGO_HOSPEDADA" alt="Educação SST" style="max-width:200px;height:auto;margin-bottom:12px;" />' +
             '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
             '</td></tr>' +
-            '<tr><td style="padding:48px;">' +
+            '<tr><td style="padding:0 48px 28px;text-align:center;">' +
+            '<span style="display:inline-block;padding:8px 24px;background:#D1FAE5;border-radius:50px;font-size:13px;font-weight:700;color:#065F46;letter-spacing:1px;">PAGAMENTO CONFIRMADO</span>' +
+            '</td></tr>' +
+            '<tr><td style="padding:0 48px 48px;">' +
             '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:32px;">' +
-            '<div style="width:72px;height:72px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">' +
+            '<div style="width:72px;height:72px;background:#D1FAE5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">' +
             '<span style="font-size:36px;">✓</span>' +
             '</div>' +
             '</td></tr></table>' +
@@ -187,66 +192,59 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
             '</td></tr>' +
             '</table></td></tr></table></body></html>'
 
-          var emailSent = false
-          var errorMsg = ''
+          var emailRes = $http.send({
+            url: 'https://api.brevo.com/v3/smtp/email',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+            body: JSON.stringify({
+              sender: { name: 'Educação SST', email: 'assinante@educacaosst.com.br' },
+              to: [{ email: userEmail, name: userName }],
+              subject: 'Assinatura Ativada — Educação SST',
+              htmlContent: htmlContent,
+            }),
+            timeout: 30,
+          })
 
-          try {
-            var emailRes = $http.send({
-              url: 'https://api.brevo.com/v3/smtp/email',
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
-              body: JSON.stringify({
-                sender: { name: 'Educação SST', email: 'assinante@educacaosst.com.br' },
-                to: [{ email: userEmail, name: userName }],
-                subject: 'Assinatura Ativada — Educação SST',
-                htmlContent: htmlContent,
-              }),
-              timeout: 30,
-            })
-
-            if (emailRes.statusCode >= 200 && emailRes.statusCode < 300) {
-              emailSent = true
-              $app.logger().info('Activation confirmation email sent', 'email', userEmail)
-            } else {
-              var errBody = emailRes.body
-                ? String.fromCharCode.apply(null, new Uint8Array(emailRes.body))
-                : 'unknown'
-              errorMsg = errBody
-              $app
-                .logger()
-                .error(
-                  'Brevo activation email failed',
-                  'status',
-                  emailRes.statusCode,
-                  'body',
-                  errBody,
-                )
-            }
-          } catch (err) {
-            errorMsg = err.message
-            $app.logger().error('Failed to send activation email', 'error', err.message)
-          }
-
-          try {
-            var logsCol = $app.findCollectionByNameOrId('email_logs')
-            var logRecord = new Record(logsCol)
-            logRecord.set('recipient_email', userEmail)
-            logRecord.set('recipient_name', userName)
-            logRecord.set('email_type', 'payment_confirmed')
-            logRecord.set('sent', emailSent)
-            logRecord.set('sent_at', emailSent ? new Date().toISOString() : '')
-            logRecord.set('brevo_synced', brevoSynced)
-            logRecord.set('brevo_list_id', 7)
-            logRecord.set('brevo_status', contactRes.statusCode)
-            logRecord.set('error_message', errorMsg)
-            logRecord.set('user', userId)
-            logRecord.set('subscription', subscription.id)
-            $app.save(logRecord)
-          } catch (logErr) {
-            $app.logger().error('Failed to log activation email', 'error', logErr.message)
+          if (emailRes.statusCode >= 200 && emailRes.statusCode < 300) {
+            emailSent = true
+            $app.logger().info('Activation confirmation email sent', 'email', userEmail)
+          } else {
+            var errBody = emailRes.body
+              ? String.fromCharCode.apply(null, new Uint8Array(emailRes.body))
+              : 'unknown'
+            errorMsg = errBody
+            $app
+              .logger()
+              .error(
+                'Brevo activation email failed',
+                'status',
+                emailRes.statusCode,
+                'body',
+                errBody,
+              )
           }
         } catch (err) {
-          $app.logger().error('Failed to sync subscriber to Brevo List 7', 'error', err.message)
+          errorMsg = err.message
+          $app.logger().error('Failed to send activation email', 'error', err.message)
+        }
+
+        try {
+          var logsCol = $app.findCollectionByNameOrId('email_logs')
+          var logRecord = new Record(logsCol)
+          logRecord.set('recipient_email', userEmail)
+          logRecord.set('recipient_name', userName)
+          logRecord.set('email_type', 'payment_confirmed')
+          logRecord.set('sent', emailSent)
+          logRecord.set('sent_at', emailSent ? new Date().toISOString() : '')
+          logRecord.set('brevo_synced', brevoSynced)
+          logRecord.set('brevo_list_id', 7)
+          logRecord.set('brevo_status', brevoStatus)
+          logRecord.set('error_message', errorMsg)
+          logRecord.set('user', userId)
+          logRecord.set('subscription', subscription.id)
+          $app.save(logRecord)
+        } catch (logErr) {
+          $app.logger().error('Failed to log activation email', 'error', logErr.message)
         }
       }
 

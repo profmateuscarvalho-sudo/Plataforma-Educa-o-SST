@@ -211,11 +211,12 @@ routerAdd(
     }
 
     var ipagUuid = data.uuid || ''
+    var attributes = data.attributes || data
     var rawStatus = ''
-    if (data.status && typeof data.status === 'object' && data.status.message) {
-      rawStatus = data.status.message
-    } else if (data.status != null) {
-      rawStatus = String(data.status)
+    if (attributes.status && typeof attributes.status === 'object' && attributes.status.message) {
+      rawStatus = attributes.status.message
+    } else if (attributes.status != null) {
+      rawStatus = String(attributes.status)
     }
 
     var mappedStatus = mapStatus(rawStatus)
@@ -228,11 +229,11 @@ routerAdd(
       status: mappedStatus,
     }
 
-    if (body.type === 'pix' && data.pix) {
+    if (body.type === 'pix' && attributes.pix) {
       response.pix = {
-        qrcode: data.pix.qrcode,
-        qrcode64: data.pix.qrcode64,
-        link: data.pix.link || data.link,
+        qrcode: attributes.pix.qrcode,
+        qrcode64: attributes.pix.qrcode64,
+        link: attributes.pix.link || attributes.link,
       }
     }
 

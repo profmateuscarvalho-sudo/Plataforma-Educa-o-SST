@@ -108,6 +108,7 @@ routerAdd(
     } else if (body.type === 'pix') {
       paymentData.payment = {
         type: 'pix',
+        method: 'pix',
       }
     }
 

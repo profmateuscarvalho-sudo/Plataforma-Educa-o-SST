@@ -150,7 +150,7 @@ routerAdd(
     var res
     try {
       res = $http.send({
-        url: baseUrl + '/v1/payment',
+        url: baseUrl + '/service/payment',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -81,7 +81,7 @@ export default function Register() {
         title: 'Cadastro realizado com sucesso!',
         description: 'Verifique seu e-mail para ativar sua assinatura.',
       })
-      navigate('/ativacao-pendente', { state: { email } })
+      navigate('/subscription-pending')
     }
   }
 

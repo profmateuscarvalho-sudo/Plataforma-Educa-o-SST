@@ -38,7 +38,11 @@ export default function Login() {
     } else {
       toast({ title: 'Bem-vindo!' })
       const record = pb.authStore.record as { role?: string } | null
-      navigate(record?.role === 'admin' ? '/admin' : '/plataforma')
+      if (record?.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/plataforma')
+      }
     }
   }
 

@@ -81,10 +81,12 @@ export default function SubscriptionPending() {
           <SquareLogo variant="yellow" className="w-16 h-16 mb-2" />
           <div>
             <CardTitle className="font-serif text-3xl text-secondary">
-              {isManual ? 'Verificação Manual' : 'Ativação Pendente'}
+              {isManual ? 'Verificação Manual Necessária' : 'Aguardando ativação'}
             </CardTitle>
             <CardDescription className="text-base mt-2">
-              {isManual ? 'Sua conta precisa de revisão manual' : 'Quase lá! Ative sua conta'}
+              {isManual
+                ? 'Nossa equipe foi notificada e realizará a verificação manual em breve'
+                : 'Confirme sua conta para acessar a plataforma'}
             </CardDescription>
           </div>
         </CardHeader>
@@ -96,8 +98,8 @@ export default function SubscriptionPending() {
                   <AlertCircle className="w-10 h-10 text-orange-500" />
                 </div>
                 <p className="text-slate-600 text-center text-sm font-medium leading-relaxed">
-                  Não conseguimos identificar seu plano - nossa equipe foi notificada e vai
-                  verificar manualmente
+                  Não conseguimos identificar seu plano automaticamente. Nossa equipe foi notificada
+                  e realizará a verificação manual em breve.
                 </p>
               </div>
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex gap-3">
@@ -134,11 +136,9 @@ export default function SubscriptionPending() {
                     <span className="font-semibold text-slate-700">{user.email}</span>
                   </p>
                 )}
-                <p className="text-slate-600 text-center text-sm font-medium">
-                  Aguardando clique no link enviado por e-mail
-                </p>
-                <p className="text-slate-500 text-center text-sm leading-relaxed">
-                  O link pode levar alguns minutos para chegar. Verifique também sua caixa de spam.
+                <p className="text-slate-600 text-center text-sm font-medium leading-relaxed">
+                  Verifique seu e-mail (incluindo a caixa de spam) para confirmar sua conta clicando
+                  no link enviado.
                 </p>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">

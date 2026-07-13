@@ -10,6 +10,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { CreditCard, Loader2, CheckCircle2, Copy, QrCode, ShieldCheck, Zap } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
@@ -28,6 +35,7 @@ export function SubscriptionCheckoutModal({
 }) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card'>('pix')
+  const [installments, setInstallments] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [pixData, setPixData] = useState<{
@@ -45,6 +53,7 @@ export function SubscriptionCheckoutModal({
       setPixData(null)
       setBillingCycle(plan.interval === 'yearly' ? 'yearly' : 'monthly')
       setPaymentMethod('pix')
+      setInstallments(1)
     }
   }, [isOpen, plan])
 
@@ -103,7 +112,7 @@ export function SubscriptionCheckoutModal({
         expiry_month: month || '',
         expiry_year: year ? '20' + year : '',
         cvv: formData.get('cvv') as string,
-        installments: 1,
+        installments: billingCycle === 'yearly' ? installments : 1,
       }
     }
 
@@ -332,6 +341,31 @@ export function SubscriptionCheckoutModal({
                         />
                       </div>
                     </div>
+                    {billingCycle === 'yearly' && (
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Parcelamento</Label>
+                        <Select
+                          value={String(installments)}
+                          onValueChange={(v) => setInstallments(Number(v))}
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => {
+                              const installmentValue = yearlyPrice / n
+                              return (
+                                <SelectItem key={n} value={String(n)}>
+                                  {n === 1
+                                    ? `1x de ${formatCurrency(installmentValue)} (à vista)`
+                                    : `${n}x de ${formatCurrency(installmentValue)}`}
+                                </SelectItem>
+                              )
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </TabsContent>
                 </Tabs>
 

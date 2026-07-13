@@ -6,6 +6,13 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Loader2,
   Send,
   CheckCircle2,
@@ -14,10 +21,23 @@ import {
   Copy,
   ExternalLink,
   Check,
+  CreditCard,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { createPayment, type CreatePaymentPayload } from '@/services/payments'
 import { WebhookSimulator } from '@/components/admin/WebhookSimulator'
+
+const CARD_BRANDS = [
+  { value: 'visa', label: 'Visa' },
+  { value: 'mastercard', label: 'Mastercard' },
+  { value: 'elo', label: 'Elo' },
+  { value: 'amex', label: 'American Express' },
+  { value: 'hipercard', label: 'Hipercard' },
+  { value: 'diners', label: 'Diners Club' },
+  { value: 'discover', label: 'Discover' },
+  { value: 'jcb', label: 'JCB' },
+  { value: 'aura', label: 'Aura' },
+]
 
 interface TestResult {
   success: boolean
@@ -34,6 +54,12 @@ export default function AdminTestes() {
   const [customerName, setCustomerName] = useState('João da Silva Teste')
   const [cpfCnpj, setCpfCnpj] = useState('12345678909')
   const [copied, setCopied] = useState(false)
+  const [cardNumber, setCardNumber] = useState('')
+  const [cardHolder, setCardHolder] = useState('')
+  const [cardExpiryMonth, setCardExpiryMonth] = useState('')
+  const [cardExpiryYear, setCardExpiryYear] = useState('')
+  const [cardCvv, setCardCvv] = useState('')
+  const [cardBrand, setCardBrand] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,6 +70,17 @@ export default function AdminTestes() {
       type: paymentType,
       amount: parseFloat(amount),
       customer: { name: customerName, cpf_cnpj: cpfCnpj },
+    }
+
+    if (paymentType === 'card') {
+      payload.card = {
+        method: cardBrand,
+        holder: cardHolder,
+        number: cardNumber,
+        expiry_month: cardExpiryMonth,
+        expiry_year: cardExpiryYear,
+        cvv: cardCvv,
+      }
     }
 
     try {
@@ -152,6 +189,89 @@ export default function AdminTestes() {
                 />
               </div>
             </div>
+
+            {paymentType === 'card' && (
+              <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <CreditCard className="w-4 h-4" />
+                  Dados do Cartão
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cardNumber">Número do Cartão</Label>
+                  <Input
+                    id="cardNumber"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                    required
+                    placeholder="4111111111111111"
+                    inputMode="numeric"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cardHolder">Nome do Titular</Label>
+                  <Input
+                    id="cardHolder"
+                    value={cardHolder}
+                    onChange={(e) => setCardHolder(e.target.value)}
+                    required
+                    placeholder="JOÃO DA SILVA"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cardExpiryMonth">Mês de Validade</Label>
+                    <Input
+                      id="cardExpiryMonth"
+                      value={cardExpiryMonth}
+                      onChange={(e) => setCardExpiryMonth(e.target.value)}
+                      required
+                      placeholder="12"
+                      inputMode="numeric"
+                      maxLength={2}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cardExpiryYear">Ano de Validade</Label>
+                    <Input
+                      id="cardExpiryYear"
+                      value={cardExpiryYear}
+                      onChange={(e) => setCardExpiryYear(e.target.value)}
+                      required
+                      placeholder="2030"
+                      inputMode="numeric"
+                      maxLength={4}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cardCvv">CVV</Label>
+                    <Input
+                      id="cardCvv"
+                      value={cardCvv}
+                      onChange={(e) => setCardCvv(e.target.value)}
+                      required
+                      placeholder="123"
+                      inputMode="numeric"
+                      maxLength={4}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cardBrand">Bandeira</Label>
+                  <Select value={cardBrand} onValueChange={setCardBrand}>
+                    <SelectTrigger id="cardBrand">
+                      <SelectValue placeholder="Selecione a bandeira" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CARD_BRANDS.map((brand) => (
+                        <SelectItem key={brand.value} value={brand.value}>
+                          {brand.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
 
             <Button type="submit" disabled={loading} className="w-full md:w-auto">
               {loading ? (

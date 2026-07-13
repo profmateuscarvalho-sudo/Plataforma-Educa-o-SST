@@ -26,6 +26,10 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { createPayment, type CreatePaymentPayload } from '@/services/payments'
 import { WebhookSimulator } from '@/components/admin/WebhookSimulator'
+import { useAuth } from '@/hooks/use-auth'
+import pb from '@/lib/pocketbase/client'
+import { ShieldAlert } from 'lucide-react'
+import { BACKEND_URL } from '@/lib/constants'
 
 const CARD_BRANDS = [
   { value: 'visa', label: 'Visa' },
@@ -60,6 +64,58 @@ export default function AdminTestes() {
   const [cardExpiryYear, setCardExpiryYear] = useState('')
   const [cardCvv, setCardCvv] = useState('')
   const [cardBrand, setCardBrand] = useState('')
+  const { user } = useAuth()
+  const [securityLoading, setSecurityLoading] = useState(false)
+  const [securityResult, setSecurityResult] = useState<TestResult | null>(null)
+
+  const handleSecurityTest = async () => {
+    if (!user) {
+      toast({ title: 'Usuário não autenticado', variant: 'destructive' })
+      return
+    }
+    setSecurityLoading(true)
+    setSecurityResult(null)
+
+    const payload = {
+      user: user.id,
+      amount: 999,
+      status: 'paid',
+    }
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/collections/payments/records`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: pb.authStore.token || '',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      let data: any = null
+      try {
+        data = await response.json()
+      } catch {
+        data = await response.text().catch(() => null)
+      }
+
+      setSecurityResult({ success: response.status === 403, status: response.status, data })
+      toast({
+        title: response.status === 403 ? 'Bloqueio confirmado' : 'Resposta inesperada',
+        description: `HTTP ${response.status}`,
+        variant: response.status === 403 ? 'default' : 'destructive',
+      })
+    } catch (err: any) {
+      setSecurityResult({ success: false, status: 0, data: String(err?.message || err) })
+      toast({
+        title: 'Erro de rede',
+        description: String(err?.message || err),
+        variant: 'destructive',
+      })
+    } finally {
+      setSecurityLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -382,6 +438,87 @@ export default function AdminTestes() {
           </Card>
         </div>
       )}
+
+      <Card className="border-amber-300">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ShieldAlert className="w-5 h-5 text-amber-600" />
+            Validação de Segurança — Bloqueio de Criação Direta
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-slate-600">
+            Este teste envia uma requisição{' '}
+            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs">POST</code> diretamente ao
+            endpoint padrão do PocketBase{' '}
+            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs">
+              /api/collections/payments/records
+            </code>{' '}
+            utilizando o token do usuário atualmente autenticado. Como as regras de segurança foram
+            atualizadas para bloquear a criação direta, o resultado esperado é um erro{' '}
+            <span className="font-semibold text-amber-700">403 Forbidden</span>.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="border-amber-400 text-amber-700 hover:bg-amber-50"
+            onClick={handleSecurityTest}
+            disabled={securityLoading}
+          >
+            {securityLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Testando...
+              </>
+            ) : (
+              <>
+                <ShieldAlert className="w-4 h-4 mr-2" />
+                Testar bloqueio de criação direta
+              </>
+            )}
+          </Button>
+
+          {securityResult && (
+            <div className="space-y-4 animate-fade-in">
+              <Alert
+                className={
+                  securityResult.status === 403
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                    : 'border-red-500 bg-red-50 text-red-800'
+                }
+              >
+                {securityResult.status === 403 ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-600" />
+                )}
+                <AlertTitle>
+                  HTTP {securityResult.status || 'N/A'} —{' '}
+                  {securityResult.status === 403
+                    ? 'Segurança ativa: criação direta bloqueada'
+                    : 'Resultado inesperado — verifique a resposta abaixo'}
+                </AlertTitle>
+                <AlertDescription>
+                  {securityResult.status === 403
+                    ? 'O servidor recusou a criação direta do registro de pagamento, confirmando que as regras de segurança estão funcionando corretamente.'
+                    : 'O servidor não retornou 403. Verifique se as regras de segurança foram aplicadas corretamente.'}
+                </AlertDescription>
+              </Alert>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Resposta JSON (Raw)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-auto text-xs font-mono max-h-96">
+                    {JSON.stringify(securityResult.data, null, 2)}
+                  </pre>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <WebhookSimulator />
     </div>

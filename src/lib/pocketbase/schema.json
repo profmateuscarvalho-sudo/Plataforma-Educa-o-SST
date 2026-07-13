@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T16:18:59.196Z",
+  "generatedAt": "2026-07-13T16:55:28.076Z",
   "collections": [
     {
       "name": "users",
@@ -1016,11 +1016,11 @@
       "name": "payments",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = 'admin' || user = @request.auth.id",
-        "view": "@request.auth.role = 'admin' || user = @request.auth.id",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.role = 'admin'",
-        "delete": "@request.auth.role = 'admin'"
+        "list": "user = @request.auth.id",
+        "view": "user = @request.auth.id",
+        "create": null,
+        "update": null,
+        "delete": null
       },
       "fields": [
         {

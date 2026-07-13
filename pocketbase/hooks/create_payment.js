@@ -52,6 +52,25 @@ routerAdd(
 
     const callbackUrl = $secrets.get('IPAG_CALLBACK_URL') || ''
 
+    var fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    var recentPayments
+    try {
+      recentPayments = $app.findRecordsByFilter(
+        'payments',
+        "user = '" + userId + "' && created >= '" + fiveMinAgo + "'",
+        '-created',
+        5,
+        0,
+      )
+    } catch (cntErr) {
+      recentPayments = []
+    }
+    if (recentPayments.length >= 5) {
+      return e.json(429, {
+        error: 'Muitas tentativas de pagamento. Aguarde alguns minutos e tente novamente.',
+      })
+    }
+
     const authString = apiId + ':' + apiKey
     let authBase64
     try {

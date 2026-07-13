@@ -74,6 +74,12 @@ routerAdd(
       paymentRecord.set('amount', body.amount)
       paymentRecord.set('status', 'pending')
       paymentRecord.set('product_type', body.product_type || '')
+      if (body.plan_id) {
+        paymentRecord.set('plan_id', body.plan_id)
+      }
+      if (body.billing_cycle) {
+        paymentRecord.set('billing_cycle', body.billing_cycle)
+      }
       if (body.mentorship_id) {
         paymentRecord.set('mentorship_id', body.mentorship_id)
       }

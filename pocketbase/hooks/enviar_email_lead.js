@@ -12,20 +12,32 @@ onRecordAfterCreateSuccess((e) => {
   if (!email) return e.next()
 
   var htmlContent =
-    '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:#f1f5f9;">' +
-    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 0;"><tr><td align="center">' +
-    '<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.05);">' +
-    '<tr><td style="background:#1e293b;padding:30px 40px;text-align:center;"><span style="font-size:24px;font-weight:bold;color:#facc15;">Educação SST</span></td></tr>' +
-    '<tr><td style="padding:40px;">' +
-    '<h1 style="margin:0 0 20px;font-size:22px;color:#1e293b;">Bem-vindo à Educação SST!</h1>' +
-    '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Olá ' +
-    name +
-    ',</p>' +
-    '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Obrigado pelo seu interesse na <strong>Educação SST</strong>! Recebemos seus dados e em breve entraremos em contato.</p>' +
-    '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Acesse nossa plataforma para explorar nossos cursos, mentorias e conteúdos exclusivos.</p>' +
-    '<div style="text-align:center;margin:32px 0;"><a href="https://www.educacaosst.com.br" style="display:inline-block;padding:14px 36px;background:#facc15;color:#1e293b;font-weight:bold;text-decoration:none;border-radius:8px;font-size:16px;">Conhecer a plataforma</a></div>' +
+    '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
+    '<body style="margin:0;padding:0;font-family:Georgia,serif;background:#0f172a;">' +
+    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
+    '<tr><td align="center">' +
+    '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
+    '<tr><td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:40px 48px 36px;text-align:center;">' +
+    '<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#facc15;letter-spacing:-.5px;">Educação SST</h1>' +
+    '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
     '</td></tr>' +
-    '<tr><td style="background:#f8fafc;padding:24px 40px;text-align:center;"><p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST. Todos os direitos reservados.</p></td></tr>' +
+    '<tr><td style="padding:48px;">' +
+    '<h2 style="margin:0 0 24px;font-size:26px;color:#1e293b;letter-spacing:-.3px;">Bem-vindo à Educação SST!</h2>' +
+    '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
+    name +
+    '</strong>,</p>' +
+    '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Obrigado pelo seu interesse na <strong>Educação SST</strong>! Recebemos seus dados e em breve entraremos em contato.</p>' +
+    '<p style="margin:0 0 32px;font-size:16px;line-height:1.75;color:#334155;">Acesse nossa plataforma para explorar nossos cursos, mentorias e conteúdos exclusivos sobre Segurança e Saúde no Trabalho.</p>' +
+    '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">' +
+    '<a href="https://www.educacaosst.com.br" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Conhecer a Plataforma</a>' +
+    '</td></tr></table>' +
+    '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0;padding-top:24px;">' +
+    '<p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Fique atento ao seu e-mail — nossa equipe entrará em contato em breve com mais informações sobre nossos planos e conteúdos.</p>' +
+    '</td></tr></table>' +
+    '</td></tr>' +
+    '<tr><td style="background:#f8fafc;padding:28px 48px;text-align:center;border-top:1px solid #e2e8f0;">' +
+    '<p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST — Todos os direitos reservados.</p>' +
+    '</td></tr>' +
     '</table></td></tr></table></body></html>'
 
   var emailSent = false

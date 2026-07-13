@@ -9,25 +9,88 @@ onRecordAfterUpdateSuccess((e) => {
   var billingCycle = e.record.getString('billing_cycle')
   var userId = e.record.getString('user')
 
-  if (!planId || !userId) return e.next()
+  if (!userId) return e.next()
+
+  var userEmail = ''
+  var userName = ''
+
+  try {
+    var user = $app.findRecordById('users', userId)
+    userEmail = user.getString('email')
+    userName = user.getString('name')
+  } catch (err) {
+    $app.logger().error('Failed to fetch user for payment email', 'error', err.message)
+    return e.next()
+  }
+
+  if (!userEmail) return e.next()
 
   var planName = ''
   var tier = 'free'
+  var planIdentified = false
 
-  try {
-    var plan = $app.findRecordById('subscription_plans', planId)
-    planName = plan.getString('name')
-    var planNameLower = planName.toLowerCase()
-    if (planNameLower.indexOf('ouro') !== -1) {
-      tier = 'ouro'
-    } else if (planNameLower.indexOf('prata') !== -1) {
-      tier = 'prata'
+  if (planId) {
+    try {
+      var plan = $app.findRecordById('subscription_plans', planId)
+      planName = plan.getString('name')
+      var planNameLower = planName.toLowerCase()
+      if (planNameLower.indexOf('ouro') !== -1) {
+        tier = 'ouro'
+        planIdentified = true
+      } else if (planNameLower.indexOf('prata') !== -1) {
+        tier = 'prata'
+        planIdentified = true
+      } else if (planNameLower.indexOf('free') !== -1 || plan.getNum('price') === 0) {
+        tier = 'free'
+        planIdentified = true
+      } else {
+        planIdentified = true
+      }
+    } catch (err) {
+      planIdentified = false
+    }
+  } else {
+    planIdentified = false
+  }
+
+  if (!planIdentified) {
+    $app
+      .logger()
+      .error(
+        'plano nao identificado - verificacao manual necessaria',
+        'paymentId',
+        e.record.id,
+        'userId',
+        userId,
+        'planId',
+        planId || 'null',
+        'hook',
+        'on_subscription_payment',
+      )
+
+    try {
+      var failLogsCol = $app.findCollectionByNameOrId('email_logs')
+      var failLogRecord = new Record(failLogsCol)
+      failLogRecord.set('recipient_email', userEmail)
+      failLogRecord.set('recipient_name', userName)
+      failLogRecord.set('email_type', 'payment_confirmed')
+      failLogRecord.set('sent', false)
+      failLogRecord.set('error_message', 'plano não identificado - verificação manual necessária')
+      failLogRecord.set('brevo_synced', false)
+      failLogRecord.set('brevo_list_id', 0)
+      failLogRecord.set('brevo_status', 0)
+      failLogRecord.set('user', userId)
+      $app.save(failLogRecord)
+    } catch (logErr) {
+      $app.logger().error('Failed to log plan identification failure', 'error', logErr.message)
     }
 
-    var user = $app.findRecordById('users', userId)
-    var userEmail = user.getString('email')
-    var userName = user.getString('name')
+    return e.next()
+  }
 
+  var apiKey = $secrets.get('BREVO_API_KEY')
+
+  try {
     var baseDate = new Date()
     var currentEnd = user.getString('contract_end_date')
     if (currentEnd) {
@@ -83,7 +146,6 @@ onRecordAfterUpdateSuccess((e) => {
         billingCycle,
       )
 
-    var apiKey = $secrets.get('BREVO_API_KEY')
     var brevoSynced = false
     var brevoStatus = 0
 
@@ -129,22 +191,39 @@ onRecordAfterUpdateSuccess((e) => {
 
       try {
         var htmlContent =
-          '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:#f1f5f9;">' +
-          '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 0;"><tr><td align="center">' +
-          '<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.05);">' +
-          '<tr><td style="background:#1e293b;padding:30px 40px;text-align:center;"><span style="font-size:24px;font-weight:bold;color:#facc15;">Educação SST</span></td></tr>' +
-          '<tr><td style="padding:40px;">' +
-          '<h1 style="margin:0 0 20px;font-size:22px;color:#1e293b;">Pagamento Confirmado!</h1>' +
-          '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Olá ' +
+          '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
+          '<body style="margin:0;padding:0;font-family:Georgia,serif;background:#0f172a;">' +
+          '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
+          '<tr><td align="center">' +
+          '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
+          '<tr><td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:40px 48px 36px;text-align:center;">' +
+          '<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#facc15;letter-spacing:-.5px;">Educação SST</h1>' +
+          '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
+          '</td></tr>' +
+          '<tr><td style="padding:48px;">' +
+          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:32px;">' +
+          '<div style="width:72px;height:72px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">' +
+          '<span style="font-size:36px;">✓</span>' +
+          '</div>' +
+          '</td></tr></table>' +
+          '<h2 style="margin:0 0 24px;font-size:26px;color:#1e293b;letter-spacing:-.3px;text-align:center;">Pagamento Confirmado!</h2>' +
+          '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
           userName +
-          ',</p>' +
-          '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Seu pagamento foi confirmado com sucesso! Sua assinatura do plano <strong>' +
+          '</strong>,</p>' +
+          '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Seu pagamento foi confirmado com sucesso! Sua assinatura do plano <strong>' +
           planName +
           '</strong> está ativa.</p>' +
-          '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Você já pode acessar todos os conteúdos da plataforma Educação SST.</p>' +
-          '<div style="text-align:center;margin:32px 0;"><a href="https://www.educacaosst.com.br/plataforma" style="display:inline-block;padding:14px 36px;background:#facc15;color:#1e293b;font-weight:bold;text-decoration:none;border-radius:8px;font-size:16px;">Acessar Plataforma</a></div>' +
+          '<p style="margin:0 0 32px;font-size:16px;line-height:1.75;color:#334155;">Você já pode acessar todos os conteúdos exclusivos da plataforma Educação SST.</p>' +
+          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">' +
+          '<a href="https://www.educacaosst.com.br/plataforma" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Acessar Plataforma</a>' +
+          '</td></tr></table>' +
+          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0;padding-top:24px;">' +
+          '<p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Aproveite todos os recursos disponíveis no seu plano. Em caso de dúvidas, entre em contato com nossa equipe de suporte.</p>' +
+          '</td></tr></table>' +
           '</td></tr>' +
-          '<tr><td style="background:#f8fafc;padding:24px 40px;text-align:center;"><p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST. Todos os direitos reservados.</p></td></tr>' +
+          '<tr><td style="background:#f8fafc;padding:28px 48px;text-align:center;border-top:1px solid #e2e8f0;">' +
+          '<p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST — Todos os direitos reservados.</p>' +
+          '</td></tr>' +
           '</table></td></tr></table></body></html>'
 
         var emailRes = $http.send({

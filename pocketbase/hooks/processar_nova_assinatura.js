@@ -45,6 +45,8 @@ onRecordAfterCreateSuccess((e) => {
 
   var planName = ''
   var isFreePlan = false
+  var planIdentified = false
+
   if (planId) {
     try {
       var plan = $app.findRecordById('subscription_plans', planId)
@@ -52,8 +54,52 @@ onRecordAfterCreateSuccess((e) => {
       var planPrice = plan.getNum('price')
       if (planName.toLowerCase().indexOf('free') !== -1 || planPrice === 0) {
         isFreePlan = true
+        planIdentified = true
+      } else {
+        isFreePlan = false
+        planIdentified = true
       }
-    } catch (_) {}
+    } catch (err) {
+      planIdentified = false
+    }
+  } else {
+    planIdentified = false
+  }
+
+  if (!planIdentified) {
+    $app
+      .logger()
+      .error(
+        'plano nao identificado - verificacao manual necessaria',
+        'subscriptionId',
+        e.record.id,
+        'userId',
+        userId,
+        'planId',
+        planId || 'null',
+        'hook',
+        'processar_nova_assinatura',
+      )
+
+    try {
+      var failLogsCol = $app.findCollectionByNameOrId('email_logs')
+      var failLogRecord = new Record(failLogsCol)
+      failLogRecord.set('recipient_email', userEmail)
+      failLogRecord.set('recipient_name', userName)
+      failLogRecord.set('email_type', isFreePlan ? 'activation_free' : 'activation_paid')
+      failLogRecord.set('sent', false)
+      failLogRecord.set('error_message', 'plano não identificado - verificação manual necessária')
+      failLogRecord.set('brevo_synced', false)
+      failLogRecord.set('brevo_list_id', 0)
+      failLogRecord.set('brevo_status', 0)
+      failLogRecord.set('user', userId)
+      failLogRecord.set('subscription', e.record.id)
+      $app.save(failLogRecord)
+    } catch (logErr) {
+      $app.logger().error('Failed to log plan identification failure', 'error', logErr.message)
+    }
+
+    return e.next()
   }
 
   var activationLink = 'https://www.educacaosst.com.br/ativar?token=' + token
@@ -65,54 +111,75 @@ onRecordAfterCreateSuccess((e) => {
     emailType = 'activation_free'
     subject = 'Ative sua assinatura — Educação SST'
     htmlContent =
-      '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:#f1f5f9;">' +
-      '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 0;"><tr><td align="center">' +
-      '<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.05);">' +
-      '<tr><td style="background:#1e293b;padding:30px 40px;text-align:center;"><span style="font-size:24px;font-weight:bold;color:#facc15;">Educação SST</span></td></tr>' +
-      '<tr><td style="padding:40px;">' +
-      '<h1 style="margin:0 0 20px;font-size:22px;color:#1e293b;">Ative sua assinatura Free</h1>' +
-      '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Olá ' +
+      '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
+      '<body style="margin:0;padding:0;font-family:Georgia,serif;background:#0f172a;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
+      '<tr><td align="center">' +
+      '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
+      '<tr><td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:40px 48px 36px;text-align:center;">' +
+      '<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#facc15;letter-spacing:-.5px;">Educação SST</h1>' +
+      '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
+      '</td></tr>' +
+      '<tr><td style="padding:48px;">' +
+      '<h2 style="margin:0 0 24px;font-size:24px;color:#1e293b;letter-spacing:-.3px;">Bem-vindo ao Plano Free</h2>' +
+      '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
       userName +
-      ',</p>' +
-      '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Sua assinatura <strong>Free</strong> foi criada com sucesso! Para ativar sua conta e acessar a plataforma, clique no botão abaixo:</p>' +
-      '<div style="text-align:center;margin:32px 0;"><a href="' +
+      '</strong>,</p>' +
+      '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Sua assinatura <strong>Free</strong> foi criada com sucesso! Para ativar sua conta e acessar a plataforma, clique no botão abaixo:</p>' +
+      '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 0;">' +
+      '<a href="' +
       activationLink +
-      '" style="display:inline-block;padding:14px 36px;background:#facc15;color:#1e293b;font-weight:bold;text-decoration:none;border-radius:8px;font-size:16px;">Ativar Assinatura</a></div>' +
-      '<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#94a3b8;">Ou copie e cole o link: ' +
+      '" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Ativar Assinatura</a>' +
+      '</td></tr></table>' +
+      '<p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#94a3b8;">Ou copie e cole o link abaixo no seu navegador:</p>' +
+      '<p style="margin:0 0 32px;font-size:13px;line-height:1.6;color:#64748b;word-break:break-all;">' +
       activationLink +
       '</p>' +
+      '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0;padding-top:24px;">' +
+      '<p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Após a ativação, você terá acesso imediato aos conteúdos disponíveis no plano Free.</p>' +
+      '</td></tr></table>' +
       '</td></tr>' +
-      '<tr><td style="background:#f8fafc;padding:24px 40px;text-align:center;"><p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST. Todos os direitos reservados.</p></td></tr>' +
+      '<tr><td style="background:#f8fafc;padding:28px 48px;text-align:center;border-top:1px solid #e2e8f0;">' +
+      '<p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST — Todos os direitos reservados.</p>' +
+      '</td></tr>' +
       '</table></td></tr></table></body></html>'
   } else {
     emailType = 'activation_paid'
     subject = 'Verifique seu e-mail — Educação SST'
     htmlContent =
-      '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:#f1f5f9;">' +
-      '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 0;"><tr><td align="center">' +
-      '<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.05);">' +
-      '<tr><td style="background:#1e293b;padding:30px 40px;text-align:center;"><span style="font-size:24px;font-weight:bold;color:#facc15;">Educação SST</span></td></tr>' +
-      '<tr><td style="padding:40px;">' +
-      '<h1 style="margin:0 0 20px;font-size:22px;color:#1e293b;">Verificação de E-mail — ' +
+      '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
+      '<body style="margin:0;padding:0;font-family:Georgia,serif;background:#0f172a;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
+      '<tr><td align="center">' +
+      '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
+      '<tr><td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:40px 48px 36px;text-align:center;">' +
+      '<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#facc15;letter-spacing:-.5px;">Educação SST</h1>' +
+      '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
+      '</td></tr>' +
+      '<tr><td style="padding:48px;">' +
+      '<h2 style="margin:0 0 24px;font-size:24px;color:#1e293b;letter-spacing:-.3px;">Verificação de E-mail — ' +
       planName +
-      '</h1>' +
-      '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Olá ' +
+      '</h2>' +
+      '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
       userName +
-      ',</p>' +
-      '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Sua assinatura do plano <strong>' +
-      planName +
-      '</strong> foi criada! Para verificar seu e-mail, clique no botão abaixo:</p>' +
-      '<div style="text-align:center;margin:32px 0;"><a href="' +
+      '</strong>,</p>' +
+      '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Sua assinatura foi registrada com sucesso! Para verificar seu e-mail e concluir o cadastro, clique no botão abaixo:</p>' +
+      '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 0;">' +
+      '<a href="' +
       activationLink +
-      '" style="display:inline-block;padding:14px 36px;background:#facc15;color:#1e293b;font-weight:bold;text-decoration:none;border-radius:8px;font-size:16px;">Verificar E-mail</a></div>' +
-      '<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#94a3b8;">Ou copie e cole o link: ' +
+      '" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Verificar E-mail</a>' +
+      '</td></tr></table>' +
+      '<p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#94a3b8;">Ou copie e cole o link abaixo no seu navegador:</p>' +
+      '<p style="margin:0 0 32px;font-size:13px;line-height:1.6;color:#64748b;word-break:break-all;">' +
       activationLink +
       '</p>' +
-      '<div style="background:#fef3c7;border:1px solid #facc15;border-radius:8px;padding:16px 20px;margin:24px 0;">' +
-      '<p style="margin:0;font-size:14px;line-height:1.6;color:#92400e;"><strong>Importante:</strong> Seu acesso à plataforma será liberado após a confirmação do pagamento.</p>' +
-      '</div>' +
+      '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:#fef9c3;border:1px solid #facc15;border-radius:10px;padding:20px 24px;">' +
+      '<p style="margin:0;font-size:14px;line-height:1.7;color:#713f12;"><strong>Importante:</strong> Seu acesso à plataforma será liberado após a confirmação do pagamento.</p>' +
+      '</td></tr></table>' +
       '</td></tr>' +
-      '<tr><td style="background:#f8fafc;padding:24px 40px;text-align:center;"><p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST. Todos os direitos reservados.</p></td></tr>' +
+      '<tr><td style="background:#f8fafc;padding:28px 48px;text-align:center;border-top:1px solid #e2e8f0;">' +
+      '<p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST — Todos os direitos reservados.</p>' +
+      '</td></tr>' +
       '</table></td></tr></table></body></html>'
   }
 

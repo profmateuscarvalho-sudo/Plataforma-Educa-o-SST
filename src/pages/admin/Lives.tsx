@@ -69,11 +69,20 @@ export default function AdminLives() {
     const fd = new FormData(e.currentTarget)
     const finalInstructor =
       selectedInstructor?.name || instructorName || (fd.get('instructor_name') as string)
+    let scheduledDate = fd.get('scheduled_at') as string
+    if (scheduledDate) {
+      try {
+        scheduledDate = new Date(scheduledDate).toISOString()
+      } catch {
+        // ignore
+      }
+    }
+
     const data: Record<string, any> = {
       title: fd.get('title'),
       description: fd.get('description'),
       panda_video_id: fd.get('panda_video_id'),
-      scheduled_at: fd.get('scheduled_at'),
+      scheduled_at: scheduledDate,
       status,
       instructor_name: finalInstructor,
       instructor: instructorId || null,

@@ -185,7 +185,7 @@ export default function StudentDashboard() {
             </Avatar>
             <div>
               <h1 className="text-3xl font-serif font-bold text-yellow-400 mb-1">
-                {getGreeting()}, {user.name?.replace(/!/g, '').trim() || 'Aluno'}
+                {getGreeting()}, {user.name?.trim() || 'Aluno'}
               </h1>
               <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
             </div>

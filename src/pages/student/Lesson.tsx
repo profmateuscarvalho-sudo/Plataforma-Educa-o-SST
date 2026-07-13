@@ -1,6 +1,15 @@
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
-import { ChevronLeft, PlayCircle, FileText, CheckSquare, Star, CheckCircle2 } from 'lucide-react'
+import { useStudentAccess } from '@/hooks/use-student-access'
+import {
+  ChevronLeft,
+  PlayCircle,
+  FileText,
+  CheckSquare,
+  Star,
+  CheckCircle2,
+  Lock,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -38,7 +47,9 @@ type ActiveItem = { type: 'lesson'; data: Lesson } | { type: 'quiz'; data: Quiz 
 
 export default function CourseLesson() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { user, loading } = useAuth()
+  const { hasAccess } = useStudentAccess()
   const [course, setCourse] = useState<Course | null>(null)
   const [modules, setModules] = useState<Module[]>([])
   const [lessons, setLessons] = useState<Lesson[]>([])
@@ -94,11 +105,42 @@ export default function CourseLesson() {
 
   const isSubscriptionExpired =
     !user.contract_end_date || new Date(user.contract_end_date) < new Date()
-  if (user.role === 'student' && isSubscriptionExpired) {
-    return <Navigate to="/planos?expired=1" />
-  }
-
   if (!course) return <div className="p-8 text-white">Carregando aula...</div>
+
+  const courseAccess = hasAccess({ is_free: course.is_free, title: course.title })
+  if (user.role === 'student' && !courseAccess) {
+    return (
+      <div className="flex flex-col min-h-screen bg-slate-950 text-slate-200 items-center justify-center p-8">
+        <Lock className="w-16 h-16 text-amber-500 mb-4" />
+        <h2 className="text-2xl font-bold mb-2 text-white">Acesso Restrito</h2>
+        <p className="text-slate-400 mb-6 text-center max-w-md">
+          Este curso é exclusivo para assinantes ou requer compra individual para ser acessado.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button
+            onClick={() => navigate('/planos')}
+            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+          >
+            Ver Planos de Assinatura
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/cursos/${course.id}`)}
+            className="border-white/20 hover:bg-white/10 text-white"
+          >
+            Comprar Curso
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/plataforma')}
+            className="text-slate-400 hover:text-white"
+          >
+            Voltar ao Hub
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   const progress = lessons.length ? (completions.length / lessons.length) * 100 : 0
   const isCurrentCompleted =
@@ -143,10 +185,13 @@ export default function CourseLesson() {
   return (
     <div className="flex flex-col min-h-[calc(100vh-80px)] bg-slate-950 text-slate-200">
       <div className="h-16 border-b border-white/10 flex items-center px-4 md:px-8 gap-4 bg-slate-900 shrink-0">
-        <Button variant="ghost" size="sm" asChild className="text-slate-400 hover:text-white">
-          <Link to={user.role === 'admin' ? '/admin/cursos' : '/plataforma'}>
-            <ChevronLeft className="mr-2 w-4 h-4" /> Voltar
-          </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(user.role === 'admin' ? '/admin/cursos' : '/plataforma')}
+          className="text-slate-400 hover:text-white"
+        >
+          <ChevronLeft className="mr-2 w-4 h-4" /> Voltar
         </Button>
         <div className="h-6 w-px bg-white/10 mx-2 hidden md:block" />
         <h1 className="font-medium truncate text-white flex-1">{course.title}</h1>

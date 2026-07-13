@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import previewImg from '@/assets/image-8463c.png'
 import { CourseCard } from '@/components/CourseCard'
 import { ArrowRight, BookOpen, Star, Check, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -92,11 +93,7 @@ export default function Index() {
             style={{ animationDelay: '0.2s' }}
           >
             <div className="mb-6 rounded-xl overflow-hidden shadow-lg border border-slate-100">
-              <img
-                src="https://img.usecurling.com/p/600/350?q=online%20learning%20dashboard&color=blue"
-                alt="Portal do Aluno"
-                className="w-full h-auto"
-              />
+              <img src={previewImg} alt="Portal do Aluno" className="w-full h-auto" />
             </div>
             <h3 className="text-2xl font-serif font-bold text-secondary mb-2">
               Cadastre-se gratuitamente

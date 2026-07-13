@@ -120,20 +120,6 @@ export default function Mentorias() {
                     <p className="text-xs text-slate-400 line-clamp-3">{stripHtml(m.mentor_bio)}</p>
                   )}
                 </CardContent>
-                <CardFooter className="flex items-center justify-between border-t pt-4">
-                  <span className="text-lg font-bold text-slate-800">
-                    {m.is_free ? 'Gratuito' : formatBRL(m.price)}
-                  </span>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSelectedMentorship(m)
-                      setIsCheckoutOpen(true)
-                    }}
-                  >
-                    {m.is_free ? 'Agendar' : 'Investir'} <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                  </Button>
-                </CardFooter>
               </Card>
             ))}
           </div>

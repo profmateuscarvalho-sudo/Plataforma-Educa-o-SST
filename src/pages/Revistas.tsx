@@ -76,6 +76,11 @@ function MagazineCard({ mag }: { mag: Magazine }) {
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Processando
             </div>
           )}
+          {!mag.is_free && (
+            <div className="absolute top-3 left-3 bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+              Acesso para assinantes
+            </div>
+          )}
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6">
             <DialogTrigger asChild>

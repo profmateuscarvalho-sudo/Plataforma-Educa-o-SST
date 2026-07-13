@@ -133,20 +133,22 @@ export default function Register() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="city">Cidade</Label>
+                <Label htmlFor="city">Cidade *</Label>
                 <Input
                   id="city"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
+                  required
                   className="h-11 bg-slate-50"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="state">Estado</Label>
+                <Label htmlFor="state">Estado *</Label>
                 <Input
                   id="state"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
+                  required
                   className="h-11 bg-slate-50"
                 />
               </div>

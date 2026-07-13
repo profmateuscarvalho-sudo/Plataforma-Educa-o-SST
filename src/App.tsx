@@ -42,6 +42,7 @@ import AdminMagazines from './pages/admin/Magazines'
 import AdminPayments from './pages/admin/Payments'
 import AdminLives from './pages/admin/Lives'
 import StudentLive from './pages/student/Live'
+import StudentLiveSessions from './pages/student/LiveSessions'
 import NewsDetails from './pages/NewsDetails'
 import AdminMagazineArticles from './pages/admin/MagazineArticles'
 import AdminMagazineConnections from './pages/admin/MagazineConnections'
@@ -97,6 +98,7 @@ const App = () => (
             <Route path="/plataforma/caderno" element={<StudentNotebook />} />
             <Route path="/plataforma/cases" element={<StudentCaseFeed />} />
             <Route path="/plataforma/live/:id" element={<StudentLive />} />
+            <Route path="/plataforma/live-sessions" element={<StudentLiveSessions />} />
             <Route path="/plataforma/perfil" element={<StudentProfile />} />
           </Route>
 

@@ -64,7 +64,14 @@ export default function StudentDashboard() {
     return 'Boa noite'
   }
 
-  const upcomingLives = liveSessions.filter((l) => l.status === 'scheduled')
+  const now = new Date()
+  const isLiveVisible = (l: LiveSession) => {
+    if (l.status === 'live') return true
+    if (l.status !== 'scheduled') return false
+    const diff = new Date(l.scheduled_at).getTime() - now.getTime()
+    return diff <= 30 * 60 * 1000 && diff >= -60 * 60 * 1000
+  }
+  const visibleLives = liveSessions.filter(isLiveVisible)
 
   const cards = [
     {
@@ -102,6 +109,15 @@ export default function StudentDashboard() {
       img: ph('documentary%20film'),
       gradient: 'from-purple-600 to-indigo-800',
       action: () => navigate('/plataforma/documentarios'),
+    },
+    {
+      title: 'Aulas ao Vivo',
+      desc: 'Transmissões e gravações',
+      icon: Radio,
+      count: liveSessions.length,
+      img: ph('live%20streaming'),
+      gradient: 'from-red-600 to-rose-800',
+      action: () => navigate('/plataforma/live-sessions'),
     },
     {
       title: 'Simulados',
@@ -169,19 +185,13 @@ export default function StudentDashboard() {
         {view === 'hub' ? (
           <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
             <div className="space-y-10">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
-                  <Video className="w-5 h-5 text-red-500" /> Aulas Ao Vivo
-                </h2>
-                {upcomingLives.length === 0 ? (
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <p className="text-slate-500 text-center py-8">
-                      Nenhuma aula programada no momento
-                    </p>
-                  </div>
-                ) : (
+              {visibleLives.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
+                    <Video className="w-5 h-5 text-red-500" /> Aulas Ao Vivo
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {upcomingLives.map((live) => {
+                    {visibleLives.map((live) => {
                       const d = new Date(live.scheduled_at)
                       const dateStr = d.toLocaleDateString('pt-BR', {
                         day: '2-digit',
@@ -243,8 +253,8 @@ export default function StudentDashboard() {
                       )
                     })}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               <div>
                 <h2 className="text-xl font-bold text-slate-800 mb-5">Sua plataforma</h2>
@@ -271,10 +281,10 @@ export default function StudentDashboard() {
                   <BellRing className="w-5 h-5 text-amber-500" /> Quadro de Avisos
                 </h2>
                 <div className="space-y-4">
-                  {upcomingLives.length > 0 && (
+                  {visibleLives.length > 0 && (
                     <div
                       className="flex items-start gap-3 p-3 rounded-lg bg-red-50 text-red-900 cursor-pointer hover:bg-red-100 transition-colors"
-                      onClick={() => navigate(`/plataforma/live/${upcomingLives[0].id}`)}
+                      onClick={() => navigate(`/plataforma/live/${visibleLives[0].id}`)}
                     >
                       <Radio className="w-5 h-5 text-red-600 shrink-0 mt-0.5 animate-pulse" />
                       <div>
@@ -319,7 +329,7 @@ export default function StudentDashboard() {
                       </div>
                     </div>
                   )}
-                  {upcomingLives.length === 0 &&
+                  {visibleLives.length === 0 &&
                     cat.courses.length === 0 &&
                     docProjects.length === 0 &&
                     mentorships.length === 0 && (

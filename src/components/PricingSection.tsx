@@ -36,7 +36,7 @@ const PLANS: PlanDef[] = [
     accent: 'border-slate-200',
     iconColor: 'text-slate-400',
     cta: 'Assine Gratuitamente',
-    ctaLink: '#hero',
+    ctaLink: '/register',
   },
   {
     name: 'Prata',

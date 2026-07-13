@@ -34,6 +34,7 @@ export default function Layout() {
     { name: 'Simulados', href: '/simulados' },
     { name: 'Revistas', href: '/revistas' },
     { name: 'Notícias', href: '/noticias' },
+    { name: 'Planos', href: '/planos' },
     { name: 'Anuncie', href: '/anuncie-na-revista' },
   ]
 
@@ -103,7 +104,7 @@ export default function Layout() {
                   <Link to="/login">Área do Aluno</Link>
                 </Button>
                 <Button asChild className="font-medium shadow-sm">
-                  <Link to="/cursos">Ver Cursos</Link>
+                  <Link to="/planos">Assine</Link>
                 </Button>
               </>
             )}

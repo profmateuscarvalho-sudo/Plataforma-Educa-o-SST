@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { StudentHomePreview } from '@/components/StudentHomePreview'
-import { LandingRegisterForm } from '@/components/LandingRegisterForm'
 import { PricingSection } from '@/components/PricingSection'
 import { CourseCard } from '@/components/CourseCard'
 import { ArrowRight, BookOpen, Star, Check, X } from 'lucide-react'
@@ -78,7 +77,7 @@ export default function Index() {
                   className="h-12 px-7 text-base font-bold bg-primary hover:bg-primary/90 text-white"
                   asChild
                 >
-                  <a href="#planos">Assine</a>
+                  <Link to="/register">Assine Gratuitamente</Link>
                 </Button>
                 <Button
                   size="lg"
@@ -86,7 +85,7 @@ export default function Index() {
                   className="h-12 px-7 text-base font-bold border-accent text-accent hover:bg-accent hover:text-secondary"
                   asChild
                 >
-                  <Link to="/mentorias">Agendar Mentoria</Link>
+                  <a href="#planos">Ver Planos</a>
                 </Button>
               </div>
               <div className="flex flex-wrap gap-3 pt-2">
@@ -102,12 +101,9 @@ export default function Index() {
               </div>
             </div>
 
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="order-2 sm:order-1 self-center">
+            <div className="lg:col-span-7 flex items-center justify-center">
+              <div className="w-full max-w-md sm:max-w-lg lg:max-w-xl">
                 <StudentHomePreview />
-              </div>
-              <div className="order-1 sm:order-2">
-                <LandingRegisterForm />
               </div>
             </div>
           </div>

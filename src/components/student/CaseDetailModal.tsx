@@ -5,11 +5,17 @@ import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getCase, getComments, createComment } from '@/services/professional-cases'
+import {
+  getCase,
+  getComments,
+  createComment,
+  getLikesForCases,
+  toggleLike,
+} from '@/services/professional-cases'
 import { ProfessionalCase, CaseComment } from '@/types'
-import { Send, MessageCircle } from 'lucide-react'
+import { Send, MessageCircle, Heart } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
-import { stripHtml } from '@/lib/utils'
+import { stripHtml, cn } from '@/lib/utils'
 
 interface CaseDetailModalProps {
   caseId: string | null
@@ -22,6 +28,8 @@ export function CaseDetailModal({ caseId, onClose }: CaseDetailModalProps) {
   const [comments, setComments] = useState<CaseComment[]>([])
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [isLiked, setIsLiked] = useState(false)
 
   const loadData = useCallback(async () => {
     if (!caseId) return
@@ -30,10 +38,13 @@ export function CaseDetailModal({ caseId, onClose }: CaseDetailModalProps) {
       setCaseData(c)
       const comms = await getComments(caseId)
       setComments(comms)
+      const likes = await getLikesForCases([caseId])
+      setLikeCount(likes.length)
+      setIsLiked(likes.some((l) => l.user === user?.id))
     } catch {
       /* ignore */
     }
-  }, [caseId])
+  }, [caseId, user?.id])
 
   useEffect(() => {
     loadData()
@@ -42,6 +53,23 @@ export function CaseDetailModal({ caseId, onClose }: CaseDetailModalProps) {
   useRealtime('case_comments', () => {
     if (caseId) loadData()
   })
+
+  useRealtime('case_likes', () => {
+    if (caseId) loadData()
+  })
+
+  const handleLike = async () => {
+    if (!user || !caseId) return
+    const wasLiked = isLiked
+    setIsLiked(!wasLiked)
+    setLikeCount((prev) => Math.max(0, prev + (wasLiked ? -1 : 1)))
+    try {
+      await toggleLike(caseId, user.id)
+    } catch {
+      setIsLiked(wasLiked)
+      setLikeCount((prev) => Math.max(0, prev + (wasLiked ? 1 : -1)))
+    }
+  }
 
   const handleComment = async () => {
     if (!user || !caseId || !newComment.trim()) return
@@ -101,11 +129,24 @@ export function CaseDetailModal({ caseId, onClose }: CaseDetailModalProps) {
                 }}
               />
             </div>
-            <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-              <div className="px-5 py-3 border-b flex items-center gap-2 text-sm font-medium text-slate-700">
+            <div className="px-5 py-2 border-b flex items-center gap-4">
+              <button
+                onClick={handleLike}
+                className={cn(
+                  'flex items-center gap-1.5 text-sm transition-colors',
+                  isLiked ? 'text-red-500' : 'text-slate-400 hover:text-red-400',
+                )}
+              >
+                <Heart className={cn('w-4 h-4', isLiked && 'fill-current')} />
+                {likeCount > 0 && <span>{likeCount}</span>}
+                <span>Curtir</span>
+              </button>
+              <div className="flex items-center gap-1.5 text-sm text-slate-400">
                 <MessageCircle className="w-4 h-4" />
                 {comments.length} {comments.length === 1 ? 'comentário' : 'comentários'}
               </div>
+            </div>
+            <div className="flex-1 overflow-hidden flex flex-col min-h-0">
               <ScrollArea className="flex-1 px-5">
                 <div className="space-y-4 py-4">
                   {comments.map((c) => (

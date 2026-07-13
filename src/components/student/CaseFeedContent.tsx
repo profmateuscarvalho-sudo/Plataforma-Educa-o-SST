@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getCases, createCase } from '@/services/professional-cases'
+import { getCases, createCase, getLikesForCases, toggleLike } from '@/services/professional-cases'
 import { ProfessionalCase } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,9 +14,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { CaseDetailModal } from '@/components/student/CaseDetailModal'
-import { MessagesSquare, Plus, MessageCircle } from 'lucide-react'
+import { MessagesSquare, Plus, MessageCircle, Heart } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
-import { stripHtml } from '@/lib/utils'
+import { stripHtml, cn } from '@/lib/utils'
 
 export function CaseFeedContent() {
   const { user } = useAuth()
@@ -26,21 +26,36 @@ export function CaseFeedContent() {
   const [newTitle, setNewTitle] = useState('')
   const [newContent, setNewContent] = useState('')
   const [saving, setSaving] = useState(false)
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
+  const [likedCases, setLikedCases] = useState<Set<string>>(new Set())
 
-  const loadCases = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
       const list = await getCases()
       setCases(list)
+      const ids = list.map((c) => c.id)
+      if (ids.length > 0) {
+        const likes = await getLikesForCases(ids)
+        const counts: Record<string, number> = {}
+        const userLiked = new Set<string>()
+        for (const l of likes) {
+          counts[l.case] = (counts[l.case] || 0) + 1
+          if (l.user === user?.id) userLiked.add(l.case)
+        }
+        setLikeCounts(counts)
+        setLikedCases(userLiked)
+      }
     } catch {
       /* ignore */
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
-    loadCases()
-  }, [loadCases])
+    loadData()
+  }, [loadData])
 
-  useRealtime('professional_cases', () => loadCases())
+  useRealtime('professional_cases', () => loadData())
+  useRealtime('case_likes', () => loadData())
 
   const handleCreate = async () => {
     if (!user || !newTitle.trim() || !newContent.trim()) return
@@ -50,11 +65,40 @@ export function CaseFeedContent() {
       setNewTitle('')
       setNewContent('')
       setShowCreate(false)
-      await loadCases()
+      await loadData()
     } catch {
       /* ignore */
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleLike = async (caseId: string) => {
+    if (!user) return
+    const wasLiked = likedCases.has(caseId)
+    setLikedCases((prev) => {
+      const next = new Set(prev)
+      if (wasLiked) next.delete(caseId)
+      else next.add(caseId)
+      return next
+    })
+    setLikeCounts((prev) => ({
+      ...prev,
+      [caseId]: Math.max(0, (prev[caseId] || 0) + (wasLiked ? -1 : 1)),
+    }))
+    try {
+      await toggleLike(caseId, user.id)
+    } catch {
+      setLikedCases((prev) => {
+        const next = new Set(prev)
+        if (wasLiked) next.add(caseId)
+        else next.delete(caseId)
+        return next
+      })
+      setLikeCounts((prev) => ({
+        ...prev,
+        [caseId]: Math.max(0, (prev[caseId] || 0) + (wasLiked ? 1 : -1)),
+      }))
     }
   }
 
@@ -99,32 +143,56 @@ export function CaseFeedContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8">
-          {cases.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedCaseId(c.id)}
-              className="text-left bg-white rounded-xl border border-slate-200 p-5 hover:border-emerald-300 hover:shadow-md transition-all flex flex-col h-full"
-            >
-              <h3 className="font-serif font-bold text-slate-800 mb-2 line-clamp-2">{c.title}</h3>
-              <p className="text-sm text-slate-500 line-clamp-3 mb-4 flex-1">
-                {stripHtml(c.content) || c.content}
-              </p>
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100 w-full mt-auto">
-                <div className="flex items-center gap-2">
-                  {renderAvatar(c.expand?.user)}
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-medium text-slate-600 truncate max-w-[120px]">
-                      {c.expand?.user?.name || 'Anônimo'}
-                    </p>
-                    <p className="text-xs text-slate-400">{formatDate(c.created)}</p>
+          {cases.map((c) => {
+            const isLiked = likedCases.has(c.id)
+            const likeCount = likeCounts[c.id] || 0
+            return (
+              <div
+                key={c.id}
+                className="text-left bg-white rounded-xl border border-slate-200 p-5 hover:border-emerald-300 hover:shadow-md transition-all flex flex-col h-full"
+              >
+                <button onClick={() => setSelectedCaseId(c.id)} className="text-left flex-1">
+                  <h3 className="font-serif font-bold text-slate-800 mb-2 line-clamp-2">
+                    {c.title}
+                  </h3>
+                  <p className="text-sm text-slate-500 line-clamp-3 mb-4">
+                    {stripHtml(c.content) || c.content}
+                  </p>
+                </button>
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100 w-full mt-auto">
+                  <div className="flex items-center gap-2">
+                    {renderAvatar(c.expand?.user)}
+                    <div className="overflow-hidden">
+                      <p className="text-xs font-medium text-slate-600 truncate max-w-[120px]">
+                        {c.expand?.user?.name || 'Anônimo'}
+                      </p>
+                      <p className="text-xs text-slate-400">{formatDate(c.created)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      onClick={() => handleLike(c.id)}
+                      className={cn(
+                        'flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md transition-colors',
+                        isLiked
+                          ? 'text-red-600 bg-red-50'
+                          : 'text-slate-400 hover:text-red-500 hover:bg-red-50',
+                      )}
+                    >
+                      <Heart className={cn('w-3.5 h-3.5', isLiked && 'fill-current')} />
+                      {likeCount > 0 && likeCount}
+                    </button>
+                    <button
+                      onClick={() => setSelectedCaseId(c.id)}
+                      className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md hover:bg-emerald-100 transition-colors"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> Ver
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md text-xs font-medium shrink-0">
-                  <MessageCircle className="w-3.5 h-3.5" /> Ver
-                </div>
               </div>
-            </button>
-          ))}
+            )
+          })}
         </div>
       )}
 

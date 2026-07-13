@@ -162,54 +162,67 @@ export default function StudentDashboard() {
       <div className="container px-4 max-w-6xl py-8">
         {view === 'hub' ? (
           <div className="animate-fade-in space-y-10">
-            {upcomingLives.length > 0 && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
-                  <Video className="w-5 h-5 text-red-500" /> Aulas Ao Vivo Programadas
-                </h2>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
+                <Video className="w-5 h-5 text-red-500" /> Aulas Ao Vivo
+              </h2>
+              {upcomingLives.length === 0 ? (
+                <p className="text-slate-500 text-center py-8">
+                  Nenhuma aula programada no momento
+                </p>
+              ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {upcomingLives.map((live) => (
-                    <div
-                      key={live.id}
-                      className="bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-red-200 transition-colors flex flex-col h-full"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3 className="font-bold text-slate-800 line-clamp-2">{live.title}</h3>
-                          <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                            Ao Vivo
-                          </span>
-                        </div>
-                        <div className="space-y-1 mt-3">
-                          <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                            <Calendar className="w-4 h-4 text-slate-400" />
-                            {new Date(live.scheduled_at).toLocaleString('pt-BR', {
-                              dateStyle: 'short',
-                              timeStyle: 'short',
-                            })}
-                          </p>
-                          {live.instructor_name && (
-                            <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                              <User className="w-4 h-4 text-slate-400" />
-                              Instrutor: {live.instructor_name}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => navigate(`/plataforma/live/${live.id}`)}
-                        className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white shadow-sm"
+                  {upcomingLives.map((live) => {
+                    const d = new Date(live.scheduled_at)
+                    const dateStr = d.toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })
+                    const timeStr = d.toLocaleTimeString('pt-BR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                    return (
+                      <div
+                        key={live.id}
+                        className="bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-red-200 transition-colors flex flex-col h-full"
                       >
-                        Acessar Transmissão
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h3 className="font-bold text-slate-800 line-clamp-2">{live.title}</h3>
+                            <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                              Ao Vivo
+                            </span>
+                          </div>
+                          <div className="space-y-1 mt-3">
+                            <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                              <Calendar className="w-4 h-4 text-slate-400" />
+                              {dateStr} às {timeStr}
+                            </p>
+                            {live.instructor_name && (
+                              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                                <User className="w-4 h-4 text-slate-400" />
+                                Instrutor: {live.instructor_name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => navigate(`/plataforma/live/${live.id}`)}
+                          className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white shadow-sm"
+                        >
+                          Acessar Transmissão
+                        </Button>
+                      </div>
+                    )
+                  })}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <div>
-              <h2 className="text-xl font-bold text-slate-800 mb-5">Seu Acervo</h2>
+              <h2 className="text-xl font-bold text-slate-800 mb-5">Sua plataforma</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {cards.map((c) => (
                   <CategoryCard

@@ -307,3 +307,8 @@ export interface CaseComment extends RecordModel {
   content: string
   expand?: { user?: User }
 }
+
+export interface CaseLike extends RecordModel {
+  user: string
+  case: string
+}

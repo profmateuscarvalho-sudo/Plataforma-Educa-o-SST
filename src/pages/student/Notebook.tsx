@@ -15,6 +15,7 @@ import { BackToHub } from '@/components/student/BackToHub'
 import { MindMapEditor } from '@/components/student/MindMapEditor'
 import { NewsSidebar } from '@/components/student/NewsSidebar'
 import { CaseFeedContent } from '@/components/student/CaseFeedContent'
+import { CaseFeedSidebar } from '@/components/student/CaseFeedSidebar'
 import { Plus, Trash2, Save, Notebook, FileText, Share2, Briefcase } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -138,113 +139,117 @@ export default function StudentNotebook() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_280px] gap-4">
-          <div className="space-y-3">
-            <Button
-              onClick={handleNewNote}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-            >
-              <Plus className="w-4 h-4 mr-2" /> Nova Nota
-            </Button>
-            <div className="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1">
-              {notes.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-8">Nenhuma nota ainda.</p>
-              ) : (
-                notes.map((n) => (
-                  <button
-                    key={n.id}
-                    onClick={() => setSelectedId(n.id)}
-                    className={cn(
-                      'w-full text-left p-3 rounded-lg border transition-all',
-                      selectedId === n.id
-                        ? 'border-blue-500 bg-blue-50 shadow-sm'
-                        : 'border-slate-200 bg-white hover:border-blue-300',
+      <div className="max-w-[1600px] mx-auto p-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[260px_1fr_280px] gap-4">
+          <div className="hidden xl:block">
+            <CaseFeedSidebar />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
+            <div className="space-y-3">
+              <Button
+                onClick={handleNewNote}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Nova Nota
+              </Button>
+              <div className="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1">
+                {notes.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-8">Nenhuma nota ainda.</p>
+                ) : (
+                  notes.map((n) => (
+                    <button
+                      key={n.id}
+                      onClick={() => setSelectedId(n.id)}
+                      className={cn(
+                        'w-full text-left p-3 rounded-lg border transition-all',
+                        selectedId === n.id
+                          ? 'border-blue-500 bg-blue-50 shadow-sm'
+                          : 'border-slate-200 bg-white hover:border-blue-300',
+                      )}
+                    >
+                      <p className="font-medium text-sm text-slate-800 truncate">
+                        {n.title || 'Sem título'}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">{formatDate(n.updated)}</p>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-sm min-h-[600px]">
+              <Tabs defaultValue="texto" className="flex flex-col flex-1 h-full">
+                <div className="flex items-center justify-between gap-3 p-3 border-b border-slate-200 bg-slate-50/50">
+                  <Input
+                    placeholder="Título da nota..."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="text-lg font-semibold border-none bg-transparent text-slate-800 placeholder:text-slate-400 focus-visible:ring-0 px-2"
+                  />
+                  <div className="flex gap-2 shrink-0">
+                    {selectedId && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleDelete}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     )}
-                  >
-                    <p className="font-medium text-sm text-slate-800 truncate">
-                      {n.title || 'Sem título'}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">{formatDate(n.updated)}</p>
-                  </button>
-                ))
-              )}
+                    <Button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="bg-slate-800 hover:bg-slate-900 text-white"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {saving ? 'Salvando...' : 'Salvar'}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border-b border-slate-200 px-4 bg-white">
+                  <TabsList className="bg-transparent border-none p-0 h-12 w-full justify-start gap-4">
+                    <TabsTrigger
+                      value="texto"
+                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-2 text-slate-600"
+                    >
+                      <FileText className="w-4 h-4 mr-2" /> Texto
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="mapa"
+                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-2 text-slate-600"
+                    >
+                      <Share2 className="w-4 h-4 mr-2" /> Mapa Mental
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="cases"
+                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 rounded-none px-2 text-slate-600 ml-auto"
+                    >
+                      <Briefcase className="w-4 h-4 mr-2" /> Feed de Cases
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="texto" className="flex-1 m-0 p-4">
+                  <Textarea
+                    placeholder="Escreva suas anotações aqui..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="w-full h-full min-h-[450px] resize-none border-none bg-transparent text-slate-700 placeholder:text-slate-400 focus-visible:ring-0 rounded-none"
+                  />
+                </TabsContent>
+                <TabsContent value="mapa" className="flex-1 m-0 p-0 flex flex-col">
+                  <MindMapEditor data={mindMap} onChange={setMindMap} />
+                </TabsContent>
+                <TabsContent value="cases" className="flex-1 m-0 p-0 overflow-y-auto bg-slate-50">
+                  <div className="p-4 h-full">
+                    <CaseFeedContent />
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-sm min-h-[600px]">
-            <Tabs defaultValue="texto" className="flex flex-col flex-1 h-full">
-              <div className="flex items-center justify-between gap-3 p-3 border-b border-slate-200 bg-slate-50/50">
-                <Input
-                  placeholder="Título da nota..."
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="text-lg font-semibold border-none bg-transparent text-slate-800 placeholder:text-slate-400 focus-visible:ring-0 px-2"
-                />
-                <div className="flex gap-2 shrink-0">
-                  {selectedId && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleDelete}
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                  <Button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="bg-slate-800 hover:bg-slate-900 text-white"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    {saving ? 'Salvando...' : 'Salvar'}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="border-b border-slate-200 px-4 bg-white">
-                <TabsList className="bg-transparent border-none p-0 h-12 w-full justify-start gap-4">
-                  <TabsTrigger
-                    value="texto"
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-2 text-slate-600"
-                  >
-                    <FileText className="w-4 h-4 mr-2" /> Texto
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="mapa"
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-2 text-slate-600"
-                  >
-                    <Share2 className="w-4 h-4 mr-2" /> Mapa Mental
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="cases"
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 rounded-none px-2 text-slate-600 ml-auto"
-                  >
-                    <Briefcase className="w-4 h-4 mr-2" /> Feed de Cases
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="texto" className="flex-1 m-0 p-4">
-                <Textarea
-                  placeholder="Escreva suas anotações aqui..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="w-full h-full min-h-[450px] resize-none border-none bg-transparent text-slate-700 placeholder:text-slate-400 focus-visible:ring-0 rounded-none"
-                />
-              </TabsContent>
-              <TabsContent value="mapa" className="flex-1 m-0 p-0 flex flex-col">
-                <MindMapEditor data={mindMap} onChange={setMindMap} />
-              </TabsContent>
-              <TabsContent value="cases" className="flex-1 m-0 p-0 overflow-y-auto bg-slate-50">
-                <div className="p-4 h-full">
-                  <CaseFeedContent />
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-
           <div className="hidden xl:block">
             <NewsSidebar />
           </div>

@@ -22,7 +22,24 @@ onRecordAfterCreateSuccess((e) => {
     try {
       var freePlan = $app.findFirstRecordByFilter('subscription_plans', 'price = 0')
       planId = freePlan.id
-    } catch (_) {}
+      $app
+        .logger()
+        .info(
+          'Free plan located for new user subscription',
+          'planId',
+          planId,
+          'userId',
+          e.record.id,
+        )
+    } catch (planErr) {
+      $app
+        .logger()
+        .error(
+          'Failed to locate Free plan (price = 0) during registration',
+          'error',
+          planErr.message,
+        )
+    }
 
     var subsCol = $app.findCollectionByNameOrId('subscriptions')
     var subRecord = new Record(subsCol)

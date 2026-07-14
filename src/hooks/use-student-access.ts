@@ -44,8 +44,11 @@ export function useStudentAccess() {
 
   const hasSubscriptionAccess = useMemo(() => {
     if (user?.role === 'admin') return true
-    return subscriptions.some((s) => s.status === 'active')
-  }, [user, subscriptions])
+    if (subscriptions.some((s) => s.status === 'active')) return true
+    if (user?.plan_tier === 'prata' || user?.plan_tier === 'ouro') return true
+    if (payments.length > 0) return true
+    return false
+  }, [user, subscriptions, payments])
 
   const activeTier = useMemo<PlanTier>(() => {
     if (user?.role === 'admin') return 'ouro'

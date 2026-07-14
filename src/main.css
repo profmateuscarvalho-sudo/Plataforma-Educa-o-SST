@@ -63,4 +63,50 @@
   .glass-header {
     @apply bg-background/95 backdrop-blur-md border-b border-border/40 supports-[backdrop-filter]:bg-background/80;
   }
+  .dashboard-3d {
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    will-change: transform;
+  }
+  .dashboard-glow {
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    background: radial-gradient(
+      circle at var(--gx, 50%) var(--gy, 50%),
+      rgba(255, 255, 255, 0.18),
+      transparent 45%
+    );
+  }
+  .dashboard-shine {
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 60%
+    );
+    background-size: 250% 250%;
+    animation: dashboard-shine-sweep 5s ease-in-out infinite;
+  }
+  @keyframes dashboard-shine-sweep {
+    0%,
+    100% {
+      background-position: 200% 200%;
+    }
+    50% {
+      background-position: -100% -100%;
+    }
+  }
+  @keyframes dashboard-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+  .animate-dashboard-float {
+    animation: dashboard-float 3s ease-in-out infinite;
+  }
 }

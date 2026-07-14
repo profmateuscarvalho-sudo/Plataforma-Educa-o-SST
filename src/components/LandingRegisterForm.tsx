@@ -78,7 +78,7 @@ export function LandingRegisterForm() {
     } else {
       toast({
         title: 'Cadastro realizado com sucesso!',
-        description: 'Bem-vindo à plataforma. Um e-mail de confirmação foi enviado.',
+        description: 'E-mail de ativação enviado! Verifique sua caixa de entrada e pasta de spam.',
       })
       navigate('/plataforma')
     }

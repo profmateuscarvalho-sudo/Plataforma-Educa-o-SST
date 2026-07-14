@@ -79,7 +79,7 @@ export default function Register() {
     } else {
       toast({
         title: 'Cadastro realizado com sucesso!',
-        description: 'Verifique seu e-mail para ativar sua assinatura.',
+        description: 'E-mail de ativação enviado! Verifique sua caixa de entrada e pasta de spam.',
       })
       navigate('/subscription-pending')
     }

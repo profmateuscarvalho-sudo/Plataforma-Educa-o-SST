@@ -20,6 +20,18 @@ routerAdd(
     var email = user.getString('email')
     var name = user.getString('name') || ''
 
+    var smtpSettings = null
+    try {
+      smtpSettings = $app.findFirstRecordByFilter('smtp_settings', '1 = 1')
+    } catch (_) {}
+
+    var senderName = 'Educação SST'
+    var senderEmail = 'noreply@educacaosst.com.br'
+    if (smtpSettings) {
+      senderName = smtpSettings.getString('sender_name') || senderName
+      senderEmail = smtpSettings.getString('sender_email') || senderEmail
+    }
+
     var baseUrl = $secrets.get('PB_INSTANCE_URL') || 'http://127.0.0.1:8090'
     var sent = false
     var errorMsg = ''
@@ -54,7 +66,7 @@ routerAdd(
               'api-key': brevoKey,
             },
             body: JSON.stringify({
-              sender: { name: 'Educação SST', email: 'noreply@educacaosst.com.br' },
+              sender: { name: senderName, email: senderEmail },
               to: [{ email: email, name: name }],
               subject: 'Ative sua conta - Educação SST',
               htmlContent:

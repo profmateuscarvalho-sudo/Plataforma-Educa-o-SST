@@ -16,6 +16,23 @@ routerAdd(
       if (logs.length > 0) emailLog = logs[0]
     } catch (_) {}
 
+    if (!emailLog) {
+      try {
+        var authRecord = $app.findRecordById('users', userId)
+        var userEmail = authRecord.getString('email')
+        if (userEmail) {
+          var logsByEmail = $app.findRecordsByFilter(
+            'email_logs',
+            "recipient_email = '" + userEmail + "'",
+            '-created',
+            1,
+            0,
+          )
+          if (logsByEmail.length > 0) emailLog = logsByEmail[0]
+        }
+      } catch (_) {}
+    }
+
     var state = 'pending_activation'
 
     if (emailLog) {

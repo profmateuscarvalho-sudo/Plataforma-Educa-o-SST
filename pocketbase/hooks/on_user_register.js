@@ -20,16 +20,8 @@ onRecordAfterCreateSuccess((e) => {
 
     var planId = ''
     try {
-      var plans = $app.findRecordsByFilter('subscription_plans', '1=1', 'created', 50, 0)
-      for (var i = 0; i < plans.length; i++) {
-        var p = plans[i]
-        var pName = (p.getString('name') || '').toLowerCase()
-        var pPrice = p.getNum('price')
-        if (pName.indexOf('free') !== -1 || pPrice === 0) {
-          planId = p.id
-          break
-        }
-      }
+      var freePlan = $app.findFirstRecordByFilter('subscription_plans', 'price = 0')
+      planId = freePlan.id
     } catch (_) {}
 
     var subsCol = $app.findCollectionByNameOrId('subscriptions')

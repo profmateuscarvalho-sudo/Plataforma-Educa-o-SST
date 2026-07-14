@@ -87,6 +87,14 @@ export default function Login() {
             <Button type="submit" className="w-full h-12 text-lg font-bold" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
+            <div className="text-center">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary font-medium hover:underline"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
             <div className="text-center mt-6">
               <p className="text-sm text-slate-500">
                 Ainda não tem conta?{' '}

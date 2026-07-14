@@ -8,23 +8,44 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { getStudents } from '@/services/users'
+import { getStudents, resendActivationEmail, deleteStudent } from '@/services/users'
 import { User } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Search, Users, Edit } from 'lucide-react'
+import { Search, Users, Edit, Mail, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { UserPlanDialog } from '@/components/admin/UserPlanDialog'
+import { UserEditDialog } from '@/components/admin/UserEditDialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { useToast } from '@/hooks/use-toast'
+import { useRealtime } from '@/hooks/use-realtime'
 
 export default function AdminStudents() {
   const [students, setStudents] = useState<User[]>([])
   const [search, setSearch] = useState('')
   const [editingUser, setEditingUser] = useState<User | null>(null)
-  const [planDialogOpen, setPlanDialogOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [resendingId, setResendingId] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  const loadStudents = () => getStudents().then(setStudents).catch(console.error)
 
   useEffect(() => {
-    getStudents().then(setStudents).catch(console.error)
+    loadStudents()
   }, [])
+  useRealtime('users', () => {
+    loadStudents()
+  })
 
   const filtered = students.filter((s) => {
     const q = search.toLowerCase()
@@ -38,6 +59,47 @@ export default function AdminStudents() {
         .includes(q)
     )
   })
+
+  const handleResend = async (s: User) => {
+    setResendingId(s.id)
+    try {
+      await resendActivationEmail(s.id)
+      toast({ title: 'E-mail reenviado', description: `Enviado para ${s.email}` })
+    } catch {
+      toast({ title: 'Erro ao reenviar e-mail', variant: 'destructive' })
+    } finally {
+      setResendingId(null)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await deleteStudent(deleteTarget.id)
+      toast({ title: 'Aluno excluído com sucesso' })
+      setDeleteTarget(null)
+      loadStudents()
+    } catch {
+      toast({ title: 'Erro ao excluir aluno', variant: 'destructive' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const planBadge = (tier?: string) => {
+    const cls =
+      tier === 'ouro'
+        ? 'bg-amber-100 text-amber-700 border-amber-200'
+        : tier === 'prata'
+          ? 'bg-blue-100 text-blue-700 border-blue-200'
+          : 'bg-slate-100 text-slate-600 border-slate-200'
+    return (
+      <Badge variant="outline" className={cls}>
+        {tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Free'}
+      </Badge>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -63,116 +125,154 @@ export default function AdminStudents() {
               className="pl-10 h-10"
             />
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Perfis Profissionais</TableHead>
-                <TableHead>Cadastro</TableHead>
-                <TableHead>Validade</TableHead>
-                <TableHead>Plano</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((s) => {
-                const isActive = s.contract_end_date && new Date(s.contract_end_date) >= new Date()
-                return (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-medium text-slate-800">
-                      {s.name || 'Sem nome'}
-                    </TableCell>
-                    <TableCell className="text-slate-600">{s.email}</TableCell>
-                    <TableCell className="text-slate-600">{s.phone || '-'}</TableCell>
-                    <TableCell>
-                      {s.professional_tags && s.professional_tags.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {s.professional_tags.map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-slate-600 text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : s.professional_profile ? (
-                        <Badge variant="outline" className="text-slate-600">
-                          {s.professional_profile}
-                        </Badge>
-                      ) : (
-                        <span className="text-slate-400">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-slate-500">
-                      {new Date(s.created).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell className="text-slate-500">
-                      {s.contract_end_date
-                        ? new Date(s.contract_end_date).toLocaleDateString('pt-BR')
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>E-mail</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Perfis Profissionais</TableHead>
+                  <TableHead>Cadastro</TableHead>
+                  <TableHead>Validade</TableHead>
+                  <TableHead>Plano</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((s) => {
+                  const isActive =
+                    s.contract_end_date && new Date(s.contract_end_date) >= new Date()
+                  return (
+                    <TableRow key={s.id}>
+                      <TableCell className="font-medium text-slate-800">
+                        {s.name || 'Sem nome'}
+                      </TableCell>
+                      <TableCell className="text-slate-600">{s.email}</TableCell>
+                      <TableCell className="text-slate-600">{s.phone || '-'}</TableCell>
+                      <TableCell>
+                        {s.professional_tags?.length ? (
+                          <div className="flex flex-wrap gap-1">
+                            {s.professional_tags.map((tag) => (
+                              <Badge key={tag} variant="outline" className="text-slate-600 text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : s.professional_profile ? (
+                          <Badge variant="outline" className="text-slate-600">
+                            {s.professional_profile}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-slate-500">
+                        {new Date(s.created).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell className="text-slate-500">
+                        {s.contract_end_date
+                          ? new Date(s.contract_end_date).toLocaleDateString('pt-BR')
+                          : '-'}
+                      </TableCell>
+                      <TableCell>{planBadge(s.plan_tier)}</TableCell>
+                      <TableCell>
                         <Badge
-                          variant="outline"
+                          variant={isActive ? 'default' : 'outline'}
                           className={
-                            s.plan_tier === 'ouro'
-                              ? 'bg-amber-100 text-amber-700 border-amber-200'
-                              : s.plan_tier === 'prata'
-                                ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                            isActive
+                              ? 'bg-emerald-500 hover:bg-emerald-600 border-transparent text-white'
+                              : 'text-slate-500'
                           }
                         >
-                          {s.plan_tier
-                            ? s.plan_tier.charAt(0).toUpperCase() + s.plan_tier.slice(1)
-                            : 'Free'}
+                          {isActive ? 'Ativo' : 'Inativo'}
                         </Badge>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => {
-                            setEditingUser(s)
-                            setPlanDialogOpen(true)
-                          }}
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={isActive ? 'default' : 'outline'}
-                        className={
-                          isActive
-                            ? 'bg-emerald-500 hover:bg-emerald-600 border-transparent text-white'
-                            : 'text-slate-500'
-                        }
-                      >
-                        {isActive ? 'Ativo' : 'Inativo'}
-                      </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Editar"
+                            onClick={() => {
+                              setEditingUser(s)
+                              setEditOpen(true)
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Reenviar ativação"
+                            disabled={resendingId === s.id}
+                            onClick={() => handleResend(s)}
+                          >
+                            {resendingId === s.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Mail className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-600"
+                            title="Excluir"
+                            onClick={() => setDeleteTarget(s)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+                {filtered.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8 text-slate-500">
+                      {search ? 'Nenhum aluno encontrado na busca.' : 'Nenhum aluno cadastrado.'}
                     </TableCell>
                   </TableRow>
-                )
-              })}
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-slate-500">
-                    {search ? 'Nenhum aluno encontrado na busca.' : 'Nenhum aluno cadastrado.'}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
-      <UserPlanDialog
+      <UserEditDialog
         user={editingUser}
-        open={planDialogOpen}
-        setOpen={setPlanDialogOpen}
-        onSuccess={() => getStudents().then(setStudents).catch(console.error)}
+        open={editOpen}
+        setOpen={setEditOpen}
+        onSuccess={loadStudents}
       />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Aluno</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir <strong>{deleteTarget?.name}</strong> (
+              {deleteTarget?.email})? Esta ação removerá o aluno e todos os dados associados
+              (conclusões de aulas, notas, etc.) e não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {deleting ? 'Excluindo...' : 'Excluir Aluno'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

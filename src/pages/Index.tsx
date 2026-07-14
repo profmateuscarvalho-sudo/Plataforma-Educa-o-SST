@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/use-auth'
 import { StudentHomePreview } from '@/components/StudentHomePreview'
 import { PricingSection } from '@/components/PricingSection'
 import { CourseCard } from '@/components/CourseCard'
@@ -17,12 +18,20 @@ export default function Index() {
   const [featuredMag, setFeaturedMag] = useState<Magazine | null>(null)
   const [latestNews, setLatestNews] = useState<News[]>([])
   const [magBannerDismissed, setMagBannerDismissed] = useState(false)
+  const { user, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (sessionStorage.getItem('mag_banner_dismissed') === 'true') {
       setMagBannerDismissed(true)
     }
   }, [])
+
+  useEffect(() => {
+    if (!authLoading && user && user.role === 'student') {
+      navigate('/plataforma', { replace: true })
+    }
+  }, [user, authLoading, navigate])
 
   useEffect(() => {
     getCourses()
@@ -110,6 +119,8 @@ export default function Index() {
         </div>
       </section>
 
+      <PricingSection />
+
       <section className="py-20 bg-slate-50 relative z-20">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
@@ -170,8 +181,6 @@ export default function Index() {
           </div>
         </section>
       )}
-
-      <PricingSection />
 
       {featuredMag && !magBannerDismissed && (
         <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up max-w-[calc(100vw-3rem)]">

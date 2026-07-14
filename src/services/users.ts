@@ -14,3 +14,21 @@ export const updateUserPlan = async (userId: string, planTier: string, billing: 
     subscription_billing: billing,
   })
 }
+
+export const updateUserProfile = async (userId: string, data: Record<string, any>) => {
+  return await pb.collection('users').update<User>(userId, data)
+}
+
+export const resendActivationEmail = async (userId: string) => {
+  return await pb.send('/backend/v1/admin/resend-activation', {
+    method: 'POST',
+    body: JSON.stringify({ userId }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+export const deleteStudent = async (userId: string) => {
+  return await pb.send(`/backend/v1/admin/students/${userId}`, {
+    method: 'DELETE',
+  })
+}

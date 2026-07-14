@@ -80,7 +80,7 @@ export function LandingRegisterForm() {
         title: 'Cadastro realizado com sucesso!',
         description: 'E-mail de ativação enviado! Verifique sua caixa de entrada e pasta de spam.',
       })
-      navigate('/plataforma')
+      navigate('/subscription-pending')
     }
   }
 

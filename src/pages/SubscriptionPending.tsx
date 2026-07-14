@@ -11,7 +11,7 @@ import { MailCheck, LogOut, RefreshCw, ArrowRight, AlertCircle, MailX, Headset }
 
 export default function SubscriptionPending() {
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const { user, signOut, refreshUser } = useAuth()
   const access = useStudentAccess()
   const [status, setStatus] = useState<PendingStatus | null>(null)
   const [loading, setLoading] = useState(true)
@@ -19,6 +19,7 @@ export default function SubscriptionPending() {
 
   const fetchStatus = useCallback(async () => {
     try {
+      await refreshUser()
       const s = await getPendingStatus()
       setStatus(s)
     } catch {
@@ -27,7 +28,7 @@ export default function SubscriptionPending() {
       setLoading(false)
       setChecking(false)
     }
-  }, [])
+  }, [refreshUser])
 
   useEffect(() => {
     if (user) fetchStatus()

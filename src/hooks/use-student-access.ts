@@ -44,7 +44,7 @@ export function useStudentAccess() {
 
   const hasSubscriptionAccess = useMemo(() => {
     if (user?.role === 'admin') return true
-    if (subscriptions.some((s) => s.status === 'active')) return true
+    if (user?.email_verificado && subscriptions.some((s) => s.status === 'active')) return true
     if (user?.plan_tier === 'prata' || user?.plan_tier === 'ouro') return true
     if (payments.length > 0) return true
     return false

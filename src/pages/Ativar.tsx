@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/use-auth'
 import { activateSubscription } from '@/services/subscriptions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -9,6 +10,7 @@ import { Loader2, CheckCircle2, XCircle, ArrowRight } from 'lucide-react'
 export default function Ativar() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { refreshUser } = useAuth()
   const token = searchParams.get('token')
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState('')
@@ -21,7 +23,8 @@ export default function Ativar() {
     }
 
     activateSubscription(token)
-      .then(() => {
+      .then(async () => {
+        await refreshUser()
         setStatus('success')
       })
       .catch((err: unknown) => {
@@ -29,7 +32,7 @@ export default function Ativar() {
         const errAny = err as { response?: { error?: string }; message?: string }
         setErrorMessage(errAny?.response?.error || errAny?.message || 'Token inválido ou expirado.')
       })
-  }, [token])
+  }, [token, refreshUser])
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4">

@@ -85,6 +85,7 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
 
   try {
     user.set('email_verificado', true)
+    user.setVerified(true)
 
     if (isFreePlan) {
       subscription.set('status', 'active')

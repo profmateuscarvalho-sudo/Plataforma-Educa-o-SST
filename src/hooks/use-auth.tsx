@@ -72,6 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         plan_tier: 'free',
         subscription_billing: 'none',
       })
+      await pb.collection('users').authWithPassword(email, pass)
       return { error: null }
     } catch (error) {
       return { error }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { getUserPayments } from '@/services/payments'
 import { getUserSubscriptions, type Subscription } from '@/services/subscriptions'
@@ -22,25 +22,26 @@ const tierLevel = (tier: string): number => {
 
 export function useStudentAccess() {
   const { user } = useAuth()
+  const userId = user?.id
   const [payments, setPayments] = useState<Payment[]>([])
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setLoading(false)
       return
     }
     setLoading(true)
     Promise.all([
-      getUserPayments(user.id).catch(() => []),
-      getUserSubscriptions(user.id).catch(() => []),
+      getUserPayments(userId).catch(() => []),
+      getUserSubscriptions(userId).catch(() => []),
     ]).then(([p, subs]) => {
       setPayments(p.filter((pay: Payment) => pay.status === 'paid'))
       setSubscriptions(subs as Subscription[])
       setLoading(false)
     })
-  }, [user])
+  }, [userId])
 
   const hasSubscriptionAccess = useMemo(() => {
     if (user?.role === 'admin') return true
@@ -56,47 +57,69 @@ export function useStudentAccess() {
     return (user?.plan_tier as PlanTier) || 'free'
   }, [user, hasSubscriptionAccess])
 
-  const hasActiveSubscription = (): boolean => hasSubscriptionAccess
+  const hasActiveSubscription = useCallback(
+    (): boolean => hasSubscriptionAccess,
+    [hasSubscriptionAccess],
+  )
 
-  const canAccess = (requiredTier: PlanTier): boolean => {
-    return tierLevel(activeTier) >= tierLevel(requiredTier)
-  }
+  const canAccess = useCallback(
+    (requiredTier: PlanTier): boolean => {
+      return tierLevel(activeTier) >= tierLevel(requiredTier)
+    },
+    [activeTier],
+  )
 
-  const hasPurchased = (itemTitle: string): boolean => {
-    return payments.some(
-      (p) => p.status === 'paid' && p.product_type && p.product_type.includes(itemTitle),
-    )
-  }
+  const hasPurchased = useCallback(
+    (itemTitle: string): boolean => {
+      return payments.some(
+        (p) => p.status === 'paid' && p.product_type && p.product_type.includes(itemTitle),
+      )
+    },
+    [payments],
+  )
 
-  const getAccessStatus = (item: {
-    is_free?: boolean
-    title: string
-    requiredTier?: PlanTier
-  }): AccessStatus => {
-    if (item.is_free) return 'free'
-    if (activeTier === 'none') return 'locked'
-    const required = item.requiredTier || 'prata'
-    if (canAccess(required)) return 'subscriber'
-    if (hasPurchased(item.title)) return 'owned'
-    return 'locked'
-  }
+  const getAccessStatus = useCallback(
+    (item: { is_free?: boolean; title: string; requiredTier?: PlanTier }): AccessStatus => {
+      if (item.is_free) return 'free'
+      if (activeTier === 'none') return 'locked'
+      const required = item.requiredTier || 'prata'
+      if (canAccess(required)) return 'subscriber'
+      if (hasPurchased(item.title)) return 'owned'
+      return 'locked'
+    },
+    [activeTier, canAccess, hasPurchased],
+  )
 
-  const hasAccess = (item: {
-    is_free?: boolean
-    title: string
-    requiredTier?: PlanTier
-  }): boolean => getAccessStatus(item) !== 'locked'
+  const hasAccess = useCallback(
+    (item: { is_free?: boolean; title: string; requiredTier?: PlanTier }): boolean =>
+      getAccessStatus(item) !== 'locked',
+    [getAccessStatus],
+  )
 
-  return {
-    payments,
-    subscriptions,
-    loading,
-    hasSubscriptionAccess,
-    hasActiveSubscription,
-    hasPurchased,
-    getAccessStatus,
-    hasAccess,
-    activeTier,
-    canAccess,
-  }
+  return useMemo(
+    () => ({
+      payments,
+      subscriptions,
+      loading,
+      hasSubscriptionAccess,
+      hasActiveSubscription,
+      hasPurchased,
+      getAccessStatus,
+      hasAccess,
+      activeTier,
+      canAccess,
+    }),
+    [
+      payments,
+      subscriptions,
+      loading,
+      hasSubscriptionAccess,
+      hasActiveSubscription,
+      hasPurchased,
+      getAccessStatus,
+      hasAccess,
+      activeTier,
+      canAccess,
+    ],
+  )
 }

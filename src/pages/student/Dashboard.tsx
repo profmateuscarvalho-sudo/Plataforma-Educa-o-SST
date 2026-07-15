@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { useStudentCatalog } from '@/hooks/use-student-catalog'
 import { useStudentAccess } from '@/hooks/use-student-access'
@@ -78,8 +78,7 @@ export default function StudentDashboard() {
       .catch(() => {})
   }, [])
 
-  if (loading) return <div className="p-12 text-center text-slate-500">Carregando...</div>
-  if (!user) return <Navigate to="/login" replace />
+  if (loading || !user) return <div className="p-12 text-center text-slate-500">Carregando...</div>
 
   const userTier = user.role === 'admin' ? 'ouro' : user.plan_tier || 'free'
   const tier = tierConfig[userTier] || tierConfig.free

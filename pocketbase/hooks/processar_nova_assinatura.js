@@ -2,6 +2,19 @@ onRecordAfterCreateSuccess((e) => {
   var status = e.record.getString('status')
   if (status !== 'pending') return e.next()
 
+  try {
+    var existingLog = $app.findFirstRecordByFilter(
+      'email_logs',
+      "subscription = '" + e.record.id + "'",
+    )
+    if (existingLog) {
+      $app
+        .logger()
+        .info('Email log already exists for subscription, skipping', 'subscriptionId', e.record.id)
+      return e.next()
+    }
+  } catch (_) {}
+
   var apiKey = $secrets.get('BREVO_API_KEY')
   if (!apiKey) {
     $app.logger().error('BREVO_API_KEY not configured', 'hook', 'processar_nova_assinatura')

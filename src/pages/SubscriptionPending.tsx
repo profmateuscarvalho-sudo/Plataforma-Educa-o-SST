@@ -17,6 +17,8 @@ export default function SubscriptionPending() {
   const [loading, setLoading] = useState(true)
   const [checking, setChecking] = useState(false)
   const hasRefreshedRef = useRef(false)
+  const refreshUserRef = useRef(refreshUser)
+  refreshUserRef.current = refreshUser
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -24,7 +26,7 @@ export default function SubscriptionPending() {
       setStatus(s)
       if (s?.subscription?.status === 'active' && !hasRefreshedRef.current) {
         hasRefreshedRef.current = true
-        await refreshUser()
+        await refreshUserRef.current()
       }
     } catch {
       setStatus(null)
@@ -32,7 +34,7 @@ export default function SubscriptionPending() {
       setLoading(false)
       setChecking(false)
     }
-  }, [refreshUser])
+  }, [])
 
   useEffect(() => {
     if (user) fetchStatus()
@@ -55,7 +57,7 @@ export default function SubscriptionPending() {
 
   useEffect(() => {
     if (!user || access.hasSubscriptionAccess) return
-    const interval = setInterval(fetchStatus, 30000)
+    const interval = setInterval(fetchStatus, 15000)
     return () => clearInterval(interval)
   }, [user, fetchStatus, access.hasSubscriptionAccess])
 

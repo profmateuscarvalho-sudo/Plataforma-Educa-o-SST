@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -16,12 +16,16 @@ export default function SubscriptionPending() {
   const [status, setStatus] = useState<PendingStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [checking, setChecking] = useState(false)
+  const hasRefreshedRef = useRef(false)
 
   const fetchStatus = useCallback(async () => {
     try {
-      await refreshUser()
       const s = await getPendingStatus()
       setStatus(s)
+      if (s?.subscription?.status === 'active' && !hasRefreshedRef.current) {
+        hasRefreshedRef.current = true
+        await refreshUser()
+      }
     } catch {
       setStatus(null)
     } finally {
@@ -50,10 +54,10 @@ export default function SubscriptionPending() {
   )
 
   useEffect(() => {
-    if (!user) return
+    if (!user || access.hasSubscriptionAccess) return
     const interval = setInterval(fetchStatus, 30000)
     return () => clearInterval(interval)
-  }, [user, fetchStatus])
+  }, [user, fetchStatus, access.hasSubscriptionAccess])
 
   const handleSignOut = () => {
     signOut()

@@ -81,24 +81,15 @@ onRecordAfterUpdateSuccess((e) => {
               tier,
             )
 
-          try {
-            var logsCol = $app.findCollectionByNameOrId('email_logs')
-            var logRecord = new Record(logsCol)
-            logRecord.set('recipient_email', e.record.getString('email'))
-            logRecord.set('recipient_name', e.record.getString('name') || '')
-            logRecord.set('email_type', 'activation_free')
-            logRecord.set('sent', true)
-            logRecord.set('sent_at', new Date().toISOString())
-            logRecord.set('brevo_synced', false)
-            logRecord.set('brevo_list_id', 0)
-            logRecord.set('brevo_status', 0)
-            logRecord.set('error_message', '')
-            logRecord.set('user', e.record.id)
-            logRecord.set('subscription', subscription.id)
-            $app.save(logRecord)
-          } catch (logErr) {
-            $app.logger().error('Failed to log activation on verification', 'error', logErr.message)
-          }
+          $app
+            .logger()
+            .info(
+              'Free subscription activated on email verification (no duplicate email log)',
+              'userId',
+              e.record.id,
+              'subscriptionId',
+              subscription.id,
+            )
         }
       }
     } catch (err) {

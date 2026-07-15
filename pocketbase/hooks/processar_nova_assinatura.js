@@ -228,6 +228,35 @@ onRecordAfterCreateSuccess((e) => {
     $app.logger().error('Failed to send activation email', 'error', err.message)
   }
 
+  var brevoSynced = false
+  var brevoStatus = 0
+
+  try {
+    var contactRes = $http.send({
+      url: 'https://api.brevo.com/v3/contacts',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+      body: JSON.stringify({
+        email: userEmail,
+        attributes: { NOME: userName },
+        listIds: [7],
+        updateEnabled: true,
+      }),
+      timeout: 30,
+    })
+    brevoStatus = contactRes.statusCode
+    brevoSynced = contactRes.statusCode >= 200 && contactRes.statusCode < 300
+    if (!brevoSynced) {
+      $app
+        .logger()
+        .error('Brevo contact sync failed on subscription', 'status', contactRes.statusCode)
+    } else {
+      $app.logger().info('User synced to Brevo List 7 on subscription', 'email', userEmail)
+    }
+  } catch (err) {
+    $app.logger().error('Failed to sync user to Brevo on subscription', 'error', err.message)
+  }
+
   try {
     var logsCol = $app.findCollectionByNameOrId('email_logs')
     var logRecord = new Record(logsCol)
@@ -236,9 +265,9 @@ onRecordAfterCreateSuccess((e) => {
     logRecord.set('email_type', emailType)
     logRecord.set('sent', emailSent)
     logRecord.set('sent_at', emailSent ? new Date().toISOString() : '')
-    logRecord.set('brevo_synced', false)
-    logRecord.set('brevo_list_id', 0)
-    logRecord.set('brevo_status', 0)
+    logRecord.set('brevo_synced', brevoSynced)
+    logRecord.set('brevo_list_id', 7)
+    logRecord.set('brevo_status', brevoStatus)
     logRecord.set('error_message', errorMsg)
     logRecord.set('user', userId)
     logRecord.set('subscription', e.record.id)

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { activateSubscription } from '@/services/subscriptions'
 import { Button } from '@/components/ui/button'
@@ -30,7 +31,9 @@ export default function Ativar() {
       .catch((err: unknown) => {
         setStatus('error')
         const errAny = err as { response?: { error?: string }; message?: string }
-        setErrorMessage(errAny?.response?.error || errAny?.message || 'Token inválido ou expirado.')
+        const message = errAny?.response?.error || errAny?.message || 'Token inválido ou expirado.'
+        setErrorMessage(message)
+        toast.error('Falha na ativação', { description: message })
       })
   }, [token, refreshUser])
 

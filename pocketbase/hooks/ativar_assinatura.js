@@ -23,6 +23,43 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
   var isFreePlan = false
   var planIdentified = false
 
+  if (!planId) {
+    $app
+      .logger()
+      .warn(
+        'Plan field is empty on subscription, attempting free plan fallback',
+        'subscriptionId',
+        subscription.id,
+        'userId',
+        userId,
+      )
+    try {
+      var freePlanFallback = $app.findFirstRecordByFilter('subscription_plans', 'price = 0')
+      planId = freePlanFallback.id
+      subscription.set('plan', planId)
+      $app.save(subscription)
+      $app
+        .logger()
+        .info(
+          'Free plan assigned to subscription during activation',
+          'subscriptionId',
+          subscription.id,
+          'planId',
+          planId,
+        )
+    } catch (fallbackErr) {
+      $app
+        .logger()
+        .error(
+          'Failed to find free plan for empty plan field fallback',
+          'error',
+          fallbackErr.message,
+          'subscriptionId',
+          subscription.id,
+        )
+    }
+  }
+
   if (planId) {
     try {
       var plan = $app.findRecordById('subscription_plans', planId)
@@ -31,6 +68,17 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       isFreePlan = planName.toLowerCase().indexOf('free') !== -1 || planPrice === 0
       planIdentified = true
     } catch (err) {
+      $app
+        .logger()
+        .error(
+          'Plan record not found in subscription_plans collection',
+          'planId',
+          planId,
+          'error',
+          err.message,
+          'subscriptionId',
+          subscription.id,
+        )
       planIdentified = false
     }
   }
@@ -51,13 +99,13 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
     $app
       .logger()
       .error(
-        'plano nao identificado - verificacao manual necessaria',
+        'Plan not identified - manual verification required',
         'subscriptionId',
         subscription.id,
         'userId',
         userId,
         'planId',
-        planId || 'null',
+        planId || 'empty',
         'hook',
         'ativar_assinatura',
       )
@@ -69,7 +117,12 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       failLogRecord.set('recipient_name', userName)
       failLogRecord.set('email_type', 'payment_confirmed')
       failLogRecord.set('sent', false)
-      failLogRecord.set('error_message', 'plano não identificado - verificação manual necessária')
+      failLogRecord.set(
+        'error_message',
+        planId
+          ? 'Plano não encontrado na coleção subscription_plans (ID: ' + planId + ')'
+          : 'Nenhum plano associado à assinatura e plano gratuito não encontrado',
+      )
       failLogRecord.set('brevo_synced', false)
       failLogRecord.set('brevo_list_id', 0)
       failLogRecord.set('brevo_status', 0)
@@ -80,7 +133,11 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       $app.logger().error('Failed to log plan identification failure', 'error', logErr.message)
     }
 
-    return e.json(422, { error: 'plano não identificado - verificação manual necessária' })
+    return e.json(422, {
+      error: planId
+        ? 'Plano não identificado - verificação manual necessária'
+        : 'Nenhum plano associado à assinatura. Contate o suporte.',
+    })
   }
 
   try {

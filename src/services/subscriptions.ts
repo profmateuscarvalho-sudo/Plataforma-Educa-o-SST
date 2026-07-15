@@ -12,6 +12,7 @@ export interface ActivateSubscriptionResponse {
   success: boolean
   message: string
   plan?: string
+  accessGranted?: boolean
 }
 
 export const activateSubscription = async (

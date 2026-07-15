@@ -19,7 +19,7 @@ routerAdd(
 
     var userEmail = user.getString('email')
     var userName = user.getString('name') || ''
-    var planTier = user.getString('plan_tier') || 'free'
+    var planTier = user.getString('plan_tier') || body.plan_tier || 'free'
     var isFreePlan = planTier === 'free' || planTier === ''
 
     if (!userEmail) return e.badRequestError('Usuário não possui e-mail cadastrado')
@@ -35,20 +35,44 @@ routerAdd(
 
     var subscriptionId = ''
     var planName = isFreePlan ? 'Free' : planTier === 'ouro' ? 'Ouro' : 'Prata'
+    var resolvedPlanId = ''
 
     try {
       var existingSub = $app.findFirstRecordByFilter('subscriptions', "user = '" + userId + "'")
+      resolvedPlanId = existingSub.getString('plan')
       existingSub.set('token', token)
       existingSub.set('status', 'pending')
       $app.save(existingSub)
       subscriptionId = existingSub.id
     } catch (_) {
+      if (!resolvedPlanId) {
+        try {
+          if (isFreePlan) {
+            var freePlan = $app.findFirstRecordByFilter('subscription_plans', "name ~ 'Free'")
+            if (freePlan) resolvedPlanId = freePlan.id
+          } else if (planTier === 'ouro') {
+            var ouroPlan = $app.findFirstRecordByFilter(
+              'subscription_plans',
+              "name ~ 'Ouro' && name ~ 'Mensal'",
+            )
+            if (ouroPlan) resolvedPlanId = ouroPlan.id
+          } else if (planTier === 'prata') {
+            var prataPlan = $app.findFirstRecordByFilter(
+              'subscription_plans',
+              "name ~ 'Prata' && name ~ 'Mensal'",
+            )
+            if (prataPlan) resolvedPlanId = prataPlan.id
+          }
+        } catch (_) {}
+      }
+
       try {
         var subsCol = $app.findCollectionByNameOrId('subscriptions')
         var newSub = new Record(subsCol)
         newSub.set('user', userId)
         newSub.set('status', 'pending')
         newSub.set('token', token)
+        if (resolvedPlanId) newSub.set('plan', resolvedPlanId)
         $app.save(newSub)
         subscriptionId = newSub.id
       } catch (createErr) {

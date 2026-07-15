@@ -19,10 +19,10 @@ export const updateUserProfile = async (userId: string, data: Record<string, any
   return await pb.collection('users').update<User>(userId, data)
 }
 
-export const resendActivationEmail = async (userId: string) => {
+export const resendActivationEmail = async (userId: string, planTier?: string) => {
   return await pb.send('/backend/v1/admin/resend-activation', {
     method: 'POST',
-    body: JSON.stringify({ userId }),
+    body: JSON.stringify({ userId, plan_tier: planTier }),
     headers: { 'Content-Type': 'application/json' },
   })
 }

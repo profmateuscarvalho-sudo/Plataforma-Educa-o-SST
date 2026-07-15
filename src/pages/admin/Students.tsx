@@ -63,10 +63,20 @@ export default function AdminStudents() {
   const handleResend = async (s: User) => {
     setResendingId(s.id)
     try {
-      await resendActivationEmail(s.id)
+      await resendActivationEmail(s.id, s.plan_tier)
       toast({ title: 'E-mail reenviado', description: `Enviado para ${s.email}` })
-    } catch {
-      toast({ title: 'Erro ao reenviar e-mail', variant: 'destructive' })
+    } catch (err: unknown) {
+      const errAny = err as { response?: { error?: string; details?: string }; message?: string }
+      const backendError =
+        errAny?.response?.error ||
+        errAny?.response?.details ||
+        errAny?.message ||
+        'Erro ao reenviar e-mail'
+      toast({
+        title: 'Erro ao reenviar e-mail',
+        description: backendError,
+        variant: 'destructive',
+      })
     } finally {
       setResendingId(null)
     }

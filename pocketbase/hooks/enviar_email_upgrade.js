@@ -28,7 +28,6 @@ onRecordAfterUpdateSuccess((e) => {
     '<tr><td align="center">' +
     '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
     '<tr><td style="padding:40px 48px 36px;text-align:center;border-top:6px solid #E8792B;">' +
-    '<img src="https://www.educacaosst.com.br/assets/logo-e-768dc.png" alt="Educação SST" style="max-width:200px;height:auto;margin-bottom:12px;" />' +
     '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
     '</td></tr>' +
     '<tr><td style="padding:0 48px 28px;text-align:center;">' +

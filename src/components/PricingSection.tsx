@@ -46,7 +46,7 @@ const DEFAULT_PLANS = [
     iconColor: 'text-blue-500',
     highlighted: true,
     cta: 'Assine',
-    ctaLink: '/planos',
+    ctaLink: '/register',
     isComingSoon: true,
   },
   {
@@ -62,7 +62,7 @@ const DEFAULT_PLANS = [
     accent: 'border-amber-300',
     iconColor: 'text-amber-500',
     cta: 'Assine',
-    ctaLink: '/planos',
+    ctaLink: '/register',
     isComingSoon: true,
   },
 ]

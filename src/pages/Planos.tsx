@@ -91,7 +91,7 @@ export default function Planos() {
 
   const handleSelectPlan = (plan: SubscriptionPlan | undefined) => {
     if (!user) {
-      navigate('/login')
+      navigate('/register')
       return
     }
     if (!plan || plan.price === 0) return

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { SquareLogo } from '@/components/ui/Logos'
 import { Loader2, CheckCircle2, XCircle, ArrowRight } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
 
 export default function Ativar() {
   const [searchParams] = useSearchParams()
@@ -37,6 +38,14 @@ export default function Ativar() {
       })
   }, [token, refreshUser])
 
+  const handleGoToDashboard = useCallback(() => {
+    if (pb.authStore.isValid) {
+      navigate('/plataforma')
+    } else {
+      navigate('/login?redirect=/plataforma')
+    }
+  }, [navigate])
+
   return (
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-2xl border-none">
@@ -66,10 +75,7 @@ export default function Ativar() {
               <p className="text-slate-600 text-center">
                 Sua assinatura foi ativada com sucesso! Você já pode acessar a plataforma.
               </p>
-              <Button
-                onClick={() => navigate('/plataforma')}
-                className="w-full h-12 text-lg font-bold"
-              >
+              <Button onClick={handleGoToDashboard} className="w-full h-12 text-lg font-bold">
                 Ir para o Dashboard <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>

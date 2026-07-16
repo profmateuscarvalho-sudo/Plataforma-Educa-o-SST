@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +13,7 @@ import pb from '@/lib/pocketbase/client'
 export default function Login() {
   const { signIn } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('carvalhomateus@icloud.com')
   const [pass, setPass] = useState('securepassword123')
   const [loading, setLoading] = useState(false)
@@ -37,11 +38,16 @@ export default function Login() {
       })
     } else {
       toast({ title: 'Bem-vindo!' })
-      const record = pb.authStore.record as { role?: string } | null
-      if (record?.role === 'admin') {
-        navigate('/admin')
+      const redirectTo = searchParams.get('redirect')
+      if (redirectTo) {
+        navigate(redirectTo)
       } else {
-        navigate('/plataforma')
+        const record = pb.authStore.record as { role?: string } | null
+        if (record?.role === 'admin') {
+          navigate('/admin')
+        } else {
+          navigate('/plataforma')
+        }
       }
     }
   }

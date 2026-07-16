@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import pb from '@/lib/pocketbase/client'
-import { setMetaTags, stripHtml } from '@/lib/utils'
+import { setMetaTags, stripHtml, cn } from '@/lib/utils'
 import {
   getSimulado,
   getSimuladoQuestions,
@@ -13,7 +13,6 @@ import {
   incrementSimuladoAccess,
 } from '@/services/simulados'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import type { Simulado, SimuladoQuestion } from '@/types'
 
@@ -130,9 +129,9 @@ export default function SimuladoSession() {
 
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-2xl shadow-xl">
+        <Card className="w-full max-w-2xl shadow-xl border-b-4 border-primary">
           <CardContent className="p-8 md:p-12 text-center space-y-6">
-            <div className="w-24 h-24 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-6">
+            <div className="w-24 h-24 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-6 shadow-lg">
               <CheckCircle2 className="w-12 h-12 text-primary" />
             </div>
             <h2 className="text-3xl font-bold text-slate-800">Resultado do Simulado</h2>
@@ -193,7 +192,7 @@ export default function SimuladoSession() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-white border-b sticky top-0 z-10">
+      <header className="bg-white border-b sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Button
             variant="ghost"
@@ -212,11 +211,24 @@ export default function SimuladoSession() {
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-3xl">
-        <div className="mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-800 leading-tight">
-            {currentIndex + 1}. {currentQ.question}
-          </h2>
-        </div>
+        <Card className="mb-8 shadow-xl border-b-4 border-primary bg-white rounded-2xl">
+          <CardContent className="p-6 md:p-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-white text-sm font-bold">
+                {currentIndex + 1}
+              </span>
+              <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+                Questão
+              </span>
+            </div>
+            <h2
+              className="text-lg md:text-2xl font-bold text-slate-800"
+              style={{ fontSize: '1.125rem', lineHeight: '1.6' }}
+            >
+              {currentQ.question}
+            </h2>
+          </CardContent>
+        </Card>
 
         <div className="space-y-3 mb-12">
           {currentQ.options.map((opt, idx) => {
@@ -227,23 +239,25 @@ export default function SimuladoSession() {
             const showAsIncorrect = hasAnswered && isSelected && !isCorrect
 
             let btnClass =
-              'w-full text-left p-4 md:p-5 rounded-xl border-2 transition-all duration-200 text-lg flex items-center justify-between '
+              'w-full text-left p-4 md:p-5 rounded-xl border-2 transition-all duration-200 text-base md:text-lg flex items-center justify-between shadow-sm '
             if (!hasAnswered) {
               btnClass +=
-                'border-slate-200 bg-white hover:border-primary/50 hover:bg-slate-50 cursor-pointer'
+                'border-slate-200 bg-white hover:border-primary/50 hover:bg-slate-50 hover:shadow-xl hover:-translate-y-0.5 cursor-pointer'
             } else {
               btnClass += 'cursor-default '
               if (showAsCorrect) {
-                btnClass += 'border-green-500 bg-green-50 text-green-700 shadow-sm'
+                btnClass +=
+                  'border-green-500 bg-green-50 text-green-700 shadow-xl border-b-4 border-green-600'
               } else if (showAsIncorrect) {
-                btnClass += 'border-red-500 bg-red-50 text-red-700 shadow-sm'
+                btnClass +=
+                  'border-red-500 bg-red-50 text-red-700 shadow-xl border-b-4 border-red-600'
               } else {
                 btnClass += 'border-slate-200 bg-white opacity-50'
               }
             }
 
             let letterClass =
-              'w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm flex-shrink-0 transition-colors '
+              'w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold text-sm flex-shrink-0 transition-colors '
             if (!hasAnswered) {
               letterClass += 'border-slate-300 text-slate-500 bg-white'
             } else {
@@ -276,6 +290,7 @@ export default function SimuladoSession() {
                             : 'text-slate-500'
                         : 'text-slate-700',
                     )}
+                    style={{ lineHeight: '1.6' }}
                   >
                     {opt}
                   </span>
@@ -287,7 +302,7 @@ export default function SimuladoSession() {
           })}
         </div>
 
-        <div className="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-sm sticky bottom-4">
+        <div className="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-xl border-b-4 border-slate-200 sticky bottom-4">
           <Button variant="ghost" onClick={handlePrev} disabled={currentIndex === 0}>
             Anterior
           </Button>

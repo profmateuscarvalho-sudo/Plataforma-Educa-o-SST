@@ -100,8 +100,11 @@ export default function StudentLive() {
                 <p className="text-slate-400 text-sm max-w-md">
                   Faça upgrade do seu plano para acessar as gravações das aulas ao vivo.
                 </p>
-                <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white mt-2">
-                  <Link to="/planos">Desbloquear com Plano Prata</Link>
+                <Button
+                  asChild
+                  className="bg-amber-500 hover:bg-amber-600 text-white mt-2 text-base font-semibold px-6 h-12"
+                >
+                  <Link to="/planos">Faça um upgrade para ter acesso</Link>
                 </Button>
               </div>
             ) : (

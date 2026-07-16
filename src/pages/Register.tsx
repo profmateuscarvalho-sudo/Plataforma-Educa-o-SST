@@ -9,15 +9,9 @@ import { SquareLogo } from '@/components/ui/Logos'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
-
-const PROFESSIONAL_TAGS = [
-  'Estudante',
-  'Técnico em Segurança',
-  'Engenheiro de Segurança',
-  'Enfermeiro do Trabalho',
-  'Médico do Trabalho',
-  'Outros',
-]
+import { LocationSelect } from '@/components/LocationSelect'
+import { PasswordStrengthChecker } from '@/components/PasswordStrengthChecker'
+import { useProfessionalTags } from '@/hooks/use-professional-tags'
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -31,6 +25,7 @@ export default function Register() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const planId = searchParams.get('planId') || undefined
+  const { tags: availableTags } = useProfessionalTags()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -65,6 +60,16 @@ export default function Register() {
 
     if (pass.length < 8) {
       setPassError('A senha deve ter no mínimo 8 caracteres.')
+      return
+    }
+
+    if (!/[A-Z]/.test(pass)) {
+      setPassError('A senha deve conter pelo menos uma letra maiúscula.')
+      return
+    }
+
+    if (!/[0-9]/.test(pass)) {
+      setPassError('A senha deve conter pelo menos um número.')
       return
     }
 
@@ -137,33 +142,18 @@ export default function Register() {
                 className="h-11 bg-slate-50"
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">Cidade *</Label>
-                <Input
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  required
-                  className="h-11 bg-slate-50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">Estado *</Label>
-                <Input
-                  id="state"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  required
-                  className="h-11 bg-slate-50"
-                />
-              </div>
-            </div>
+            <LocationSelect
+              state={state}
+              city={city}
+              onStateChange={setState}
+              onCityChange={setCity}
+              required
+            />
             <div className="space-y-2">
               <Label>Perfil Profissional</Label>
               <p className="text-xs text-slate-400">Selecione uma ou mais opções</p>
               <div className="flex flex-wrap gap-2">
-                {PROFESSIONAL_TAGS.map((tag) => (
+                {availableTags.map((tag) => (
                   <button
                     key={tag}
                     type="button"
@@ -194,6 +184,7 @@ export default function Register() {
                 required
                 className="h-11 bg-slate-50"
               />
+              {pass && <PasswordStrengthChecker password={pass} />}
             </div>
             <div className="space-y-2">
               <Label htmlFor="passwordConfirm">Confirmar Senha</Label>

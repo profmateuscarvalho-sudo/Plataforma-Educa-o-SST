@@ -19,6 +19,7 @@ import {
   MessagesSquare,
   FlaskConical,
   ScrollText,
+  Tag,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -52,6 +53,7 @@ export default function AdminLayout() {
     { label: 'Casos Profissionais', icon: MessagesSquare, path: '/admin/casos' },
     { label: 'Testes iPag', icon: FlaskConical, path: '/admin/testes' },
     { label: 'Log de E-mails', icon: ScrollText, path: '/admin/email-log' },
+    { label: 'Tags Profissionais', icon: Tag, path: '/admin/tags' },
   ]
 
   return (

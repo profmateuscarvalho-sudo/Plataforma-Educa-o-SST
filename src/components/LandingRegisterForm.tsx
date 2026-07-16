@@ -8,15 +8,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
-
-const PROFESSIONAL_TAGS = [
-  'Estudante',
-  'Técnico em Segurança',
-  'Engenheiro de Segurança',
-  'Enfermeiro do Trabalho',
-  'Médico do Trabalho',
-  'Outros',
-]
+import { LocationSelect } from '@/components/LocationSelect'
+import { PasswordStrengthChecker } from '@/components/PasswordStrengthChecker'
+import { useProfessionalTags } from '@/hooks/use-professional-tags'
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -28,6 +22,7 @@ const formatPhone = (value: string) => {
 export function LandingRegisterForm() {
   const { signUp } = useAuth()
   const navigate = useNavigate()
+  const { tags: availableTags } = useProfessionalTags()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -51,17 +46,15 @@ export function LandingRegisterForm() {
     setTagsError('')
 
     if (selectedTags.length === 0) {
-      setTagsError('Selecione pelo menos um perfil profissional.')
+      setTagsError('Selecione um perfil.')
       return
     }
-
     if (pass !== passConfirm) {
       setPassError('As senhas não coincidem.')
       return
     }
-
-    if (pass.length < 8) {
-      setPassError('A senha deve ter no mínimo 8 caracteres.')
+    if (pass.length < 8 || !/[A-Z]/.test(pass) || !/[0-9]/.test(pass)) {
+      setPassError('A senha não atende aos requisitos de segurança.')
       return
     }
 
@@ -126,36 +119,18 @@ export function LandingRegisterForm() {
               className="h-10 bg-slate-50"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="landing-city" className="text-sm">
-                Cidade
-              </Label>
-              <Input
-                id="landing-city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-                className="h-10 bg-slate-50"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="landing-state" className="text-sm">
-                Estado
-              </Label>
-              <Input
-                id="landing-state"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                required
-                className="h-10 bg-slate-50"
-              />
-            </div>
-          </div>
+          <LocationSelect
+            state={state}
+            city={city}
+            onStateChange={setState}
+            onCityChange={setCity}
+            required
+            compact
+          />
           <div className="space-y-1.5">
             <Label className="text-sm">Perfil Profissional</Label>
             <div className="flex flex-wrap gap-1.5">
-              {PROFESSIONAL_TAGS.map((tag) => (
+              {availableTags.map((tag) => (
                 <button
                   key={tag}
                   type="button"
@@ -174,35 +149,34 @@ export function LandingRegisterForm() {
             </div>
             {tagsError && <p className="text-xs font-medium text-destructive">{tagsError}</p>}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="landing-password" className="text-sm">
-                Senha
-              </Label>
-              <Input
-                id="landing-password"
-                type="password"
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                required
-                className="h-10 bg-slate-50"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="landing-password-confirm" className="text-sm">
-                Confirmar
-              </Label>
-              <Input
-                id="landing-password-confirm"
-                type="password"
-                value={passConfirm}
-                onChange={(e) => setPassConfirm(e.target.value)}
-                required
-                className="h-10 bg-slate-50"
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="landing-password" className="text-sm">
+              Senha
+            </Label>
+            <Input
+              id="landing-password"
+              type="password"
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
+              required
+              className="h-10 bg-slate-50"
+            />
+            {pass && <PasswordStrengthChecker password={pass} />}
           </div>
-          {passError && <p className="text-xs font-medium text-destructive">{passError}</p>}
+          <div className="space-y-1.5">
+            <Label htmlFor="landing-password-confirm" className="text-sm">
+              Confirmar
+            </Label>
+            <Input
+              id="landing-password-confirm"
+              type="password"
+              value={passConfirm}
+              onChange={(e) => setPassConfirm(e.target.value)}
+              required
+              className="h-10 bg-slate-50"
+            />
+            {passError && <p className="text-xs font-medium text-destructive">{passError}</p>}
+          </div>
           <Button type="submit" className="w-full h-11 text-base font-bold mt-2" disabled={loading}>
             {loading ? 'Criando conta...' : 'Assine Gratuitamente'}
           </Button>

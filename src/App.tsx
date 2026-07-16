@@ -67,6 +67,8 @@ import AdminAnnouncements from './pages/admin/Announcements'
 import AdminCases from './pages/admin/Cases'
 import AdminTestes from './pages/admin/Testes'
 import AdminEmailLog from './pages/admin/EmailLog'
+import AdminProfessionalTags from './pages/admin/ProfessionalTags'
+import Convite from './pages/Convite'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -98,6 +100,7 @@ const App = () => (
             <Route path="/anuncie-na-revista" element={<Anuncie />} />
             <Route path="/planos" element={<Planos />} />
             <Route path="/documentarios/:id" element={<DocumentaryPitch />} />
+            <Route path="/convite" element={<Convite />} />
           </Route>
 
           <Route path="/plataforma/documentarios/:id" element={<DocumentaryViewer />} />
@@ -141,6 +144,7 @@ const App = () => (
             <Route path="/admin/casos" element={<AdminCases />} />
             <Route path="/admin/testes" element={<AdminTestes />} />
             <Route path="/admin/email-log" element={<AdminEmailLog />} />
+            <Route path="/admin/tags" element={<AdminProfessionalTags />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

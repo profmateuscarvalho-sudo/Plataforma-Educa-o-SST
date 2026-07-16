@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { ProfileAvatar } from '@/components/student/ProfileAvatar'
+import { LocationSelect } from '@/components/LocationSelect'
+import { useProfessionalTags } from '@/hooks/use-professional-tags'
 import { Check } from 'lucide-react'
 import { getUserPayments } from '@/services/payments'
 import { getSubscriptionPlans } from '@/services/subscription-plans'
@@ -17,15 +19,6 @@ import { ptBR } from 'date-fns/locale'
 import { Shield, CreditCard, User as UserIcon, Lock, Crown, ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-const PROFESSIONAL_PROFILES = [
-  'Estudante',
-  'Técnico em Segurança',
-  'Engenheiro de Segurança',
-  'Enfermeiro do Trabalho',
-  'Médico do Trabalho',
-  'Outros',
-]
-
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11)
   if (digits.length <= 2) return digits
@@ -36,6 +29,7 @@ const formatPhone = (value: string) => {
 export default function StudentProfile() {
   const { user, updateProfile } = useAuth()
   const { toast } = useToast()
+  const { tags: availableTags } = useProfessionalTags()
 
   const [name, setName] = useState(user?.name || '')
   const [email, setEmail] = useState(user?.email || '')
@@ -168,30 +162,16 @@ export default function StudentProfile() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">Cidade</Label>
-                  <Input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">Estado</Label>
-                  <Input
-                    id="state"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    className="h-11"
-                  />
-                </div>
-              </div>
+              <LocationSelect
+                state={state}
+                city={city}
+                onStateChange={setState}
+                onCityChange={setCity}
+              />
               <div className="space-y-2">
                 <Label>Perfil Profissional</Label>
                 <div className="flex flex-wrap gap-2">
-                  {PROFESSIONAL_PROFILES.map((p) => (
+                  {availableTags.map((p) => (
                     <button
                       key={p}
                       type="button"

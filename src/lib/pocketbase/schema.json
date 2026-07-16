@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T04:33:19.586Z",
+  "generatedAt": "2026-07-16T13:59:56.643Z",
   "collections": [
     {
       "name": "users",
@@ -2486,6 +2486,46 @@
         "CREATE INDEX idx_email_logs_email ON email_logs (recipient_email)",
         "CREATE INDEX idx_email_logs_created ON email_logs (created DESC)"
       ]
+    },
+    {
+      "name": "professional_tag_options",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
     }
   ]
 }

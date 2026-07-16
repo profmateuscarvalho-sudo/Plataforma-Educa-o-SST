@@ -70,6 +70,12 @@ export default function LiveSessions() {
           <p className="text-white/60 mt-2">
             Acompanhe transmissões ao vivo e assista gravações de sessões anteriores.
           </p>
+          <div className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-300 backdrop-blur-sm shadow-lg">
+            <Calendar className="w-4 h-4" />
+            <span className="text-sm font-bold tracking-wide">
+              Início das transmissões em Agosto
+            </span>
+          </div>
         </div>
       </div>
 

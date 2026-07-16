@@ -56,6 +56,10 @@ export default function DocumentaryViewer() {
     (user.plan_tier && user.plan_tier !== 'free') ||
     (!!user.contract_end_date && new Date(user.contract_end_date) >= new Date())
 
+  if (!hasAccess) {
+    return <Navigate to="/planos" replace />
+  }
+
   const videoUrl = getPandaUrl(project.panda_video_id)
   const photos = project.presentation_photos || []
 

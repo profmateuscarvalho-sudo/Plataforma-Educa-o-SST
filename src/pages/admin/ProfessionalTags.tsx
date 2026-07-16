@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Trash2, Tag, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Tag, Loader2, Pencil } from 'lucide-react'
 import {
   getProfessionalTagOptions,
   createProfessionalTagOption,
@@ -21,6 +21,10 @@ export default function AdminProfessionalTags() {
   const [open, setOpen] = useState(false)
   const [newTag, setNewTag] = useState('')
   const [creating, setCreating] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editingTag, setEditingTag] = useState<ProfessionalTagOption | null>(null)
+  const [editName, setEditName] = useState('')
+  const [saving, setSaving] = useState(false)
   const { toast } = useToast()
 
   const load = async () => {
@@ -34,7 +38,6 @@ export default function AdminProfessionalTags() {
   useEffect(() => {
     load()
   }, [])
-
   useRealtime('professional_tag_options', () => load())
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -50,6 +53,28 @@ export default function AdminProfessionalTags() {
       toast({ title: 'Erro ao criar tag', variant: 'destructive' })
     } finally {
       setCreating(false)
+    }
+  }
+
+  const handleEditOpen = (tag: ProfessionalTagOption) => {
+    setEditingTag(tag)
+    setEditName(tag.name)
+    setEditOpen(true)
+  }
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingTag || !editName.trim()) return
+    setSaving(true)
+    try {
+      await updateProfessionalTagOption(editingTag.id, { name: editName.trim() })
+      toast({ title: 'Tag atualizada com sucesso' })
+      setEditOpen(false)
+      setEditingTag(null)
+    } catch {
+      toast({ title: 'Erro ao atualizar tag', variant: 'destructive' })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -105,7 +130,17 @@ export default function AdminProfessionalTags() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="h-8 w-8"
+                    title="Editar"
+                    onClick={() => handleEditOpen(tag)}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="text-red-600"
+                    title="Excluir"
                     onClick={() => handleDelete(tag)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -135,8 +170,28 @@ export default function AdminProfessionalTags() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={creating}>
-              {creating && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
-              Criar Tag
+              {creating && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}Criar Tag
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Tag</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSave} className="space-y-4 pt-4">
+            <div>
+              <Label>Nome da Tag *</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Nome da tag"
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={saving}>
+              {saving && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}Salvar Alterações
             </Button>
           </form>
         </DialogContent>

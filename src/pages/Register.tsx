@@ -12,6 +12,7 @@ import { Check } from 'lucide-react'
 import { LocationSelect } from '@/components/LocationSelect'
 import { PasswordStrengthChecker } from '@/components/PasswordStrengthChecker'
 import { useProfessionalTags } from '@/hooks/use-professional-tags'
+import '@/styles/3d-effects.css'
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -97,8 +98,17 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl border-none">
+    <div className="min-h-[calc(100vh-80px)] bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 flex items-center justify-center p-4 perspective-1500 relative overflow-hidden">
+      <div className="absolute top-10 left-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl animate-float-3d" />
+      <div
+        className="absolute bottom-10 right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl animate-float-3d"
+        style={{ animationDelay: '3s' }}
+      />
+      <div
+        className="absolute top-1/4 right-1/4 w-24 h-24 bg-blue-200/20 rounded-3xl rotate-12 blur-2xl animate-float-3d"
+        style={{ animationDelay: '1.5s' }}
+      />
+      <Card className="relative w-full max-w-md glass shadow-3d-lg card-3d border-white/40">
         <CardHeader className="space-y-4 text-center items-center pb-8">
           <SquareLogo variant="yellow" className="w-16 h-16 text-5xl mb-2" />
           <div>
@@ -159,10 +169,10 @@ export default function Register() {
                     type="button"
                     onClick={() => toggleTag(tag)}
                     className={cn(
-                      'px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5',
+                      'px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 tag-chip-3d',
                       selectedTags.includes(tag)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                        ? 'bg-primary text-primary-foreground tag-chip-3d-active'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:-translate-y-0.5',
                     )}
                   >
                     {selectedTags.includes(tag) && <Check className="w-3.5 h-3.5" />}

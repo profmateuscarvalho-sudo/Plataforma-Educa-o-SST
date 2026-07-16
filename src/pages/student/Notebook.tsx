@@ -14,10 +14,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { BackToHub } from '@/components/student/BackToHub'
 import { MindMapEditor } from '@/components/student/MindMapEditor'
 import { NewsSidebar } from '@/components/student/NewsSidebar'
-import { Plus, Trash2, Save, Notebook, FileText, Share2, Briefcase } from 'lucide-react'
+import { Plus, Trash2, Save, Notebook, FileText, Share2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import '@/styles/3d-effects.css'
 
 const emptyMindMap: MindMapData = { nodes: [], connections: [] }
 
@@ -34,20 +35,16 @@ export default function StudentNotebook() {
   const loadNotes = useCallback(async () => {
     if (!user) return
     try {
-      const list = await getStudentNotes(user.id)
-      setNotes(list)
+      setNotes(await getStudentNotes(user.id))
     } catch {
-      /* ignore */
+      /* intentionally ignored */
     }
   }, [user])
 
   useEffect(() => {
     loadNotes()
   }, [loadNotes])
-
-  useRealtime('student_notes', () => {
-    loadNotes()
-  })
+  useRealtime('student_notes', () => loadNotes())
 
   const selected = notes.find((n) => n.id === selectedId) || null
 
@@ -121,19 +118,19 @@ export default function StudentNotebook() {
     })
 
   return (
-    <div className="min-h-[calc(100vh-56px)] bg-slate-50 text-slate-800">
-      <div className="bg-white border-b border-slate-200 py-6 px-4">
+    <div className="min-h-[calc(100vh-56px)] bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 text-slate-800">
+      <div className="notebook-glass border-b border-white/40 py-6 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-              <Notebook className="w-5 h-5 text-blue-600" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center icon-3d">
+              <Notebook className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-serif font-bold text-slate-800">Caderno Virtual</h1>
               <p className="text-slate-500 text-sm">Suas anotações, mapas mentais e comunidade</p>
             </div>
           </div>
-          <BackToHub className="bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200" />
+          <BackToHub className="bg-white/60 hover:bg-white/80 text-slate-700 hover:text-slate-900 border border-white/50 backdrop-blur" />
         </div>
       </div>
 
@@ -143,7 +140,7 @@ export default function StudentNotebook() {
             <div className="space-y-3">
               <Button
                 onClick={handleNewNote}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-3d btn-3d border-0"
               >
                 <Plus className="w-4 h-4 mr-2" /> Nova Nota
               </Button>
@@ -156,10 +153,10 @@ export default function StudentNotebook() {
                       key={n.id}
                       onClick={() => setSelectedId(n.id)}
                       className={cn(
-                        'w-full text-left p-3 rounded-lg border transition-all',
+                        'w-full text-left p-3 rounded-xl border transition-all',
                         selectedId === n.id
-                          ? 'border-blue-500 bg-blue-50 shadow-sm'
-                          : 'border-slate-200 bg-white hover:border-blue-300',
+                          ? 'border-blue-500 bg-blue-50 shadow-3d'
+                          : 'border-white/40 bg-white/50 hover:border-blue-300 hover:shadow-3d backdrop-blur',
                       )}
                     >
                       <p className="font-medium text-sm text-slate-800 truncate">
@@ -172,9 +169,9 @@ export default function StudentNotebook() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-sm min-h-[600px]">
+            <div className="notebook-glass rounded-2xl overflow-hidden flex flex-col min-h-[600px]">
               <Tabs defaultValue="texto" className="flex flex-col flex-1 h-full">
-                <div className="flex items-center justify-between gap-3 p-3 border-b border-slate-200 bg-slate-50/50">
+                <div className="flex items-center justify-between gap-3 p-3 border-b border-white/30 bg-white/30">
                   <Input
                     placeholder="Título da nota..."
                     value={title}
@@ -187,7 +184,8 @@ export default function StudentNotebook() {
                         variant="ghost"
                         size="icon"
                         onClick={handleDelete}
-                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 icon-3d"
+                        title="Excluir"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -195,7 +193,8 @@ export default function StudentNotebook() {
                     <Button
                       onClick={handleSave}
                       disabled={saving}
-                      className="bg-slate-800 hover:bg-slate-900 text-white"
+                      className="bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white btn-3d border-0"
+                      title="Salvar"
                     >
                       <Save className="w-4 h-4 mr-2" />
                       {saving ? 'Salvando...' : 'Salvar'}
@@ -203,7 +202,7 @@ export default function StudentNotebook() {
                   </div>
                 </div>
 
-                <div className="border-b border-slate-200 px-4 bg-white">
+                <div className="border-b border-white/30 px-4 bg-white/20">
                   <TabsList className="bg-transparent border-none p-0 h-12 w-full justify-start gap-4">
                     <TabsTrigger
                       value="texto"
@@ -225,7 +224,7 @@ export default function StudentNotebook() {
                     placeholder="Escreva suas anotações aqui..."
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    className="w-full h-full min-h-[450px] resize-none border-none bg-transparent text-slate-700 placeholder:text-slate-400 focus-visible:ring-0 rounded-none"
+                    className="w-full h-full min-h-[450px] resize-none border-none bg-white/40 text-slate-700 placeholder:text-slate-400 focus-visible:ring-0 rounded-xl backdrop-blur"
                   />
                 </TabsContent>
                 <TabsContent value="mapa" className="flex-1 m-0 p-0 flex flex-col">

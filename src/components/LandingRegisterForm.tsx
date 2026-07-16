@@ -11,6 +11,7 @@ import { Check } from 'lucide-react'
 import { LocationSelect } from '@/components/LocationSelect'
 import { PasswordStrengthChecker } from '@/components/PasswordStrengthChecker'
 import { useProfessionalTags } from '@/hooks/use-professional-tags'
+import '@/styles/3d-effects.css'
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -78,7 +79,7 @@ export function LandingRegisterForm() {
   }
 
   return (
-    <Card className="w-full shadow-2xl border-none">
+    <Card className="w-full glass shadow-3d-lg card-3d border-white/40">
       <CardContent className="p-6">
         <form onSubmit={handleRegister} className="space-y-3">
           <div className="space-y-1.5">
@@ -136,10 +137,10 @@ export function LandingRegisterForm() {
                   type="button"
                   onClick={() => toggleTag(tag)}
                   className={cn(
-                    'px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1',
+                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 tag-chip-3d',
                     selectedTags.includes(tag)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                      ? 'bg-primary text-primary-foreground tag-chip-3d-active'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:-translate-y-0.5',
                   )}
                 >
                   {selectedTags.includes(tag) && <Check className="w-3 h-3" />}

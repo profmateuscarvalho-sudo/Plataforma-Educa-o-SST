@@ -4,7 +4,7 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { getCases, createCase, getLikesForCases, toggleLike } from '@/services/professional-cases'
 import { ProfessionalCase } from '@/types'
 import { CaseDetailModal } from '@/components/student/CaseDetailModal'
-import { Heart, MessageCircle, MessageSquare } from 'lucide-react'
+import { Heart, MessageCircle, MessageSquare, Briefcase, Plus } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { stripHtml, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import '@/styles/3d-effects.css'
 
 export function CaseFeedSidebar() {
   const { user } = useAuth()
@@ -24,7 +25,6 @@ export function CaseFeedSidebar() {
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
   const [likedCases, setLikedCases] = useState<Set<string>>(new Set())
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
-
   const [showCreate, setShowCreate] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newContent, setNewContent] = useState('')
@@ -47,14 +47,13 @@ export function CaseFeedSidebar() {
         setLikedCases(userLiked)
       }
     } catch {
-      /* ignore */
+      /* intentionally ignored */
     }
   }, [user?.id])
 
   useEffect(() => {
     loadData()
   }, [loadData])
-
   useRealtime('professional_cases', () => loadData())
   useRealtime('case_likes', () => loadData())
 
@@ -62,10 +61,9 @@ export function CaseFeedSidebar() {
     if (!user) return
     const wasLiked = likedCases.has(caseId)
     setLikedCases((prev) => {
-      const next = new Set(prev)
-      if (wasLiked) next.delete(caseId)
-      else next.add(caseId)
-      return next
+      const n = new Set(prev)
+      wasLiked ? n.delete(caseId) : n.add(caseId)
+      return n
     })
     setLikeCounts((prev) => ({
       ...prev,
@@ -75,10 +73,9 @@ export function CaseFeedSidebar() {
       await toggleLike(caseId, user.id)
     } catch {
       setLikedCases((prev) => {
-        const next = new Set(prev)
-        if (wasLiked) next.add(caseId)
-        else next.delete(caseId)
-        return next
+        const n = new Set(prev)
+        wasLiked ? n.add(caseId) : n.delete(caseId)
+        return n
       })
       setLikeCounts((prev) => ({
         ...prev,
@@ -97,7 +94,7 @@ export function CaseFeedSidebar() {
       setShowCreate(false)
       await loadData()
     } catch {
-      /* ignore */
+      /* intentionally ignored */
     } finally {
       setSaving(false)
     }
@@ -108,10 +105,10 @@ export function CaseFeedSidebar() {
       <img
         src={pb.files.getUrl(u, u.avatar)}
         alt={u.name}
-        className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-100"
+        className="w-10 h-10 rounded-full object-cover shrink-0 ring-2 ring-white shadow-md"
       />
     ) : (
-      <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm shrink-0 border border-emerald-200">
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm shrink-0 ring-2 ring-white shadow-md">
         {u?.name?.charAt(0).toUpperCase() || '?'}
       </div>
     )
@@ -126,14 +123,13 @@ export function CaseFeedSidebar() {
 
   return (
     <>
-      <div className="rounded-xl border border-slate-200 bg-slate-100 overflow-hidden flex flex-col h-full shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-slate-100 overflow-hidden flex flex-col h-full shadow-sm">
         <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-emerald-600" />
             <h3 className="text-lg font-bold text-slate-800">Feed de Cases</h3>
           </div>
         </div>
-
         <div className="p-4 bg-white border-b border-slate-200 shadow-sm z-10 shrink-0">
           <div
             onClick={() => setShowCreate(true)}
@@ -143,7 +139,6 @@ export function CaseFeedSidebar() {
             <span className="text-slate-500 font-medium">Compartilhe um caso profissional...</span>
           </div>
         </div>
-
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {cases.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-6">Nenhum caso compartilhado.</p>
@@ -151,18 +146,31 @@ export function CaseFeedSidebar() {
             cases.map((c) => {
               const isLiked = likedCases.has(c.id)
               const likeCount = likeCounts[c.id] || 0
+              const author = c.expand?.user
+              const tags = author?.professional_tags || []
               return (
                 <div
                   key={c.id}
-                  className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                  className="social-card p-4 rounded-2xl border border-slate-200 bg-white"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    {renderAvatar(c.expand?.user)}
-                    <div>
-                      <span className="text-sm font-bold text-slate-800 block">
-                        {c.expand?.user?.name || 'Anônimo'}
+                    {renderAvatar(author)}
+                    <div className="min-w-0">
+                      <span className="text-sm font-bold text-slate-800 block truncate">
+                        {author?.name || 'Anônimo'}
                       </span>
-                      <span className="text-xs text-slate-500 block">{formatDate(c.created)}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {tags.slice(0, 2).map((t: string) => (
+                          <span
+                            key={t}
+                            className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100"
+                          >
+                            <Briefcase className="w-2 h-2" />
+                            {t}
+                          </span>
+                        ))}
+                        <span className="text-xs text-slate-400">{formatDate(c.created)}</span>
+                      </div>
                     </div>
                   </div>
                   <button onClick={() => setSelectedCaseId(c.id)} className="w-full text-left">
@@ -171,23 +179,24 @@ export function CaseFeedSidebar() {
                       {stripHtml(c.content) || c.content}
                     </p>
                   </button>
-                  <div className="flex items-center gap-4 pt-3 border-t border-slate-100">
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                     <button
                       onClick={() => handleLike(c.id)}
                       className={cn(
-                        'flex items-center justify-center gap-1.5 text-sm font-medium transition-colors flex-1 py-1.5 rounded-lg hover:bg-slate-50',
-                        isLiked ? 'text-red-600' : 'text-slate-500 hover:text-red-500',
+                        'flex items-center justify-center gap-1.5 text-sm font-semibold transition-all flex-1 py-1.5 rounded-xl',
+                        isLiked
+                          ? 'text-red-600 bg-red-50'
+                          : 'text-slate-500 hover:text-red-500 hover:bg-red-50',
                       )}
                     >
-                      <Heart className={cn('w-4 h-4', isLiked && 'fill-current')} />
-                      Curtir {likeCount > 0 && `(${likeCount})`}
+                      <Heart className={cn('w-4 h-4', isLiked && 'fill-current')} /> Curtir{' '}
+                      {likeCount > 0 && `(${likeCount})`}
                     </button>
                     <button
                       onClick={() => setSelectedCaseId(c.id)}
-                      className="flex items-center justify-center gap-1.5 text-sm font-medium text-slate-500 hover:text-emerald-600 flex-1 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+                      className="flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-emerald-600 flex-1 py-1.5 rounded-xl hover:bg-slate-50 transition-all"
                     >
-                      <MessageCircle className="w-4 h-4" />
-                      Comentar
+                      <MessageCircle className="w-4 h-4" /> Comentar
                     </button>
                   </div>
                 </div>
@@ -228,9 +237,9 @@ export function CaseFeedSidebar() {
             <Button
               onClick={handleCreate}
               disabled={saving || !newTitle.trim() || !newContent.trim()}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white btn-3d"
             >
-              {saving ? 'Publicando...' : 'Publicar Case'}
+              <Plus className="w-4 h-4 mr-2" /> {saving ? 'Publicando...' : 'Publicar Case'}
             </Button>
           </div>
         </DialogContent>

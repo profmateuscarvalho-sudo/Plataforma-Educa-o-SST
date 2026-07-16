@@ -14,9 +14,10 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { CaseDetailModal } from '@/components/student/CaseDetailModal'
-import { MessagesSquare, Plus, MessageCircle, Heart, Clock } from 'lucide-react'
+import { MessagesSquare, Plus, MessageCircle, Heart, Clock, Briefcase } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { stripHtml, cn } from '@/lib/utils'
+import '@/styles/3d-effects.css'
 
 export function CaseFeedContent() {
   const { user } = useAuth()
@@ -46,14 +47,13 @@ export function CaseFeedContent() {
         setLikedCases(userLiked)
       }
     } catch {
-      /* ignore */
+      /* intentionally ignored */
     }
   }, [user?.id])
 
   useEffect(() => {
     loadData()
   }, [loadData])
-
   useRealtime('professional_cases', () => loadData())
   useRealtime('case_likes', () => loadData())
 
@@ -66,7 +66,7 @@ export function CaseFeedContent() {
       setNewContent('')
       setShowCreate(false)
     } catch {
-      /* ignore */
+      /* intentionally ignored */
     } finally {
       setSaving(false)
     }
@@ -76,10 +76,9 @@ export function CaseFeedContent() {
     if (!user) return
     const wasLiked = likedCases.has(caseId)
     setLikedCases((prev) => {
-      const next = new Set(prev)
-      if (wasLiked) next.delete(caseId)
-      else next.add(caseId)
-      return next
+      const n = new Set(prev)
+      wasLiked ? n.delete(caseId) : n.add(caseId)
+      return n
     })
     setLikeCounts((prev) => ({
       ...prev,
@@ -89,10 +88,9 @@ export function CaseFeedContent() {
       await toggleLike(caseId, user.id)
     } catch {
       setLikedCases((prev) => {
-        const next = new Set(prev)
-        if (wasLiked) next.add(caseId)
-        else next.delete(caseId)
-        return next
+        const n = new Set(prev)
+        wasLiked ? n.add(caseId) : n.delete(caseId)
+        return n
       })
       setLikeCounts((prev) => ({
         ...prev,
@@ -104,92 +102,104 @@ export function CaseFeedContent() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
 
-  const renderAvatar = (u: any) =>
+  const renderAvatar = (u: any, size = 'w-11 h-11') =>
     u?.avatar ? (
       <img
         src={pb.files.getUrl(u, u.avatar)}
         alt={u.name}
-        className="w-9 h-9 rounded-full object-cover"
+        className={`${size} rounded-full object-cover ring-2 ring-white shadow-md`}
       />
     ) : (
-      <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm shrink-0">
+      <div
+        className={`${size} rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white`}
+      >
         {u?.name?.charAt(0).toUpperCase() || '?'}
       </div>
     )
 
   return (
-    <div className="flex flex-col h-full bg-white/50 rounded-xl">
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <MessagesSquare className="w-5 h-5 text-emerald-600" /> Casos Profissionais
           </h2>
-          <p className="text-sm text-slate-500">Compartilhe e discuta experiências</p>
+          <p className="text-sm text-slate-500">Compartilhe e discuta experiências em SST</p>
         </div>
         <Button
           onClick={() => setShowCreate(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white btn-3d"
         >
           <Plus className="w-4 h-4 mr-2" /> Novo Case
         </Button>
       </div>
 
       {cases.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+        <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
           <MessagesSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-500">Nenhum case aprovado ainda.</p>
-          <p className="text-slate-400 text-sm mt-1">
-            Os cases compartilhados aparecem aqui após aprovação.
-          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8">
+        <div className="space-y-5 pb-8 max-w-2xl mx-auto w-full">
           {cases.map((c) => {
             const isLiked = likedCases.has(c.id)
             const likeCount = likeCounts[c.id] || 0
+            const author = c.expand?.user
+            const tags = author?.professional_tags || []
             return (
               <div
                 key={c.id}
-                className="text-left bg-white rounded-xl border border-slate-200 p-5 hover:border-emerald-300 hover:shadow-md transition-all flex flex-col h-full"
+                className="social-card bg-white rounded-2xl border border-slate-200 overflow-hidden"
               >
-                <button onClick={() => setSelectedCaseId(c.id)} className="text-left flex-1">
-                  <h3 className="font-serif font-bold text-slate-800 mb-2 line-clamp-2">
+                <div className="flex items-center gap-3 p-4 pb-3">
+                  {renderAvatar(author)}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-800 truncate">{author?.name || 'Anônimo'}</p>
+                    <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                      {tags.slice(0, 3).map((t: string) => (
+                        <span
+                          key={t}
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100"
+                        >
+                          <Briefcase className="w-2.5 h-2.5" />
+                          {t}
+                        </span>
+                      ))}
+                      <span className="text-xs text-slate-400">{formatDate(c.created)}</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedCaseId(c.id)}
+                  className="block w-full text-left px-4 pb-3"
+                >
+                  <h3 className="font-serif font-bold text-lg text-slate-900 mb-1.5 line-clamp-2">
                     {c.title}
                   </h3>
-                  <p className="text-sm text-slate-500 line-clamp-3 mb-4">
+                  <p className="text-sm text-slate-600 line-clamp-4">
                     {stripHtml(c.content) || c.content}
                   </p>
                 </button>
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100 w-full mt-auto">
-                  <div className="flex items-center gap-2">
-                    {renderAvatar(c.expand?.user)}
-                    <div className="overflow-hidden">
-                      <p className="text-xs font-medium text-slate-600 truncate max-w-[120px]">
-                        {c.expand?.user?.name || 'Anônimo'}
-                      </p>
-                      <p className="text-xs text-slate-400">{formatDate(c.created)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <button
-                      onClick={() => handleLike(c.id)}
-                      className={cn(
-                        'flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md transition-colors',
-                        isLiked
-                          ? 'text-red-600 bg-red-50'
-                          : 'text-slate-400 hover:text-red-500 hover:bg-red-50',
-                      )}
-                    >
-                      <Heart className={cn('w-3.5 h-3.5', isLiked && 'fill-current')} />
-                      {likeCount > 0 && likeCount}
-                    </button>
-                    <button
-                      onClick={() => setSelectedCaseId(c.id)}
-                      className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md hover:bg-emerald-100 transition-colors"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" /> Ver
-                    </button>
-                  </div>
+                <div className="flex items-center gap-2 px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+                  <button
+                    onClick={() => handleLike(c.id)}
+                    className={cn(
+                      'flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full transition-all',
+                      isLiked
+                        ? 'text-red-600 bg-red-50'
+                        : 'text-slate-500 hover:text-red-500 hover:bg-red-50',
+                    )}
+                  >
+                    <Heart className={cn('w-4 h-4', isLiked && 'fill-current')} />
+                    {likeCount > 0 && <span>{likeCount}</span>}
+                    <span>Curtir</span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedCaseId(c.id)}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-emerald-600 px-3 py-1.5 rounded-full hover:bg-emerald-50 transition-all"
+                  >
+                    <MessageCircle className="w-4 h-4" /> Comentar
+                  </button>
                 </div>
               </div>
             )
@@ -202,8 +212,8 @@ export function CaseFeedContent() {
           <DialogHeader>
             <DialogTitle>Compartilhar Case</DialogTitle>
             <DialogDescription>
-              Descreva uma situação profissional para discussão. Seu case será revisado pela equipe
-              antes de aparecer no feed.
+              Descreva uma situação profissional para discussão. Seu case será revisado antes de
+              aparecer no feed.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -227,13 +237,12 @@ export function CaseFeedContent() {
               />
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-400">
-              <Clock className="w-3.5 h-3.5" />
-              Seu case será revisado antes da publicação
+              <Clock className="w-3.5 h-3.5" /> Seu case será revisado antes da publicação
             </div>
             <Button
               onClick={handleCreate}
               disabled={saving || !newTitle.trim() || !newContent.trim()}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white btn-3d"
             >
               {saving ? 'Enviando...' : 'Enviar para Moderação'}
             </Button>

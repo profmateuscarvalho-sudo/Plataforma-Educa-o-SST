@@ -17,6 +17,20 @@ onRecordAfterCreateSuccess((e) => {
   try {
     var freePlan = $app.findFirstRecordByFilter('subscription_plans', 'price = 0')
     planId = freePlan.id
+
+    var freePlanPrice = freePlan.getFloat('price')
+    var freePlanName = freePlan.getString('name')
+    $app
+      .logger()
+      .info(
+        'Free plan identified on registration',
+        'planId',
+        planId,
+        'planName',
+        freePlanName,
+        'planPrice',
+        freePlanPrice,
+      )
   } catch (planErr) {
     planLookupFailed = true
     planErrMessage = planErr.message

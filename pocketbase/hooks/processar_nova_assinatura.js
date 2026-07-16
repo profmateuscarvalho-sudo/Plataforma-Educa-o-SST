@@ -64,7 +64,7 @@ onRecordAfterCreateSuccess((e) => {
     try {
       var plan = $app.findRecordById('subscription_plans', planId)
       planName = plan.getString('name')
-      var planPrice = plan.getNum('price')
+      var planPrice = plan.getFloat('price')
       isFreePlan = planName.toLowerCase().indexOf('free') !== -1 || planPrice === 0
       planIdentified = true
     } catch (err) {

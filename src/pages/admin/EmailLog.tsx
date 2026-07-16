@@ -9,10 +9,21 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Mail, ShieldCheck, RefreshCw, CheckCircle2, XCircle } from 'lucide-react'
+import {
+  Mail,
+  ShieldCheck,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react'
 import { getEmailLogs, getUsersForLog, getSubscriptionsForLog } from '@/services/email-logs'
 import { EmailLog, User } from '@/types'
 import { Subscription } from '@/services/subscriptions'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 const EMAIL_TYPE_LABELS: Record<string, string> = {
   lead: 'Confirmação de Lead',
@@ -118,6 +129,17 @@ export default function AdminEmailLog() {
     }
   }
 
+  const [expandedErrors, setExpandedErrors] = useState<Set<string>>(new Set())
+
+  const toggleError = (id: string) => {
+    setExpandedErrors((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -127,7 +149,7 @@ export default function AdminEmailLog() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
             <Mail className="w-8 h-8 text-blue-500" />
@@ -170,6 +192,17 @@ export default function AdminEmailLog() {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 p-4">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+            <div>
+              <p className="text-2xl font-bold text-secondary">
+                {rows.filter((r) => r.errorMessage).length}
+              </p>
+              <p className="text-xs text-slate-500">Com Erro</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -177,18 +210,34 @@ export default function AdminEmailLog() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-8"></TableHead>
                 <TableHead>Nome / Email</TableHead>
                 <TableHead>Tipo de Email</TableHead>
                 <TableHead>Email Enviado</TableHead>
                 <TableHead>Email Verificado</TableHead>
                 <TableHead>Status Assinatura</TableHead>
                 <TableHead>Brevo Sync</TableHead>
+                <TableHead>Erro Técnico</TableHead>
                 <TableHead>Data</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.id}>
+                  <TableCell className="w-8 p-2">
+                    {row.errorMessage && (
+                      <button
+                        onClick={() => toggleError(row.id)}
+                        className="text-slate-400 hover:text-slate-700 transition-colors"
+                      >
+                        {expandedErrors.has(row.id) ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="font-medium text-slate-800">{row.name}</div>
                     <div className="text-xs text-slate-500">{row.email}</div>
@@ -240,6 +289,33 @@ export default function AdminEmailLog() {
                       <XCircle className="w-4 h-4 text-slate-300" />
                     )}
                   </TableCell>
+                  <TableCell>
+                    {row.errorMessage ? (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 transition-colors">
+                            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span className="max-w-[180px] truncate text-left">
+                              {row.errorMessage}
+                            </span>
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="max-w-md p-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 font-semibold text-red-700">
+                              <AlertTriangle className="w-4 h-4" />
+                              Detalhe do Erro
+                            </div>
+                            <p className="text-xs text-slate-600 break-words whitespace-pre-wrap">
+                              {row.errorMessage}
+                            </p>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-xs text-slate-500">
                     {formatDate(row.created)}
                   </TableCell>
@@ -247,14 +323,14 @@ export default function AdminEmailLog() {
               ))}
               {rows.length === 0 && !loading && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={9} className="text-center py-8 text-slate-500">
                     Nenhum registro encontrado.
                   </TableCell>
                 </TableRow>
               )}
               {loading && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={9} className="text-center py-8 text-slate-500">
                     Carregando...
                   </TableCell>
                 </TableRow>

@@ -27,7 +27,7 @@ export default function StudentLayout() {
     ) {
       navigate('/subscription-pending')
     }
-  }, [user, loading, access.loading, access.hasSubscriptionAccess, navigate])
+  }, [user?.id, user?.role, loading, access.loading, access.hasSubscriptionAccess, navigate])
 
   useEffect(() => {
     window.scrollTo(0, 0)

@@ -62,7 +62,11 @@ export function CaseFeedSidebar() {
     const wasLiked = likedCases.has(caseId)
     setLikedCases((prev) => {
       const n = new Set(prev)
-      wasLiked ? n.delete(caseId) : n.add(caseId)
+      if (wasLiked) {
+        n.delete(caseId)
+      } else {
+        n.add(caseId)
+      }
       return n
     })
     setLikeCounts((prev) => ({
@@ -74,7 +78,11 @@ export function CaseFeedSidebar() {
     } catch {
       setLikedCases((prev) => {
         const n = new Set(prev)
-        wasLiked ? n.add(caseId) : n.delete(caseId)
+        if (wasLiked) {
+          n.add(caseId)
+        } else {
+          n.delete(caseId)
+        }
         return n
       })
       setLikeCounts((prev) => ({

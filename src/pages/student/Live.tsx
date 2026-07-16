@@ -7,7 +7,7 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ChevronLeft, Send } from 'lucide-react'
+import { ChevronLeft, Send, Lock } from 'lucide-react'
 
 export default function StudentLive() {
   const { id } = useParams()
@@ -85,17 +85,32 @@ export default function StudentLive() {
             className="bg-black w-full rounded-2xl overflow-hidden shadow-2xl relative border border-white/5"
             style={{ paddingTop: '56.25%' }}
           >
-            {session.status !== 'scheduled' ? (
+            {session.status === 'scheduled' ? (
+              <div className="absolute inset-0 flex items-center justify-center text-slate-500">
+                Transmissão inicia em {new Date(session.scheduled_at).toLocaleString()}
+              </div>
+            ) : session.status === 'finished' &&
+              user?.plan_tier === 'free' &&
+              user?.role !== 'admin' ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-center p-8 gap-3">
+                <Lock className="w-12 h-12 text-amber-400" />
+                <p className="text-white text-lg font-semibold">
+                  Conteúdo disponível para membros Prata e Ouro
+                </p>
+                <p className="text-slate-400 text-sm max-w-md">
+                  Faça upgrade do seu plano para acessar as gravações das aulas ao vivo.
+                </p>
+                <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white mt-2">
+                  <Link to="/planos">Desbloquear com Plano Prata</Link>
+                </Button>
+              </div>
+            ) : (
               <iframe
                 src={iframeUrl}
                 className="absolute top-0 left-0 w-full h-full border-none"
                 allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
                 allowFullScreen
               />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-slate-500">
-                Transmissão inicia em {new Date(session.scheduled_at).toLocaleString()}
-              </div>
             )}
           </div>
           <div>

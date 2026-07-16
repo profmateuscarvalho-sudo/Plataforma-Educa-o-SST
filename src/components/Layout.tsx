@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Instagram,
   MessageCircle,
+  Linkedin,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useEffect } from 'react'
@@ -214,6 +215,14 @@ export default function Layout() {
                 className="bg-white/10 p-2 rounded-full text-white hover:bg-green-500 transition-colors"
               >
                 <MessageCircle className="w-5 h-5" />
+              </a>
+              <a
+                href="https://www.linkedin.com/company/revista-educacao-sst"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/10 p-2 rounded-full text-white hover:bg-blue-600 transition-colors"
+              >
+                <Linkedin className="w-5 h-5" />
               </a>
             </div>
           </div>

@@ -10,7 +10,7 @@ routerAdd(
     if (!body.card_number || !body.cvv) throw new BadRequestError('Dados de pagamento invalidos.')
 
     const plan = $app.findRecordById('subscription_plans', body.plan_id)
-    var price = plan.get('price') || 0
+    var price = plan.getFloat('price') || 0
     var interval = plan.getString('interval')
     var planName = plan.getString('name')
 

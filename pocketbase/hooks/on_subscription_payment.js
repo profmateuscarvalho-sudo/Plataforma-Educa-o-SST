@@ -34,13 +34,14 @@ onRecordAfterUpdateSuccess((e) => {
       var plan = $app.findRecordById('subscription_plans', planId)
       planName = plan.getString('name')
       var planNameLower = planName.toLowerCase()
+      var planPrice = plan.getFloat('price')
       if (planNameLower.indexOf('ouro') !== -1) {
         tier = 'ouro'
         planIdentified = true
       } else if (planNameLower.indexOf('prata') !== -1) {
         tier = 'prata'
         planIdentified = true
-      } else if (planNameLower.indexOf('free') !== -1 || plan.getNum('price') === 0) {
+      } else if (planNameLower.indexOf('free') !== -1 || planPrice === 0) {
         tier = 'free'
         planIdentified = true
       } else {
@@ -83,6 +84,21 @@ onRecordAfterUpdateSuccess((e) => {
       $app.logger().error('Failed to log plan identification failure', 'error', logErr.message)
     }
 
+    return e.next()
+  }
+
+  if (tier === 'free') {
+    $app
+      .logger()
+      .info(
+        'Free plan detected — skipping payment confirmed email and Brevo sync',
+        'userId',
+        userId,
+        'planId',
+        planId,
+        'hook',
+        'on_subscription_payment',
+      )
     return e.next()
   }
 

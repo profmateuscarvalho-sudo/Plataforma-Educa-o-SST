@@ -83,8 +83,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           professional_tags: professionalTags,
           city,
           state,
-          plan_tier: 'free',
-          subscription_billing: 'none',
           plan_id: planId,
         })
         await pb.collection('users').authWithPassword(email, pass)

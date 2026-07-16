@@ -2,7 +2,17 @@ onRecordCreateRequest((e) => {
   var body = e.requestInfo().body || {}
   var planId = body.plan_id || ''
 
-  if (!e.record.getString('plan_tier')) {
+  var earlyIsPaidPlan = false
+  if (planId) {
+    try {
+      var earlyPlan = $app.findRecordById('subscription_plans', planId)
+      if (earlyPlan.getFloat('price') > 0) {
+        earlyIsPaidPlan = true
+      }
+    } catch (_) {}
+  }
+
+  if (!e.record.getString('plan_tier') && !earlyIsPaidPlan) {
     e.record.set('plan_tier', 'free')
     e.record.set('subscription_billing', 'none')
   }

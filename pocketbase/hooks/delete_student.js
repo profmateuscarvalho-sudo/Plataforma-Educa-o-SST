@@ -9,7 +9,17 @@ routerAdd(
     var userId = e.request.pathValue('userId')
     if (!userId) return e.badRequestError('userId é obrigatório')
 
-    var collections = ['lesson_completions', 'lesson_ratings', 'student_notes', 'support_messages']
+    var collections = [
+      'lesson_completions',
+      'lesson_ratings',
+      'student_notes',
+      'support_messages',
+      'subscriptions',
+      'payments',
+      'email_logs',
+      'simulado_submissions',
+      'live_messages',
+    ]
 
     for (var c = 0; c < collections.length; c++) {
       try {

@@ -9,8 +9,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
-
-const tierRank: Record<string, number> = { free: 1, prata: 2, ouro: 3 }
+import { getPlanButtonState } from '@/lib/plan-utils'
 
 const DEFAULT_PLANS = [
   {
@@ -84,10 +83,6 @@ export default function Planos() {
   useEffect(() => {
     getSubscriptionPlans().then(setPlans).catch(console.error)
   }, [])
-
-  const userTier = user?.plan_tier || 'free'
-  const isActive = user?.contract_end_date && new Date(user.contract_end_date) >= new Date()
-  const activeTier = user?.role === 'admin' ? 'ouro' : isActive ? userTier : 'free'
 
   const handleSelectPlan = (plan: SubscriptionPlan | undefined) => {
     if (!user) {
@@ -163,9 +158,6 @@ export default function Planos() {
                 ? Math.round((1 - yearlyPerMonth / plan.monthlyPrice) * 100)
                 : 0
 
-            const isCurrent = activeTier === plan.name.toLowerCase()
-            const hasHigher = tierRank[activeTier] >= tierRank[plan.name.toLowerCase()]
-
             return (
               <Card
                 key={plan.name}
@@ -236,45 +228,40 @@ export default function Planos() {
                     ))}
                   </ul>
 
-                  {plan.isComingSoon ? (
-                    <Button
-                      size="lg"
-                      className="w-full bg-[#7ce2a6] hover:bg-[#7ce2a6] text-white cursor-not-allowed opacity-80"
-                      disabled
-                    >
-                      <Clock className="mr-2 w-4 h-4" />
-                      Indisponível
-                    </Button>
-                  ) : plan.monthlyPrice === 0 ? (
-                    <Button
-                      size="lg"
-                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
-                      disabled={isCurrent || hasHigher}
-                      onClick={() => {
-                        if (!user) navigate('/register')
-                        else navigate('/plataforma')
-                      }}
-                    >
-                      {isCurrent
-                        ? 'Plano Atual'
-                        : hasHigher
-                          ? 'Incluso no seu plano'
-                          : 'Assine Gratuitamente'}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="lg"
-                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
-                      disabled={isCurrent || hasHigher}
-                      onClick={() => handleSelectPlan(plan.dbPlan)}
-                    >
-                      {isCurrent
-                        ? 'Plano Atual'
-                        : hasHigher
-                          ? 'Incluso no seu plano'
-                          : 'Assinar Agora'}
-                    </Button>
-                  )}
+                  {(() => {
+                    const btn = getPlanButtonState(plan.name, user, plan.isComingSoon)
+                    return (
+                      <Button
+                        size="lg"
+                        className={cn(
+                          'w-full',
+                          btn.variant === 'default' && !plan.isComingSoon
+                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                            : '',
+                          plan.isComingSoon
+                            ? 'bg-[#7ce2a6] hover:bg-[#7ce2a6] text-white cursor-not-allowed opacity-80'
+                            : '',
+                        )}
+                        variant={btn.variant}
+                        disabled={btn.disabled}
+                        onClick={() => {
+                          if (btn.disabled) return
+                          if (!user) {
+                            navigate('/register')
+                            return
+                          }
+                          if (plan.monthlyPrice === 0 || btn.label === 'Fazer Downgrade') {
+                            navigate('/plataforma')
+                            return
+                          }
+                          handleSelectPlan(plan.dbPlan)
+                        }}
+                      >
+                        {plan.isComingSoon && <Clock className="mr-2 w-4 h-4" />}
+                        {btn.label}
+                      </Button>
+                    )
+                  })()}
                 </CardContent>
               </Card>
             )

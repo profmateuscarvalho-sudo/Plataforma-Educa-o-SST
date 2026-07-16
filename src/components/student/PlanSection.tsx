@@ -7,8 +7,8 @@ import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModa
 import { useAuth } from '@/hooks/use-auth'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
+import { getPlanButtonState } from '@/lib/plan-utils'
 
-const tierRank: Record<string, number> = { free: 1, prata: 2, ouro: 3 }
 const fmt = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0)
 
@@ -22,10 +22,6 @@ export function PlanSection({
   const [selected, setSelected] = useState<SubscriptionPlan | null>(null)
   const [open, setOpen] = useState(false)
   const { user } = useAuth()
-
-  const userTier = user?.plan_tier || 'free'
-  const isActive = user?.contract_end_date && new Date(user.contract_end_date) >= new Date()
-  const activeTier = user?.role === 'admin' ? 'ouro' : isActive ? userTier : 'free'
 
   const freePlan = plans.find((p) => p.name.toLowerCase().includes('free'))
   const prataPlan = plans.find(
@@ -82,8 +78,6 @@ export function PlanSection({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {tiers.map((t) => {
-          const isCurrent = activeTier === t.tier
-          const hasHigher = tierRank[activeTier] >= tierRank[t.tier]
           return (
             <Card
               key={t.tier}
@@ -122,14 +116,23 @@ export function PlanSection({
                     </li>
                   ))}
                 </ul>
-                <Button
-                  className="w-full"
-                  variant={isCurrent || hasHigher ? 'outline' : 'default'}
-                  disabled={isCurrent || hasHigher}
-                  onClick={() => handleSelect(t.plan)}
-                >
-                  {isCurrent ? 'Plano Atual' : hasHigher ? 'Incluso' : 'Assinar'}
-                </Button>
+                {(() => {
+                  const btn = getPlanButtonState(t.name, user, t.plan?.is_coming_soon)
+                  return (
+                    <Button
+                      className="w-full"
+                      variant={btn.variant}
+                      disabled={btn.disabled}
+                      onClick={() => {
+                        if (btn.disabled) return
+                        if (btn.label === 'Fazer Downgrade') return
+                        handleSelect(t.plan)
+                      }}
+                    >
+                      {btn.label}
+                    </Button>
+                  )
+                })()}
               </CardContent>
             </Card>
           )

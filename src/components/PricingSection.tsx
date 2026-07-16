@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Check, Sparkles, Award, Crown, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getSubscriptionPlans } from '@/services/subscription-plans'
+import { useAuth } from '@/hooks/use-auth'
+import { getPlanButtonState } from '@/lib/plan-utils'
 import { SubscriptionPlan } from '@/types'
 
 const DEFAULT_PLANS = [
@@ -72,6 +74,7 @@ const fmt = (v: number) =>
 
 export function PricingSection() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
+  const { user } = useAuth()
 
   useEffect(() => {
     getSubscriptionPlans()
@@ -197,40 +200,47 @@ export function PricingSection() {
                     ))}
                   </ul>
 
-                  {plan.isComingSoon ? (
-                    <Button
-                      size="lg"
-                      className="w-full bg-[#7ce2a6] hover:bg-[#7ce2a6] text-white cursor-not-allowed opacity-80"
-                      disabled
-                    >
-                      <Clock className="mr-2 w-4 h-4" />
-                      Indisponível
-                    </Button>
-                  ) : plan.monthlyPrice === 0 ? (
-                    <Button
-                      size="lg"
-                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
-                      asChild
-                    >
-                      {plan.ctaLink.startsWith('#') ? (
-                        <a href={plan.ctaLink}>{plan.cta}</a>
-                      ) : (
-                        <Link to={plan.ctaLink}>{plan.cta}</Link>
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="lg"
-                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
-                      asChild
-                    >
-                      {plan.ctaLink.startsWith('#') ? (
-                        <a href={plan.ctaLink}>{plan.cta}</a>
-                      ) : (
-                        <Link to={plan.ctaLink}>{plan.cta}</Link>
-                      )}
-                    </Button>
-                  )}
+                  {(() => {
+                    const btn = getPlanButtonState(plan.name, user, plan.isComingSoon)
+                    if (btn.disabled) {
+                      return (
+                        <Button
+                          size="lg"
+                          className={cn(
+                            'w-full',
+                            plan.isComingSoon
+                              ? 'bg-[#7ce2a6] hover:bg-[#7ce2a6] text-white cursor-not-allowed opacity-80'
+                              : '',
+                          )}
+                          variant={btn.variant}
+                          disabled
+                        >
+                          {plan.isComingSoon && <Clock className="mr-2 w-4 h-4" />}
+                          {btn.label}
+                        </Button>
+                      )
+                    }
+                    const linkTo = !user
+                      ? '/register'
+                      : plan.monthlyPrice === 0
+                        ? '/plataforma'
+                        : '/planos'
+                    return (
+                      <Button
+                        size="lg"
+                        className={cn(
+                          'w-full',
+                          btn.variant === 'default'
+                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                            : '',
+                        )}
+                        variant={btn.variant}
+                        asChild
+                      >
+                        <Link to={linkTo}>{btn.label}</Link>
+                      </Button>
+                    )
+                  })()}
                 </CardContent>
               </Card>
             )

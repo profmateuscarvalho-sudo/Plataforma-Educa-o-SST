@@ -1,28 +1,69 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckoutModal } from '@/components/CheckoutModal'
 import { getMentorships } from '@/services/mentorships'
-import { Mentorship } from '@/types'
-import { Calendar, Video, GraduationCap, ArrowRight, Star } from 'lucide-react'
+import { Mentorship, Mentor } from '@/types'
+import { Calendar, Video, GraduationCap, Star, AlertCircle } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { stripHtml } from '@/lib/utils'
 import { getMentors } from '@/services/mentors'
-import { Mentor } from '@/types'
+
+const safeFileUrl = (record: any, filename?: string): string => {
+  if (!filename || !record) return ''
+  try {
+    return pb.files.getUrl(record, filename)
+  } catch {
+    return ''
+  }
+}
 
 export default function Mentorias() {
   const [mentorships, setMentorships] = useState<Mentorship[]>([])
   const [mentors, setMentors] = useState<Mentor[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [selectedMentorship, setSelectedMentorship] = useState<Mentorship | null>(null)
 
   useEffect(() => {
-    getMentorships().then(setMentorships).catch(console.error)
-    getMentors().then(setMentors).catch(console.error)
+    const loadData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const [msRes, mtsRes] = await Promise.allSettled([getMentorships(), getMentors()])
+        if (msRes.status === 'fulfilled') setMentorships(msRes.value)
+        if (mtsRes.status === 'fulfilled') setMentors(mtsRes.value)
+        if (msRes.status === 'rejected' && mtsRes.status === 'rejected')
+          setError('Não foi possível carregar as mentorias. Tente novamente mais tarde.')
+      } catch {
+        setError('Não foi possível carregar as mentorias. Tente novamente mais tarde.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
   }, [])
 
-  const formatBRL = (v: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+  if (loading)
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    )
+
+  if (error)
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-slate-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    )
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -56,33 +97,34 @@ export default function Mentorias() {
           Como Funciona
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <GraduationCap className="w-7 h-7 text-primary" />
+          {[
+            {
+              icon: GraduationCap,
+              title: '1. Escolha o Mentor',
+              desc: 'Selecione o mentor que mais se alinha com seus objetivos profissionais.',
+            },
+            {
+              icon: Calendar,
+              title: '2. Confirme o Pagamento',
+              desc: 'Após a confirmação do pagamento, você receberá o link de agendamento.',
+            },
+            {
+              icon: Video,
+              title: '3. Participe da Sessão',
+              desc: 'Acesse a sessão online no horário agendado e tire suas dúvidas.',
+            },
+          ].map((step, i) => (
+            <div
+              key={i}
+              className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm"
+            >
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <step.icon className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="font-bold text-lg text-secondary mb-2">{step.title}</h3>
+              <p className="text-sm text-slate-500">{step.desc}</p>
             </div>
-            <h3 className="font-bold text-lg text-secondary mb-2">1. Escolha o Mentor</h3>
-            <p className="text-sm text-slate-500">
-              Selecione o mentor que mais se alinha com seus objetivos profissionais.
-            </p>
-          </div>
-          <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-7 h-7 text-primary" />
-            </div>
-            <h3 className="font-bold text-lg text-secondary mb-2">2. Confirme o Pagamento</h3>
-            <p className="text-sm text-slate-500">
-              Após a confirmação do pagamento, você receberá o link de agendamento.
-            </p>
-          </div>
-          <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Video className="w-7 h-7 text-primary" />
-            </div>
-            <h3 className="font-bold text-lg text-secondary mb-2">3. Participe da Sessão</h3>
-            <p className="text-sm text-slate-500">
-              Acesse a sessão online no horário agendado e tire suas dúvidas.
-            </p>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -104,7 +146,7 @@ export default function Mentorias() {
                 {m.mentor_photo && (
                   <div className="aspect-[4/3] overflow-hidden bg-slate-100">
                     <img
-                      src={pb.files.getUrl(m, m.mentor_photo)}
+                      src={safeFileUrl(m, m.mentor_photo)}
                       alt={m.mentor_name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -143,7 +185,7 @@ export default function Mentorias() {
                 {m.photo && (
                   <div className="aspect-[4/3] overflow-hidden bg-slate-100">
                     <img
-                      src={pb.files.getUrl(m, m.photo)}
+                      src={safeFileUrl(m, m.photo)}
                       alt={m.name}
                       className="w-full h-full object-cover"
                     />

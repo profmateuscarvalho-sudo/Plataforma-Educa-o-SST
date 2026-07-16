@@ -1,10 +1,15 @@
 import pb from '@/lib/pocketbase/client'
 import { Mentorship } from '@/types'
 
-export const getMentorships = async () => {
-  return await pb
-    .collection('mentorships')
-    .getFullList<Mentorship>({ sort: '-created', expand: 'mentor' })
+export const getMentorships = async (): Promise<Mentorship[]> => {
+  try {
+    return await pb
+      .collection('mentorships')
+      .getFullList<Mentorship>({ sort: '-created', expand: 'mentor' })
+  } catch (error) {
+    console.error('Failed to fetch mentorships:', error)
+    return []
+  }
 }
 
 export const getMentorship = async (id: string) => {

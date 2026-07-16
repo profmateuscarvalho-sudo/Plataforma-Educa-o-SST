@@ -217,7 +217,7 @@ export default function AdminEmailLog() {
                 <TableHead>Email Verificado</TableHead>
                 <TableHead>Status Assinatura</TableHead>
                 <TableHead>Brevo Sync</TableHead>
-                <TableHead>Erro Técnico</TableHead>
+                <TableHead>Erro / Status Técnico</TableHead>
                 <TableHead>Data</TableHead>
               </TableRow>
             </TableHeader>
@@ -300,15 +300,17 @@ export default function AdminEmailLog() {
                             </span>
                           </button>
                         </PopoverTrigger>
-                        <PopoverContent className="max-w-md p-4">
+                        <PopoverContent className="max-w-xl p-4 shadow-xl border-red-100">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2 font-semibold text-red-700">
                               <AlertTriangle className="w-4 h-4" />
                               Detalhe do Erro
                             </div>
-                            <p className="text-xs text-slate-600 break-words whitespace-pre-wrap">
-                              {row.errorMessage}
-                            </p>
+                            <div className="bg-slate-50 p-3 rounded border border-slate-200 max-h-[300px] overflow-y-auto">
+                              <p className="text-xs text-slate-700 font-mono break-all whitespace-pre-wrap">
+                                {row.errorMessage}
+                              </p>
+                            </div>
                           </div>
                         </PopoverContent>
                       </Popover>

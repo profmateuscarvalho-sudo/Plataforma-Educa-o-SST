@@ -22,6 +22,8 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
   var planName = ''
   var isFreePlan = false
   var planIdentified = false
+  var planLookupError = ''
+  var fallbackErrorMsg = ''
 
   if (!planId) {
     $app
@@ -48,6 +50,7 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
           planId,
         )
     } catch (fallbackErr) {
+      fallbackErrorMsg = fallbackErr.message
       $app
         .logger()
         .error(
@@ -68,6 +71,7 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       isFreePlan = planName.toLowerCase().indexOf('free') !== -1 || planPrice === 0
       planIdentified = true
     } catch (err) {
+      planLookupError = err.message
       $app
         .logger()
         .error(
@@ -117,12 +121,16 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       failLogRecord.set('recipient_name', userName)
       failLogRecord.set('email_type', 'payment_confirmed')
       failLogRecord.set('sent', false)
-      failLogRecord.set(
-        'error_message',
-        planId
-          ? 'Plano não encontrado na coleção subscription_plans (ID: ' + planId + ')'
-          : 'Nenhum plano associado à assinatura e plano gratuito não encontrado',
-      )
+      var failErrorMsg = planId
+        ? 'Plano não encontrado na coleção subscription_plans (ID: ' + planId + ')'
+        : 'Nenhum plano associado à assinatura e plano gratuito não encontrado'
+      if (planLookupError) {
+        failErrorMsg += ' | Technical error: ' + planLookupError
+      }
+      if (fallbackErrorMsg) {
+        failErrorMsg += ' | Fallback error: ' + fallbackErrorMsg
+      }
+      failLogRecord.set('error_message', failErrorMsg)
       failLogRecord.set('brevo_synced', false)
       failLogRecord.set('brevo_list_id', 0)
       failLogRecord.set('brevo_status', 0)

@@ -27,6 +27,28 @@ onRecordAfterCreateSuccess((e) => {
         $app
           .logger()
           .error('Failed to locate Free plan during registration', 'error', planErr.message)
+
+        try {
+          var regLogsCol = txApp.findCollectionByNameOrId('email_logs')
+          var regLogRecord = new Record(regLogsCol)
+          regLogRecord.set('recipient_email', e.record.getString('email'))
+          regLogRecord.set('recipient_name', e.record.getString('name'))
+          regLogRecord.set('email_type', 'activation_free')
+          regLogRecord.set('sent', false)
+          regLogRecord.set('brevo_synced', false)
+          regLogRecord.set('brevo_list_id', 0)
+          regLogRecord.set('brevo_status', 0)
+          regLogRecord.set(
+            'error_message',
+            'Failed to locate Free plan during registration: ' + planErr.message,
+          )
+          regLogRecord.set('user', e.record.id)
+          txApp.save(regLogRecord)
+        } catch (logErr) {
+          $app
+            .logger()
+            .error('Failed to log registration error to email_logs', 'error', logErr.message)
+        }
       }
 
       var subsCol = txApp.findCollectionByNameOrId('subscriptions')

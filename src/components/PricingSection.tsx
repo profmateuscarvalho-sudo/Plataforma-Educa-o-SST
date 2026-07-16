@@ -221,7 +221,9 @@ export function PricingSection() {
                       )
                     }
                     const linkTo = !user
-                      ? '/register'
+                      ? plan.dbPlan
+                        ? `/register?planId=${plan.dbPlan.id}`
+                        : '/register'
                       : plan.monthlyPrice === 0
                         ? '/plataforma'
                         : '/planos'

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useStudentAccess } from '@/hooks/use-student-access'
 import { getPendingStatus, type PendingStatus } from '@/services/subscriptions'
+import pb from '@/lib/pocketbase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { SquareLogo } from '@/components/ui/Logos'
@@ -13,6 +14,8 @@ export default function SubscriptionPending() {
   const navigate = useNavigate()
   const { user, signOut, refreshUser } = useAuth()
   const access = useStudentAccess()
+  const [searchParams] = useSearchParams()
+  const planId = searchParams.get('planId') || ''
   const [status, setStatus] = useState<PendingStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [checking, setChecking] = useState(false)
@@ -22,11 +25,18 @@ export default function SubscriptionPending() {
 
   const fetchStatus = useCallback(async () => {
     try {
+      await refreshUserRef.current()
       const s = await getPendingStatus()
       setStatus(s)
       if (s?.subscription?.status === 'active' && !hasRefreshedRef.current) {
         hasRefreshedRef.current = true
-        await refreshUserRef.current()
+      }
+      if (planId && s?.subscription?.status !== 'active' && s?.state !== 'manual_verification') {
+        const currentUser = pb.authStore.record as { email_verificado?: boolean } | null
+        if (currentUser?.email_verificado) {
+          navigate(`/planos?planId=${planId}&checkout=1`)
+          return
+        }
       }
     } catch {
       setStatus(null)
@@ -34,7 +44,7 @@ export default function SubscriptionPending() {
       setLoading(false)
       setChecking(false)
     }
-  }, [])
+  }, [planId, navigate])
 
   useEffect(() => {
     if (user) fetchStatus()

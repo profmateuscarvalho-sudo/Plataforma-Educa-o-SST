@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,6 +29,8 @@ const formatPhone = (value: string) => {
 export default function Register() {
   const { signUp } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const planId = searchParams.get('planId') || undefined
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -67,7 +69,7 @@ export default function Register() {
     }
 
     setLoading(true)
-    const { error } = await signUp(name, email, pass, phone, selectedTags, city, state)
+    const { error } = await signUp(name, email, pass, phone, selectedTags, city, state, planId)
     setLoading(false)
 
     if (error) {
@@ -81,7 +83,11 @@ export default function Register() {
         title: 'Cadastro realizado com sucesso!',
         description: 'E-mail de ativação enviado! Verifique sua caixa de entrada e pasta de spam.',
       })
-      navigate('/subscription-pending')
+      if (planId) {
+        navigate(`/subscription-pending?planId=${planId}`)
+      } else {
+        navigate('/subscription-pending')
+      }
     }
   }
 

@@ -79,10 +79,22 @@ export default function Planos() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const isExpired = searchParams.get('expired') === '1'
+  const checkoutPlanId = searchParams.get('planId')
+  const isCheckout = searchParams.get('checkout') === '1'
 
   useEffect(() => {
     getSubscriptionPlans().then(setPlans).catch(console.error)
   }, [])
+
+  useEffect(() => {
+    if (isCheckout && checkoutPlanId && user && plans.length > 0) {
+      const plan = plans.find((p) => p.id === checkoutPlanId)
+      if (plan) {
+        setSelectedPlan(plan)
+        setIsCheckoutOpen(true)
+      }
+    }
+  }, [isCheckout, checkoutPlanId, user, plans])
 
   const handleSelectPlan = (plan: SubscriptionPlan | undefined) => {
     if (!user) {
@@ -247,7 +259,9 @@ export default function Planos() {
                         onClick={() => {
                           if (btn.disabled) return
                           if (!user) {
-                            navigate('/register')
+                            navigate(
+                              plan.dbPlan ? `/register?planId=${plan.dbPlan.id}` : '/register',
+                            )
                             return
                           }
                           if (plan.monthlyPrice === 0 || btn.label === 'Fazer Downgrade') {

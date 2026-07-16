@@ -38,6 +38,7 @@ export default function AdminDocumentaryWizard() {
         fd.append('title', project.title || '')
         fd.append('description', project.description || '')
         fd.append('panda_video_id', project.panda_video_id || '')
+        fd.append('youtube_url', project.youtube_url || '')
         fd.append('is_free', String(project.is_free ?? true))
         if (photoFile) fd.append('presentation_photos', photoFile)
         await updateDocProject(id, fd as any)
@@ -47,6 +48,7 @@ export default function AdminDocumentaryWizard() {
           title: project.title || '',
           description: project.description || '',
           panda_video_id: project.panda_video_id || '',
+          youtube_url: project.youtube_url || '',
           is_free: project.is_free ?? true,
         })
         if (photoFile) {
@@ -112,6 +114,18 @@ export default function AdminDocumentaryWizard() {
           />
           <p className="text-xs text-muted-foreground">
             Insira o ID do vídeo ou a URL de embed da Panda Video.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Link do YouTube</Label>
+          <Input
+            value={project.youtube_url || ''}
+            onChange={(e) => setProject({ ...project, youtube_url: e.target.value })}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+          <p className="text-xs text-muted-foreground">
+            Se preenchido, o vídeo do YouTube será exibido como alternativa à Panda Video.
           </p>
         </div>
 

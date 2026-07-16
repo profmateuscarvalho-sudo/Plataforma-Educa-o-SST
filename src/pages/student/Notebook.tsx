@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { BackToHub } from '@/components/student/BackToHub'
 import { MindMapEditor } from '@/components/student/MindMapEditor'
 import { NewsSidebar } from '@/components/student/NewsSidebar'
+import { RichTextEditor } from '@/components/RichTextEditor'
 import { Plus, Trash2, Save, Notebook, FileText, Share2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -220,12 +221,7 @@ export default function StudentNotebook() {
                 </div>
 
                 <TabsContent value="texto" className="flex-1 m-0 p-4">
-                  <Textarea
-                    placeholder="Escreva suas anotações aqui..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="w-full h-full min-h-[450px] resize-none border-none bg-white/40 text-slate-700 placeholder:text-slate-400 focus-visible:ring-0 rounded-xl backdrop-blur"
-                  />
+                  <RichTextEditor value={content} onChange={setContent} />
                 </TabsContent>
                 <TabsContent value="mapa" className="flex-1 m-0 p-0 flex flex-col">
                   <MindMapEditor data={mindMap} onChange={setMindMap} />

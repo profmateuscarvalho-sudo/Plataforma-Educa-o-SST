@@ -277,8 +277,17 @@ export interface DocProject extends RecordModel {
   title: string
   description: string
   panda_video_id?: string
+  youtube_url?: string
   presentation_photos?: string[]
   is_free?: boolean
+}
+
+export interface Banner extends RecordModel {
+  title: string
+  image: string
+  location: 'Home - Topo' | 'Home - Meio' | 'Lateral dos Artigos' | 'Rodapé'
+  destination_link: string
+  active: boolean
 }
 
 export interface Simulado extends RecordModel {

@@ -19,6 +19,12 @@ const getPandaUrl = (val?: string) => {
   return `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${val}`
 }
 
+const getYoutubeEmbedUrl = (url?: string) => {
+  if (!url) return ''
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url
+}
+
 export default function DocumentaryViewer() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -60,7 +66,8 @@ export default function DocumentaryViewer() {
     return <Navigate to="/planos" replace />
   }
 
-  const videoUrl = getPandaUrl(project.panda_video_id)
+  const youtubeEmbedUrl = getYoutubeEmbedUrl(project.youtube_url)
+  const videoUrl = youtubeEmbedUrl || getPandaUrl(project.panda_video_id)
   const photos = project.presentation_photos || []
 
   if (mode === 'player') {

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/carousel'
 import { setMetaTags, stripHtml } from '@/lib/utils'
 import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
+import { BannerDisplay } from '@/components/BannerDisplay'
 
 const injectOGTags = (title: string, desc: string, image: string, url: string) => {
   document.title = title
@@ -120,6 +121,8 @@ export default function NewsDetails() {
           dangerouslySetInnerHTML={{ __html: news.content }}
         />
 
+        <BannerDisplay location="Lateral dos Artigos" className="mb-12 max-w-sm mx-auto" />
+
         {galleryImages.length > 0 && (
           <div className="space-y-6 mt-12">
             <h3 className="text-2xl font-serif font-bold text-secondary border-b pb-4">
@@ -194,6 +197,8 @@ export default function NewsDetails() {
             Instagram
           </Button>
         </div>
+
+        <BannerDisplay location="Rodapé" className="mt-12" />
       </main>
     </div>
   )

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -7,7 +7,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Bold, Italic, Underline, List, Heading1, Heading2 } from 'lucide-react'
+import {
+  Bold,
+  Italic,
+  Underline,
+  List,
+  ListOrdered,
+  Heading1,
+  Heading2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+} from 'lucide-react'
 
 const FONT_SIZES = [
   { label: 'Pequeno', value: '2' },
@@ -27,87 +38,102 @@ const FONT_FAMILIES = [
   { label: 'Inter', value: 'Inter, sans-serif' },
 ]
 
-export function RichTextEditor({ name, defaultValue }: { name: string; defaultValue?: string }) {
+interface RichTextEditorProps {
+  name?: string
+  defaultValue?: string
+  value?: string
+  onChange?: (html: string) => void
+}
+
+function ToolButton({
+  onClick,
+  title,
+  children,
+}: {
+  onClick: () => void
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <Button type="button" variant="ghost" size="icon" onClick={onClick} title={title}>
+      {children}
+    </Button>
+  )
+}
+
+export function RichTextEditor({ name, defaultValue, value, onChange }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const lastSync = useRef<string>('')
 
   useEffect(() => {
-    if (editorRef.current && defaultValue) {
-      editorRef.current.innerHTML = defaultValue
-      if (inputRef.current) inputRef.current.value = defaultValue
+    if (editorRef.current) {
+      const initial = value ?? defaultValue ?? ''
+      editorRef.current.innerHTML = initial
+      if (inputRef.current) inputRef.current.value = initial
+      lastSync.current = initial
     }
-  }, [defaultValue])
+  }, [])
 
-  const exec = (command: string, value?: string) => {
-    document.execCommand(command, false, value)
-    updateInput()
+  useEffect(() => {
+    if (value !== undefined && editorRef.current && value !== lastSync.current) {
+      editorRef.current.innerHTML = value
+      if (inputRef.current) inputRef.current.value = value
+      lastSync.current = value
+    }
+  }, [value])
+
+  const exec = (command: string, val?: string) => {
+    document.execCommand(command, false, val)
+    syncValue()
+    editorRef.current?.focus()
   }
 
-  const updateInput = () => {
-    if (inputRef.current && editorRef.current) {
-      inputRef.current.value = editorRef.current.innerHTML
+  const syncValue = () => {
+    if (editorRef.current) {
+      const html = editorRef.current.innerHTML
+      if (inputRef.current) inputRef.current.value = html
+      lastSync.current = html
+      onChange?.(html)
     }
   }
 
   return (
     <div className="border rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-      <input type="hidden" name={name} ref={inputRef} />
+      {name && <input type="hidden" name={name} ref={inputRef} />}
       <div className="flex flex-wrap gap-1 p-2 border-b bg-slate-50 rounded-t-md items-center">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => exec('bold')}
-          title="Negrito"
-        >
+        <ToolButton onClick={() => exec('bold')} title="Negrito">
           <Bold className="w-4 h-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => exec('italic')}
-          title="Itálico"
-        >
+        </ToolButton>
+        <ToolButton onClick={() => exec('italic')} title="Itálico">
           <Italic className="w-4 h-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => exec('underline')}
-          title="Sublinhado"
-        >
+        </ToolButton>
+        <ToolButton onClick={() => exec('underline')} title="Sublinhado">
           <Underline className="w-4 h-4" />
-        </Button>
+        </ToolButton>
         <div className="w-px h-6 bg-slate-200 mx-1" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => exec('formatBlock', 'H1')}
-          title="Título 1"
-        >
+        <ToolButton onClick={() => exec('formatBlock', 'H1')} title="Título 1">
           <Heading1 className="w-4 h-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => exec('formatBlock', 'H2')}
-          title="Título 2"
-        >
+        </ToolButton>
+        <ToolButton onClick={() => exec('formatBlock', 'H2')} title="Título 2">
           <Heading2 className="w-4 h-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => exec('insertUnorderedList')}
-          title="Lista"
-        >
+        </ToolButton>
+        <ToolButton onClick={() => exec('insertUnorderedList')} title="Lista">
           <List className="w-4 h-4" />
-        </Button>
+        </ToolButton>
+        <ToolButton onClick={() => exec('insertOrderedList')} title="Lista Numerada">
+          <ListOrdered className="w-4 h-4" />
+        </ToolButton>
+        <div className="w-px h-6 bg-slate-200 mx-1" />
+        <ToolButton onClick={() => exec('justifyLeft')} title="Alinhar à Esquerda">
+          <AlignLeft className="w-4 h-4" />
+        </ToolButton>
+        <ToolButton onClick={() => exec('justifyCenter')} title="Centralizar">
+          <AlignCenter className="w-4 h-4" />
+        </ToolButton>
+        <ToolButton onClick={() => exec('justifyRight')} title="Alinhar à Direita">
+          <AlignRight className="w-4 h-4" />
+        </ToolButton>
         <div className="w-px h-6 bg-slate-200 mx-1" />
         <Select onValueChange={(v) => exec('fontSize', v)}>
           <SelectTrigger className="w-[130px] h-9">
@@ -148,8 +174,8 @@ export function RichTextEditor({ name, defaultValue }: { name: string; defaultVa
         ref={editorRef}
         contentEditable
         className="p-4 min-h-[200px] focus:outline-none prose max-w-none"
-        onInput={updateInput}
-        onBlur={updateInput}
+        onInput={syncValue}
+        onBlur={syncValue}
       />
     </div>
   )

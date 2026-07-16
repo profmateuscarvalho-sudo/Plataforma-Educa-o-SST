@@ -12,6 +12,7 @@ import { getNews } from '@/services/news'
 import { Course, Magazine, News } from '@/types'
 import pb from '@/lib/pocketbase/client'
 import { NewsCard } from '@/components/NewsCard'
+import { BannerDisplay } from '@/components/BannerDisplay'
 
 export default function Index() {
   const [courses, setCourses] = useState<Course[]>([])
@@ -52,6 +53,7 @@ export default function Index() {
 
   return (
     <div className="flex flex-col min-h-screen relative">
+      <BannerDisplay location="Home - Topo" className="px-4 pt-4 max-w-[88rem] mx-auto" />
       <section
         id="hero"
         className="min-h-screen flex items-center overflow-hidden bg-secondary relative pt-20 pb-8 scroll-mt-16"
@@ -150,6 +152,8 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      <BannerDisplay location="Home - Meio" className="py-8 container px-4" />
 
       {latestNews.length > 0 && (
         <section className="py-24 bg-white relative z-20">

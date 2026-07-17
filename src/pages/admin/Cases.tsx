@@ -2,12 +2,13 @@ import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Check, Trash2, MessageCircle, Heart } from 'lucide-react'
+import { Check, Trash2, MessageCircle, Heart, Plus } from 'lucide-react'
 import { getAllCases, updateCaseStatus, deleteCase } from '@/services/professional-cases'
 import { getLikesForCases, getComments } from '@/services/professional-cases'
 import { ProfessionalCase, CaseLike, CaseComment } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 import { useRealtime } from '@/hooks/use-realtime'
+import { CaseFormModal } from '@/components/admin/CaseFormModal'
 import pb from '@/lib/pocketbase/client'
 import { stripHtml } from '@/lib/utils'
 
@@ -16,6 +17,7 @@ export default function AdminCases() {
   const [cases, setCases] = useState<ProfessionalCase[]>([])
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({})
+  const [showFormModal, setShowFormModal] = useState(false)
 
   const loadData = useCallback(async () => {
     try {
@@ -55,20 +57,28 @@ export default function AdminCases() {
   const handleApprove = async (id: string) => {
     try {
       await updateCaseStatus(id, 'approved')
-      toast({ title: 'Case aprovado com sucesso!' })
+      toast({ title: 'Caso aprovado com sucesso!' })
       await loadData()
-    } catch {
-      toast({ title: 'Erro ao aprovar case', variant: 'destructive' })
+    } catch (err) {
+      toast({
+        title: 'Erro ao aprovar o caso',
+        description: 'Não foi possível atualizar o status. Tente novamente.',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
       await deleteCase(id)
-      toast({ title: 'Case excluído com sucesso!' })
+      toast({ title: 'Caso excluído com sucesso!' })
       await loadData()
-    } catch {
-      toast({ title: 'Erro ao excluir case', variant: 'destructive' })
+    } catch (err) {
+      toast({
+        title: 'Erro ao excluir o caso',
+        description: 'Não foi possível remover o registro. Tente novamente.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -94,7 +104,13 @@ export default function AdminCases() {
             Modere os cases compartilhados pela comunidade
           </p>
         </div>
+        <Button onClick={() => setShowFormModal(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Caso
+        </Button>
       </div>
+
+      <CaseFormModal open={showFormModal} setOpen={setShowFormModal} onSuccess={loadData} />
 
       <Card>
         <CardContent className="p-0 divide-y">
@@ -171,7 +187,9 @@ export default function AdminCases() {
             </div>
           ))}
           {cases.length === 0 && (
-            <div className="p-4 text-center text-slate-500">Nenhum case cadastrado.</div>
+            <div className="p-8 text-center text-slate-500">
+              Nenhum caso cadastrado. Clique em "Novo Caso" para criar o primeiro.
+            </div>
           )}
         </CardContent>
       </Card>

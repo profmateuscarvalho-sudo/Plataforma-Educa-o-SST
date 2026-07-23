@@ -6,6 +6,7 @@ import { LogOut } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { Logo } from '@/components/ui/Logos'
 import { WhatsAppFloat } from '@/components/WhatsAppFloat'
+import { AgentChatWidget } from '@/components/AgentChatWidget'
 
 export default function StudentLayout() {
   const { user, signOut, loading } = useAuth()
@@ -77,6 +78,7 @@ export default function StudentLayout() {
         <Outlet />
       </main>
       <WhatsAppFloat />
+      <AgentChatWidget />
     </div>
   )
 }

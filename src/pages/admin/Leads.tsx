@@ -5,7 +5,7 @@ import { Upload, Download, Loader2 } from 'lucide-react'
 import { getLeads } from '@/services/leads'
 import { Lead } from '@/types'
 import { LeadList } from '@/components/admin/leads/LeadList'
-import { exportLeadsToCsv } from '@/lib/export-leads'
+import { exportLeadsToExcel } from '@/lib/export-leads'
 
 export default function AdminLeads() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -18,7 +18,7 @@ export default function AdminLeads() {
   const handleExport = () => {
     setExporting(true)
     try {
-      exportLeadsToCsv(leads)
+      exportLeadsToExcel(leads)
     } finally {
       setExporting(false)
     }

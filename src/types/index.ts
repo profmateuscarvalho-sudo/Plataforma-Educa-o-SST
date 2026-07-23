@@ -390,3 +390,25 @@ export interface PlatformAnnouncement extends RecordModel {
   active: boolean
   priority: number
 }
+
+export interface AgentKnowledgeBase extends RecordModel {
+  title: string
+  content: string
+  tags: string[]
+  source: string
+  active: boolean
+}
+
+export interface AgentMessage extends RecordModel {
+  user: string
+  content: string
+  role: 'user' | 'assistant'
+  conversation_id: string
+  expand?: { user?: User }
+}
+
+export interface AgentLimitsConfig extends RecordModel {
+  limit_free: number
+  limit_prata: number
+  limit_ouro: number
+}

@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast'
 import type { KnowledgeEntry } from '@/types'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024
+const MAX_TEXT_LENGTH = 100000
 
 interface Props {
   open: boolean
@@ -44,6 +45,7 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
   const [saving, setSaving] = useState(false)
   const [fileError, setFileError] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [textError, setTextError] = useState('')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
       setTagsText(editing?.tags?.join(', ') || '')
       setFileError('')
       setErrorMessage('')
+      setTextError('')
     }
   }, [open, editing])
 
@@ -97,8 +100,16 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMessage('')
+    setTextError('')
 
     if (!title.trim()) return
+
+    if (rawText.length > MAX_TEXT_LENGTH) {
+      setTextError(
+        `O texto deve ter no máximo ${MAX_TEXT_LENGTH.toLocaleString('pt-BR')} caracteres.`,
+      )
+      return
+    }
 
     if (file && file.size > MAX_FILE_SIZE) {
       setFileError(
@@ -205,6 +216,7 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
                   setType(v)
                   setFileError('')
                   setErrorMessage('')
+                  setTextError('')
                 }}
               >
                 <SelectTrigger>
@@ -268,11 +280,33 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               <Label>{type === 'free_text' ? 'Conteúdo *' : 'Texto extraído / Descrição'}</Label>
               <Textarea
                 value={rawText}
-                onChange={(e) => setRawText(e.target.value)}
+                onChange={(e) => {
+                  setRawText(e.target.value)
+                  if (e.target.value.length > MAX_TEXT_LENGTH) {
+                    setTextError(
+                      `O texto deve ter no máximo ${MAX_TEXT_LENGTH.toLocaleString('pt-BR')} caracteres.`,
+                    )
+                  } else {
+                    setTextError('')
+                  }
+                }}
                 rows={8}
                 placeholder="Digite ou cole o conteúdo aqui..."
                 required={type === 'free_text' && !editing}
               />
+              <div className="flex items-center justify-between mt-1">
+                <span
+                  className={`text-xs ${rawText.length > MAX_TEXT_LENGTH ? 'text-red-600 font-medium' : 'text-slate-500'}`}
+                >
+                  {rawText.length.toLocaleString('pt-BR')} /{' '}
+                  {MAX_TEXT_LENGTH.toLocaleString('pt-BR')} caracteres
+                </span>
+              </div>
+              {textError && (
+                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {textError}
+                </p>
+              )}
             </div>
           )}
           <div>
@@ -283,7 +317,7 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               placeholder="NR-12, Ergonomia, eSocial"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={saving || !!fileError}>
+          <Button type="submit" className="w-full" disabled={saving || !!fileError || !!textError}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {editing ? 'Salvar' : 'Criar e Processar'}
           </Button>

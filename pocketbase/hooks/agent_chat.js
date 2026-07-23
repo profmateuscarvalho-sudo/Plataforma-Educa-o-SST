@@ -119,14 +119,12 @@ routerAdd(
       $app.logger().error('Knowledge search failed', 'error', err.message)
     }
 
-    var iter = $ai
-      .agent('agente-ia-educacao-sst')
-      .chat({
-        user_id: userId,
-        conversation_id: agentConvId,
-        message: enhancedMessage,
-        stream: true,
-      })
+    var iter = $ai.agent('agente-ia-educacao-sst').chat({
+      user_id: userId,
+      conversation_id: agentConvId,
+      message: enhancedMessage,
+      stream: true,
+    })
 
     e.response.header().set('Content-Type', 'text/event-stream')
     e.response.header().set('Cache-Control', 'no-cache')

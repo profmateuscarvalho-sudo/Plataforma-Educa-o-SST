@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Select,
   SelectContent,
@@ -11,10 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle, AlertTriangle } from 'lucide-react'
 import { createKnowledgeEntry, updateKnowledgeEntry } from '@/services/knowledge'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { useToast } from '@/hooks/use-toast'
 import type { KnowledgeEntry } from '@/types'
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024
 
 interface Props {
   open: boolean
@@ -38,6 +42,8 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
   const [rawText, setRawText] = useState('')
   const [tagsText, setTagsText] = useState('')
   const [saving, setSaving] = useState(false)
+  const [fileError, setFileError] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -48,29 +54,78 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
       setUrl(editing?.url || '')
       setRawText(editing?.raw_text || '')
       setTagsText(editing?.tags?.join(', ') || '')
+      setFileError('')
+      setErrorMessage('')
     }
   }, [open, editing])
 
+  const handleFileChange = (selectedFile: File | null) => {
+    setFileError('')
+    if (selectedFile && selectedFile.size > MAX_FILE_SIZE) {
+      setFileError(
+        `O arquivo excede o limite de 50MB (tamanho atual: ${(selectedFile.size / 1024 / 1024).toFixed(1)}MB)`,
+      )
+      setFile(null)
+      return
+    }
+    setFile(selectedFile)
+  }
+
+  const parseTags = () =>
+    tagsText
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean)
+
+  const buildCreateFormData = (): FormData => {
+    const formData = new FormData()
+    formData.append('title', title.trim())
+    formData.append('type', type)
+    formData.append('tags', JSON.stringify(parseTags()))
+    formData.append('status', 'processing')
+
+    if (type === 'pdf' || type === 'image') {
+      if (file) formData.append('file', file)
+    } else if (type === 'link') {
+      formData.append('url', url.trim())
+    } else if (type === 'free_text') {
+      formData.append('raw_text', rawText)
+    }
+    return formData
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setErrorMessage('')
+
     if (!title.trim()) return
-    if ((type === 'pdf' || type === 'image') && !editing && !file) return
-    if (type === 'link' && !editing && !url.trim()) return
+
+    if (file && file.size > MAX_FILE_SIZE) {
+      setFileError(
+        `O arquivo excede o limite de 50MB (tamanho atual: ${(file.size / 1024 / 1024).toFixed(1)}MB)`,
+      )
+      return
+    }
+
+    if (!editing) {
+      if ((type === 'pdf' || type === 'image') && !file) return
+      if (type === 'link' && !url.trim()) return
+      if (type === 'free_text' && !rawText.trim()) return
+    }
+
     setSaving(true)
     try {
-      const tags = tagsText
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean)
       if (editing) {
+        const tags = parseTags()
         const contentChanged =
           file !== null || url !== (editing.url || '') || rawText !== (editing.raw_text || '')
+
         if (contentChanged || file) {
           const formData = new FormData()
           formData.append('title', title.trim())
           formData.append('tags', JSON.stringify(tags))
           if (rawText) formData.append('raw_text', rawText)
-          if (url) formData.append('url', url)
+          if (url.trim()) formData.append('url', url.trim())
           if (file) formData.append('file', file)
           formData.append('status', 'processing')
           await updateKnowledgeEntry(editing.id, formData)
@@ -79,21 +134,46 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
         }
         toast({ title: 'Entrada atualizada!' })
       } else {
-        const formData = new FormData()
-        formData.append('title', title.trim())
-        formData.append('type', type)
-        formData.append('tags', JSON.stringify(tags))
-        formData.append('status', 'processing')
-        if (rawText) formData.append('raw_text', rawText)
-        if (url) formData.append('url', url)
-        if (file) formData.append('file', file)
+        const formData = buildCreateFormData()
         await createKnowledgeEntry(formData)
         toast({ title: 'Entrada criada! Processando...' })
       }
       onSuccess()
       setOpen(false)
-    } catch {
-      toast({ title: 'Erro ao salvar', variant: 'destructive' })
+    } catch (error) {
+      const message = getErrorMessage(error)
+      console.error('[KnowledgeEntryModal] Failed to save entry:', {
+        url: `${import.meta.env.VITE_POCKETBASE_URL}/api/collections/knowledge_entries/records`,
+        method: editing ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'multipart/form-data' },
+        bodyKeys: editing
+          ? [
+              'title',
+              'tags',
+              'status',
+              file ? 'file' : '',
+              url ? 'url' : '',
+              rawText ? 'raw_text' : '',
+            ].filter(Boolean)
+          : [
+              'title',
+              'type',
+              'tags',
+              'status',
+              type === 'pdf' || type === 'image' ? 'file' : '',
+              type === 'link' ? 'url' : '',
+              type === 'free_text' ? 'raw_text' : '',
+            ].filter(Boolean),
+        editing: !!editing,
+        entryType: type,
+        title: title.trim(),
+        hasFile: !!file,
+        fileSize: file?.size,
+        hasUrl: !!url.trim(),
+        hasRawText: !!rawText,
+        error,
+      })
+      setErrorMessage(`Erro ao salvar: ${message}`)
     } finally {
       setSaving(false)
     }
@@ -106,6 +186,12 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
           <DialogTitle>{editing ? 'Editar Entrada' : 'Nova Entrada'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {errorMessage && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
           <div>
             <Label>Título *</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -115,7 +201,11 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               <Label>Tipo *</Label>
               <Select
                 value={type}
-                onValueChange={(v: 'pdf' | 'image' | 'link' | 'free_text') => setType(v)}
+                onValueChange={(v: 'pdf' | 'image' | 'link' | 'free_text') => {
+                  setType(v)
+                  setFileError('')
+                  setErrorMessage('')
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -136,21 +226,27 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               <Input
                 type="file"
                 accept={type === 'pdf' ? 'application/pdf' : 'image/png,image/jpeg,image/webp'}
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
                 required={!editing}
               />
-              {type === 'pdf' && (
+              {fileError && (
+                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {fileError}
+                </p>
+              )}
+              {!fileError && type === 'pdf' && (
                 <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" /> Cole o texto extraído do PDF no campo abaixo.
                   PDFs digitalizados sem texto extraível devem usar "Texto Livre".
                 </p>
               )}
-              {type === 'image' && (
+              {!fileError && type === 'image' && (
                 <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" /> OCR não é suportado. Descreva o conteúdo da
                   imagem no campo de texto abaixo.
                 </p>
               )}
+              <p className="text-xs text-slate-500 mt-1">Tamanho máximo: 50MB</p>
             </div>
           )}
           {type === 'link' && (
@@ -187,7 +283,7 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               placeholder="NR-12, Ergonomia, eSocial"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={saving}>
+          <Button type="submit" className="w-full" disabled={saving || !!fileError}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {editing ? 'Salvar' : 'Criar e Processar'}
           </Button>

@@ -21,6 +21,7 @@ import {
   ScrollText,
   Tag,
   ImageIcon,
+  Brain,
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -56,6 +57,7 @@ export default function AdminLayout() {
     { label: 'Log de E-mails', icon: ScrollText, path: '/admin/email-log' },
     { label: 'Tags Profissionais', icon: Tag, path: '/admin/tags' },
     { label: 'Banners de Patrocínio', icon: ImageIcon, path: '/admin/banners' },
+    { label: 'Base de Conhecimento', icon: Brain, path: '/admin/base-conhecimento' },
   ]
 
   return (

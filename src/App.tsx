@@ -69,6 +69,7 @@ import AdminTestes from './pages/admin/Testes'
 import AdminEmailLog from './pages/admin/EmailLog'
 import AdminProfessionalTags from './pages/admin/ProfessionalTags'
 import AdminBanners from './pages/admin/Banners'
+import AdminKnowledgeBase from './pages/admin/KnowledgeBase'
 import Convite from './pages/Convite'
 
 const App = () => (
@@ -147,6 +148,7 @@ const App = () => (
             <Route path="/admin/email-log" element={<AdminEmailLog />} />
             <Route path="/admin/tags" element={<AdminProfessionalTags />} />
             <Route path="/admin/banners" element={<AdminBanners />} />
+            <Route path="/admin/base-conhecimento" element={<AdminKnowledgeBase />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

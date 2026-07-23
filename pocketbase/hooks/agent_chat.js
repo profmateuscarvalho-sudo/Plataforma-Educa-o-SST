@@ -53,10 +53,9 @@ routerAdd(
     var agentConvId = null
     if (body.conversation_id) {
       try {
-        var conv1 = $ai.agent('agente-ia-educacao-sst').getOrCreateConversation({
-          user_id: userId,
-          id: body.conversation_id,
-        })
+        var conv1 = $ai
+          .agent('agente-ia-educacao-sst')
+          .getOrCreateConversation({ user_id: userId, id: body.conversation_id })
         agentConvId = conv1.id
       } catch (_) {
         agentConvId = null
@@ -82,12 +81,52 @@ routerAdd(
     userMsg.set('conversation_id', agentConvId)
     $app.save(userMsg)
 
-    var iter = $ai.agent('agente-ia-educacao-sst').chat({
-      user_id: userId,
-      conversation_id: agentConvId,
-      message: body.message,
-      stream: true,
-    })
+    var enhancedMessage = body.message
+    try {
+      var embedRes = $ai.embed({ input: body.message })
+      var searchResults = $vectors.search(e, 'knowledge_chunks', {
+        field: 'embedding',
+        query: embedRes.data[0].embedding,
+        k: 5,
+      })
+      if (searchResults.items && searchResults.items.length > 0) {
+        var ctx = '\n\n--- CONTEXTO DA BASE DE CONHECIMENTO ---\n'
+        for (var j = 0; j < searchResults.items.length; j++) {
+          var chunkItem = searchResults.items[j]
+          var entryTitle = 'Fonte desconhecida'
+          try {
+            var entryRec = $app.findRecordById('knowledge_entries', chunkItem.getString('entry'))
+            entryTitle = entryRec.getString('title')
+          } catch (_) {}
+          ctx +=
+            '[' +
+            (j + 1) +
+            '] ' +
+            chunkItem.getString('chunk_text') +
+            '\n(Fonte: ' +
+            entryTitle +
+            ')\n\n'
+        }
+        ctx +=
+          '--- FIM DO CONTEXTO ---\n\nUse as informacoes acima como contexto prioritario para responder.'
+        enhancedMessage = body.message + ctx
+      } else {
+        enhancedMessage =
+          body.message +
+          '\n\n[AVISO: Nenhuma informacao encontrada na base de conhecimento. Se a pergunta nao for sobre SST ou nao estiver coberta pelas suas instrucoes, responda: "Nao encontrei informacoes sobre isso na minha base de conhecimento atual."]'
+      }
+    } catch (err) {
+      $app.logger().error('Knowledge search failed', 'error', err.message)
+    }
+
+    var iter = $ai
+      .agent('agente-ia-educacao-sst')
+      .chat({
+        user_id: userId,
+        conversation_id: agentConvId,
+        message: enhancedMessage,
+        stream: true,
+      })
 
     e.response.header().set('Content-Type', 'text/event-stream')
     e.response.header().set('Cache-Control', 'no-cache')

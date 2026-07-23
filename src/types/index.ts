@@ -412,3 +412,27 @@ export interface AgentLimitsConfig extends RecordModel {
   limit_prata: number
   limit_ouro: number
 }
+
+export interface KnowledgeEntry extends RecordModel {
+  title: string
+  type: 'pdf' | 'image' | 'link' | 'free_text'
+  file?: string
+  url?: string
+  raw_text?: string
+  tags: string[]
+  status: 'processing' | 'completed' | 'failed'
+  error_message?: string
+}
+
+export interface KnowledgeChunk extends RecordModel {
+  entry: string
+  chunk_text: string
+  tags: string[]
+}
+
+export interface KnowledgeSearchResult {
+  text: string
+  score: number
+  title: string
+  tags: string[]
+}

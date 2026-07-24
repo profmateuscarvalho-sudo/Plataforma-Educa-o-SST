@@ -10,6 +10,7 @@ import { Magazine } from '@/types'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { setMetaTags } from '@/lib/utils'
+import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
 
 function MagazineCard({ mag }: { mag: Magazine }) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -160,12 +161,15 @@ export default function Revistas() {
     if (revistaId && magazines.length > 0) {
       const mag = magazines.find((m) => m.id === revistaId)
       if (mag) {
-        const imgUrl = mag.thumbnail ? pb.files.getURL(mag, mag.thumbnail) : ''
+        const imgUrl = mag.thumbnail
+          ? `${PUBLIC_URL}/api/files/${mag.collectionId}/${mag.id}/${mag.thumbnail}`
+          : 'https://img.usecurling.com/p/1200/630?q=magazine%20cover&color=blue'
+        const shareUrl = getSharePreviewUrl('revistas', mag.id)
         setMetaTags({
           title: `${mag.title} | Educação SST`,
           description: mag.summary || 'Confira esta edição da Revista SST.',
           image: imgUrl,
-          url: window.location.href,
+          url: shareUrl,
         })
       }
     } else {

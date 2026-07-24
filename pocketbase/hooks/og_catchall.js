@@ -1,19 +1,32 @@
-routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
-  const type = e.request.pathValue('type')
-  const id = e.request.pathValue('id')
+routerAdd('GET', '/backend/v1/og-preview', (e) => {
+  const rawPath = e.requestInfo().query['path'] || ''
   const siteUrl = $secrets.get('SITE_URL') || 'https://www.educacaosst.com.br'
   const pbUrl = $secrets.get('PB_INSTANCE_URL') || siteUrl
 
-  let title = 'Educação SST'
+  let title = 'Educacao SST'
   let description =
-    'Plataforma premium de cursos e mentorias em Segurança e Saúde no Trabalho (SST).'
+    'Plataforma premium de cursos e mentorias em Seguranca e Saude no Trabalho (SST).'
   let image = 'https://img.usecurling.com/p/1200/630?q=workplace%20safety&color=green'
   let redirectUrl = siteUrl
   let ogType = 'website'
 
+  const pathPart = rawPath.split('?')[0].replace(/^\//, '')
+  const parts = pathPart.split('/').filter(function (p) {
+    return p !== ''
+  })
+
+  const pathQueryStr = rawPath.split('?')[1] || ''
+  const queryParams = {}
+  if (pathQueryStr) {
+    pathQueryStr.split('&').forEach(function (pair) {
+      const kv = pair.split('=')
+      if (kv.length === 2) queryParams[kv[0]] = decodeURIComponent(kv[1])
+    })
+  }
+
   try {
-    if (type === 'noticias' || type === 'news') {
-      const record = $app.findRecordById('news', id)
+    if (parts[0] === 'noticias' && parts[1]) {
+      const record = $app.findRecordById('news', parts[1])
       title = record.getString('title')
       const content = record.getString('content') || ''
       let plainText = content
@@ -22,7 +35,6 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
         .trim()
       description = plainText.substring(0, 155)
       if (plainText.length > 155) description += '...'
-
       const imgField = record.getString('image')
       if (imgField) {
         image =
@@ -47,12 +59,12 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
           image = 'https://img.usecurling.com/p/1200/630?q=industry%20safety&color=gray'
         }
       }
-      redirectUrl = siteUrl + '/noticias/' + id
+      redirectUrl = siteUrl + '/noticias/' + parts[1]
       ogType = 'article'
-    } else if (type === 'cursos' || type === 'courses') {
-      const record = $app.findRecordById('courses', id)
+    } else if (parts[0] === 'cursos' && parts[1]) {
+      const record = $app.findRecordById('courses', parts[1])
       title = record.getString('title')
-      description = record.getString('description') || 'Curso de Segurança e Saúde no Trabalho.'
+      description = record.getString('description') || 'Curso de Seguranca e Saude no Trabalho.'
       const imgField = record.getString('thumbnail')
       if (imgField) {
         image =
@@ -60,24 +72,31 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=education%20course&color=green'
       }
-      redirectUrl = siteUrl + '/cursos/' + id
+      redirectUrl = siteUrl + '/cursos/' + parts[1]
       ogType = 'website'
-    } else if (type === 'revistas' || type === 'magazines') {
-      const record = $app.findRecordById('magazines', id)
-      title = record.getString('title')
-      description = record.getString('summary') || 'Edição da Revista SST.'
-      const imgField = record.getString('thumbnail')
-      if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+    } else if (parts[0] === 'revistas') {
+      const magId = queryParams['revista']
+      if (magId) {
+        const record = $app.findRecordById('magazines', magId)
+        title = record.getString('title')
+        description = record.getString('summary') || 'Edicao da Revista SST.'
+        const imgField = record.getString('thumbnail')
+        if (imgField) {
+          image =
+            pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+        } else {
+          image = 'https://img.usecurling.com/p/1200/630?q=magazine%20cover&color=blue'
+        }
+        redirectUrl = siteUrl + '/revistas?revista=' + magId
       } else {
-        image = 'https://img.usecurling.com/p/1200/630?q=magazine%20cover&color=blue'
+        title = 'Acervo Cientifico | Educacao SST'
+        description = 'Acesso gratuito as publicacoes periodicas em Seguranca e Saude no Trabalho.'
+        redirectUrl = siteUrl + '/revistas'
       }
-      redirectUrl = siteUrl + '/revistas?revista=' + id
       ogType = 'website'
-    } else if (type === 'cases') {
-      if (id && id !== 'feed' && id !== 'all') {
-        const record = $app.findRecordById('professional_cases', id)
+    } else if (parts[0] === 'cases') {
+      if (parts[1]) {
+        const record = $app.findRecordById('professional_cases', parts[1])
         title = record.getString('title')
         const content = record.getString('content') || ''
         let plainText = content
@@ -86,16 +105,16 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
           .trim()
         description = plainText.substring(0, 155)
         if (plainText.length > 155) description += '...'
-        redirectUrl = siteUrl + '/cases/' + id
+        redirectUrl = siteUrl + '/cases/' + parts[1]
       } else {
-        title = 'Feed de Cases | Educação SST'
-        description = 'Compartilhe e discuta casos profissionais em Segurança e Saúde no Trabalho.'
+        title = 'Feed de Cases | Educacao SST'
+        description = 'Compartilhe e discuta casos profissionais em Seguranca e Saude no Trabalho.'
         redirectUrl = siteUrl + '/cases'
       }
       image = 'https://img.usecurling.com/p/1200/630?q=professional%20cases&color=teal'
       ogType = 'website'
-    } else if (type === 'simulados') {
-      const record = $app.findRecordById('simulados', id)
+    } else if (parts[0] === 'simulados' && parts[1]) {
+      const record = $app.findRecordById('simulados', parts[1])
       title = record.getString('title')
       const content = record.getString('description') || ''
       let plainText = content
@@ -111,13 +130,12 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=exam%20study&color=blue'
       }
-      redirectUrl = siteUrl + '/simulados/' + id
+      redirectUrl = siteUrl + '/simulados/' + parts[1]
       ogType = 'website'
-    } else if (type === 'documentarios' || type === 'documentaries') {
-      const record = $app.findRecordById('doc_projects', id)
+    } else if (parts[0] === 'documentarios' && parts[1]) {
+      const record = $app.findRecordById('doc_projects', parts[1])
       title = record.getString('title')
-      description =
-        record.getString('description') || 'Documentário em Segurança e Saúde no Trabalho.'
+      description = record.getString('description') || 'Documentario em SST.'
       const photos = record.get('presentation_photos')
       if (Array.isArray(photos) && photos.length > 0) {
         image =
@@ -125,37 +143,16 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=documentary%20film&color=gray'
       }
-      redirectUrl = siteUrl + '/documentarios/' + id
+      redirectUrl = siteUrl + '/documentarios/' + parts[1]
       ogType = 'website'
-    } else if (type === 'mentorias' || type === 'mentorships') {
-      const record = $app.findRecordById('mentorships', id)
-      title = record.getString('title')
-      description = record.getString('description') || 'Mentoria em Segurança e Saúde no Trabalho.'
-      const imgField = record.getString('mentor_photo')
-      if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
-      } else {
-        image = 'https://img.usecurling.com/p/1200/630?q=mentoring%20professional&color=orange'
-      }
+    } else if (parts[0] === 'mentorias') {
+      title = 'Mentorias SST | Educacao SST'
+      description = 'Mentorias especializadas em Seguranca e Saude no Trabalho.'
       redirectUrl = siteUrl + '/mentorias'
       ogType = 'website'
-    } else if (type === 'convite') {
-      const record = $app.findFirstRecordByData('workshop_invitations', 'token', id)
-      const eventRec = $app.findRecordById('events', record.getString('event'))
-      title = 'Convite para ' + record.getString('guest_name') + ' - Workshop SST'
-      description =
-        'Voce foi convidado para o ' +
-        eventRec.getString('title') +
-        '. Confira a programacao e confirme sua presenca!'
-      image = 'https://img.usecurling.com/p/1200/630?q=corporate%20workshop&color=blue'
-      redirectUrl = siteUrl + '/convite/' + id
-      ogType = 'website'
-    } else {
-      return e.redirect(302, siteUrl)
     }
   } catch (err) {
-    return e.redirect(302, siteUrl)
+    // keep defaults
   }
 
   if (title.length > 60) title = title.substring(0, 57) + '...'

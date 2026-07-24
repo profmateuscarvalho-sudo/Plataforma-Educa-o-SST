@@ -2,21 +2,41 @@ import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, PlayCircle, Award } from 'lucide-react'
+import { CheckCircle2, PlayCircle, Award, Share2 } from 'lucide-react'
 import { CheckoutModal } from '@/components/CheckoutModal'
 import { LeadForm } from '@/components/LeadForm'
 import { getCourse } from '@/services/courses'
 import { Course } from '@/types'
 import pb from '@/lib/pocketbase/client'
+import { setMetaTags } from '@/lib/utils'
+import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
+import { useToast } from '@/hooks/use-toast'
 
 export default function CourseDetails() {
   const { id } = useParams()
   const [course, setCourse] = useState<Course | null>(null)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     if (id) getCourse(id).then(setCourse).catch(console.error)
   }, [id])
+
+  const shareUrl = getSharePreviewUrl('cursos', id || '')
+
+  useEffect(() => {
+    if (course) {
+      const imgUrl = course.thumbnail
+        ? `${PUBLIC_URL}/api/files/${course.collectionId}/${course.id}/${course.thumbnail}`
+        : 'https://img.usecurling.com/p/1200/630?q=education%20course&color=green'
+      setMetaTags({
+        title: `${course.title} | Educação SST`,
+        description: course.description || 'Curso de Segurança e Saúde no Trabalho.',
+        image: imgUrl,
+        url: `${PUBLIC_URL}/cursos/${id}`,
+      })
+    }
+  }, [course, id])
 
   if (!course) return <div className="p-20 text-center text-2xl">Carregando...</div>
 
@@ -93,6 +113,20 @@ export default function CourseDetails() {
               <p className="text-xs text-center text-slate-500">
                 Acesso imediato após confirmação do pagamento. Garantia de 7 dias.
               </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={() => {
+                  navigator.clipboard.writeText(shareUrl)
+                  toast({
+                    title: 'Link copiado!',
+                    description: 'Compartilhe o curso com seus colegas.',
+                  })
+                }}
+              >
+                <Share2 className="w-4 h-4 mr-2" /> Compartilhar
+              </Button>
             </div>
             <div className="bg-secondary p-6 rounded-2xl text-white">
               <h3 className="font-serif font-bold text-xl mb-2 text-accent">Dúvidas?</h3>

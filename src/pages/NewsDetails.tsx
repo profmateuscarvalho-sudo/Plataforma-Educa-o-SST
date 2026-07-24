@@ -14,7 +14,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel'
 import { setMetaTags, stripHtml } from '@/lib/utils'
-import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
+import { PUBLIC_URL, getSharePreviewUrl, getOgPreviewUrl } from '@/lib/constants'
 import { BannerDisplay } from '@/components/BannerDisplay'
 
 const injectOGTags = (title: string, desc: string, image: string, url: string) => {
@@ -62,6 +62,7 @@ export default function NewsDetails() {
 
   const shareUrl = getSharePreviewUrl('news', id || '')
   const actualUrl = `${PUBLIC_URL}/noticias/${id}`
+  const ogPreviewUrl = getOgPreviewUrl(`/noticias/${id}`)
 
   useEffect(() => {
     if (news) {

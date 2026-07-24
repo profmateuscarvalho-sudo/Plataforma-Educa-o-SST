@@ -64,6 +64,13 @@ export default function StudentDashboard() {
   const [announcements, setAnnouncements] = useState<PlatformAnnouncement[]>([])
 
   useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login?redirect=/plataforma')
+    }
+  }, [loading, user, navigate])
+
+  useEffect(() => {
+    if (!user) return
     getMentorships()
       .then(setMentorships)
       .catch(() => {})
@@ -76,7 +83,7 @@ export default function StudentDashboard() {
     getAnnouncements()
       .then(setAnnouncements)
       .catch(() => {})
-  }, [])
+  }, [user])
 
   if (loading || !user) return <div className="p-12 text-center text-slate-500">Carregando...</div>
 

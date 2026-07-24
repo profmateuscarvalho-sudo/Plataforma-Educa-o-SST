@@ -190,12 +190,8 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
           tier,
         )
 
-      return e.json(200, {
-        success: true,
-        message: 'Assinatura ativada com sucesso! Você já pode acessar a plataforma.',
-        plan: planName,
-        accessGranted: true,
-      })
+      $apis.recordAuthResponse(e, user)
+      return
     } else {
       $app.save(user)
 
@@ -203,13 +199,8 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
         .logger()
         .info('Email verified for paid plan (no email sent)', 'userId', userId, 'plan', planName)
 
-      return e.json(200, {
-        success: true,
-        message:
-          'E-mail verificado com sucesso! Seu acesso será liberado após a confirmação do pagamento.',
-        plan: planName,
-        accessGranted: false,
-      })
+      $apis.recordAuthResponse(e, user)
+      return
     }
   } catch (err) {
     $app.logger().error('Failed to activate subscription', 'error', err.message)

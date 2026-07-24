@@ -25,7 +25,10 @@ export default function Ativar() {
     }
 
     activateSubscription(token)
-      .then(async () => {
+      .then(async (result) => {
+        if (result.token && result.record) {
+          pb.authStore.save(result.token, result.record as any)
+        }
         await refreshUser()
         setStatus('success')
       })

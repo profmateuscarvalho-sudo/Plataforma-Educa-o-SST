@@ -9,10 +9,12 @@ export interface Subscription extends RecordModel {
 }
 
 export interface ActivateSubscriptionResponse {
-  success: boolean
-  message: string
+  success?: boolean
+  message?: string
   plan?: string
   accessGranted?: boolean
+  token?: string
+  record?: Record<string, unknown>
 }
 
 export const activateSubscription = async (

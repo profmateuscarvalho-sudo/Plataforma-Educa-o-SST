@@ -100,10 +100,10 @@ export default function AdminStudents() {
   const planBadge = (tier?: string) => {
     const cls =
       tier === 'ouro'
-        ? 'bg-amber-100 text-amber-700 border-amber-200'
+        ? 'bg-amber-50 text-amber-700 border-amber-200'
         : tier === 'prata'
-          ? 'bg-blue-100 text-blue-700 border-blue-200'
-          : 'bg-slate-100 text-slate-600 border-slate-200'
+          ? 'bg-blue-50 text-blue-700 border-blue-200'
+          : 'bg-slate-50 text-slate-600 border-slate-200'
     return (
       <Badge variant="outline" className={cls}>
         {tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Free'}
@@ -112,20 +112,20 @@ export default function AdminStudents() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-3xl font-serif font-bold text-secondary">Alunos</h2>
-          <p className="text-slate-500 mt-1">Gestão de alunos cadastrados na plataforma.</p>
+          <h2 className="text-2xl font-semibold text-slate-900">Alunos</h2>
+          <p className="text-sm text-slate-500 mt-1">Gestão de alunos cadastrados na plataforma.</p>
         </div>
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border">
-          <Users className="w-5 h-5 text-slate-400" />
+        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2">
+          <Users className="w-4 h-4 text-slate-400" />
           <span className="text-sm font-medium text-slate-600">{students.length} alunos</span>
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-4">
+      <Card className="border border-slate-200 shadow-none">
+        <CardContent className="p-4 sm:p-6">
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
@@ -135,19 +135,20 @@ export default function AdminStudents() {
               className="pl-10 h-10"
             />
           </div>
+
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Perfis Profissionais</TableHead>
-                  <TableHead>Cadastro</TableHead>
-                  <TableHead>Validade</TableHead>
-                  <TableHead>Plano</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
+                <TableRow className="border-slate-200">
+                  <TableHead className="text-slate-600">Nome</TableHead>
+                  <TableHead className="text-slate-600">E-mail</TableHead>
+                  <TableHead className="text-slate-600">Telefone</TableHead>
+                  <TableHead className="text-slate-600">Perfis Profissionais</TableHead>
+                  <TableHead className="text-slate-600">Cadastro</TableHead>
+                  <TableHead className="text-slate-600">Validade</TableHead>
+                  <TableHead className="text-slate-600">Plano</TableHead>
+                  <TableHead className="text-slate-600">Status</TableHead>
+                  <TableHead className="text-slate-600">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -155,7 +156,7 @@ export default function AdminStudents() {
                   const isActive =
                     s.contract_end_date && new Date(s.contract_end_date) >= new Date()
                   return (
-                    <TableRow key={s.id}>
+                    <TableRow key={s.id} className="border-slate-100">
                       <TableCell className="font-medium text-slate-800">
                         {s.name || 'Sem nome'}
                       </TableCell>
@@ -165,23 +166,27 @@ export default function AdminStudents() {
                         {s.professional_tags?.length ? (
                           <div className="flex flex-wrap gap-1">
                             {s.professional_tags.map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-slate-600 text-xs">
+                              <Badge
+                                key={tag}
+                                variant="outline"
+                                className="text-slate-600 text-xs font-normal"
+                              >
                                 {tag}
                               </Badge>
                             ))}
                           </div>
                         ) : s.professional_profile ? (
-                          <Badge variant="outline" className="text-slate-600">
+                          <Badge variant="outline" className="text-slate-600 font-normal">
                             {s.professional_profile}
                           </Badge>
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-slate-500">
+                      <TableCell className="text-slate-500 text-sm">
                         {new Date(s.created).toLocaleDateString('pt-BR')}
                       </TableCell>
-                      <TableCell className="text-slate-500">
+                      <TableCell className="text-slate-500 text-sm">
                         {s.contract_end_date
                           ? new Date(s.contract_end_date).toLocaleDateString('pt-BR')
                           : '-'}
@@ -189,11 +194,11 @@ export default function AdminStudents() {
                       <TableCell>{planBadge(s.plan_tier)}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={isActive ? 'default' : 'outline'}
+                          variant="outline"
                           className={
                             isActive
-                              ? 'bg-emerald-500 hover:bg-emerald-600 border-transparent text-white'
-                              : 'text-slate-500'
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                              : 'border-slate-200 text-slate-500'
                           }
                         >
                           {isActive ? 'Ativo' : 'Inativo'}
@@ -204,7 +209,7 @@ export default function AdminStudents() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 text-slate-500 hover:text-slate-700"
                             title="Editar"
                             onClick={() => {
                               setEditingUser(s)
@@ -216,7 +221,7 @@ export default function AdminStudents() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 text-slate-500 hover:text-slate-700"
                             title="Reenviar ativação"
                             disabled={resendingId === s.id}
                             onClick={() => handleResend(s)}

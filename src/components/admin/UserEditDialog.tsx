@@ -1,8 +1,14 @@
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useEffect, useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -10,11 +16,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
-import { updateUserProfile } from '@/services/users'
-import { User } from '@/types'
+import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
+import pb from '@/lib/pocketbase/client'
+import { User } from '@/types'
+import { getProfessionalTagOptions } from '@/services/professional-tag-options'
+import { Loader2, Save } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+interface UserEditDialogProps {
+  user: User | null
+  open: boolean
+  setOpen: (open: boolean) => void
+  onSuccess: () => void
+}
 
 const PROFILES = [
   'Estudante',
@@ -25,93 +41,134 @@ const PROFILES = [
   'Outros',
 ]
 
-interface Props {
-  user: User | null
-  open: boolean
-  setOpen: (v: boolean) => void
-  onSuccess: () => void
-}
+const PLANS = [
+  { value: 'free', label: 'Free' },
+  { value: 'prata', label: 'Prata' },
+  { value: 'ouro', label: 'Ouro' },
+]
 
-export function UserEditDialog({ user, open, setOpen, onSuccess }: Props) {
-  const [form, setForm] = useState<Record<string, any>>({})
-  const [tagsText, setTagsText] = useState('')
+const BILLING = [
+  { value: 'none', label: 'Nenhuma' },
+  { value: 'monthly', label: 'Mensal' },
+  { value: 'yearly', label: 'Anual' },
+]
+
+export function UserEditDialog({ user, open, setOpen, onSuccess }: UserEditDialogProps) {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [profile, setProfile] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [planTier, setPlanTier] = useState('free')
+  const [billing, setBilling] = useState('none')
+  const [contractEnd, setContractEnd] = useState('')
+  const [tags, setTags] = useState<string[]>([])
+  const [availableTags, setAvailableTags] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    if (user) {
-      setForm({
-        name: user.name || '',
-        phone: user.phone || '',
-        professional_profile: user.professional_profile || '',
-        city: user.city || '',
-        state: user.state || '',
-        plan_tier: user.plan_tier || 'free',
-        subscription_billing: user.subscription_billing || 'none',
-        contract_end_date: user.contract_end_date || '',
-        email_verificado: user.email_verificado || false,
+    getProfessionalTagOptions()
+      .then((opts) => {
+        setAvailableTags(opts.map((o: { name: string }) => o.name))
       })
-      setTagsText((user.professional_tags || []).join(', '))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '')
+      setEmail(user.email || '')
+      setPhone(user.phone || '')
+      setProfile(user.professional_profile || '')
+      setCity(user.city || '')
+      setState(user.state || '')
+      setPlanTier(user.plan_tier || 'free')
+      setBilling(user.subscription_billing || 'none')
+      setContractEnd(user.contract_end_date || '')
+      setTags(user.professional_tags || [])
     }
   }, [user])
 
-  const set = (key: string, value: any) => setForm((p) => ({ ...p, [key]: value }))
+  const toggleTag = (tag: string) => {
+    setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
+  }
 
   const handleSave = async () => {
     if (!user) return
     setSaving(true)
     try {
-      const tags = tagsText
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean)
-      await updateUserProfile(user.id, { ...form, professional_tags: tags })
-      toast({ title: 'Perfil atualizado com sucesso' })
-      onSuccess()
+      await pb.collection('users').update(user.id, {
+        name,
+        email,
+        phone,
+        professional_profile: profile || undefined,
+        city,
+        state,
+        plan_tier: planTier,
+        subscription_billing: billing,
+        contract_end_date: contractEnd || undefined,
+        professional_tags: tags,
+      })
+      toast({ title: 'Aluno atualizado com sucesso' })
       setOpen(false)
-    } catch {
-      toast({ title: 'Erro ao atualizar perfil', variant: 'destructive' })
+      onSuccess()
+    } catch (err) {
+      toast({
+        title: 'Erro ao atualizar aluno',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      })
     } finally {
       setSaving(false)
     }
   }
 
-  const fieldClass = 'space-y-1.5'
-  const inputClass = 'h-10'
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Aluno — {user?.name}</DialogTitle>
+          <DialogTitle>Editar Aluno</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 pt-2">
-          <div className={cn(fieldClass, 'md:col-span-2')}>
-            <Label>Nome Completo</Label>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 py-2">
+          <div className="space-y-2">
+            <Label htmlFor="edit-name">Nome</Label>
             <Input
-              className={inputClass}
-              value={form.name || ''}
-              onChange={(e) => set('name', e.target.value)}
+              id="edit-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Nome do aluno"
             />
           </div>
-          <div className={fieldClass}>
-            <Label>Telefone</Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-email">E-mail</Label>
             <Input
-              className={inputClass}
-              value={form.phone || ''}
-              onChange={(e) => set('phone', e.target.value)}
+              id="edit-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@exemplo.com"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-phone">Telefone</Label>
+            <Input
+              id="edit-phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               placeholder="(00) 00000-0000"
             />
           </div>
-          <div className={fieldClass}>
+
+          <div className="space-y-2">
             <Label>Perfil Profissional</Label>
-            <Select
-              value={form.professional_profile || ''}
-              onValueChange={(v) => set('professional_profile', v)}
-            >
-              <SelectTrigger className={inputClass}>
-                <SelectValue placeholder="Selecione" />
+            <Select value={profile} onValueChange={setProfile}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
                 {PROFILES.map((p) => (
@@ -122,78 +179,111 @@ export function UserEditDialog({ user, open, setOpen, onSuccess }: Props) {
               </SelectContent>
             </Select>
           </div>
-          <div className={cn(fieldClass, 'md:col-span-2')}>
-            <Label>Tags Profissionais (separadas por vírgula)</Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-city">Cidade</Label>
             <Input
-              className={inputClass}
-              value={tagsText}
-              onChange={(e) => setTagsText(e.target.value)}
-              placeholder="NR-10, SST, Ergonomia"
-            />
-          </div>
-          <div className={fieldClass}>
-            <Label>Cidade</Label>
-            <Input
-              className={inputClass}
-              value={form.city || ''}
-              onChange={(e) => set('city', e.target.value)}
+              id="edit-city"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
               placeholder="Cidade"
             />
           </div>
-          <div className={fieldClass}>
-            <Label>Estado</Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-state">Estado</Label>
             <Input
-              className={inputClass}
-              value={form.state || ''}
-              onChange={(e) => set('state', e.target.value)}
+              id="edit-state"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
               placeholder="UF"
             />
           </div>
-          <div className={fieldClass}>
+
+          <div className="space-y-2">
             <Label>Plano</Label>
-            <Select value={form.plan_tier || 'free'} onValueChange={(v) => set('plan_tier', v)}>
-              <SelectTrigger className={inputClass}>
+            <Select value={planTier} onValueChange={setPlanTier}>
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="prata">Prata</SelectItem>
-                <SelectItem value="ouro">Ouro</SelectItem>
+                {PLANS.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          <div className={fieldClass}>
-            <Label>Ciclo de Cobrança</Label>
-            <Select
-              value={form.subscription_billing || 'none'}
-              onValueChange={(v) => set('subscription_billing', v)}
-            >
-              <SelectTrigger className={inputClass}>
+
+          <div className="space-y-2">
+            <Label>Cobrança</Label>
+            <Select value={billing} onValueChange={setBilling}>
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                <SelectItem value="monthly">Mensal</SelectItem>
-                <SelectItem value="yearly">Anual</SelectItem>
+                {BILLING.map((b) => (
+                  <SelectItem key={b.value} value={b.value}>
+                    {b.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          <div className={fieldClass}>
-            <Label>Data de Validade do Contrato</Label>
+
+          <div className="space-y-2 lg:col-span-2">
+            <Label htmlFor="edit-contract-end">Data de Validade</Label>
             <Input
-              className={inputClass}
+              id="edit-contract-end"
               type="date"
-              value={form.contract_end_date ? form.contract_end_date.split(' ')[0] : ''}
-              onChange={(e) => set('contract_end_date', e.target.value)}
+              value={contractEnd}
+              onChange={(e) => setContractEnd(e.target.value)}
             />
           </div>
-          <div className={cn(fieldClass, 'md:col-span-2', 'flex items-end')}>
-            <Button onClick={handleSave} disabled={saving} className="w-full h-10">
-              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar Alterações
-            </Button>
-          </div>
+
+          {availableTags.length > 0 && (
+            <div className="space-y-2 lg:col-span-2">
+              <Label>Tags Profissionais</Label>
+              <div className="flex flex-wrap gap-2 rounded-md border bg-slate-50 p-3">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      'inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                      tags.includes(tag)
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
+                    )}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Salvar
+              </>
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

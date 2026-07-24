@@ -18,6 +18,7 @@ import { Logo, SquareLogo } from './ui/Logos'
 import { useAuth } from '@/hooks/use-auth'
 import { LeadForm } from './LeadForm'
 import pb from '@/lib/pocketbase/client'
+import { FEATURE_FLAGS } from '@/lib/constants'
 
 export default function Layout() {
   const location = useLocation()
@@ -36,7 +37,7 @@ export default function Layout() {
     { name: 'Revistas', href: '/revistas' },
     { name: 'Notícias', href: '/noticias' },
     { name: 'Planos', href: '/planos' },
-    { name: 'Anuncie', href: '/anuncie-na-revista' },
+    ...(FEATURE_FLAGS.anunciePage ? [{ name: 'Anuncie', href: '/anuncie-na-revista' }] : []),
   ]
 
   return (
@@ -249,11 +250,13 @@ export default function Layout() {
                   Notícias do Setor
                 </Link>
               </li>
-              <li>
-                <Link to="/anuncie-na-revista" className="hover:text-white transition-colors">
-                  Anuncie
-                </Link>
-              </li>
+              {FEATURE_FLAGS.anunciePage && (
+                <li>
+                  <Link to="/anuncie-na-revista" className="hover:text-white transition-colors">
+                    Anuncie
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link to="/submeter-artigo" className="hover:text-white transition-colors">
                   Submeter Artigo

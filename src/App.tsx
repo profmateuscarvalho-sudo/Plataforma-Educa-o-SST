@@ -71,6 +71,7 @@ import AdminProfessionalTags from './pages/admin/ProfessionalTags'
 import AdminBanners from './pages/admin/Banners'
 import AdminKnowledgeBase from './pages/admin/KnowledgeBase'
 import Convite from './pages/Convite'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -103,6 +104,7 @@ const App = () => (
             <Route path="/planos" element={<Planos />} />
             <Route path="/documentarios/:id" element={<DocumentaryPitch />} />
             <Route path="/convite" element={<Convite />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
           </Route>
 
           <Route path="/plataforma/documentarios/:id" element={<DocumentaryViewer />} />

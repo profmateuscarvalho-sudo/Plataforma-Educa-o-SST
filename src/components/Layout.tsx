@@ -259,6 +259,11 @@ export default function Layout() {
                   Submeter Artigo
                 </Link>
               </li>
+              <li>
+                <Link to="/politica-de-privacidade" className="hover:text-white transition-colors">
+                  Política de Privacidade
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

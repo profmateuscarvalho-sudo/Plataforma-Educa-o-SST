@@ -72,6 +72,7 @@ import AdminBanners from './pages/admin/Banners'
 import AdminKnowledgeBase from './pages/admin/KnowledgeBase'
 import Convite from './pages/Convite'
 import PrivacyPolicy from './pages/PrivacyPolicy'
+import { FEATURE_FLAGS } from '@/lib/constants'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -100,7 +101,10 @@ const App = () => (
 
             <Route path="/simulados" element={<PublicSimulados />} />
             <Route path="/simulados/:id" element={<SimuladoSession />} />
-            <Route path="/anuncie-na-revista" element={<Anuncie />} />
+            <Route
+              path="/anuncie-na-revista"
+              element={FEATURE_FLAGS.anunciePage ? <Anuncie /> : <Navigate to="/" replace />}
+            />
             <Route path="/planos" element={<Planos />} />
             <Route path="/documentarios/:id" element={<DocumentaryPitch />} />
             <Route path="/convite" element={<Convite />} />

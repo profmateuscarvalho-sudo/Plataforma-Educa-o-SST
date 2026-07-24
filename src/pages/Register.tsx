@@ -12,7 +12,6 @@ import { Check } from 'lucide-react'
 import { LocationSelect } from '@/components/LocationSelect'
 import { PasswordStrengthChecker } from '@/components/PasswordStrengthChecker'
 import { useProfessionalTags } from '@/hooks/use-professional-tags'
-import '@/styles/3d-effects.css'
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -98,67 +97,66 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 flex items-center justify-center p-4 perspective-1500 relative overflow-hidden">
-      <div className="absolute top-10 left-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl animate-float-3d" />
-      <div
-        className="absolute bottom-10 right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl animate-float-3d"
-        style={{ animationDelay: '3s' }}
-      />
-      <div
-        className="absolute top-1/4 right-1/4 w-24 h-24 bg-blue-200/20 rounded-3xl rotate-12 blur-2xl animate-float-3d"
-        style={{ animationDelay: '1.5s' }}
-      />
-      <Card className="relative w-full max-w-md glass shadow-3d-lg card-3d border-white/40">
-        <CardHeader className="space-y-4 text-center items-center pb-8">
-          <SquareLogo variant="yellow" className="w-16 h-16 text-5xl mb-2" />
+    <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <Card className="w-full max-w-2xl border border-slate-200 shadow-sm">
+        <CardHeader className="space-y-3 text-center items-center pb-6 border-b border-slate-100">
+          <SquareLogo variant="yellow" className="w-14 h-14 text-4xl mb-1" />
           <div>
-            <CardTitle className="font-serif text-3xl text-secondary">Criar Conta</CardTitle>
-            <CardDescription className="text-base mt-2">
+            <CardTitle className="font-serif text-2xl text-secondary">Criar Conta</CardTitle>
+            <CardDescription className="text-sm mt-1.5">
               Junte-se à maior plataforma de SST
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="h-11 bg-slate-50"
-              />
+        <CardContent className="pt-6">
+          <form onSubmit={handleRegister} className="space-y-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome Completo</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="h-11 bg-white border-slate-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-11 bg-white border-slate-200"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-11 bg-slate-50"
-              />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(formatPhone(e.target.value))}
+                  placeholder="(00) 00000-0000"
+                  required
+                  className="h-11 bg-white border-slate-200"
+                />
+              </div>
+              <div className="space-y-0">
+                <LocationSelect
+                  state={state}
+                  city={city}
+                  onStateChange={setState}
+                  onCityChange={setCity}
+                  required
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(formatPhone(e.target.value))}
-                placeholder="(00) 00000-0000"
-                required
-                className="h-11 bg-slate-50"
-              />
-            </div>
-            <LocationSelect
-              state={state}
-              city={city}
-              onStateChange={setState}
-              onCityChange={setCity}
-              required
-            />
+
             <div className="space-y-2">
               <Label>Perfil Profissional</Label>
               <p className="text-xs text-slate-400">Selecione uma ou mais opções</p>
@@ -169,10 +167,10 @@ export default function Register() {
                     type="button"
                     onClick={() => toggleTag(tag)}
                     className={cn(
-                      'px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 tag-chip-3d',
+                      'px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5',
                       selectedTags.includes(tag)
-                        ? 'bg-primary text-primary-foreground tag-chip-3d-active'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:-translate-y-0.5',
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50',
                     )}
                   >
                     {selectedTags.includes(tag) && <Check className="w-3.5 h-3.5" />}
@@ -184,36 +182,44 @@ export default function Register() {
                 <p className="text-sm font-medium text-destructive mt-1">{tagsError}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                required
-                className="h-11 bg-slate-50"
-              />
-              {pass && <PasswordStrengthChecker password={pass} />}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={pass}
+                  onChange={(e) => setPass(e.target.value)}
+                  required
+                  className="h-11 bg-white border-slate-200"
+                />
+                {pass && <PasswordStrengthChecker password={pass} />}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="passwordConfirm">Confirmar Senha</Label>
+                <Input
+                  id="passwordConfirm"
+                  type="password"
+                  value={passConfirm}
+                  onChange={(e) => setPassConfirm(e.target.value)}
+                  required
+                  className="h-11 bg-white border-slate-200"
+                />
+                {passError && (
+                  <p className="text-sm font-medium text-destructive mt-1">{passError}</p>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="passwordConfirm">Confirmar Senha</Label>
-              <Input
-                id="passwordConfirm"
-                type="password"
-                value={passConfirm}
-                onChange={(e) => setPassConfirm(e.target.value)}
-                required
-                className="h-11 bg-slate-50"
-              />
-              {passError && (
-                <p className="text-sm font-medium text-destructive mt-1">{passError}</p>
-              )}
-            </div>
-            <Button type="submit" className="w-full h-12 text-lg font-bold mt-2" disabled={loading}>
+
+            <Button
+              type="submit"
+              className="w-full h-12 text-base font-bold mt-2"
+              disabled={loading}
+            >
               {loading ? 'Criando conta...' : 'Cadastrar'}
             </Button>
-            <div className="text-center mt-6">
+            <div className="text-center">
               <p className="text-sm text-slate-500">
                 Já tem uma conta?{' '}
                 <Link to="/login" className="text-primary font-bold hover:underline">

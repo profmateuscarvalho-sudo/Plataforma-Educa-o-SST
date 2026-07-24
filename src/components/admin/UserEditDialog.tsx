@@ -14,6 +14,7 @@ import { Loader2 } from 'lucide-react'
 import { updateUserProfile } from '@/services/users'
 import { User } from '@/types'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 const PROFILES = [
   'Estudante',
@@ -75,102 +76,123 @@ export function UserEditDialog({ user, open, setOpen, onSuccess }: Props) {
     }
   }
 
+  const fieldClass = 'space-y-1.5'
+  const inputClass = 'h-10'
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Aluno — {user?.name}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Nome</Label>
-            <Input value={form.name || ''} onChange={(e) => set('name', e.target.value)} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 pt-2">
+          <div className={cn(fieldClass, 'md:col-span-2')}>
+            <Label>Nome Completo</Label>
+            <Input
+              className={inputClass}
+              value={form.name || ''}
+              onChange={(e) => set('name', e.target.value)}
+              placeholder="Nome do aluno"
+            />
           </div>
-          <div className="space-y-2">
+          <div className={fieldClass}>
             <Label>Telefone</Label>
-            <Input value={form.phone || ''} onChange={(e) => set('phone', e.target.value)} />
+            <Input
+              className={inputClass}
+              value={form.phone || ''}
+              onChange={(e) => set('phone', e.target.value)}
+              placeholder="(00) 00000-0000"
+            />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Perfil Profissional</Label>
-              <Select
-                value={form.professional_profile || ''}
-                onValueChange={(v) => set('professional_profile', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROFILES.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Tags (vírgula)</Label>
-              <Input
-                value={tagsText}
-                onChange={(e) => setTagsText(e.target.value)}
-                placeholder="NR-10, SST, Ergonomia"
-              />
-            </div>
+          <div className={fieldClass}>
+            <Label>Perfil Profissional</Label>
+            <Select
+              value={form.professional_profile || ''}
+              onValueChange={(v) => set('professional_profile', v)}
+            >
+              <SelectTrigger className={inputClass}>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {PROFILES.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Cidade</Label>
-              <Input value={form.city || ''} onChange={(e) => set('city', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Estado</Label>
-              <Input value={form.state || ''} onChange={(e) => set('state', e.target.value)} />
-            </div>
+          <div className={cn(fieldClass, 'md:col-span-2')}>
+            <Label>Tags Profissionais (separadas por vírgula)</Label>
+            <Input
+              className={inputClass}
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+              placeholder="NR-10, SST, Ergonomia"
+            />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Plano</Label>
-              <Select value={form.plan_tier || 'free'} onValueChange={(v) => set('plan_tier', v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="free">Free</SelectItem>
-                  <SelectItem value="prata">Prata</SelectItem>
-                  <SelectItem value="ouro">Ouro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Ciclo de Cobrança</Label>
-              <Select
-                value={form.subscription_billing || 'none'}
-                onValueChange={(v) => set('subscription_billing', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  <SelectItem value="monthly">Mensal</SelectItem>
-                  <SelectItem value="yearly">Anual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className={fieldClass}>
+            <Label>Cidade</Label>
+            <Input
+              className={inputClass}
+              value={form.city || ''}
+              onChange={(e) => set('city', e.target.value)}
+              placeholder="Cidade"
+            />
           </div>
-          <div className="space-y-2">
+          <div className={fieldClass}>
+            <Label>Estado</Label>
+            <Input
+              className={inputClass}
+              value={form.state || ''}
+              onChange={(e) => set('state', e.target.value)}
+              placeholder="UF"
+            />
+          </div>
+          <div className={fieldClass}>
+            <Label>Plano</Label>
+            <Select value={form.plan_tier || 'free'} onValueChange={(v) => set('plan_tier', v)}>
+              <SelectTrigger className={inputClass}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="prata">Prata</SelectItem>
+                <SelectItem value="ouro">Ouro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className={fieldClass}>
+            <Label>Ciclo de Cobrança</Label>
+            <Select
+              value={form.subscription_billing || 'none'}
+              onValueChange={(v) => set('subscription_billing', v)}
+            >
+              <SelectTrigger className={inputClass}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                <SelectItem value="monthly">Mensal</SelectItem>
+                <SelectItem value="yearly">Anual</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className={fieldClass}>
             <Label>Data de Validade do Contrato</Label>
             <Input
+              className={inputClass}
               type="date"
               value={form.contract_end_date ? form.contract_end_date.split(' ')[0] : ''}
               onChange={(e) => set('contract_end_date', e.target.value)}
             />
           </div>
-          <Button onClick={handleSave} disabled={saving} className="w-full">
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar Alterações
-          </Button>
+          <div className={cn(fieldClass, 'md:col-span-2', 'flex items-end')}>
+            <Button onClick={handleSave} disabled={saving} className="w-full h-10">
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar Alterações
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -59,7 +59,7 @@ export default function AdminNews() {
           title: 'Erro ao salvar',
           variant: 'destructive',
           description:
-            'Verifique se a imagem excede o limite de tamanho (5MB) ou se os campos estão corretos.',
+            'Verifique se a imagem excede o limite de tamanho (20MB) ou se os campos estão corretos.',
         })
       }
     } finally {
@@ -123,11 +123,14 @@ export default function AdminNews() {
                 {fieldErrors.image && (
                   <p className="text-sm text-red-500 mt-1">{fieldErrors.image}</p>
                 )}
-                <p className="text-xs text-slate-500 mt-1">Recomendado: 1200x600px. Máximo: 5MB.</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Recomendado: 1200x600px. Máximo: 20MB.
+                </p>
               </div>
               <div>
                 <Label>Fotos da Galeria (Opcional, múltiplas)</Label>
                 <Input name="images" type="file" accept="image/*" multiple />
+                <p className="text-xs text-slate-500 mt-1">Máximo: 20MB por arquivo.</p>
                 {fieldErrors.images && (
                   <p className="text-sm text-red-500 mt-1">{fieldErrors.images}</p>
                 )}

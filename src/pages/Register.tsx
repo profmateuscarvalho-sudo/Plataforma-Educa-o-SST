@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +24,7 @@ const formatPhone = (value: string) => {
 export default function Register() {
   const { signUp } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const planId = searchParams.get('planId') || undefined
   const { tags: availableTags } = useProfessionalTags()
@@ -49,27 +51,27 @@ export default function Register() {
     setTagsError('')
 
     if (selectedTags.length === 0) {
-      setTagsError('Selecione pelo menos um perfil profissional.')
+      setTagsError(t('auth.register.errorTags'))
       return
     }
 
     if (pass !== passConfirm) {
-      setPassError('As senhas não coincidem.')
+      setPassError(t('auth.register.errorPasswordMatch'))
       return
     }
 
     if (pass.length < 8) {
-      setPassError('A senha deve ter no mínimo 8 caracteres.')
+      setPassError(t('auth.register.errorPasswordLength'))
       return
     }
 
     if (!/[A-Z]/.test(pass)) {
-      setPassError('A senha deve conter pelo menos uma letra maiúscula.')
+      setPassError(t('auth.register.errorPasswordUpper'))
       return
     }
 
     if (!/[0-9]/.test(pass)) {
-      setPassError('A senha deve conter pelo menos um número.')
+      setPassError(t('auth.register.errorPasswordNumber'))
       return
     }
 
@@ -79,14 +81,14 @@ export default function Register() {
 
     if (error) {
       toast({
-        title: 'Erro no cadastro',
-        description: 'Verifique os dados ou se o e-mail já está em uso.',
+        title: t('auth.register.errorTitle'),
+        description: t('auth.register.errorDesc'),
         variant: 'destructive',
       })
     } else {
       toast({
-        title: 'Cadastro realizado com sucesso!',
-        description: 'E-mail de ativação enviado! Verifique sua caixa de entrada e pasta de spam.',
+        title: t('auth.register.successTitle'),
+        description: t('auth.register.successDesc'),
       })
       if (planId) {
         navigate(`/subscription-pending?planId=${planId}`)
@@ -102,9 +104,11 @@ export default function Register() {
         <CardHeader className="space-y-3 text-center items-center pb-6 border-b border-slate-100">
           <SquareLogo variant="yellow" className="w-14 h-14 text-4xl mb-1" />
           <div>
-            <CardTitle className="font-serif text-2xl text-secondary">Criar Conta</CardTitle>
+            <CardTitle className="font-serif text-2xl text-secondary">
+              {t('auth.register.title')}
+            </CardTitle>
             <CardDescription className="text-sm mt-1.5">
-              Junte-se à maior plataforma de SST
+              {t('auth.register.subtitle')}
             </CardDescription>
           </div>
         </CardHeader>
@@ -112,7 +116,7 @@ export default function Register() {
           <form onSubmit={handleRegister} className="space-y-5">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo</Label>
+                <Label htmlFor="name">{t('auth.register.fullName')}</Label>
                 <Input
                   id="name"
                   value={name}
@@ -122,7 +126,7 @@ export default function Register() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="email">{t('auth.register.email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -136,12 +140,12 @@ export default function Register() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
+                <Label htmlFor="phone">{t('auth.register.phone')}</Label>
                 <Input
                   id="phone"
                   value={phone}
                   onChange={(e) => setPhone(formatPhone(e.target.value))}
-                  placeholder="(00) 00000-0000"
+                  placeholder={t('auth.register.phonePlaceholder')}
                   required
                   className="h-11 bg-white border-slate-200"
                 />
@@ -158,8 +162,8 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label>Perfil Profissional</Label>
-              <p className="text-xs text-slate-400">Selecione uma ou mais opções</p>
+              <Label>{t('auth.register.professionalProfile')}</Label>
+              <p className="text-xs text-slate-400">{t('auth.register.selectOneOrMore')}</p>
               <div className="flex flex-wrap gap-2">
                 {availableTags.map((tag) => (
                   <button
@@ -185,7 +189,7 @@ export default function Register() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">{t('auth.register.password')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -197,7 +201,7 @@ export default function Register() {
                 {pass && <PasswordStrengthChecker password={pass} />}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="passwordConfirm">Confirmar Senha</Label>
+                <Label htmlFor="passwordConfirm">{t('auth.register.confirmPassword')}</Label>
                 <Input
                   id="passwordConfirm"
                   type="password"
@@ -217,13 +221,13 @@ export default function Register() {
               className="w-full h-12 text-base font-bold mt-2"
               disabled={loading}
             >
-              {loading ? 'Criando conta...' : 'Cadastrar'}
+              {loading ? t('auth.register.submitting') : t('auth.register.submit')}
             </Button>
             <div className="text-center">
               <p className="text-sm text-slate-500">
-                Já tem uma conta?{' '}
+                {t('auth.register.hasAccount')}{' '}
                 <Link to="/login" className="text-primary font-bold hover:underline">
-                  Faça login
+                  {t('auth.register.login')}
                 </Link>
               </p>
             </div>

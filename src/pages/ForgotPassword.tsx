@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,6 +11,7 @@ import pb from '@/lib/pocketbase/client'
 import { ArrowLeft, CheckCircle2, Mail } from 'lucide-react'
 
 export default function ForgotPassword() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
@@ -20,11 +22,14 @@ export default function ForgotPassword() {
     try {
       await pb.collection('users').requestPasswordReset(email)
       setSent(true)
-      toast({ title: 'E-mail enviado!', description: 'Verifique sua caixa de entrada.' })
+      toast({
+        title: t('auth.forgotPassword.successTitle'),
+        description: t('auth.forgotPassword.successDesc'),
+      })
     } catch {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível enviar o e-mail. Tente novamente.',
+        title: t('auth.forgotPassword.errorTitle'),
+        description: t('auth.forgotPassword.errorDesc'),
         variant: 'destructive',
       })
     } finally {
@@ -38,9 +43,11 @@ export default function ForgotPassword() {
         <CardHeader className="space-y-4 text-center items-center pb-8">
           <SquareLogo variant="black" className="w-16 h-16 text-5xl mb-2" />
           <div>
-            <CardTitle className="font-serif text-3xl text-secondary">Recuperar Senha</CardTitle>
+            <CardTitle className="font-serif text-3xl text-secondary">
+              {t('auth.forgotPassword.title')}
+            </CardTitle>
             <CardDescription className="text-base mt-2">
-              Digite seu e-mail para receber o link de recuperação
+              {t('auth.forgotPassword.subtitle')}
             </CardDescription>
           </div>
         </CardHeader>
@@ -50,21 +57,23 @@ export default function ForgotPassword() {
               <div className="flex justify-center">
                 <CheckCircle2 className="w-16 h-16 text-emerald-500" />
               </div>
-              <p className="text-slate-600">
-                Enviamos um link de recuperação para <strong>{email}</strong>. Verifique sua caixa
-                de entrada e siga as instruções para redefinir sua senha.
-              </p>
+              <p
+                className="text-slate-600"
+                dangerouslySetInnerHTML={{
+                  __html: t('auth.forgotPassword.successBody', { email }),
+                }}
+              />
               <Button asChild className="w-full h-12">
                 <Link to="/login">
                   <ArrowLeft className="mr-2 w-4 h-4" />
-                  Voltar para o login
+                  {t('auth.forgotPassword.backToLogin')}
                 </Link>
               </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="email">{t('auth.forgotPassword.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
@@ -74,12 +83,12 @@ export default function ForgotPassword() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     className="h-12 bg-slate-50 pl-10"
-                    placeholder="seu@email.com"
+                    placeholder={t('auth.forgotPassword.emailPlaceholder')}
                   />
                 </div>
               </div>
               <Button type="submit" className="w-full h-12 text-lg font-bold" disabled={loading}>
-                {loading ? 'Enviando...' : 'Enviar link de recuperação'}
+                {loading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
               </Button>
               <div className="text-center">
                 <Link
@@ -87,7 +96,7 @@ export default function ForgotPassword() {
                   className="text-sm text-slate-500 hover:text-primary inline-flex items-center gap-1"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Voltar para o login
+                  {t('auth.forgotPassword.backToLogin')}
                 </Link>
               </div>
             </form>

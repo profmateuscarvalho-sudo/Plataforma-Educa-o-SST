@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,7 @@ import pb from '@/lib/pocketbase/client'
 export default function Login() {
   const { signIn } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('carvalhomateus@icloud.com')
   const [pass, setPass] = useState('securepassword123')
@@ -30,14 +32,12 @@ export default function Login() {
         'status' in error &&
         (error as any).status === 0
       toast({
-        title: 'Erro de login',
-        description: isNetworkError
-          ? 'Serviço temporariamente indisponível. Verifique sua conexão e tente novamente.'
-          : 'Credenciais inválidas.',
+        title: t('auth.login.errorTitle'),
+        description: isNetworkError ? t('auth.login.errorNetwork') : t('auth.login.errorInvalid'),
         variant: 'destructive',
       })
     } else {
-      toast({ title: 'Bem-vindo!' })
+      toast({ title: t('auth.login.welcome') })
       const redirectTo = searchParams.get('redirect')
       if (redirectTo) {
         navigate(redirectTo)
@@ -59,17 +59,15 @@ export default function Login() {
           <SquareLogo variant="black" className="w-16 h-16 text-5xl mb-2" />
           <div>
             <CardTitle className="font-serif text-3xl text-secondary">
-              Acesso à Plataforma
+              {t('auth.login.title')}
             </CardTitle>
-            <CardDescription className="text-base mt-2">
-              Educação e Desenvolvimento em SST
-            </CardDescription>
+            <CardDescription className="text-base mt-2">{t('auth.login.subtitle')}</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">{t('auth.login.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -80,7 +78,7 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">{t('auth.login.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -91,21 +89,21 @@ export default function Login() {
               />
             </div>
             <Button type="submit" className="w-full h-12 text-lg font-bold" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? t('auth.login.submitting') : t('auth.login.submit')}
             </Button>
             <div className="text-center">
               <Link
                 to="/forgot-password"
                 className="text-sm text-primary font-medium hover:underline"
               >
-                Esqueci minha senha
+                {t('auth.login.forgotPassword')}
               </Link>
             </div>
             <div className="text-center mt-6">
               <p className="text-sm text-slate-500">
-                Ainda não tem conta?{' '}
+                {t('auth.login.noAccount')}{' '}
                 <Link to="/register" className="text-primary font-bold hover:underline">
-                  Crie uma agora
+                  {t('auth.login.createNow')}
                 </Link>
               </p>
             </div>

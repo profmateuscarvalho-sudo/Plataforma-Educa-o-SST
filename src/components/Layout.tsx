@@ -14,9 +14,11 @@ import {
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Logo, SquareLogo } from './ui/Logos'
 import { useAuth } from '@/hooks/use-auth'
 import { LeadForm } from './LeadForm'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import pb from '@/lib/pocketbase/client'
 import { FEATURE_FLAGS } from '@/lib/constants'
 
@@ -24,20 +26,23 @@ export default function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const { t } = useTranslation()
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [location.pathname])
 
   const navigation = [
-    { name: 'Início', href: '/' },
-    { name: 'Cursos', href: '/cursos' },
-    { name: 'Mentorias', href: '/mentorias' },
-    { name: 'Simulados', href: '/simulados' },
-    { name: 'Revistas', href: '/revistas' },
-    { name: 'Notícias', href: '/noticias' },
-    { name: 'Planos', href: '/planos' },
-    ...(FEATURE_FLAGS.anunciePage ? [{ name: 'Anuncie', href: '/anuncie-na-revista' }] : []),
+    { name: t('nav.home'), href: '/' },
+    { name: t('nav.courses'), href: '/cursos' },
+    { name: t('nav.mentorships'), href: '/mentorias' },
+    { name: t('nav.simulados'), href: '/simulados' },
+    { name: t('nav.magazines'), href: '/revistas' },
+    { name: t('nav.news'), href: '/noticias' },
+    { name: t('nav.plans'), href: '/planos' },
+    ...(FEATURE_FLAGS.anunciePage
+      ? [{ name: t('nav.advertise'), href: '/anuncie-na-revista' }]
+      : []),
   ]
 
   return (
@@ -86,9 +91,10 @@ export default function Layout() {
                 </Link>
                 <Button variant="ghost" asChild className="text-primary font-semibold">
                   <Link to={user.role === 'admin' ? '/admin' : '/plataforma'}>
-                    <LayoutDashboard className="w-4 h-4 mr-2" /> Painel
+                    <LayoutDashboard className="w-4 h-4 mr-2" /> {t('nav.panel')}
                   </Link>
                 </Button>{' '}
+                <LanguageSwitcher />
                 <Button
                   variant="outline"
                   size="sm"
@@ -97,16 +103,17 @@ export default function Layout() {
                     navigate('/')
                   }}
                 >
-                  Sair
+                  {t('nav.logout')}
                 </Button>
               </>
             ) : (
               <>
+                <LanguageSwitcher />
                 <Button variant="ghost" asChild className="font-medium text-slate-600">
-                  <Link to="/login">Área do Assinante</Link>
+                  <Link to="/login">{t('nav.subscriberArea')}</Link>
                 </Button>
                 <Button asChild className="font-medium shadow-sm">
-                  <Link to="/planos">Assine</Link>
+                  <Link to="/planos">{t('nav.subscribe')}</Link>
                 </Button>
               </>
             )}
@@ -159,9 +166,12 @@ export default function Layout() {
                       </Link>
                       <Button className="w-full justify-start text-lg h-12" asChild>
                         <Link to={user.role === 'admin' ? '/admin' : '/plataforma'}>
-                          <LayoutDashboard className="mr-2" /> Painel
+                          <LayoutDashboard className="mr-2" /> {t('nav.panel')}
                         </Link>
                       </Button>
+                      <div className="px-1">
+                        <LanguageSwitcher />
+                      </div>
                       <Button
                         variant="outline"
                         className="w-full justify-start text-lg h-12"
@@ -170,13 +180,22 @@ export default function Layout() {
                           navigate('/')
                         }}
                       >
-                        <LogOut className="mr-2" /> Sair
+                        <LogOut className="mr-2" /> {t('nav.logout')}
                       </Button>
                     </>
                   ) : (
-                    <Button variant="outline" className="w-full justify-start text-lg h-12" asChild>
-                      <Link to="/login">Área do Assinante</Link>
-                    </Button>
+                    <>
+                      <div className="px-1">
+                        <LanguageSwitcher />
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-lg h-12"
+                        asChild
+                      >
+                        <Link to="/login">{t('nav.subscriberArea')}</Link>
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
@@ -196,10 +215,10 @@ export default function Layout() {
               <SquareLogo variant="yellow" />
               <Logo className="text-white" />
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Plataforma de educação e desenvolvimento profissional na área de Segurança e Saúde no
-              Trabalho.
-            </p>
+            <p className="text-slate-400 text-sm leading-relaxed">{t('footer.about')}</p>
+            <div className="pt-2">
+              <LanguageSwitcher variant="dark" />
+            </div>
             <div className="flex items-center gap-4 pt-2">
               <a
                 href="https://www.instagram.com/revista.educacaosst"
@@ -228,64 +247,70 @@ export default function Layout() {
             </div>
           </div>
           <div>
-            <h4 className="font-serif font-bold text-lg text-white mb-6">Links Rápidos</h4>
+            <h4 className="font-serif font-bold text-lg text-white mb-6">
+              {t('footer.quickLinks')}
+            </h4>
             <ul className="space-y-3 text-sm text-slate-400">
               <li>
                 <Link to="/cursos" className="hover:text-white transition-colors">
-                  Todos os Cursos
+                  {t('footer.allCourses')}
                 </Link>
               </li>
               <li>
                 <Link to="/mentorias" className="hover:text-white transition-colors">
-                  Mentorias
+                  {t('footer.mentorships')}
                 </Link>
               </li>
               <li>
                 <Link to="/revistas" className="hover:text-white transition-colors">
-                  Revistas Digitais
+                  {t('footer.digitalMagazines')}
                 </Link>
               </li>
               <li>
                 <Link to="/noticias" className="hover:text-white transition-colors">
-                  Notícias do Setor
+                  {t('footer.sectorNews')}
                 </Link>
               </li>
               {FEATURE_FLAGS.anunciePage && (
                 <li>
                   <Link to="/anuncie-na-revista" className="hover:text-white transition-colors">
-                    Anuncie
+                    {t('footer.advertise')}
                   </Link>
                 </li>
               )}
               <li>
                 <Link to="/submeter-artigo" className="hover:text-white transition-colors">
-                  Submeter Artigo
+                  {t('footer.submitArticle')}
                 </Link>
               </li>
               <li>
                 <Link to="/politica-de-privacidade" className="hover:text-white transition-colors">
-                  Política de Privacidade
+                  {t('footer.privacyPolicy')}
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-serif font-bold text-lg text-white mb-6">Fale Conosco</h4>
+            <h4 className="font-serif font-bold text-lg text-white mb-6">
+              {t('footer.contactUs')}
+            </h4>
             <div className="bg-white/5 p-4 rounded-lg border border-white/10">
               <LeadForm variant="dark" />
             </div>
           </div>
           <div>
-            <h4 className="font-serif font-bold text-lg text-white mb-6">Áreas de Atuação</h4>
+            <h4 className="font-serif font-bold text-lg text-white mb-6">
+              {t('footer.areasOfPractice')}
+            </h4>
             <ul className="space-y-3 text-sm text-slate-400">
               <li className="flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-accent" /> Medicina do Trabalho
+                <GraduationCap className="w-4 h-4 text-accent" /> {t('footer.occupationalMedicine')}
               </li>
               <li className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-accent" /> Segurança do Trabalho
+                <BookOpen className="w-4 h-4 text-accent" /> {t('footer.occupationalSafety')}
               </li>
               <li className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-accent" /> Gestão de SST
+                <Users className="w-4 h-4 text-accent" /> {t('footer.sstManagement')}
               </li>
             </ul>
           </div>

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
+import { useTranslation } from 'react-i18next'
 import { StudentHomePreview } from '@/components/StudentHomePreview'
 import { PricingSection } from '@/components/PricingSection'
 import { CourseCard } from '@/components/CourseCard'
@@ -21,6 +22,7 @@ export default function Index() {
   const [magBannerDismissed, setMagBannerDismissed] = useState(false)
   const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (sessionStorage.getItem('mag_banner_dismissed') === 'true') {
@@ -72,15 +74,13 @@ export default function Index() {
             <div className="lg:col-span-4 space-y-5 animate-fade-in-up">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary backdrop-blur-sm font-medium text-sm">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                #SejaEducaçãoSST
+                {t('hero.badge')}
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-serif font-bold text-white leading-tight">
-                Educação e desenvolvimento em <span className="text-accent">SST</span>
+                {t('hero.title')} <span className="text-accent">{t('hero.titleHighlight')}</span>
               </h1>
               <p className="text-base md:text-lg text-slate-300 max-w-xl leading-relaxed font-light">
-                Eleve o seu conhecimento a partir de nossos programas educacionais focados em
-                Segurança e Saúde no Trabalho e construa um itinerário profissional de forma sólida
-                com foco na prática e na sua realidade de trabalho.
+                {t('hero.subtitle')}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Button
@@ -88,7 +88,7 @@ export default function Index() {
                   className="h-12 px-7 text-base font-bold bg-primary hover:bg-primary/90 text-white"
                   asChild
                 >
-                  <Link to="/register">Assine Gratuitamente</Link>
+                  <Link to="/register">{t('hero.ctaFree')}</Link>
                 </Button>
                 <Button
                   size="lg"
@@ -96,18 +96,18 @@ export default function Index() {
                   className="h-12 px-7 text-base font-bold border-accent text-accent hover:bg-accent hover:text-secondary"
                   asChild
                 >
-                  <a href="#planos">Ver Planos</a>
+                  <a href="#planos">{t('hero.ctaPlans')}</a>
                 </Button>
               </div>
               <div className="flex flex-wrap gap-3 pt-2">
                 <div className="flex items-center gap-1.5 text-sm text-slate-300">
-                  <Check className="w-4 h-4 text-primary" /> Cursos em SST
+                  <Check className="w-4 h-4 text-primary" /> {t('hero.featureCourses')}
                 </div>
                 <div className="flex items-center gap-1.5 text-sm text-slate-300">
-                  <Check className="w-4 h-4 text-primary" /> Revistas científicas
+                  <Check className="w-4 h-4 text-primary" /> {t('hero.featureMagazines')}
                 </div>
                 <div className="flex items-center gap-1.5 text-sm text-slate-300">
-                  <Check className="w-4 h-4 text-primary" /> Documentários exclusivos
+                  <Check className="w-4 h-4 text-primary" /> {t('hero.featureDocumentaries')}
                 </div>
               </div>
             </div>
@@ -128,12 +128,9 @@ export default function Index() {
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="max-w-2xl">
               <h2 className="text-4xl font-serif font-bold text-secondary mb-4">
-                Cursos em Destaque
+                {t('home.featuredCourses')}
               </h2>
-              <p className="text-slate-600 text-lg">
-                Construa seu itinerário formativo de alto nível com foco na sua realidade e
-                conhecimento prático.
-              </p>
+              <p className="text-slate-600 text-lg">{t('home.featuredCoursesDesc')}</p>
             </div>
             <Button
               variant="ghost"
@@ -141,7 +138,7 @@ export default function Index() {
               asChild
             >
               <Link to="/cursos">
-                Ver todos <ArrowRight className="ml-2 w-4 h-4" />
+                {t('home.viewAll')} <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
           </div>
@@ -161,11 +158,9 @@ export default function Index() {
             <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
               <div className="max-w-2xl">
                 <h2 className="text-4xl font-serif font-bold text-secondary mb-4">
-                  Últimas Notícias
+                  {t('home.latestNews')}
                 </h2>
-                <p className="text-slate-600 text-lg">
-                  Acompanhe as novidades e atualizações do mercado de Segurança e Saúde no Trabalho.
-                </p>
+                <p className="text-slate-600 text-lg">{t('home.latestNewsDesc')}</p>
               </div>
               <Button
                 variant="ghost"
@@ -173,7 +168,7 @@ export default function Index() {
                 asChild
               >
                 <Link to="/noticias">
-                  Ver todas <ArrowRight className="ml-2 w-4 h-4" />
+                  {t('home.viewAll')} <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </Button>
             </div>
@@ -194,7 +189,7 @@ export default function Index() {
               sessionStorage.setItem('mag_banner_dismissed', 'true')
             }}
             className="absolute -top-2 -right-2 z-10 bg-white rounded-full p-1.5 shadow-md hover:bg-slate-100 transition-colors"
-            aria-label="Fechar"
+            aria-label={t('home.close')}
           >
             <X className="w-4 h-4 text-slate-600" />
           </button>
@@ -215,10 +210,10 @@ export default function Index() {
             </div>
             <div className="flex flex-col items-center text-center w-full min-w-0 pb-1">
               <div className="text-xs font-bold uppercase tracking-wider text-accent mb-2 flex items-center justify-center gap-1.5">
-                <Star className="w-4 h-4 fill-current text-accent" /> Revista do Mês
+                <Star className="w-4 h-4 fill-current text-accent" /> {t('home.magazineOfMonth')}
               </div>
               <p className="text-sm font-bold text-primary mt-1 flex items-center justify-center gap-1 w-full bg-primary/5 hover:bg-primary/10 py-2.5 rounded-lg transition-colors">
-                Clique aqui para ler grátis
+                {t('home.clickToReadFree')}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </p>
             </div>

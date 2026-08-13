@@ -21,6 +21,7 @@ import {
   Image as ImageIcon,
   Link2,
   Type,
+  Braces,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -41,6 +42,7 @@ const TYPE_ICONS: Record<string, typeof FileText> = {
   image: ImageIcon,
   link: Link2,
   free_text: Type,
+  json: Braces,
 }
 
 export default function AdminKnowledgeBase() {

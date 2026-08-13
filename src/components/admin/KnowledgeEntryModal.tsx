@@ -20,6 +20,9 @@ import type { KnowledgeEntry } from '@/types'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024
 const MAX_TEXT_LENGTH = 100000
+const MAX_JSON_LENGTH = 200000
+
+type EntryType = 'pdf' | 'image' | 'link' | 'free_text' | 'json'
 
 interface Props {
   open: boolean
@@ -33,32 +36,37 @@ const TYPE_LABELS: Record<string, string> = {
   image: 'Imagem',
   link: 'Link (URL)',
   free_text: 'Texto Livre',
+  json: 'JSON Estruturado',
 }
 
 export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props) {
   const [title, setTitle] = useState('')
-  const [type, setType] = useState<'pdf' | 'image' | 'link' | 'free_text'>('free_text')
+  const [type, setType] = useState<EntryType>('free_text')
   const [file, setFile] = useState<File | null>(null)
   const [url, setUrl] = useState('')
   const [rawText, setRawText] = useState('')
+  const [jsonData, setJsonData] = useState('')
   const [tagsText, setTagsText] = useState('')
   const [saving, setSaving] = useState(false)
   const [fileError, setFileError] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [textError, setTextError] = useState('')
+  const [jsonError, setJsonError] = useState('')
   const { toast } = useToast()
 
   useEffect(() => {
     if (open) {
       setTitle(editing?.title || '')
-      setType(editing?.type || 'free_text')
+      setType((editing?.type as EntryType) || 'free_text')
       setFile(null)
       setUrl(editing?.url || '')
       setRawText(editing?.raw_text || '')
+      setJsonData(editing?.json_data != null ? JSON.stringify(editing.json_data, null, 2) : '')
       setTagsText(editing?.tags?.join(', ') || '')
       setFileError('')
       setErrorMessage('')
       setTextError('')
+      setJsonError('')
     }
   }, [open, editing])
 
@@ -80,6 +88,19 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
       .map((t) => t.trim())
       .filter(Boolean)
 
+  const validateJson = (value: string) => {
+    if (!value.trim()) return 'O JSON não pode estar vazio.'
+    try {
+      const parsed = JSON.parse(value)
+      if (parsed === null || typeof parsed !== 'object') {
+        return 'O JSON deve ser um objeto ou array.'
+      }
+      return ''
+    } catch (err) {
+      return 'JSON inválido: ' + (err instanceof Error ? err.message : String(err))
+    }
+  }
+
   const buildCreateFormData = (): FormData => {
     const formData = new FormData()
     formData.append('title', title.trim())
@@ -93,6 +114,8 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
       formData.append('url', url.trim())
     } else if (type === 'free_text') {
       formData.append('raw_text', rawText)
+    } else if (type === 'json') {
+      formData.append('json_data', jsonData)
     }
     return formData
   }
@@ -101,12 +124,20 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
     e.preventDefault()
     setErrorMessage('')
     setTextError('')
+    setJsonError('')
 
     if (!title.trim()) return
 
     if (rawText.length > MAX_TEXT_LENGTH) {
       setTextError(
         `O texto deve ter no máximo ${MAX_TEXT_LENGTH.toLocaleString('pt-BR')} caracteres.`,
+      )
+      return
+    }
+
+    if (jsonData.length > MAX_JSON_LENGTH) {
+      setJsonError(
+        `O JSON deve ter no máximo ${MAX_JSON_LENGTH.toLocaleString('pt-BR')} caracteres.`,
       )
       return
     }
@@ -118,10 +149,19 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
       return
     }
 
+    if (type === 'json') {
+      const jsonValidation = validateJson(jsonData)
+      if (jsonValidation) {
+        setJsonError(jsonValidation)
+        return
+      }
+    }
+
     if (!editing) {
       if ((type === 'pdf' || type === 'image') && !file) return
       if (type === 'link' && !url.trim()) return
       if (type === 'free_text' && !rawText.trim()) return
+      if (type === 'json' && !jsonData.trim()) return
     }
 
     setSaving(true)
@@ -129,7 +169,10 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
       if (editing) {
         const tags = parseTags()
         const contentChanged =
-          file !== null || url !== (editing.url || '') || rawText !== (editing.raw_text || '')
+          file !== null ||
+          url !== (editing.url || '') ||
+          rawText !== (editing.raw_text || '') ||
+          jsonData !== (editing.json_data != null ? JSON.stringify(editing.json_data, null, 2) : '')
 
         if (contentChanged || file) {
           const formData = new FormData()
@@ -138,6 +181,9 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
           if (rawText) formData.append('raw_text', rawText)
           if (url.trim()) formData.append('url', url.trim())
           if (file) formData.append('file', file)
+          if (type === 'json' && jsonData.trim()) {
+            formData.append('json_data', jsonData)
+          }
           formData.append('status', 'processing')
           await updateKnowledgeEntry(editing.id, formData)
         } else {
@@ -165,6 +211,7 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               file ? 'file' : '',
               url ? 'url' : '',
               rawText ? 'raw_text' : '',
+              type === 'json' && jsonData ? 'json_data' : '',
             ].filter(Boolean)
           : [
               'title',
@@ -174,6 +221,7 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               type === 'pdf' || type === 'image' ? 'file' : '',
               type === 'link' ? 'url' : '',
               type === 'free_text' ? 'raw_text' : '',
+              type === 'json' ? 'json_data' : '',
             ].filter(Boolean),
         editing: !!editing,
         entryType: type,
@@ -182,6 +230,7 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
         fileSize: file?.size,
         hasUrl: !!url.trim(),
         hasRawText: !!rawText,
+        hasJsonData: !!jsonData,
         error,
       })
       setErrorMessage(`Erro ao salvar: ${message}`)
@@ -189,6 +238,8 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
       setSaving(false)
     }
   }
+
+  const hasBlockingError = !!fileError || !!textError || !!jsonError
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -212,11 +263,12 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               <Label>Tipo *</Label>
               <Select
                 value={type}
-                onValueChange={(v: 'pdf' | 'image' | 'link' | 'free_text') => {
+                onValueChange={(v: EntryType) => {
                   setType(v)
                   setFileError('')
                   setErrorMessage('')
                   setTextError('')
+                  setJsonError('')
                 }}
               >
                 <SelectTrigger>
@@ -309,6 +361,55 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               )}
             </div>
           )}
+          {type === 'json' && (
+            <div>
+              <Label>Conteúdo JSON *</Label>
+              <Textarea
+                value={jsonData}
+                onChange={(e) => {
+                  setJsonData(e.target.value)
+                  if (e.target.value.length > MAX_JSON_LENGTH) {
+                    setJsonError(
+                      `O JSON deve ter no máximo ${MAX_JSON_LENGTH.toLocaleString('pt-BR')} caracteres.`,
+                    )
+                  } else if (e.target.value.trim()) {
+                    setJsonError(validateJson(e.target.value))
+                  } else {
+                    setJsonError('')
+                  }
+                }}
+                rows={15}
+                className="font-mono text-xs"
+                placeholder={
+                  '{\n  "items": [\n    {\n      "title": "...",\n      "content": "..."\n    }\n  ]\n}'
+                }
+                required={!editing}
+                spellCheck={false}
+              />
+              <div className="flex items-center justify-between mt-1">
+                <span
+                  className={`text-xs ${jsonData.length > MAX_JSON_LENGTH ? 'text-red-600 font-medium' : 'text-slate-500'}`}
+                >
+                  {jsonData.length.toLocaleString('pt-BR')} /{' '}
+                  {MAX_JSON_LENGTH.toLocaleString('pt-BR')} caracteres
+                </span>
+                {!jsonError && jsonData.trim() && (
+                  <span className="text-xs text-green-600 flex items-center gap-1">
+                    JSON válido
+                  </span>
+                )}
+              </div>
+              {jsonError && (
+                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {jsonError}
+                </p>
+              )}
+              <p className="text-xs text-slate-500 mt-1">
+                Cole o JSON gerado pela IA. O conteúdo textual (títulos, descrições, perguntas e
+                respostas) será extraído automaticamente para alimentar a base de conhecimento.
+              </p>
+            </div>
+          )}
           <div>
             <Label>Tags (separadas por vírgula)</Label>
             <Input
@@ -317,7 +418,7 @@ export function KnowledgeEntryModal({ open, setOpen, editing, onSuccess }: Props
               placeholder="NR-12, Ergonomia, eSocial"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={saving || !!fileError || !!textError}>
+          <Button type="submit" className="w-full" disabled={saving || hasBlockingError}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {editing ? 'Salvar' : 'Criar e Processar'}
           </Button>

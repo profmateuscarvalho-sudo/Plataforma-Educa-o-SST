@@ -22,6 +22,86 @@ onRecordAfterUpdateSuccess((e) => {
       }
     } catch (_) {}
 
+    // --- Helper: extract textual content from a parsed JSON value ---
+    function extractTextFromJson(node) {
+      var blocks = []
+      var titleKeys = {
+        title: true,
+        titulo: true,
+        name: true,
+        nome: true,
+        heading: true,
+        pergunta: true,
+        question: true,
+        subject: true,
+        assunto: true,
+      }
+      var contentKeys = {
+        content: true,
+        conteudo: true,
+        description: true,
+        descricao: true,
+        text: true,
+        texto: true,
+        body: true,
+        corpo: true,
+        answer: true,
+        resposta: true,
+        answer_text: true,
+        summary: true,
+        resumo: true,
+        message: true,
+        mensagem: true,
+        explanation: true,
+        explicacao: true,
+        context: true,
+        contexto: true,
+      }
+      function isObj(v) {
+        return v !== null && typeof v === 'object' && !Array.isArray(v)
+      }
+      function walk(v) {
+        if (Array.isArray(v)) {
+          for (var i = 0; i < v.length; i++) walk(v[i])
+          return
+        }
+        if (isObj(v)) {
+          var titles = []
+          var contents = []
+          for (var k in v) {
+            var lk = (k || '').toLowerCase()
+            var val = v[k]
+            if (typeof val === 'string' && val.trim()) {
+              if (titleKeys[lk]) titles.push(val.trim())
+              else if (contentKeys[lk]) contents.push(val.trim())
+            }
+          }
+          if (titles.length || contents.length) {
+            var block = ''
+            if (titles.length) block += titles.join(' / ')
+            if (contents.length) block += (block ? '\n' : '') + contents.join('\n')
+            if (block) blocks.push(block)
+          }
+          for (var k2 in v) walk(v[k2])
+        }
+      }
+      walk(node)
+      if (blocks.length === 0) {
+        function collectStrings(v) {
+          if (typeof v === 'string') {
+            if (v.trim().length > 3) blocks.push(v.trim())
+          } else if (Array.isArray(v)) {
+            for (var j = 0; j < v.length; j++) collectStrings(v[j])
+          } else if (isObj(v)) {
+            for (var kk in v) collectStrings(v[kk])
+          }
+        }
+        collectStrings(node)
+      }
+      return blocks
+    }
+
+    // --- type: link -> fetch URL content (retrocompatible) ---
     if (entryType === 'link' && !rawText) {
       var linkUrl = entry.getString('url')
       if (!linkUrl) {
@@ -77,6 +157,38 @@ onRecordAfterUpdateSuccess((e) => {
         $app.saveNoValidate(entry)
         return e.next()
       }
+    }
+
+    // --- type: json -> extract textual content from json_data ---
+    if (entryType === 'json' && !rawText) {
+      var jsonStr = entry.getString('json_data') || ''
+      if (!jsonStr.trim()) {
+        entry.set('status', 'failed')
+        entry.set('error_message', 'Nenhum conteudo JSON fornecido.')
+        $app.saveNoValidate(entry)
+        return e.next()
+      }
+      var parsed
+      try {
+        parsed = JSON.parse(jsonStr)
+      } catch (jerr) {
+        entry.set('status', 'failed')
+        entry.set('error_message', 'JSON invalido: ' + jerr.message)
+        $app.saveNoValidate(entry)
+        return e.next()
+      }
+      var jsonBlocks = extractTextFromJson(parsed)
+      rawText = jsonBlocks.join('\n\n')
+      if (!rawText || rawText.trim().length === 0) {
+        entry.set('status', 'failed')
+        entry.set(
+          'error_message',
+          'Nenhum conteudo textual extraido do JSON. Inclua campos como title, content, description, question, answer, etc.',
+        )
+        $app.saveNoValidate(entry)
+        return e.next()
+      }
+      entry.set('raw_text', rawText)
     }
 
     if (!rawText || rawText.trim().length === 0) {
@@ -151,6 +263,12 @@ onRecordAfterUpdateSuccess((e) => {
     var curTags = JSON.stringify(entry.get('tags'))
     var origTags = JSON.stringify(entry.original().get('tags'))
     if (curTags !== origTags) {
+      var syncTagsRaw = entry.get('tags')
+      var syncTagsStr = syncTagsRaw
+        ? typeof syncTagsRaw === 'string'
+          ? syncTagsRaw
+          : JSON.stringify(syncTagsRaw)
+        : '[]'
       try {
         var chunks2 = $app.findRecordsByFilter(
           'knowledge_chunks',
@@ -160,7 +278,7 @@ onRecordAfterUpdateSuccess((e) => {
           0,
         )
         for (var k = 0; k < chunks2.length; k++) {
-          chunks2[k].set('tags', tagsStr || '[]')
+          chunks2[k].set('tags', syncTagsStr)
           $app.saveNoValidate(chunks2[k])
         }
       } catch (_) {}

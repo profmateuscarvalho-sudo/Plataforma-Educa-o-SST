@@ -415,10 +415,11 @@ export interface AgentLimitsConfig extends RecordModel {
 
 export interface KnowledgeEntry extends RecordModel {
   title: string
-  type: 'pdf' | 'image' | 'link' | 'free_text'
+  type: 'pdf' | 'image' | 'link' | 'free_text' | 'json'
   file?: string
   url?: string
   raw_text?: string
+  json_data?: unknown
   tags: string[]
   status: 'processing' | 'completed' | 'failed'
   error_message?: string

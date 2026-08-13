@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T00:15:50.637Z",
+  "generatedAt": "2026-08-13T00:32:54.646Z",
   "collections": [
     {
       "name": "users",
@@ -2775,7 +2775,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["pdf", "image", "link", "free_text"]
+          "selectValues": ["pdf", "image", "link", "free_text", "json"]
         },
         {
           "name": "file",
@@ -2827,6 +2827,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "json_data",
+          "type": "json",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

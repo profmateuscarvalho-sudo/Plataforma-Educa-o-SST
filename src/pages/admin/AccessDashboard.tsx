@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from '@/hooks/use-toast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -55,10 +56,27 @@ export default function AdminAccessDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
+    setLoading(true)
     getAccessEvents(30)
-      .then(setEvents)
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      .then((rows) => {
+        if (!cancelled) setEvents(rows)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('Falha ao carregar eventos de acesso:', err)
+        toast({
+          title: 'Não foi possível carregar os acessos',
+          description: 'Tente recarregar a página em alguns instantes.',
+          variant: 'destructive',
+        })
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Start of today (local) — used for "acessos no dia"

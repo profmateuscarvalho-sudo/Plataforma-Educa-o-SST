@@ -50,8 +50,12 @@ export async function trackAccess(
 export async function getAccessEvents(days = 30): Promise<AccessEvent[]> {
   const { default: pb } = await import('@/lib/pocketbase/client')
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  // PocketBase expects date literals in "YYYY-MM-DD HH:MM:SS" format (space,
+  // not the "T" separator used by toISOString). An ISO string here makes the
+  // list request fail with 400 and leaves the dashboard blank.
+  const sinceStr = since.toISOString().replace('T', ' ').replace('Z', '')
   return await pb.collection('access_events').getFullList<AccessEvent>({
-    filter: `created >= "${since.toISOString()}"`,
+    filter: `created >= "${sinceStr}"`,
     sort: '-created',
     expand: 'user',
   })

@@ -309,6 +309,11 @@ export interface SimuladoQuestion extends RecordModel {
 export interface SimuladoSubmission extends RecordModel {
   user?: string
   simulado: string
+  score?: number
+  total_questions?: number
+  percentage?: number
+  completed_at?: string
+  expand?: { simulado?: Simulado }
 }
 
 export interface Workplace extends RecordModel {
@@ -360,6 +365,9 @@ export interface StudentNote extends RecordModel {
   title: string
   content: string
   itinerary_data: MindMapData | ItineraryStep[] | null
+  is_public?: boolean
+  shared_at?: string
+  expand?: { user?: User }
 }
 
 export interface ProfessionalCase extends RecordModel {

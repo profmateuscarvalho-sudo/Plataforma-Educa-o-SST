@@ -1,5 +1,5 @@
 import pb from '@/lib/pocketbase/client'
-import type { Simulado, SimuladoQuestion } from '@/types'
+import type { Simulado, SimuladoQuestion, SimuladoSubmission } from '@/types'
 
 export const getSimulados = async (activeOnly = false) => {
   const filter = activeOnly ? 'active = true' : ''
@@ -39,14 +39,40 @@ export const incrementSimuladoAccess = async (id: string) => {
   }
 }
 
-export const submitSimuladoCompletion = async (simuladoId: string, userId?: string) => {
+export const submitSimuladoCompletion = async (
+  simuladoId: string,
+  userId?: string,
+  score?: number,
+  total?: number,
+) => {
   try {
-    const data: Record<string, string> = { simulado: simuladoId }
+    const percentage =
+      typeof score === 'number' && typeof total === 'number' && total > 0
+        ? Math.round((score / total) * 100)
+        : 0
+    const data: Record<string, unknown> = {
+      simulado: simuladoId,
+      score: score ?? 0,
+      total_questions: total ?? 0,
+      percentage,
+      completed_at: new Date().toISOString(),
+    }
     if (userId) {
       data.user = userId
     }
-    await pb.collection('simulado_submissions').create(data)
+    await pb.collection('simulado_submissions').create<SimuladoSubmission>(data)
+    return percentage
   } catch (error) {
     console.error('Erro ao registrar conclusão do simulado', error)
+    return 0
   }
+}
+
+/** Returns all submissions for the given user (newest first). */
+export const getUserSimuladoSubmissions = async (userId: string) => {
+  return await pb.collection('simulado_submissions').getFullList<SimuladoSubmission>({
+    filter: `user="${userId}"`,
+    sort: '-created',
+    expand: 'simulado',
+  })
 }

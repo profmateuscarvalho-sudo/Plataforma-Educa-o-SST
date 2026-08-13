@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T00:32:54.646Z",
+  "generatedAt": "2026-08-13T02:56:14.544Z",
   "collections": [
     {
       "name": "users",
@@ -1605,7 +1605,7 @@
         "list": "@request.auth.role = 'admin' || (@request.auth.id != '' && user = @request.auth.id)",
         "view": "@request.auth.role = 'admin' || (@request.auth.id != '' && user = @request.auth.id)",
         "create": "",
-        "update": null,
+        "update": "@request.auth.role = 'admin' || (@request.auth.id != '' && user = @request.auth.id)",
         "delete": null
       },
       "fields": [
@@ -1636,9 +1636,36 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "score",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_questions",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "percentage",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "completed_at",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
-      "indexes": []
+      "indexes": [
+        "CREATE INDEX `idx_simulado_submissions_user` ON `simulado_submissions` (user)",
+        "CREATE INDEX `idx_simulado_submissions_simulado` ON `simulado_submissions` (simulado)"
+      ]
     },
     {
       "name": "workplaces",
@@ -1961,8 +1988,8 @@
       "name": "student_notes",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != \"\" && user = @request.auth.id",
-        "view": "@request.auth.id != \"\" && user = @request.auth.id",
+        "list": "is_public = true || (@request.auth.id != \"\" && user = @request.auth.id)",
+        "view": "is_public = true || (@request.auth.id != \"\" && user = @request.auth.id)",
         "create": "@request.auth.id != \"\" && user = @request.auth.id",
         "update": "@request.auth.id != \"\" && user = @request.auth.id",
         "delete": "@request.auth.id != \"\" && user = @request.auth.id"
@@ -2006,9 +2033,24 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "is_public",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "shared_at",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
-      "indexes": ["CREATE INDEX idx_student_notes_user ON student_notes (user)"]
+      "indexes": [
+        "CREATE INDEX idx_student_notes_user ON student_notes (user)",
+        "CREATE INDEX `idx_student_notes_public` ON `student_notes` (is_public)"
+      ]
     },
     {
       "name": "professional_cases",

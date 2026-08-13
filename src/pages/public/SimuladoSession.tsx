@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, MessageCircle, Share2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -37,7 +37,11 @@ const injectOGTags = (title: string, desc: string, image: string, url: string) =
 export default function SimuladoSession() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
+  const backPath = location.pathname.includes('/plataforma/')
+    ? '/plataforma/simulados'
+    : '/simulados'
   const [simulado, setSimulado] = useState<Simulado | null>(null)
   const [questions, setQuestions] = useState<SimuladoQuestion[]>([])
   const [loading, setLoading] = useState(true)
@@ -78,10 +82,10 @@ export default function SimuladoSession() {
       })
       .catch(() => {
         toast.error('Erro ao carregar o simulado')
-        navigate('/simulados')
+        navigate(backPath)
       })
       .finally(() => setLoading(false))
-  }, [id, navigate])
+  }, [id, navigate, backPath])
 
   const handleSelectOption = (questionId: string, option: string) => {
     if (!answers[questionId]) {
@@ -96,7 +100,11 @@ export default function SimuladoSession() {
     } else {
       setShowResults(true)
       if (simulado) {
-        submitSimuladoCompletion(simulado.id, user?.id)
+        const score = questions.reduce(
+          (acc, q) => acc + (answers[q.id] === q.correct_option ? 1 : 0),
+          0,
+        )
+        submitSimuladoCompletion(simulado.id, user?.id, score, questions.length)
       }
     }
   }
@@ -145,7 +153,7 @@ export default function SimuladoSession() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-              <Button variant="outline" size="lg" onClick={() => navigate('/simulados')}>
+              <Button variant="outline" size="lg" onClick={() => navigate(backPath)}>
                 Voltar aos Simulados
               </Button>
               <Button
@@ -197,7 +205,7 @@ export default function SimuladoSession() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/simulados')}
+            onClick={() => navigate(backPath)}
             className="text-slate-500"
           >
             <ArrowLeft className="w-4 h-4 mr-2" /> Sair

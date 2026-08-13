@@ -23,7 +23,6 @@ import SubscriptionPending from './pages/SubscriptionPending'
 import NotFound from './pages/NotFound'
 
 import ArticleSubmission from './pages/public/ArticleSubmission'
-import SubmitArticleInfo from './pages/public/SubmitArticleInfo'
 import ProfessionalConnection from './pages/public/ProfessionalConnection'
 import WorkplaceSubmission from './pages/public/WorkplaceSubmission'
 import PublicSimulados from './pages/public/Simulados'
@@ -37,6 +36,8 @@ import StudentDocumentaries from './pages/student/Documentaries'
 import DocumentaryViewer from './pages/student/DocumentaryViewer'
 import StudentNotebook from './pages/student/Notebook'
 import StudentCaseFeed from './pages/student/CaseFeed'
+import StudentSimulados from './pages/student/Simulados'
+import MagazineReader from './pages/student/MagazineReader'
 
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminCourses from './pages/admin/Courses'
@@ -112,12 +113,15 @@ const App = () => (
           </Route>
 
           <Route path="/plataforma/documentarios/:id" element={<DocumentaryViewer />} />
+          <Route path="/plataforma/simulados/:id" element={<SimuladoSession />} />
 
           <Route element={<StudentLayout />}>
             <Route path="/plataforma" element={<StudentDashboard />} />
             <Route path="/plataforma/curso/:id/aula" element={<CourseLesson />} />
             <Route path="/plataforma/documentarios" element={<StudentDocumentaries />} />
             <Route path="/plataforma/caderno" element={<StudentNotebook />} />
+            <Route path="/plataforma/simulados" element={<StudentSimulados />} />
+            <Route path="/plataforma/revista/:id" element={<MagazineReader />} />
             <Route path="/plataforma/cases" element={<StudentCaseFeed />} />
             <Route path="/plataforma/live/:id" element={<StudentLive />} />
             <Route path="/plataforma/live-sessions" element={<StudentLiveSessions />} />

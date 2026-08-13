@@ -66,6 +66,8 @@ export default function StudentDashboard() {
   const [announcements, setAnnouncements] = useState<PlatformAnnouncement[]>([])
   const [featuredMagazine, setFeaturedMagazine] = useState<Magazine | null>(null)
 
+  useTrackAccess('Hub', [view])
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/login?redirect=/plataforma')
@@ -314,50 +316,6 @@ export default function StudentDashboard() {
                 </div>
               )}
 
-              {featuredMagazine && (
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
-                    <Newspaper className="w-5 h-5 text-blue-600" /> Revista do Mês
-                  </h2>
-                  <button
-                    onClick={() => navigate(`/plataforma/revista/${featuredMagazine.id}`)}
-                    className="group block w-full text-left"
-                  >
-                    <div className="flex flex-col sm:flex-row gap-5 bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
-                      <div className="sm:w-40 shrink-0 aspect-[3/4] sm:aspect-auto bg-slate-100 overflow-hidden">
-                        {featuredMagazine.thumbnail ? (
-                          <img
-                            src={pb.files.getUrl(featuredMagazine, featuredMagazine.thumbnail)}
-                            alt={featuredMagazine.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Newspaper className="w-12 h-12 text-slate-400" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 p-5 flex flex-col justify-center">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 mb-2">
-                          <Sparkles className="w-3.5 h-3.5" /> Edição em Destaque
-                        </span>
-                        <h3 className="font-serif text-xl font-bold text-slate-800 mb-2 line-clamp-2">
-                          {featuredMagazine.title}
-                        </h3>
-                        {featuredMagazine.summary && (
-                          <p className="text-sm text-slate-500 line-clamp-3 mb-4">
-                            {featuredMagazine.summary}
-                          </p>
-                        )}
-                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 group-hover:gap-2 transition-all">
-                          Ler agora <ChevronRight className="w-4 h-4" />
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              )}
-
               <div>
                 <h2 className="text-xl font-bold text-slate-800 mb-5">Sua plataforma</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -459,6 +417,50 @@ export default function StudentDashboard() {
                     )}
                 </div>
               </div>
+
+              {featuredMagazine && (
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <Newspaper className="w-5 h-5 text-blue-600" /> Revista do Mês
+                  </h2>
+                  <button
+                    onClick={() => navigate(`/plataforma/revista/${featuredMagazine.id}`)}
+                    className="group block w-full text-left"
+                  >
+                    <div className="flex flex-col gap-4 bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
+                      <div className="w-full aspect-[3/2] bg-slate-100 overflow-hidden">
+                        {featuredMagazine.thumbnail ? (
+                          <img
+                            src={pb.files.getUrl(featuredMagazine, featuredMagazine.thumbnail)}
+                            alt={featuredMagazine.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Newspaper className="w-12 h-12 text-slate-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 p-4 pt-0 flex flex-col justify-center">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 mb-2">
+                          <Sparkles className="w-3.5 h-3.5" /> Edição em Destaque
+                        </span>
+                        <h3 className="font-serif text-lg font-bold text-slate-800 mb-1 line-clamp-2">
+                          {featuredMagazine.title}
+                        </h3>
+                        {featuredMagazine.summary && (
+                          <p className="text-sm text-slate-500 line-clamp-3 mb-3">
+                            {featuredMagazine.summary}
+                          </p>
+                        )}
+                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 group-hover:gap-2 transition-all">
+                          Ler agora <ChevronRight className="w-4 h-4" />
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ) : (

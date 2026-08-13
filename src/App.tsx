@@ -40,6 +40,7 @@ import StudentSimulados from './pages/student/Simulados'
 import MagazineReader from './pages/student/MagazineReader'
 
 import AdminDashboard from './pages/admin/Dashboard'
+import AdminAccessDashboard from './pages/admin/AccessDashboard'
 import AdminCourses from './pages/admin/Courses'
 import AdminCourseBuilder from './pages/admin/CourseBuilder'
 import AdminMagazines from './pages/admin/Magazines'
@@ -130,6 +131,7 @@ const App = () => (
 
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/acessos" element={<AdminAccessDashboard />} />
             <Route path="/admin/cursos" element={<AdminCourses />} />
             <Route path="/admin/cursos/:id" element={<AdminCourseBuilder />} />
             <Route path="/admin/alunos" element={<AdminStudents />} />

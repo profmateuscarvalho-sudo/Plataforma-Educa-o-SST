@@ -58,6 +58,8 @@ export default function StudentNotebook() {
   const [viewingShared, setViewingShared] = useState<StudentNote | null>(null)
   const [tab, setTab] = useState('minhas')
 
+  useTrackAccess('Caderno Virtual')
+
   const loadNotes = useCallback(async () => {
     if (!user) return
     try {

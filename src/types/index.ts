@@ -445,3 +445,11 @@ export interface KnowledgeSearchResult {
   title: string
   tags: string[]
 }
+
+export interface AccessEvent extends RecordModel {
+  user: string
+  area: string
+  event_type: 'login' | 'page_view'
+  meta?: Record<string, unknown>
+  expand?: { user?: User }
+}

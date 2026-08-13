@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T02:56:14.544Z",
+  "generatedAt": "2026-08-13T03:34:54.079Z",
   "collections": [
     {
       "name": "users",
@@ -2933,6 +2933,65 @@
         }
       ],
       "indexes": ["CREATE INDEX idx_knowledge_chunks_entry ON knowledge_chunks (entry)"]
+    },
+    {
+      "name": "access_events",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\"",
+        "view": "@request.auth.id != \"\"",
+        "create": "@request.auth.id != \"\"",
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "area",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "event_type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["login", "page_view"]
+        },
+        {
+          "name": "meta",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_access_events_user ON access_events (user)",
+        "CREATE INDEX idx_access_events_area ON access_events (area)",
+        "CREATE INDEX idx_access_events_created ON access_events (created DESC)",
+        "CREATE INDEX idx_access_events_user_created ON access_events (user, created DESC)"
+      ]
     }
   ]
 }

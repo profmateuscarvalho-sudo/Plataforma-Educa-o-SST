@@ -10,6 +10,7 @@ import {
 } from 'react'
 import pb from '@/lib/pocketbase/client'
 import { User } from '@/types'
+import { trackAccess } from '@/services/access_events'
 
 interface AuthContextType {
   user: User | null
@@ -55,6 +56,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = useCallback(async (email: string, pass: string) => {
     try {
       await pb.collection('users').authWithPassword(email, pass)
+      try {
+        const rec = pb.authStore.record
+        if (rec && rec.role !== 'admin') {
+          trackAccess('Hub', 'login')
+        }
+      } catch {
+        /* intentionally ignored */
+      }
       return { error: null }
     } catch (error) {
       return { error }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getDocProjects } from '@/services/doc_projects'
 import { DocProject } from '@/types'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Play, Info, Lock } from 'lucide-react'
+import { ArrowLeft, Play, Info, Lock, X, Film } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
 import {
@@ -16,10 +16,30 @@ import {
 import { Logo } from '@/components/ui/Logos'
 import { Badge } from '@/components/ui/badge'
 
+const getPandaUrl = (val?: string) => {
+  if (!val) return ''
+  if (val.includes('<iframe') || val.includes('src="')) {
+    const m = val.match(/src="([^"]+)"/)
+    return m ? m[1] : ''
+  }
+  if (val.startsWith('http')) return val
+  return `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${val}`
+}
+
+const getYoutubeEmbedUrl = (url?: string) => {
+  if (!url) return ''
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url
+}
+
 export default function StudentDocumentaries() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [projects, setProjects] = useState<DocProject[]>([])
+  const [selected, setSelected] = useState<DocProject | null>(null)
+  const [playing, setPlaying] = useState(false)
+
+  useTrackAccess('Documentários')
 
   useEffect(() => {
     getDocProjects()
@@ -38,6 +58,19 @@ export default function StudentDocumentaries() {
       : `https://img.usecurling.com/p/800/500?q=documentary`
 
   const handleLockedClick = () => navigate('/planos')
+
+  const openCard = (p: DocProject) => {
+    if (!canWatch(p)) {
+      handleLockedClick()
+      return
+    }
+    setSelected(p)
+    setPlaying(false)
+  }
+
+  const videoUrl = selected
+    ? getYoutubeEmbedUrl(selected.youtube_url) || getPandaUrl(selected.panda_video_id)
+    : ''
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 overflow-x-hidden pb-20">
@@ -86,11 +119,9 @@ export default function StudentDocumentaries() {
                   <Button
                     size="lg"
                     className="bg-white text-black hover:bg-zinc-200 text-lg font-bold px-8 h-14 rounded-full"
-                    asChild
+                    onClick={() => openCard(featured)}
                   >
-                    <Link to={`/plataforma/documentarios/${featured.id}`}>
-                      <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
-                    </Link>
+                    <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
                   </Button>
                   <Button
                     size="lg"
@@ -163,21 +194,16 @@ export default function StudentDocumentaries() {
                     key={p.id}
                     className="pl-4 basis-[85%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
                   >
-                    {accessible ? (
-                      <Link
-                        to={`/plataforma/documentarios/${p.id}`}
-                        className="group relative block aspect-video rounded-xl overflow-hidden bg-zinc-800 transition-all hover:scale-105 hover:z-30 duration-500 border border-zinc-800 hover:border-zinc-500 hover:shadow-2xl hover:shadow-black/50"
-                      >
-                        {cardContent}
-                      </Link>
-                    ) : (
-                      <button
-                        onClick={handleLockedClick}
-                        className="group relative block w-full aspect-video rounded-xl overflow-hidden bg-zinc-800 transition-all hover:scale-105 hover:z-30 duration-500 border border-zinc-800 hover:border-amber-600/50 hover:shadow-2xl hover:shadow-black/50 text-left"
-                      >
-                        {cardContent}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => openCard(p)}
+                      className={`group relative block w-full aspect-video rounded-xl overflow-hidden bg-zinc-800 transition-all hover:scale-105 hover:z-30 duration-500 border text-left ${
+                        accessible
+                          ? 'border-zinc-800 hover:border-zinc-500 hover:shadow-2xl hover:shadow-black/50'
+                          : 'border-zinc-800 hover:border-amber-600/50 hover:shadow-2xl hover:shadow-black/50'
+                      }`}
+                    >
+                      {cardContent}
+                    </button>
                   </CarouselItem>
                 )
               })}
@@ -187,6 +213,124 @@ export default function StudentDocumentaries() {
           </Carousel>
         </div>
       </div>
+
+      {selected && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <button
+            onClick={() => {
+              setSelected(null)
+              setPlaying(false)
+            }}
+            className="absolute top-5 right-5 z-10 flex items-center justify-center w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors"
+            aria-label="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="relative w-full max-w-5xl bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+            {/* Tela principal: thumbnail / player */}
+            <div className="relative aspect-video bg-black">
+              {playing && videoUrl ? (
+                <iframe
+                  src={videoUrl}
+                  className="w-full h-full border-none"
+                  allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen"
+                  allowFullScreen
+                />
+              ) : (
+                <>
+                  <img
+                    src={getCover(selected)}
+                    alt={selected.title}
+                    className="w-full h-full object-cover opacity-80"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  {canWatch(selected) ? (
+                    <button
+                      onClick={() => videoUrl && setPlaying(true)}
+                      className="absolute inset-0 flex items-center justify-center group"
+                    >
+                      <span className="flex items-center justify-center w-20 h-20 rounded-full bg-white/15 backdrop-blur border border-white/40 group-hover:bg-white/25 group-hover:scale-110 transition-all">
+                        <Play className="w-9 h-9 text-white fill-white ml-1" />
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="flex items-center gap-2 text-amber-400 bg-amber-500/10 border border-amber-500/30 px-5 py-2.5 rounded-full text-sm font-bold">
+                        <Lock className="w-4 h-4" /> Acesso Restrito
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Informações básicas + ações */}
+            <div className="p-6 space-y-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  {selected.is_free && (
+                    <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 text-xs font-bold uppercase tracking-wider">
+                      Acesso Liberado
+                    </Badge>
+                  )}
+                  <span className="text-xs text-zinc-400 uppercase tracking-wider">
+                    Documentário
+                  </span>
+                </div>
+                <h2 className="text-2xl font-serif font-bold text-white mb-2">{selected.title}</h2>
+                {selected.description && (
+                  <p className="text-sm text-zinc-300 line-clamp-3 max-w-3xl">
+                    {selected.description}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-2">
+                {canWatch(selected) ? (
+                  <Button
+                    size="lg"
+                    onClick={() =>
+                      videoUrl
+                        ? setPlaying(true)
+                        : navigate(`/plataforma/documentarios/${selected.id}`)
+                    }
+                    className="bg-white text-black hover:bg-zinc-200 font-bold px-6 h-12 rounded-full"
+                  >
+                    <Play className="w-5 h-5 mr-2 fill-current" />
+                    {playing ? 'Reproduzindo...' : 'Assistir Agora'}
+                  </Button>
+                ) : (
+                  <Button
+                    size="lg"
+                    onClick={handleLockedClick}
+                    className="bg-amber-500 text-black hover:bg-amber-400 font-bold px-6 h-12 rounded-full"
+                  >
+                    <Lock className="w-5 h-5 mr-2" /> Faça Upgrade para Assistir
+                  </Button>
+                )}
+                <Button
+                  size="lg"
+                  variant="outline"
+                  asChild
+                  className="bg-zinc-800/60 border-zinc-500/50 text-white hover:bg-zinc-700/80 font-bold px-6 h-12 rounded-full"
+                >
+                  <Link to={`/plataforma/documentarios/${selected.id}`}>
+                    <Info className="w-5 h-5 mr-2" /> Mais Detalhes
+                  </Link>
+                </Button>
+              </div>
+
+              {!videoUrl && canWatch(selected) && (
+                <p className="text-xs text-zinc-500 flex items-center gap-1.5">
+                  <Film className="w-3.5 h-3.5" /> Vídeo não disponível no momento — veja a página
+                  de detalhes.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

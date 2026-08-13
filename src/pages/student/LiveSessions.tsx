@@ -31,6 +31,8 @@ export default function LiveSessions() {
   const [loading, setLoading] = useState(true)
   const [playing, setPlaying] = useState<LiveSession | null>(null)
 
+  useTrackAccess('Aulas ao Vivo')
+
   const load = () => {
     getLiveSessions()
       .then(setSessions)

@@ -18,6 +18,7 @@ import pb from '@/lib/pocketbase/client'
 import { getSimulados, getUserSimuladoSubmissions } from '@/services/simulados'
 import type { Simulado, SimuladoSubmission } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
+import { useTrackAccess } from '@/hooks/use-track-access'
 
 const ph = (q: string, w = 800, h = 500) => `https://img.usecurling.com/p/${w}/${h}?q=${q}`
 
@@ -27,6 +28,8 @@ export default function StudentSimulados() {
   const [simulados, setSimulados] = useState<Simulado[]>([])
   const [submissions, setSubmissions] = useState<SimuladoSubmission[]>([])
   const [loading, setLoading] = useState(true)
+
+  useTrackAccess('Simulados')
 
   useEffect(() => {
     if (!user) return

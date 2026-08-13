@@ -23,6 +23,7 @@ import {
   ImageIcon,
   Brain,
   ChevronDown,
+  BarChart3,
 } from 'lucide-react'
 
 type MenuItem = {
@@ -39,7 +40,10 @@ type MenuSection = {
 const sections: MenuSection[] = [
   {
     title: 'Principal',
-    items: [{ label: 'Visão Geral', icon: LayoutDashboard, path: '/admin' }],
+    items: [
+      { label: 'Visão Geral', icon: LayoutDashboard, path: '/admin' },
+      { label: 'Dashboard de Acessos', icon: BarChart3, path: '/admin/acessos' },
+    ],
   },
   {
     title: 'Conteúdo',

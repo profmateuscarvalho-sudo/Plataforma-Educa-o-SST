@@ -5,8 +5,10 @@ import { BackToHub } from '@/components/student/BackToHub'
 import { useEffect } from 'react'
 import { setMetaTags } from '@/lib/utils'
 import { PUBLIC_URL } from '@/lib/constants'
+import { useTrackAccess } from '@/hooks/use-track-access'
 
 export default function StudentCaseFeed() {
+  useTrackAccess('Feed de Cases')
   useEffect(() => {
     setMetaTags({
       title: 'Feed de Cases | Educação SST',

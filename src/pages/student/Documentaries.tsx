@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Play, Info, Lock, X, Film } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
+import { useTrackAccess } from '@/hooks/use-track-access'
 import {
   Carousel,
   CarouselContent,

@@ -79,15 +79,18 @@ export default function StudentDashboard() {
     }
   }, [docProjects])
 
-  // Rotação automática das capas a cada 8 segundos enquanto o aluno está no
-  // hub, alternando entre todos os documentários disponíveis.
+  // Rotação automática das capas a cada 3 segundos enquanto o aluno está no
+  // hub, alternando entre todos os documentários disponíveis. Depende do
+  // array `docProjects` (e não apenas de `.length`) para que o efeito seja
+  // recriado quando os dados chegam de forma assíncrona, garantindo que o
+  // closure do intervalo sempre enxergue a lista atualizada.
   useEffect(() => {
     if (docProjects.length <= 1 || view !== 'hub') return
     const interval = setInterval(() => {
       setDocCoverIndex((prev) => (prev + 1) % docProjects.length)
-    }, 8000)
+    }, 3000)
     return () => clearInterval(interval)
-  }, [docProjects.length, view])
+  }, [docProjects, view])
 
   useEffect(() => {
     if (!loading && !user) {

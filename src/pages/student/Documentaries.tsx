@@ -39,6 +39,7 @@ export default function StudentDocumentaries() {
   const [projects, setProjects] = useState<DocProject[]>([])
   const [selected, setSelected] = useState<DocProject | null>(null)
   const [playing, setPlaying] = useState(false)
+  const [coverIndex, setCoverIndex] = useState(0)
 
   useTrackAccess('Documentários')
 
@@ -48,11 +49,32 @@ export default function StudentDocumentaries() {
       .catch(() => {})
   }, [])
 
+  // Sorteio inicial baseado no dia — cada acesso ao catálogo pode começar de
+  // um documentário diferente, distribuindo as capas entre os alunos.
+  useEffect(() => {
+    if (projects.length > 1) {
+      const seed = Math.floor(Date.now() / 86_400_000) // muda por dia
+      setCoverIndex(seed % projects.length)
+    }
+  }, [projects])
+
+  // Rotação automática das capas a cada 8 segundos, alternando circularmente
+  // entre todos os documentários disponíveis. Só acontece quando há mais de
+  // um documentário carregado. Depende do array `projects` (e não apenas de
+  // `.length`) para que o closure do intervalo sempre enxergue a lista atual.
+  useEffect(() => {
+    if (projects.length <= 1) return
+    const interval = setInterval(() => {
+      setCoverIndex((prev) => (prev + 1) % projects.length)
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [projects])
+
   const userTier = user?.role === 'admin' ? 'ouro' : user?.plan_tier || 'free'
   const hasPaidAccess = userTier !== 'free' || user?.role === 'admin'
   const canWatch = (p: DocProject) => p.is_free || hasPaidAccess
 
-  const featured = projects[0]
+  const featured = projects[coverIndex] || projects[0]
   const getCover = (p: DocProject) =>
     p.presentation_photos?.length
       ? pb.files.getUrl(p, p.presentation_photos[0])

@@ -88,7 +88,7 @@ export default function StudentDashboard() {
     if (docProjects.length <= 1 || view !== 'hub') return
     const interval = setInterval(() => {
       setDocCoverIndex((prev) => (prev + 1) % docProjects.length)
-    }, 3000)
+    }, 8000)
     return () => clearInterval(interval)
   }, [docProjects, view])
 

@@ -66,8 +66,28 @@ export default function StudentDashboard() {
   const [docProjects, setDocProjects] = useState<DocProject[]>([])
   const [announcements, setAnnouncements] = useState<PlatformAnnouncement[]>([])
   const [featuredMagazine, setFeaturedMagazine] = useState<Magazine | null>(null)
+  const [docCoverIndex, setDocCoverIndex] = useState(0)
 
   useTrackAccess('Hub', [view])
+
+  // Sorteio inicial baseado no dia — cada acesso ao hub pode começar de um
+  // documentário diferente, distribuindo as capas entre os alunos.
+  useEffect(() => {
+    if (docProjects.length > 1) {
+      const seed = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) // muda por dia
+      setDocCoverIndex(seed % docProjects.length)
+    }
+  }, [docProjects])
+
+  // Rotação automática das capas a cada 8 segundos enquanto o aluno está no
+  // hub, alternando entre todos os documentários disponíveis.
+  useEffect(() => {
+    if (docProjects.length <= 1 || view !== 'hub') return
+    const interval = setInterval(() => {
+      setDocCoverIndex((prev) => (prev + 1) % docProjects.length)
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [docProjects.length, view])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -116,6 +136,14 @@ export default function StudentDashboard() {
   }
   const visibleLives = liveSessions.filter(isLiveVisible)
 
+  // Capa rotativa da seção de documentários: usa a foto do documentário atual
+  // (definido pelo índice rotativo docCoverIndex). Cai para o placeholder
+  // quando não há documentários ou quando o item não tem fotos.
+  const featuredDoc = docProjects[docCoverIndex] || docProjects[0]
+  const docCoverUrl = featuredDoc?.presentation_photos?.length
+    ? pb.files.getUrl(featuredDoc, featuredDoc.presentation_photos[0])
+    : ph('documentary%20film')
+
   const cards = [
     {
       title: 'Cursos',
@@ -149,7 +177,7 @@ export default function StudentDashboard() {
       desc: 'Produções audiovisuais',
       icon: Film,
       count: cat.documentaries.length,
-      img: ph('documentary%20film'),
+      img: docCoverUrl,
       gradient: 'from-purple-600 to-indigo-800',
       action: () => navigate('/plataforma/documentarios'),
     },

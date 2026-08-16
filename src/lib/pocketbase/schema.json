@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-14T14:46:28.057Z",
+  "generatedAt": "2026-08-16T04:20:52.773Z",
   "collections": [
     {
       "name": "users",
@@ -2991,6 +2991,227 @@
         "CREATE INDEX idx_access_events_area ON access_events (area)",
         "CREATE INDEX idx_access_events_created ON access_events (created DESC)",
         "CREATE INDEX idx_access_events_user_created ON access_events (user, created DESC)"
+      ]
+    },
+    {
+      "name": "clientes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "nome_empresa",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "cnpj",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "nome_contato",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "telefone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "segmento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origem",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_clientes_created ON clientes (created DESC)",
+        "CREATE INDEX idx_clientes_origem ON clientes (origem)"
+      ]
+    },
+    {
+      "name": "oportunidades",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "cliente_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "clientes"
+        },
+        {
+          "name": "titulo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor_estimado",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "responsavel",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "etapa",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "Cadastro",
+            "Prospecção",
+            "Aguardando retorno",
+            "Retorno recebido",
+            "Em decisão",
+            "Concluído"
+          ]
+        },
+        {
+          "name": "resultado",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Ganho", "Perdido"]
+        },
+        {
+          "name": "data_prevista_fechamento",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notas",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_oportunidades_cliente ON oportunidades (cliente_id)",
+        "CREATE INDEX idx_oportunidades_etapa ON oportunidades (etapa)",
+        "CREATE INDEX idx_oportunidades_responsavel ON oportunidades (responsavel)",
+        "CREATE INDEX idx_oportunidades_created ON oportunidades (created DESC)"
+      ]
+    },
+    {
+      "name": "etapa_historico",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "oportunidade_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "oportunidades"
+        },
+        {
+          "name": "etapa_anterior",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "etapa_nova",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_etapa_historico_op ON etapa_historico (oportunidade_id)",
+        "CREATE INDEX idx_etapa_historico_created ON etapa_historico (created DESC)"
       ]
     }
   ]

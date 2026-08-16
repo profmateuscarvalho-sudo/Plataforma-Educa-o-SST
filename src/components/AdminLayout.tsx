@@ -24,6 +24,7 @@ import {
   Brain,
   ChevronDown,
   BarChart3,
+  Handshake,
 } from 'lucide-react'
 
 type MenuItem = {
@@ -64,6 +65,13 @@ const sections: MenuSection[] = [
       { label: 'Planos de Assinatura', icon: BadgeCent, path: '/admin/planos' },
       { label: 'Pagamentos', icon: BookOpen, path: '/admin/pagamentos' },
       { label: 'Leads', icon: Users, path: '/admin/leads' },
+    ],
+  },
+  {
+    title: 'Comercial',
+    items: [
+      { label: 'Kanban', icon: Handshake, path: '/admin/comercial' },
+      { label: 'Clientes', icon: Users, path: '/admin/comercial/clientes' },
     ],
   },
   {

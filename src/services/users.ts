@@ -8,6 +8,13 @@ export const getStudents = async () => {
   })
 }
 
+export const getAdmins = async () => {
+  return await pb.collection('users').getFullList<User>({
+    filter: "role = 'admin'",
+    sort: 'name',
+  })
+}
+
 export const updateUserPlan = async (userId: string, planTier: string, billing: string) => {
   return await pb.collection('users').update<User>(userId, {
     plan_tier: planTier,

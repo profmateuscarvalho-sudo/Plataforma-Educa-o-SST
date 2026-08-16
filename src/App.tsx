@@ -72,6 +72,8 @@ import AdminEmailLog from './pages/admin/EmailLog'
 import AdminProfessionalTags from './pages/admin/ProfessionalTags'
 import AdminBanners from './pages/admin/Banners'
 import AdminKnowledgeBase from './pages/admin/KnowledgeBase'
+import AdminComercial from './pages/admin/Comercial'
+import AdminComercialClientes from './pages/admin/ComercialClientes'
 import Convite from './pages/Convite'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import { FEATURE_FLAGS } from '@/lib/constants'
@@ -161,6 +163,8 @@ const App = () => (
             <Route path="/admin/tags" element={<AdminProfessionalTags />} />
             <Route path="/admin/banners" element={<AdminBanners />} />
             <Route path="/admin/base-conhecimento" element={<AdminKnowledgeBase />} />
+            <Route path="/admin/comercial" element={<AdminComercial />} />
+            <Route path="/admin/comercial/clientes" element={<AdminComercialClientes />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

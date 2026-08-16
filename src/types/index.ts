@@ -453,3 +453,46 @@ export interface AccessEvent extends RecordModel {
   meta?: Record<string, unknown>
   expand?: { user?: User }
 }
+
+export type EtapaOportunidade =
+  | 'Cadastro'
+  | 'Prospecção'
+  | 'Aguardando retorno'
+  | 'Retorno recebido'
+  | 'Em decisão'
+  | 'Concluído'
+
+export type ResultadoOportunidade = 'Ganho' | 'Perdido'
+
+export interface ClienteComercial extends RecordModel {
+  nome_empresa: string
+  cnpj?: string
+  nome_contato: string
+  email?: string
+  telefone?: string
+  segmento?: string
+  origem?: string
+  observacoes?: string
+}
+
+export interface OportunidadeComercial extends RecordModel {
+  cliente_id: string
+  titulo: string
+  valor_estimado?: number
+  responsavel?: string
+  etapa: EtapaOportunidade
+  resultado?: ResultadoOportunidade
+  data_prevista_fechamento?: string
+  notas?: string
+  expand?: {
+    cliente_id?: ClienteComercial
+    responsavel?: User
+  }
+}
+
+export interface EtapaHistorico extends RecordModel {
+  oportunidade_id: string
+  etapa_anterior: string
+  etapa_nova: string
+  expand?: { oportunidade_id?: OportunidadeComercial }
+}

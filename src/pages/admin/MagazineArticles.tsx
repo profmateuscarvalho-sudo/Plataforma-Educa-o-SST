@@ -75,7 +75,7 @@ export default function AdminMagazineArticles() {
   const load = async () => {
     try {
       const data = await getArticles()
-      setArticles(data)
+      setArticles(data as unknown as Article[])
     } catch (e) {
       toast({ title: 'Erro', description: 'Falha ao carregar artigos.', variant: 'destructive' })
     }
@@ -226,7 +226,9 @@ export default function AdminMagazineArticles() {
                       <AvatarImage
                         src={pb.files.getUrl(
                           article.expand?.author,
-                          article.expand?.author?.photos,
+                          Array.isArray(article.expand?.author?.photos)
+                            ? article.expand?.author?.photos[0]
+                            : article.expand?.author?.photos,
                         )}
                       />
                       <AvatarFallback>{article.expand?.author?.name?.[0]}</AvatarFallback>
@@ -358,7 +360,9 @@ export default function AdminMagazineArticles() {
                         <AvatarImage
                           src={pb.files.getUrl(
                             selectedArticle.expand?.author,
-                            selectedArticle.expand?.author?.photos,
+                            Array.isArray(selectedArticle.expand?.author?.photos)
+                              ? selectedArticle.expand?.author?.photos[0]
+                              : selectedArticle.expand?.author?.photos,
                           )}
                         />
                         <AvatarFallback>{selectedArticle.expand?.author?.name?.[0]}</AvatarFallback>

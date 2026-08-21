@@ -46,7 +46,7 @@ export default function AdminAnnouncements() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<PlatformAnnouncement | null>(null)
   const [active, setActive] = useState(false)
-  const [type, setType] = useState('Texto Customizado')
+  const [type, setType] = useState<PlatformAnnouncement['type']>('Texto Customizado')
 
   const load = () => getAllAnnouncements().then(setItems)
   useEffect(() => {
@@ -122,7 +122,10 @@ export default function AdminAnnouncements() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Tipo</Label>
-                  <Select value={type} onValueChange={setType}>
+                  <Select
+                    value={type}
+                    onValueChange={(v) => setType(v as PlatformAnnouncement['type'])}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

@@ -142,7 +142,10 @@ export default function StudentDocumentaries() {
                   <Button
                     size="lg"
                     className="bg-white text-black hover:bg-zinc-200 text-lg font-bold px-8 h-14 rounded-full"
-                    onClick={() => openCard(featured)}
+                    onClick={() => {
+                      openCard(featured)
+                      setPlaying(true)
+                    }}
                   >
                     <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
                   </Button>
@@ -250,7 +253,7 @@ export default function StudentDocumentaries() {
             <X className="w-5 h-5" />
           </button>
 
-          <div className="relative w-full max-w-3xl max-h-[85vh] flex flex-col bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+          <div className="relative w-full max-w-xl max-h-[85vh] flex flex-col bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
             {/* Tela principal: thumbnail / player */}
             <div className="relative aspect-video w-full shrink-0 bg-black">
               {playing && videoUrl ? (

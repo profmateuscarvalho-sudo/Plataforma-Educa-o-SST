@@ -59,7 +59,7 @@ export default function AdminMagazineConnections() {
   const load = async () => {
     try {
       const data = await getConnections()
-      setConnections(data)
+      setConnections(data as unknown as ProfessionalConnection[])
     } catch (e) {
       toast({ title: 'Erro', description: 'Falha ao carregar conexões.', variant: 'destructive' })
     }
@@ -402,18 +402,36 @@ export default function AdminMagazineConnections() {
                   <div className="space-y-2 mt-4">
                     <Label>Fotos Enviadas</Label>
                     <div className="flex flex-wrap gap-2">
-                      <a
-                        href={pb.files.getUrl(selectedConn, selectedConn.photos)}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        <img
-                          src={pb.files.getUrl(selectedConn, selectedConn.photos, {
-                            thumb: '100x100',
-                          })}
-                          className="w-24 h-24 object-cover border rounded hover:opacity-80 transition"
-                        />
-                      </a>
+                      {Array.isArray(selectedConn.photos) ? (
+                        selectedConn.photos.map((photo: string, idx: number) => (
+                          <a
+                            key={idx}
+                            href={pb.files.getUrl(selectedConn, photo)}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <img
+                              src={pb.files.getUrl(selectedConn, photo, {
+                                thumb: '100x100',
+                              })}
+                              className="w-24 h-24 object-cover border rounded hover:opacity-80 transition"
+                            />
+                          </a>
+                        ))
+                      ) : (
+                        <a
+                          href={pb.files.getUrl(selectedConn, selectedConn.photos)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <img
+                            src={pb.files.getUrl(selectedConn, selectedConn.photos, {
+                              thumb: '100x100',
+                            })}
+                            className="w-24 h-24 object-cover border rounded hover:opacity-80 transition"
+                          />
+                        </a>
+                      )}
                     </div>
                   </div>
                 )}

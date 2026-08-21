@@ -126,14 +126,14 @@ export default function AdminBanners() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 rounded-lg border bg-white p-1">
             <Button
-              variant={cn(viewMode === 'list' ? 'default' : 'ghost')}
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('list')}
             >
               <List className="mr-1.5 h-4 w-4" /> Lista
             </Button>
             <Button
-              variant={cn(viewMode === 'mirror' ? 'default' : 'ghost')}
+              variant={viewMode === 'mirror' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('mirror')}
             >

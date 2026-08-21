@@ -28,8 +28,8 @@ import type { Simulado } from '@/types'
 const schema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   description: z.string().min(1, 'Descrição é obrigatória'),
-  active: z.boolean().default(true),
-  is_free: z.boolean().default(false),
+  active: z.boolean(),
+  is_free: z.boolean(),
   banner: z.any().optional(),
 })
 

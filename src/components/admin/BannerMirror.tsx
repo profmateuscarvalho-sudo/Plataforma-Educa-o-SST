@@ -87,14 +87,14 @@ export function BannerMirror({ banners, onSlotClick }: BannerMirrorProps) {
         </div>
         <div className="flex items-center gap-1 rounded-lg border bg-white p-1">
           <Button
-            variant={cn(view === 'desktop' ? 'default' : 'ghost')}
+            variant={view === 'desktop' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setView('desktop')}
           >
             <Monitor className="mr-1.5 h-4 w-4" /> Desktop
           </Button>
           <Button
-            variant={cn(view === 'mobile' ? 'default' : 'ghost')}
+            variant={view === 'mobile' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setView('mobile')}
           >

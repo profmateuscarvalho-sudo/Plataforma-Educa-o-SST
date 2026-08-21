@@ -79,7 +79,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import { FEATURE_FLAGS } from '@/lib/constants'
 
 const App = () => (
-  <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+  <BrowserRouter>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />

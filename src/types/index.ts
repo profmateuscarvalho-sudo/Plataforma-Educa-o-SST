@@ -304,6 +304,7 @@ export interface SimuladoQuestion extends RecordModel {
   question: string
   options: string[]
   correct_option: string
+  comment?: string
 }
 
 export interface SimuladoSubmission extends RecordModel {

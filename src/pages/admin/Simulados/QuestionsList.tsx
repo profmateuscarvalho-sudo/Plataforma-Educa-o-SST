@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   getSimuladoQuestions,
@@ -18,7 +19,10 @@ export default function QuestionsList({ simuladoId }: { simuladoId: string }) {
   const [questions, setQuestions] = useState<SimuladoQuestion[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
-  const [current, setCurrent] = useState<Partial<SimuladoQuestion>>({ options: ['', '', '', ''] })
+  const [current, setCurrent] = useState<Partial<SimuladoQuestion>>({
+    options: ['', '', '', ''],
+    comment: '',
+  })
 
   const loadData = async () => {
     try {
@@ -79,7 +83,7 @@ export default function QuestionsList({ simuladoId }: { simuladoId: string }) {
         <h3 className="text-lg font-medium">Questões do Simulado</h3>
         <Button
           onClick={() => {
-            setCurrent({ options: ['', '', '', ''], correct_option: '' })
+            setCurrent({ options: ['', '', '', ''], correct_option: '', comment: '' })
             setOpen(true)
           }}
         >
@@ -114,6 +118,11 @@ export default function QuestionsList({ simuladoId }: { simuladoId: string }) {
                     </li>
                   ))}
                 </ul>
+                {q.comment && (
+                  <p className="mt-2 text-xs text-slate-500 bg-slate-50 p-2 rounded border border-slate-100">
+                    <span className="font-semibold text-slate-700">Comentário:</span> {q.comment}
+                  </p>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -170,6 +179,16 @@ export default function QuestionsList({ simuladoId }: { simuladoId: string }) {
                   )
                 })}
               </RadioGroup>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="question-comment">Comentário (opcional)</Label>
+              <Textarea
+                id="question-comment"
+                placeholder="Escreva uma explicação ou comentário sobre a resposta correta..."
+                rows={3}
+                value={current.comment || ''}
+                onChange={(e) => setCurrent({ ...current, comment: e.target.value })}
+              />
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

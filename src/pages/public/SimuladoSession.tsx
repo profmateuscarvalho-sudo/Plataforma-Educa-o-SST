@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, MessageCircle, Share2, XCircle } from 'lucide-react'
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Info,
+  Lightbulb,
+  MessageCircle,
+  Share2,
+  XCircle,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -237,8 +245,7 @@ export default function SimuladoSession() {
             </h2>
           </CardContent>
         </Card>
-
-        <div className="space-y-3 mb-12">
+        <div className="space-y-3 mb-8">
           {currentQ.options.map((opt, idx) => {
             const hasAnswered = !!answers[currentQ.id]
             const isSelected = answers[currentQ.id] === opt
@@ -309,7 +316,16 @@ export default function SimuladoSession() {
             )
           })}
         </div>
-
+        {hasAnsweredCurrent && currentQ.comment && (
+          <div className="mb-12 p-4 md:p-5 rounded-xl bg-sky-50 border border-sky-200 text-sky-950 shadow-sm flex items-start gap-3">
+            <Lightbulb className="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1 text-sm md:text-base leading-relaxed">
+              <span className="font-semibold text-sky-900 block">Explicação:</span>
+              <p className="text-sky-900 whitespace-pre-wrap">{currentQ.comment}</p>
+            </div>
+          </div>
+        )}
+        =======
         <div className="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-xl border-b-4 border-slate-200 sticky bottom-4">
           <Button variant="ghost" onClick={handlePrev} disabled={currentIndex === 0}>
             Anterior

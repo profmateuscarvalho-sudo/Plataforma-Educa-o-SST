@@ -325,7 +325,6 @@ export default function SimuladoSession() {
             </div>
           </div>
         )}
-        =======
         <div className="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-xl border-b-4 border-slate-200 sticky bottom-4">
           <Button variant="ghost" onClick={handlePrev} disabled={currentIndex === 0}>
             Anterior

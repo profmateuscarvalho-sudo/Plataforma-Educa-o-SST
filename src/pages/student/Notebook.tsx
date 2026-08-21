@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
+import { useTrackAccess } from '@/hooks/use-track-access'
 import {
   getStudentNotes,
   createStudentNote,

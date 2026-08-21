@@ -16,8 +16,8 @@ export default function Login() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
-  const [email, setEmail] = useState('carvalhomateus@icloud.com')
-  const [pass, setPass] = useState('securepassword123')
+  const [email, setEmail] = useState('')
+  const [pass, setPass] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -65,14 +65,16 @@ export default function Login() {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
             <div className="space-y-2">
               <Label htmlFor="email">{t('auth.login.email')}</Label>
               <Input
                 id="email"
+                name="user-identifier"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
                 required
                 className="h-12 bg-slate-50"
               />
@@ -81,9 +83,11 @@ export default function Login() {
               <Label htmlFor="password">{t('auth.login.password')}</Label>
               <Input
                 id="password"
+                name="access-key"
                 type="password"
                 value={pass}
                 onChange={(e) => setPass(e.target.value)}
+                autoComplete="off"
                 required
                 className="h-12 bg-slate-50"
               />

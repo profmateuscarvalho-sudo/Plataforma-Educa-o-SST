@@ -250,9 +250,9 @@ export default function StudentDocumentaries() {
             <X className="w-5 h-5" />
           </button>
 
-          <div className="relative w-full max-w-5xl bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+          <div className="relative w-full max-w-3xl max-h-[85vh] flex flex-col bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
             {/* Tela principal: thumbnail / player */}
-            <div className="relative aspect-video bg-black">
+            <div className="relative aspect-video w-full shrink-0 bg-black">
               {playing && videoUrl ? (
                 <iframe
                   src={videoUrl}
@@ -289,7 +289,7 @@ export default function StudentDocumentaries() {
             </div>
 
             {/* Informações básicas + ações */}
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto">
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   {selected.is_free && (

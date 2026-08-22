@@ -137,8 +137,11 @@ routerAdd('GET', '/backend/v1/dose/today', (e) => {
     }
     if (candidates.length > 0) {
       // Entre as candidatas do pior simulado, libere as mais antigas primeiro.
+      // Em Goja (runtime do PocketBase), record.get('created') retorna um
+      // objeto Time, não string — .localeCompare() não existe nesse tipo.
+      // Usamos comparação numérica via Date.getTime().
       candidates.sort(function (a, b) {
-        return a.get('created').localeCompare(b.get('created'))
+        return new Date(a.get('created')).getTime() - new Date(b.get('created')).getTime()
       })
       chosen = candidates[0]
     }
@@ -146,8 +149,9 @@ routerAdd('GET', '/backend/v1/dose/today', (e) => {
 
   if (!chosen) {
     // Senão, sorteia entre o pool, priorizando as mais antigas.
+    // Mesmo motivo: record.get('created') é um Time, não string.
     pool.sort(function (a, b) {
-      return (a.get('created') || '').localeCompare(b.get('created') || '')
+      return new Date(a.get('created')).getTime() - new Date(b.get('created')).getTime()
     })
     // Um pouco de aleatoriedade nos 40% mais antigos.
     var windowSize = Math.max(1, Math.ceil(pool.length * 0.4))

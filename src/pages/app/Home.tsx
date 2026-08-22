@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   UserCircle,
   ArrowRight,
+  Hourglass,
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
@@ -155,6 +156,9 @@ export default function Home() {
   const [selected, setSelected] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [locked, setLocked] = useState(false)
+  // True após a tentativa de carregar a dose — controla o estado fallback
+  // do card quando não há pergunta disponível.
+  const [doseLoaded, setDoseLoaded] = useState(false)
 
   // Fita
   const [fita, setFita] = useState<Record<string, { acertou: boolean }>>({})
@@ -207,28 +211,34 @@ export default function Home() {
     if (!user) return
     let cancelled = false
     ;(async () => {
-      const d = await getDoseDoDia(user.id)
-      if (cancelled) return
-      setDose(d)
-      if (!d.question_id) return
-      const q = await getDoseQuestion(d.question_id)
-      if (cancelled || !q) return
-      setQuestion(q)
-      // Simulado name
       try {
-        const sim = await pb.collection('simulados').getOne<Simulado>(q.simulado)
-        if (!cancelled) setSimuladoName(sim?.title || 'Simulado')
-      } catch {
-        if (!cancelled) setSimuladoName('Simulado')
-      }
-      if (d.answered) {
-        // Already answered today — show the locked/answered state.
-        setRevealed(true)
-        setLocked(true)
-        if (d.acertou !== undefined) {
-          // We don't store which option the user picked, so just reveal the correct.
-          setSelected(null)
+        const d = await getDoseDoDia(user.id)
+        if (cancelled) return
+        setDose(d)
+        if (!d.question_id) return
+        const q = await getDoseQuestion(d.question_id)
+        if (cancelled || !q) return
+        setQuestion(q)
+        // Simulado name
+        try {
+          const sim = await pb.collection('simulados').getOne<Simulado>(q.simulado)
+          if (!cancelled) setSimuladoName(sim?.title || 'Simulado')
+        } catch {
+          if (!cancelled) setSimuladoName('Simulado')
         }
+        if (d.answered) {
+          // Already answered today — show the locked/answered state.
+          setRevealed(true)
+          setLocked(true)
+          if (d.acertou !== undefined) {
+            // We don't store which option the user picked, so just reveal the correct.
+            setSelected(null)
+          }
+        }
+      } finally {
+        // Mesmo que a chamada falhe ou retorne question_id vazio, sinaliza
+        // que a carga terminou para o card fallback aparecer no lugar.
+        if (!cancelled) setDoseLoaded(true)
       }
     })()
     return () => {
@@ -422,7 +432,7 @@ export default function Home() {
       </header>
 
       {/* Dose do dia */}
-      {question && (
+      {question ? (
         <DoseCard
           question={question}
           simuladoName={simuladoName}
@@ -433,7 +443,9 @@ export default function Home() {
           alreadyAnswered={!!dose?.answered}
           onAnswer={handleAnswer}
         />
-      )}
+      ) : doseLoaded ? (
+        <DoseEmptyCard />
+      ) : null}
 
       {/* Fita da semana */}
       <section className="sst-cascade" style={{ ['--sst-i' as any]: 1, marginTop: 24 }}>
@@ -830,6 +842,93 @@ function DoseCard({
           {question.comment}
         </div>
       )}
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Dose do dia — estado fallback quando não há pergunta disponível
+// (backend indisponível ou nenhuma questão liberada para o dia).
+// Mantém o mesmo visual do card (fundo âmbar) em vez de sumir da tela.
+// ---------------------------------------------------------------------------
+
+function DoseEmptyCard() {
+  return (
+    <section
+      className="sst-cascade relative overflow-hidden"
+      style={{
+        ['--sst-i' as any]: 0,
+        backgroundColor: 'var(--sst-amber)',
+        borderRadius: 'var(--sst-r-card-lg)',
+        padding: 20,
+        boxShadow: 'var(--sst-shadow-dose)',
+      }}
+    >
+      {/* Translucent white circle emerging from top-right */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: -40,
+          right: -40,
+          width: 150,
+          height: 150,
+          borderRadius: '50%',
+          backgroundColor: 'rgba(255,255,255,0.18)',
+        }}
+      />
+      <p
+        style={{
+          color: 'var(--sst-amber-ink)',
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+        }}
+      >
+        Dose do dia
+      </p>
+      <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 13,
+            backgroundColor: 'rgba(255,255,255,0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Hourglass
+            style={{ width: 24, height: 24, color: 'var(--sst-text)' }}
+            strokeWidth={1.75}
+          />
+        </div>
+        <div>
+          <p
+            className="sst-display"
+            style={{
+              fontSize: 16,
+              lineHeight: 1.3,
+              color: 'var(--sst-text)',
+            }}
+          >
+            Sua dose de amanhã já está sendo preparada
+          </p>
+          <p
+            style={{
+              marginTop: 4,
+              fontSize: 12.5,
+              lineHeight: 1.4,
+              color: 'var(--sst-amber-ink)',
+            }}
+          >
+            Volte amanhã para uma nova questão
+          </p>
+        </div>
+      </div>
     </section>
   )
 }

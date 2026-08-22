@@ -1,0 +1,265 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Inter:wght@400;500;600&display=swap');
+
+/* ===========================================================
+   Educação SST — App mobile design tokens
+   Loaded in addition to src/main.css; scoped to the /app route
+   via the .app-shell wrapper so it never leaks into the rest
+   of the platform.
+   =========================================================== */
+
+:root {
+  /* Surfaces */
+  --sst-page: #faf8f3;
+  --sst-card: #ffffff;
+  /* Text */
+  --sst-text: #15170f;
+  --sst-text-2: #767a6e;
+  /* Lines / borders */
+  --sst-line: #eae6dc;
+  --sst-line-soft: #f1eee6;
+  /* Brand — amber */
+  --sst-amber: #ffc220;
+  --sst-amber-wash: #fff1cc;
+  --sst-amber-ink: #8a6400;
+  /* Completion — green */
+  --sst-green: #00bf63;
+  --sst-green-wash: #dff6ea;
+  /* Audiovisual — blue */
+  --sst-blue: #2e7cf6;
+  --sst-blue-wash: #e3edff;
+  /* Magazine — purple */
+  --sst-purple: #7c5cff;
+  --sst-purple-wash: #eee9ff;
+  /* Red — live */
+  --sst-red: #ef4444;
+
+  /* Typography */
+  --sst-font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  --sst-font-body: 'Inter', system-ui, sans-serif;
+
+  /* Radii */
+  --sst-r-card-lg: 26px;
+  --sst-r-card: 20px;
+  --sst-r-btn: 16px;
+  --sst-r-pill: 999px;
+
+  /* Shadows */
+  --sst-shadow-card: 0 2px 8px rgba(30, 28, 20, 0.04);
+  --sst-shadow-dose: 0 10px 24px rgba(255, 194, 32, 0.32);
+
+  /* Motion */
+  --sst-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --sst-spring: cubic-bezier(0.34, 1.45, 0.5, 1);
+  --sst-dur: 260ms;
+}
+
+.app-shell {
+  --font-sans: var(--sst-font-body);
+  background-color: var(--sst-page);
+  color: var(--sst-text);
+  font-family: var(--sst-font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100dvh;
+}
+
+/* Headings inside the app use the display font. */
+.app-shell h1,
+.app-shell h2,
+.app-shell h3,
+.app-shell h4,
+.app-shell .sst-display {
+  font-family: var(--sst-font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* Type scale */
+.sst-title {
+  font-family: var(--sst-font-display);
+  font-weight: 800;
+  font-size: 29px;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+.sst-card-title {
+  font-family: var(--sst-font-display);
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.2;
+}
+.sst-body {
+  font-family: var(--sst-font-body);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.sst-caption {
+  font-family: var(--sst-font-body);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--sst-text-2);
+}
+.sst-label {
+  font-family: var(--sst-font-body);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sst-text-2);
+}
+
+/* Surfaces */
+.sst-card {
+  background: var(--sst-card);
+  border-radius: var(--sst-r-card);
+  box-shadow: var(--sst-shadow-card);
+}
+.sst-card-lg {
+  background: var(--sst-card);
+  border-radius: var(--sst-r-card-lg);
+  box-shadow: var(--sst-shadow-card);
+}
+
+/* Pill */
+.sst-pill {
+  border-radius: var(--sst-r-pill);
+}
+
+/* Buttons: tap feedback — scale .97 on active */
+.sst-tap {
+  transition:
+    transform var(--sst-dur) var(--sst-ease),
+    background-color var(--sst-dur) var(--sst-ease),
+    border-color var(--sst-dur) var(--sst-ease),
+    color var(--sst-dur) var(--sst-ease),
+    box-shadow var(--sst-dur) var(--sst-ease),
+    opacity var(--sst-dur) var(--sst-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.sst-tap:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Card entrance cascade */
+@keyframes sst-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.sst-cascade {
+  opacity: 0;
+  animation: sst-card-in 420ms var(--sst-ease) forwards;
+  animation-delay: calc(var(--sst-i, 0) * 45ms);
+}
+
+/* Streak number bounce */
+@keyframes sst-streak-bounce {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.sst-bounce {
+  animation: sst-streak-bounce 500ms var(--sst-spring);
+}
+
+/* Page transition (opacity + translateY(12px)) */
+@keyframes sst-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.sst-page-enter {
+  animation: sst-page-in 320ms var(--sst-ease) forwards;
+}
+
+/* Bottom sheet spring slide */
+@keyframes sst-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes sst-sheet-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+.sst-sheet-enter {
+  animation: sst-sheet-up 360ms var(--sst-spring) forwards;
+}
+.sst-sheet-leave {
+  animation: sst-sheet-down 280ms var(--sst-ease) forwards;
+}
+
+/* Live pulsing dot */
+@keyframes sst-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
+}
+.sst-live-dot {
+  animation: sst-pulse 1.4s var(--sst-ease) infinite;
+}
+
+/* No scrollbars for horizontal rails */
+.sst-no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.sst-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Snap rail */
+.sst-snap {
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 20px;
+}
+.sst-snap > * {
+  scroll-snap-align: start;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sst-cascade,
+  .sst-bounce,
+  .sst-page-enter,
+  .sst-sheet-enter,
+  .sst-sheet-leave,
+  .sst-live-dot {
+    animation: none !important;
+  }
+  .sst-tap {
+    transition: none !important;
+  }
+  .sst-tap:active:not(:disabled) {
+    transform: none !important;
+  }
+}

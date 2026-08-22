@@ -497,3 +497,59 @@ export interface EtapaHistorico extends RecordModel {
   etapa_nova: string
   expand?: { oportunidade_id?: OportunidadeComercial }
 }
+
+// ----- App mobile (Dose do dia, sequência, push) -----
+
+export interface DosePergunta extends RecordModel {
+  questao_id: string
+  ativa: boolean
+  expand?: { questao_id?: SimuladoQuestion }
+}
+
+export interface DoseResposta extends RecordModel {
+  usuario_id: string
+  pergunta_id: string
+  data: string
+  acertou: boolean
+  respondida_em: string
+  expand?: { pergunta_id?: DosePergunta }
+}
+
+export interface SequenciaUsuario extends RecordModel {
+  usuario_id: string
+  sequencia_atual: number
+  recorde: number
+  ultima_data: string
+}
+
+export interface PushSubscription extends RecordModel {
+  user: string
+  endpoint: string
+  p256dh: string
+  auth: string
+}
+
+// Payload retornado pelo endpoint /backend/v1/dose/today.
+export interface DoseDoDia {
+  answered: boolean
+  today: string
+  question_id: string
+  pergunta_id?: string
+  acertou?: boolean
+}
+
+// Payload retornado pelo endpoint /backend/v1/dose/answer.
+export interface DoseRespostaResult {
+  ok: boolean
+  acertou: boolean
+  sequencia_atual: number
+  recorde: number
+  today: string
+}
+
+// Estatísticas de sequência da dose.
+export interface SequenciaStats {
+  sequencia_atual: number
+  recorde: number
+  ultima_data: string
+}

@@ -30,6 +30,12 @@ import SimuladoSession from './pages/public/SimuladoSession'
 import Anuncie from './pages/public/Anuncie'
 import Planos from './pages/Planos'
 
+import AppLayout from './pages/app/AppLayout'
+import AppHome from './pages/app/Home'
+import AppStudy from './pages/app/Study'
+import AppCases from './pages/app/Cases'
+import AppProfile from './pages/app/Profile'
+
 import StudentDashboard from './pages/student/Dashboard'
 import CourseLesson from './pages/student/Lesson'
 import StudentDocumentaries from './pages/student/Documentaries'
@@ -117,6 +123,13 @@ const App = () => (
 
           <Route path="/plataforma/documentarios/:id" element={<DocumentaryViewer />} />
           <Route path="/plataforma/simulados/:id" element={<SimuladoSession />} />
+
+          <Route element={<AppLayout />}>
+            <Route path="/app" element={<AppHome />} />
+            <Route path="/app/estudar" element={<AppStudy />} />
+            <Route path="/app/cases" element={<AppCases />} />
+            <Route path="/app/perfil" element={<AppProfile />} />
+          </Route>
 
           <Route element={<StudentLayout />}>
             <Route path="/plataforma" element={<StudentDashboard />} />

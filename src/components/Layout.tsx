@@ -38,6 +38,10 @@ export default function Layout() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { t } = useTranslation()
+  const { isIOS, run: runInstall } = useInstallFlow()
+  const [installOpen, setInstallOpen] = useState(false)
+
+  const handleInstall = () => runInstall(() => setInstallOpen(true))
 
   useEffect(() => {
     window.scrollTo(0, 0)

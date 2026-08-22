@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T22:07:36.200Z",
+  "generatedAt": "2026-08-22T00:56:10.283Z",
   "collections": [
     {
       "name": "users",
@@ -106,6 +106,18 @@
         {
           "name": "email_verificado",
           "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lembrete_diario_ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lembrete_diario_hora",
+          "type": "text",
           "required": false,
           "system": false
         }
@@ -3218,6 +3230,218 @@
       "indexes": [
         "CREATE INDEX idx_etapa_historico_op ON etapa_historico (oportunidade_id)",
         "CREATE INDEX idx_etapa_historico_created ON etapa_historico (created DESC)"
+      ]
+    },
+    {
+      "name": "dose_perguntas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\"",
+        "view": "@request.auth.id != \"\"",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "questao_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "simulado_questions"
+        },
+        {
+          "name": "ativa",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_dose_perguntas_questao ON dose_perguntas (questao_id)"]
+    },
+    {
+      "name": "dose_respostas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && usuario_id = @request.auth.id",
+        "view": "@request.auth.id != \"\" && usuario_id = @request.auth.id",
+        "create": "@request.auth.id != \"\" && usuario_id = @request.auth.id",
+        "update": "@request.auth.id != \"\" && usuario_id = @request.auth.id",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "pergunta_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "dose_perguntas"
+        },
+        {
+          "name": "data",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "acertou",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "respondida_em",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_dose_respostas_usuario_data ON dose_respostas (usuario_id, data)"
+      ]
+    },
+    {
+      "name": "sequencia_usuario",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && usuario_id = @request.auth.id",
+        "view": "@request.auth.id != \"\" && usuario_id = @request.auth.id",
+        "create": "@request.auth.id != \"\" && usuario_id = @request.auth.id",
+        "update": "@request.auth.id != \"\" && usuario_id = @request.auth.id",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "sequencia_atual",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "recorde",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ultima_data",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_sequencia_usuario ON sequencia_usuario (usuario_id)"]
+    },
+    {
+      "name": "push_subscriptions",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && user = @request.auth.id",
+        "view": "@request.auth.id != \"\" && user = @request.auth.id",
+        "create": "@request.auth.id != \"\" && user = @request.auth.id",
+        "update": "@request.auth.id != \"\" && user = @request.auth.id",
+        "delete": "@request.auth.id != \"\" && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "endpoint",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "p256dh",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "auth",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_push_subscriptions_endpoint ON push_subscriptions (endpoint)",
+        "CREATE INDEX idx_push_subscriptions_user ON push_subscriptions (user)"
       ]
     }
   ]

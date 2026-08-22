@@ -451,5 +451,24 @@
     "loading": "Cargando...",
     "back": "Volver",
     "seeMore": "Ver más"
+  },
+  "install": {
+    "menuItem": "Instalar la app en el móvil",
+    "banner": {
+      "aria": "Invitación para instalar la app",
+      "appName": "Educación SST",
+      "message": "Instala Educación SST en la pantalla de inicio",
+      "install": "Instalar",
+      "notNow": "Ahora no"
+    },
+    "ios": {
+      "title": "Instalar la app",
+      "subtitle": "Sigue los pasos para añadir a la pantalla de inicio.",
+      "step1": "Toca el botón Compartir",
+      "step1Desc": "En el menú inferior de Safari.",
+      "step2": "Selecciona \"Añadir a Pantalla de Inicio\"",
+      "step2Desc": "El ícono de la app aparecerá en tu pantalla de inicio.",
+      "fallback": "Tu navegador no ofrece el aviso automático de instalación — abre este sitio en el móvil para instalar."
+    }
   }
 }

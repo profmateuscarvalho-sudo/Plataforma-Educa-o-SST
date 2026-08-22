@@ -451,5 +451,24 @@
     "loading": "Carregando...",
     "back": "Voltar",
     "seeMore": "Ver mais"
+  },
+  "install": {
+    "menuItem": "Instalar o app no celular",
+    "banner": {
+      "aria": "Convite de instalação do app",
+      "appName": "Educação SST",
+      "message": "Instale o Educação SST na tela inicial",
+      "install": "Instalar",
+      "notNow": "Agora não"
+    },
+    "ios": {
+      "title": "Instalar o app",
+      "subtitle": "Siga os passos abaixo para adicionar à tela inicial.",
+      "step1": "Toque no botão Compartilhar",
+      "step1Desc": "No menu inferior do Safari.",
+      "step2": "Selecione \"Adicionar à Tela de Início\"",
+      "step2Desc": "O ícone do app aparecerá na sua tela inicial.",
+      "fallback": "Seu navegador não oferece o prompt automático de instalação — abra este site no celular para instalar."
+    }
   }
 }

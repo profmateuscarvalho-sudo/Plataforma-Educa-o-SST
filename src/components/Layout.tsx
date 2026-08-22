@@ -11,14 +11,25 @@ import {
   Instagram,
   MessageCircle,
   Linkedin,
+  Smartphone,
+  ChevronDown,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { useEffect } from 'react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Logo, SquareLogo } from './ui/Logos'
 import { useAuth } from '@/hooks/use-auth'
 import { LeadForm } from './LeadForm'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { InstallBanner, InstallInstructionsDialog, useInstallFlow } from './InstallBanner'
 import pb from '@/lib/pocketbase/client'
 import { FEATURE_FLAGS } from '@/lib/constants'
 
@@ -73,38 +84,49 @@ export default function Layout() {
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
-                <Link
-                  to={user.role === 'admin' ? '/admin' : '/plataforma'}
-                  className="flex items-center gap-2"
-                >
-                  {user.avatar ? (
-                    <img
-                      src={pb.files.getUrl(user, user.avatar)}
-                      alt={user.name}
-                      className="w-9 h-9 rounded-full object-cover border-2 border-primary/20"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                      {user.name?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </Link>
-                <Button variant="ghost" asChild className="text-primary font-semibold">
-                  <Link to={user.role === 'admin' ? '/admin' : '/plataforma'}>
-                    <LayoutDashboard className="w-4 h-4 mr-2" /> {t('nav.panel')}
-                  </Link>
-                </Button>{' '}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="flex items-center gap-1.5 rounded-full"
+                      aria-label={t('nav.panel')}
+                    >
+                      {user.avatar ? (
+                        <img
+                          src={pb.files.getUrl(user, user.avatar)}
+                          alt={user.name}
+                          className="w-9 h-9 rounded-full object-cover border-2 border-primary/20"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                          {user.name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <ChevronDown className="w-4 h-4 text-slate-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to={user.role === 'admin' ? '/admin' : '/plataforma'}>
+                        <LayoutDashboard className="w-4 h-4 mr-2" /> {t('nav.panel')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleInstall}>
+                      <Smartphone className="w-4 h-4 mr-2" /> {t('install.menuItem')}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        signOut()
+                        navigate('/')
+                      }}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" /> {t('nav.logout')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <LanguageSwitcher />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    signOut()
-                    navigate('/')
-                  }}
-                >
-                  {t('nav.logout')}
-                </Button>
               </>
             ) : (
               <>
@@ -168,6 +190,13 @@ export default function Layout() {
                         <Link to={user.role === 'admin' ? '/admin' : '/plataforma'}>
                           <LayoutDashboard className="mr-2" /> {t('nav.panel')}
                         </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-lg h-12"
+                        onClick={handleInstall}
+                      >
+                        <Smartphone className="mr-2" /> {t('install.menuItem')}
                       </Button>
                       <div className="px-1">
                         <LanguageSwitcher />

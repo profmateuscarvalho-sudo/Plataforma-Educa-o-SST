@@ -32,7 +32,10 @@ const AREA_LABELS: Record<string, string> = {
   'Aulas ao Vivo': 'Aulas ao Vivo',
   Simulados: 'Simulados',
   'Caderno Virtual': 'Caderno Virtual',
-  'Feed de Cases': 'Feed de Cases',
+  'Feed de Cases': 'Ágora de Debates',
+  'Ágora de Debates': 'Ágora de Debates',
+  'Criar Debate Ágora': 'Criar Debate Ágora',
+  'Sala do Debate Ágora': 'Sala do Debate Ágora',
   'Meu Perfil': 'Meu Perfil',
 }
 
@@ -45,7 +48,10 @@ const AREA_COLORS: Record<string, string> = {
   'Aulas ao Vivo': 'from-red-500 to-rose-600',
   Simulados: 'from-cyan-500 to-blue-600',
   'Caderno Virtual': 'from-amber-500 to-orange-600',
-  'Feed de Cases': 'from-teal-500 to-emerald-600',
+  'Feed de Cases': 'from-[#C17A4E] to-[#8C4F2B]',
+  'Ágora de Debates': 'from-[#C17A4E] to-[#8C4F2B]',
+  'Criar Debate Ágora': 'from-[#C17A4E] to-[#8C4F2B]',
+  'Sala do Debate Ágora': 'from-[#C17A4E] to-[#8C4F2B]',
   'Meu Perfil': 'from-slate-500 to-slate-700',
 }
 

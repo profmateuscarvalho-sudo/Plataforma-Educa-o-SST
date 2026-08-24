@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, BookOpen, LayoutGrid, User } from 'lucide-react'
+import { Home, BookOpen, Landmark, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -11,7 +11,7 @@ interface NavItem {
 const ITEMS: NavItem[] = [
   { to: '/app', label: 'Início', icon: Home },
   { to: '/app/estudar', label: 'Estudar', icon: BookOpen },
-  { to: '/app/cases', label: 'Cases', icon: LayoutGrid },
+  { to: '/app/agora', label: 'Ágora', icon: Landmark },
   { to: '/app/perfil', label: 'Perfil', icon: User },
 ]
 

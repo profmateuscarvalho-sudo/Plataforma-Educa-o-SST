@@ -32,8 +32,8 @@ const BENEFITS = [
   },
   {
     icon: MessageSquare,
-    title: 'Feed de Cases',
-    desc: 'Compartilhe e discuta casos profissionais reais',
+    title: 'Ágora de Debates',
+    desc: 'Participe e vote em discussões técnicas e normativas reais',
   },
   { icon: Users, title: 'Comunidade', desc: 'Conecte-se com milhares de profissionais de SST' },
 ]

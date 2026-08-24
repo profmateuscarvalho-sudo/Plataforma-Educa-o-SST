@@ -18,6 +18,9 @@ export type AccessArea =
   | 'Simulados'
   | 'Caderno Virtual'
   | 'Feed de Cases'
+  | 'Ágora de Debates'
+  | 'Criar Debate Ágora'
+  | 'Sala do Debate Ágora'
   | 'Meu Perfil'
   | (string & {})
 

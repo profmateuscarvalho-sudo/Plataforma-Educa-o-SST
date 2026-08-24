@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-22T02:38:55.353Z",
+  "generatedAt": "2026-08-24T11:40:30.436Z",
   "collections": [
     {
       "name": "users",
@@ -3442,6 +3442,209 @@
       "indexes": [
         "CREATE UNIQUE INDEX idx_push_subscriptions_endpoint ON push_subscriptions (endpoint)",
         "CREATE INDEX idx_push_subscriptions_user ON push_subscriptions (user)"
+      ]
+    },
+    {
+      "name": "agora_debates",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != '' && (moderador_id = @request.auth.id || @request.auth.role = 'admin')",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "tema",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "categoria_tags",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_inicio",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_termino",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "regras_conduta",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "moderador_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["agendado", "em_andamento", "encerrado"]
+        },
+        {
+          "name": "conclusoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "aprendizados",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_agora_debates_status ON agora_debates (status)",
+        "CREATE INDEX idx_agora_debates_moderador ON agora_debates (moderador_id)",
+        "CREATE INDEX idx_agora_debates_termino ON agora_debates (data_termino)"
+      ]
+    },
+    {
+      "name": "agora_votos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && @request.body.usuario_id = @request.auth.id",
+        "update": null,
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "debate_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "agora_debates"
+        },
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "posicao",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["a_favor", "contra", "complementacao"]
+        },
+        {
+          "name": "justificativa",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "apoios",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_agora_votos_debate_user ON agora_votos (debate_id, usuario_id)",
+        "CREATE INDEX idx_agora_votos_debate ON agora_votos (debate_id)"
+      ]
+    },
+    {
+      "name": "agora_apoios",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && @request.body.usuario_id = @request.auth.id",
+        "update": null,
+        "delete": "@request.auth.id != '' && usuario_id = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "voto_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "agora_votos"
+        },
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_agora_apoios_voto_user ON agora_apoios (voto_id, usuario_id)",
+        "CREATE INDEX idx_agora_apoios_voto ON agora_apoios (voto_id)"
       ]
     }
   ]

@@ -77,7 +77,6 @@ const sections: MenuSection[] = [
   {
     title: 'Comunidade',
     items: [
-      { label: 'Casos Profissionais', icon: MessagesSquare, path: '/admin/casos' },
       { label: 'Quadro de Avisos', icon: Megaphone, path: '/admin/avisos' },
       { label: 'Mentores', icon: UserCog, path: '/admin/mentores' },
       { label: 'Tags Profissionais', icon: Tag, path: '/admin/tags' },

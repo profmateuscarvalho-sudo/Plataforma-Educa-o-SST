@@ -33,7 +33,7 @@ import Planos from './pages/Planos'
 import AppLayout from './pages/app/AppLayout'
 import AppHome from './pages/app/Home'
 import AppStudy from './pages/app/Study'
-import AppCases from './pages/app/Cases'
+import AppAgora from './pages/app/AgoraApp'
 import AppProfile from './pages/app/Profile'
 
 import StudentDashboard from './pages/student/Dashboard'
@@ -41,7 +41,9 @@ import CourseLesson from './pages/student/Lesson'
 import StudentDocumentaries from './pages/student/Documentaries'
 import DocumentaryViewer from './pages/student/DocumentaryViewer'
 import StudentNotebook from './pages/student/Notebook'
-import StudentCaseFeed from './pages/student/CaseFeed'
+import AgoraList from './pages/student/AgoraList'
+import AgoraCreate from './pages/student/AgoraCreate'
+import AgoraRoom from './pages/student/AgoraRoom'
 import StudentSimulados from './pages/student/Simulados'
 import MagazineReader from './pages/student/MagazineReader'
 
@@ -127,7 +129,8 @@ const App = () => (
           <Route element={<AppLayout />}>
             <Route path="/app" element={<AppHome />} />
             <Route path="/app/estudar" element={<AppStudy />} />
-            <Route path="/app/cases" element={<AppCases />} />
+            <Route path="/app/agora" element={<AppAgora />} />
+            <Route path="/app/cases" element={<Navigate to="/app/agora" replace />} />
             <Route path="/app/perfil" element={<AppProfile />} />
           </Route>
 
@@ -138,7 +141,10 @@ const App = () => (
             <Route path="/plataforma/caderno" element={<StudentNotebook />} />
             <Route path="/plataforma/simulados" element={<StudentSimulados />} />
             <Route path="/plataforma/revista/:id" element={<MagazineReader />} />
-            <Route path="/plataforma/cases" element={<StudentCaseFeed />} />
+            <Route path="/plataforma/agora" element={<AgoraList />} />
+            <Route path="/plataforma/agora/novo" element={<AgoraCreate />} />
+            <Route path="/plataforma/agora/:id" element={<AgoraRoom />} />
+            <Route path="/plataforma/cases" element={<Navigate to="/plataforma/agora" replace />} />
             <Route path="/plataforma/live/:id" element={<StudentLive />} />
             <Route path="/plataforma/live-sessions" element={<StudentLiveSessions />} />
             <Route path="/plataforma/perfil" element={<StudentProfile />} />

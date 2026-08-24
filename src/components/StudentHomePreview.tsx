@@ -11,7 +11,7 @@ import {
   Calendar,
   Crown,
   BookMarked,
-  MessagesSquare,
+  Landmark,
   User,
 } from 'lucide-react'
 
@@ -23,7 +23,7 @@ const cards = [
   { title: 'Aulas ao Vivo', icon: Radio, count: '3', gradient: 'from-red-600 to-rose-800' },
   { title: 'Simulados', icon: ClipboardList, count: '10', gradient: 'from-cyan-600 to-blue-800' },
   { title: 'Caderno', icon: BookMarked, count: '', gradient: 'from-amber-600 to-orange-800' },
-  { title: 'Cases', icon: MessagesSquare, count: '', gradient: 'from-teal-600 to-emerald-800' },
+  { title: 'Ágora', icon: Landmark, count: '', gradient: 'from-[#C17A4E] to-[#8C4F2B]' },
   { title: 'Perfil', icon: User, count: '', gradient: 'from-slate-700 to-slate-900' },
 ]
 

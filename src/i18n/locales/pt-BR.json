@@ -316,7 +316,7 @@
     "cardSimuladosDesc": "Teste seus conhecimentos",
     "cardNotebook": "Caderno Virtual",
     "cardNotebookDesc": "Mapas e Notas",
-    "cardCaseFeed": "Feed de Cases",
+    "cardCaseFeed": "Ágora de Debates",
     "cardCaseFeedDesc": "Compartilhe experiências",
     "cardProfile": "Meu Perfil",
     "cardProfileDesc": "Gerenciar conta"
@@ -355,10 +355,10 @@
     "errorDelete": "Erro ao excluir nota."
   },
   "caseFeed": {
-    "pageTitle": "Feed de Cases | Educação SST",
-    "metaDescription": "Compartilhe e discuta casos profissionais em Segurança e Saúde no Trabalho com a comunidade.",
-    "title": "Feed de Cases",
-    "subtitle": "Compartilhe e discuta casos profissionais",
+    "pageTitle": "Ágora de Debates | Educação SST",
+    "metaDescription": "Participe dos debates técnicos e normativos de Segurança e Saúde no Trabalho.",
+    "title": "Ágora de Debates",
+    "subtitle": "Discussões e deliberações técnicas da comunidade",
     "backToHub": "Voltar ao Hub"
   },
   "leadForm": {

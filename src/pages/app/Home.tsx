@@ -310,7 +310,7 @@ export default function Home() {
         /* noop */
       }
       try {
-        c.agora = (await getDebates('status != "encerrado"')).length
+        c.agora = (await getDebates("status != 'encerrado'")).length
       } catch {
         /* noop */
       }

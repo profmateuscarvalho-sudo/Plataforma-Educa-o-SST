@@ -125,7 +125,7 @@ export default function StudentDashboard() {
     getFeaturedMagazine()
       .then(setFeaturedMagazine)
       .catch(() => {})
-    getDebates('status != "encerrado"')
+    getDebates("status != 'encerrado'")
       .then(setDebates)
       .catch(() => {})
   }, [user])
@@ -387,69 +387,90 @@ export default function StudentDashboard() {
                 </h2>
                 <div className="space-y-4">
                   {/* Debates Ativos da Ágora com Card Completo e Contagem Regressiva */}
-                  {debates.map((debate) => {
-                    const mod = debate.expand?.moderador_id
-                    const modName = mod?.name || mod?.email || 'Moderador'
-                    const tags = (debate.categoria_tags || '')
-                      .split(',')
-                      .map((t) => t.trim())
-                      .filter(Boolean)
+                  {debates.length > 0 ? (
+                    debates.map((debate) => {
+                      const mod = debate.expand?.moderador_id
+                      const modName = mod?.name || mod?.email || 'Moderador'
+                      const tags = (debate.categoria_tags || '')
+                        .split(',')
+                        .map((t) => t.trim())
+                        .filter(Boolean)
 
-                    return (
-                      <div
-                        key={debate.id}
-                        className="p-4 rounded-xl bg-gradient-to-br from-[#FAF8F3] to-[#F3EEE3] border border-[#C17A4E]/30 text-slate-800 shadow-sm space-y-3"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#C17A4E]/15 text-[#8C4F2B]">
-                            <Landmark className="w-3 h-3 text-[#C17A4E]" />
-                            Ágora de Debates
-                          </span>
-                          <AgoraCountdown
-                            dataTermino={debate.data_termino}
-                            status={debate.status}
-                            compact
-                          />
-                        </div>
-
-                        <div>
-                          <h3 className="font-serif font-bold text-sm text-slate-900 line-clamp-2 leading-snug">
-                            {debate.tema}
-                          </h3>
-                          <p className="text-xs text-slate-600 mt-1 flex items-center gap-1">
-                            <User className="w-3 h-3 text-slate-400" />
-                            <span>
-                              Moderador: <strong className="text-slate-800">{modName}</strong>
-                            </span>
-                          </p>
-                        </div>
-
-                        {tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {tags.slice(0, 3).map((tag) => (
-                              <span
-                                key={tag}
-                                className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/80 border border-slate-200 text-slate-600"
-                              >
-                                #{tag}
-                              </span>
-                            ))}
-                            {tags.length > 3 && (
-                              <span className="text-[10px] text-slate-400">+{tags.length - 3}</span>
-                            )}
-                          </div>
-                        )}
-
-                        <Button
-                          size="sm"
-                          onClick={() => navigate(`/plataforma/agora/${debate.id}`)}
-                          className="w-full bg-[#C17A4E] hover:bg-[#A9663D] text-white font-bold text-xs h-8 shadow-sm"
+                      return (
+                        <div
+                          key={debate.id}
+                          className="p-4 rounded-xl bg-gradient-to-br from-[#FAF8F3] to-[#F3EEE3] border border-[#C17A4E]/30 text-slate-800 shadow-sm space-y-3"
                         >
-                          Entrar no Debate <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                        </Button>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#C17A4E]/15 text-[#8C4F2B]">
+                              <Landmark className="w-3 h-3 text-[#C17A4E]" />
+                              Ágora de Debates
+                            </span>
+                            <AgoraCountdown
+                              dataTermino={debate.data_termino}
+                              status={debate.status}
+                              compact
+                            />
+                          </div>
+
+                          <div>
+                            <h3 className="font-serif font-bold text-sm text-slate-900 line-clamp-2 leading-snug">
+                              {debate.tema}
+                            </h3>
+                            <p className="text-xs text-slate-600 mt-1 flex items-center gap-1">
+                              <User className="w-3 h-3 text-slate-400" />
+                              <span>
+                                Moderador: <strong className="text-slate-800">{modName}</strong>
+                              </span>
+                            </p>
+                          </div>
+
+                          {tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {tags.slice(0, 3).map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/80 border border-slate-200 text-slate-600"
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                              {tags.length > 3 && (
+                                <span className="text-[10px] text-slate-400">
+                                  +{tags.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          <Button
+                            size="sm"
+                            onClick={() => navigate(`/plataforma/agora/${debate.id}`)}
+                            className="w-full bg-[#C17A4E] hover:bg-[#A9663D] text-white font-bold text-xs h-8 shadow-sm"
+                          >
+                            Entrar no Debate <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                          </Button>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-[#FAF8F3] to-[#F3EEE3] border border-[#C17A4E]/30 text-slate-800 shadow-sm space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#C17A4E]/15 text-[#8C4F2B]">
+                          <Landmark className="w-3 h-3 text-[#C17A4E]" />
+                          Ágora de Debates
+                        </span>
                       </div>
-                    )
-                  })}
+                      <p className="text-xs text-slate-600">Nenhum debate ativo no momento.</p>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/plataforma/agora/novo')}
+                        className="inline-flex items-center text-xs font-bold text-[#8C4F2B] hover:text-[#C17A4E] hover:underline"
+                      >
+                        Criar um debate <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Avisos gerais cadastrados */}
                   {announcements

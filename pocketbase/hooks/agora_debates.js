@@ -104,12 +104,11 @@ cronAdd('agora_auto_close', '*/15 * * * *', () => {
     var nowIso = new Date().toISOString()
     var expiredDebates = $app.findRecordsByFilter(
       'agora_debates',
-      'status != "encerrado" && data_termino <= "' + nowIso + '"',
+      "status != 'encerrado' && data_termino <= '" + nowIso + "'",
       'created',
       100,
       0,
     )
-
     for (var i = 0; i < expiredDebates.length; i++) {
       var debate = expiredDebates[i]
       debate.set('status', 'encerrado')

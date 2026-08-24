@@ -52,7 +52,7 @@ onRecordAfterCreateSuccess((e) => {
     var notice = new Record(announcementsCol)
     notice.set('title', '🏛️ Novo debate: ' + tema)
     notice.set('content', contentHtml)
-    notice.set('type', 'Texto Customizado')
+    notice.set('type', 'Ágora de Debates')
     notice.set('reference_id', debateId)
     notice.set('active', true)
     notice.set('priority', 5)

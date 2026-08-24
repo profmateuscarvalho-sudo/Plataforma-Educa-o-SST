@@ -394,7 +394,13 @@ export interface CaseLike extends RecordModel {
 export interface PlatformAnnouncement extends RecordModel {
   title: string
   content: string
-  type: 'Texto Customizado' | 'Novo Curso' | 'Documentário' | 'Mentoria' | 'Aula Ao Vivo'
+  type:
+    | 'Texto Customizado'
+    | 'Novo Curso'
+    | 'Documentário'
+    | 'Mentoria'
+    | 'Aula Ao Vivo'
+    | 'Ágora de Debates'
   reference_id: string
   active: boolean
   priority: number

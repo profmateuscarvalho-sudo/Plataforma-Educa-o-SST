@@ -39,7 +39,14 @@ import { PlatformAnnouncement } from '@/types'
 import { toast } from '@/hooks/use-toast'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 
-const TYPES = ['Texto Customizado', 'Novo Curso', 'Documentário', 'Mentoria', 'Aula Ao Vivo']
+const TYPES = [
+  'Texto Customizado',
+  'Novo Curso',
+  'Documentário',
+  'Mentoria',
+  'Aula Ao Vivo',
+  'Ágora de Debates',
+]
 
 export default function AdminAnnouncements() {
   const [items, setItems] = useState<PlatformAnnouncement[]>([])

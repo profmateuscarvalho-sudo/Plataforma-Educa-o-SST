@@ -76,7 +76,7 @@
           "Cursos selecionados",
           "Aulas ao vivo (toda quarta feira)",
           "Caderno de Estudos Digital",
-          "Feed de Cases"
+          "Ágora de Debates"
         ]
       },
       "prata": {
@@ -87,7 +87,7 @@
           "Todos os cursos da plataforma",
           "Aulas ao vivo (toda quarta feira) + Gravações",
           "Caderno de Estudos Digital",
-          "Feed de Cases",
+          "Ágora de Debates",
           "Documentários",
           "Desconto exclusivo em mentorias"
         ]
@@ -317,7 +317,7 @@
     "cardNotebook": "Caderno Virtual",
     "cardNotebookDesc": "Mapas e Notas",
     "cardCaseFeed": "Ágora de Debates",
-    "cardCaseFeedDesc": "Compartilhe experiências",
+    "cardCaseFeedDesc": "Discussões e deliberações",
     "cardProfile": "Meu Perfil",
     "cardProfileDesc": "Gerenciar conta"
   },

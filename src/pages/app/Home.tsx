@@ -9,7 +9,7 @@ import {
   Video,
   Radio,
   NotebookPen,
-  LayoutGrid,
+  Landmark,
   UserCircle,
   ArrowRight,
   Hourglass,
@@ -34,6 +34,7 @@ import { getCourses } from '@/services/courses'
 import { getMagazines } from '@/services/magazines'
 import { getMentorships } from '@/services/mentorships'
 import { getStudentNotes } from '@/services/student-notes'
+import { getDebates } from '@/services/agora'
 
 // Lucide doesn't export a "magazine" icon — alias the closest available.
 const MagazineIcon = NotebookPen
@@ -115,13 +116,13 @@ const MODULES: PlatformModule[] = [
     to: '/plataforma/caderno',
   },
   {
-    key: 'cases',
-    label: 'Feed de cases',
-    desc: 'Cases da comunidade',
-    icon: LayoutGrid,
-    color: 'var(--sst-amber)',
-    wash: 'var(--sst-amber-wash)',
-    to: '/plataforma/cases',
+    key: 'agora',
+    label: 'Ágora de debates',
+    desc: 'Discussões e votos',
+    icon: Landmark,
+    color: '#C17A4E',
+    wash: 'rgba(193, 122, 78, 0.12)',
+    to: '/app/agora',
   },
   {
     key: 'perfil',
@@ -264,7 +265,7 @@ export default function Home() {
       .catch(() => setContinuar([]))
   }, [user])
 
-  // Counts + live + revista + cases
+  // Counts + live + revista + agora
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -309,9 +310,7 @@ export default function Home() {
         /* noop */
       }
       try {
-        c.cases = (
-          await pb.collection('professional_cases').getFullList({ filter: 'status="approved"' })
-        ).length
+        c.agora = (await getDebates('status != "encerrado"')).length
       } catch {
         /* noop */
       }

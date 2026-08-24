@@ -71,23 +71,23 @@
       "free": {
         "name": "Free",
         "features": [
-          "Hub del estudiante",
-          "Revista Educación SST digital",
+          "Hub de estudiantes",
+          "Revista Digital Educación SST",
           "Cursos seleccionados",
           "Clases en vivo (todos los miércoles)",
-          "Cuaderno de Estudios Digital",
-          "Feed de Casos"
+          "Cuaderno de Estudio Digital",
+          "Ágora de Debates"
         ]
       },
       "prata": {
-        "name": "Prata",
+        "name": "Plata",
         "features": [
-          "Hub del estudiante",
-          "Revista Educación SST digital",
+          "Hub de estudiantes",
+          "Revista Digital Educación SST",
           "Todos los cursos de la plataforma",
           "Clases en vivo (todos los miércoles) + Grabaciones",
-          "Cuaderno de Estudios Digital",
-          "Feed de Casos",
+          "Cuaderno de Estudio Digital",
+          "Ágora de Debates",
           "Documentales",
           "Descuento exclusivo en mentorías"
         ]
@@ -316,8 +316,8 @@
     "cardSimuladosDesc": "Pon a prueba tus conocimientos",
     "cardNotebook": "Cuaderno Virtual",
     "cardNotebookDesc": "Mapas y Notas",
-    "cardCaseFeed": "Feed de Casos",
-    "cardCaseFeedDesc": "Comparta experiencias",
+    "cardCaseFeed": "Ágora de Debates",
+    "cardCaseFeedDesc": "Discusiones y deliberaciones",
     "cardProfile": "Mi Perfil",
     "cardProfileDesc": "Gestionar cuenta"
   },
@@ -355,10 +355,10 @@
     "errorDelete": "Error al eliminar la nota."
   },
   "caseFeed": {
-    "pageTitle": "Feed de Casos | Educación SST",
-    "metaDescription": "Comparta y discuta casos profesionales en Seguridad y Salud en el Trabajo con la comunidad.",
-    "title": "Feed de Casos",
-    "subtitle": "Comparta y discuta casos profesionales",
+    "pageTitle": "Ágora de Debates | Educación SST",
+    "metaDescription": "Participe en los debates técnicos y normativos de Seguridad y Salud en el Trabajo.",
+    "title": "Ágora de Debates",
+    "subtitle": "Discusiones y deliberaciones técnicas de la comunidad",
     "backToHub": "Volver al Hub"
   },
   "leadForm": {

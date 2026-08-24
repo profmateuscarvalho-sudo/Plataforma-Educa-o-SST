@@ -26,13 +26,22 @@ import {
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { ClockDisplay } from '@/components/student/ClockDisplay'
-import { Magazine, Mentorship, LiveSession, DocProject, PlatformAnnouncement } from '@/types'
+import {
+  Magazine,
+  Mentorship,
+  LiveSession,
+  DocProject,
+  PlatformAnnouncement,
+  AgoraDebate,
+} from '@/types'
 import { getMentorships } from '@/services/mentorships'
 import { getLiveSessions } from '@/services/live'
 import { getDocProjects } from '@/services/doc_projects'
 import { getAnnouncements } from '@/services/announcements'
 import { getFeaturedMagazine } from '@/services/magazines'
-import { BellRing, Radio, Megaphone, Crown, Award, Sparkles } from 'lucide-react'
+import { getDebates } from '@/services/agora'
+import { AgoraCountdown } from '@/components/agora/AgoraCountdown'
+import { BellRing, Radio, Megaphone, Crown, Award, Sparkles, Landmark } from 'lucide-react'
 
 const tierConfig: Record<string, { label: string; icon: typeof Crown; className: string }> = {
   free: {
@@ -66,6 +75,7 @@ export default function StudentDashboard() {
   const [docProjects, setDocProjects] = useState<DocProject[]>([])
   const [announcements, setAnnouncements] = useState<PlatformAnnouncement[]>([])
   const [featuredMagazine, setFeaturedMagazine] = useState<Magazine | null>(null)
+  const [debates, setDebates] = useState<AgoraDebate[]>([])
   const [docCoverIndex, setDocCoverIndex] = useState(0)
 
   useTrackAccess('Hub', [view])
@@ -114,6 +124,9 @@ export default function StudentDashboard() {
       .catch(() => {})
     getFeaturedMagazine()
       .then(setFeaturedMagazine)
+      .catch(() => {})
+    getDebates('status != "encerrado"')
+      .then(setDebates)
       .catch(() => {})
   }, [user])
 
@@ -212,13 +225,13 @@ export default function StudentDashboard() {
       action: () => navigate('/plataforma/caderno'),
     },
     {
-      title: 'Feed de Cases',
-      desc: 'Compartilhe experiências',
-      icon: MessagesSquare,
-      count: 0,
-      img: ph('professional%20cases'),
-      gradient: 'from-teal-600 to-emerald-800',
-      action: () => navigate('/plataforma/cases'),
+      title: 'Ágora de Debates',
+      desc: 'Discussões técnicas e votos',
+      icon: Landmark,
+      count: debates.length,
+      img: ph('debate%20discussion'),
+      gradient: 'from-[#C17A4E] to-[#8C4F2B]',
+      action: () => navigate('/plataforma/agora'),
     },
     {
       title: 'Meu Perfil',
@@ -373,23 +386,103 @@ export default function StudentDashboard() {
                   <BellRing className="w-5 h-5 text-amber-500" /> Quadro de Avisos
                 </h2>
                 <div className="space-y-4">
-                  {announcements.map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 text-amber-900 cursor-pointer hover:bg-amber-100 transition-colors"
-                    >
-                      <Megaphone className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold">{a.title}</p>
-                        {a.type === 'Texto Customizado' && a.content && (
-                          <div
-                            className="text-sm prose prose-sm max-w-none mt-1 line-clamp-3"
-                            dangerouslySetInnerHTML={{ __html: a.content }}
+                  {/* Debates Ativos da Ágora com Card Completo e Contagem Regressiva */}
+                  {debates.map((debate) => {
+                    const mod = debate.expand?.moderador_id
+                    const modName = mod?.name || mod?.email || 'Moderador'
+                    const tags = (debate.categoria_tags || '')
+                      .split(',')
+                      .map((t) => t.trim())
+                      .filter(Boolean)
+
+                    return (
+                      <div
+                        key={debate.id}
+                        className="p-4 rounded-xl bg-gradient-to-br from-[#FAF8F3] to-[#F3EEE3] border border-[#C17A4E]/30 text-slate-800 shadow-sm space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#C17A4E]/15 text-[#8C4F2B]">
+                            <Landmark className="w-3 h-3 text-[#C17A4E]" />
+                            Ágora de Debates
+                          </span>
+                          <AgoraCountdown
+                            dataTermino={debate.data_termino}
+                            status={debate.status}
+                            compact
                           />
+                        </div>
+
+                        <div>
+                          <h3 className="font-serif font-bold text-sm text-slate-900 line-clamp-2 leading-snug">
+                            {debate.tema}
+                          </h3>
+                          <p className="text-xs text-slate-600 mt-1 flex items-center gap-1">
+                            <User className="w-3 h-3 text-slate-400" />
+                            <span>
+                              Moderador: <strong className="text-slate-800">{modName}</strong>
+                            </span>
+                          </p>
+                        </div>
+
+                        {tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {tags.slice(0, 3).map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/80 border border-slate-200 text-slate-600"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                            {tags.length > 3 && (
+                              <span className="text-[10px] text-slate-400">+{tags.length - 3}</span>
+                            )}
+                          </div>
                         )}
+
+                        <Button
+                          size="sm"
+                          onClick={() => navigate(`/plataforma/agora/${debate.id}`)}
+                          className="w-full bg-[#C17A4E] hover:bg-[#A9663D] text-white font-bold text-xs h-8 shadow-sm"
+                        >
+                          Entrar no Debate <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
+
+                  {/* Avisos gerais cadastrados */}
+                  {announcements
+                    .filter((a) => {
+                      // Se já exibimos o debate acima, não duplica se for tipo Ágora com o mesmo id
+                      if (a.type?.includes('Ágora de Debates') && a.reference_id) {
+                        return !debates.some((d) => d.id === a.reference_id)
+                      }
+                      return true
+                    })
+                    .map((a) => (
+                      <div
+                        key={a.id}
+                        className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 text-amber-900 cursor-pointer hover:bg-amber-100 transition-colors"
+                        onClick={() => {
+                          if (a.type?.includes('Ágora de Debates') && a.reference_id) {
+                            navigate(`/plataforma/agora/${a.reference_id}`)
+                          }
+                        }}
+                      >
+                        <Megaphone className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold">{a.title}</p>
+                          {a.type === 'Texto Customizado' && a.content && (
+                            <div
+                              className="text-sm prose prose-sm max-w-none mt-1 line-clamp-3"
+                              dangerouslySetInnerHTML={{ __html: a.content }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
                   {visibleLives.length > 0 && (
                     <div
                       className="flex items-start gap-3 p-3 rounded-lg bg-red-50 text-red-900 cursor-pointer hover:bg-red-100 transition-colors"
@@ -438,7 +531,8 @@ export default function StudentDashboard() {
                       </div>
                     </div>
                   )}
-                  {visibleLives.length === 0 &&
+                  {debates.length === 0 &&
+                    visibleLives.length === 0 &&
                     cat.courses.length === 0 &&
                     docProjects.length === 0 &&
                     mentorships.length === 0 &&

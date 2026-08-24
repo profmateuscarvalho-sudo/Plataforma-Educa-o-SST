@@ -75,7 +75,7 @@ const PLAN_FEATURES = [
   'Cursos selecionados',
   'Aulas ao vivo',
   'Caderno de estudos',
-  'Feed de cases',
+  'Ágora de Debates',
 ]
 
 export default function Convite() {

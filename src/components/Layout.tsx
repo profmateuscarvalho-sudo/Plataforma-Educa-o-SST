@@ -27,7 +27,6 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Logo, SquareLogo } from './ui/Logos'
 import { useAuth } from '@/hooks/use-auth'
-import { LeadForm } from './LeadForm'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { InstallBanner, InstallInstructionsDialog, useInstallFlow } from './InstallBanner'
 import pb from '@/lib/pocketbase/client'
@@ -328,7 +327,17 @@ export default function Layout() {
               {t('footer.contactUs')}
             </h4>
             <div className="bg-white/5 p-4 rounded-lg border border-white/10">
-              <LeadForm variant="dark" />
+              <a
+                href="https://wa.me/5518997425195"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 text-slate-200 hover:text-green-400 transition-colors font-medium text-sm group"
+              >
+                <div className="bg-green-500/20 text-green-400 p-2 rounded-lg group-hover:bg-green-500 group-hover:text-white transition-colors">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <span>(18) 99742-5195</span>
+              </a>
             </div>
           </div>
           <div>

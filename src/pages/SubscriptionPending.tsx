@@ -28,12 +28,30 @@ export default function SubscriptionPending() {
       await refreshUserRef.current()
       const s = await getPendingStatus()
       setStatus(s)
-      if (s?.subscription?.status === 'active' && !hasRefreshedRef.current) {
+
+      const currentUser = pb.authStore.record as {
+        email_verificado?: boolean
+        verified?: boolean
+        role?: string
+        plan_tier?: string
+      } | null
+      const isEmailVerified = Boolean(currentUser?.email_verificado || currentUser?.verified)
+      const isSubActive = s?.subscription?.status === 'active'
+
+      if ((isSubActive || isEmailVerified) && !hasRefreshedRef.current) {
         hasRefreshedRef.current = true
       }
-      if (planId && s?.subscription?.status !== 'active' && s?.state !== 'manual_verification') {
-        const currentUser = pb.authStore.record as { email_verificado?: boolean } | null
-        if (currentUser?.email_verificado) {
+
+      if (
+        currentUser?.role === 'admin' ||
+        (isEmailVerified && (isSubActive || currentUser?.plan_tier))
+      ) {
+        navigate('/plataforma', { replace: true })
+        return
+      }
+
+      if (planId && !isSubActive && s?.state !== 'manual_verification') {
+        if (isEmailVerified) {
           navigate(`/planos?planId=${planId}&checkout=1`)
           return
         }
@@ -52,10 +70,28 @@ export default function SubscriptionPending() {
   }, [user, fetchStatus])
 
   useEffect(() => {
-    if (user && !access.loading && access.hasSubscriptionAccess) {
-      navigate('/plataforma')
+    if (!user) return
+    const isEmailVerified = Boolean(user.email_verificado || (user as any).verified)
+    const isSubActive =
+      status?.subscription?.status === 'active' ||
+      access.subscriptions.some((s) => s.status === 'active')
+    const hasActiveStatus = access.hasSubscriptionAccess || isSubActive || Boolean(user.plan_tier)
+
+    if (
+      user.role === 'admin' ||
+      (!access.loading && access.hasSubscriptionAccess) ||
+      (isEmailVerified && hasActiveStatus)
+    ) {
+      navigate('/plataforma', { replace: true })
     }
-  }, [user, access.loading, access.hasSubscriptionAccess, navigate])
+  }, [
+    user,
+    access.loading,
+    access.hasSubscriptionAccess,
+    access.subscriptions,
+    status?.subscription?.status,
+    navigate,
+  ])
 
   useRealtime(
     'subscriptions',
@@ -173,9 +209,26 @@ export default function SubscriptionPending() {
 
           <div className="space-y-3">
             <Button
-              onClick={() => {
+              onClick={async () => {
                 setChecking(true)
-                fetchStatus()
+                await fetchStatus()
+                const currentUser = pb.authStore.record as {
+                  email_verificado?: boolean
+                  verified?: boolean
+                  role?: string
+                  plan_tier?: string
+                } | null
+                const isEmailVerified = Boolean(
+                  currentUser?.email_verificado || currentUser?.verified,
+                )
+                if (
+                  currentUser?.role === 'admin' ||
+                  access.hasSubscriptionAccess ||
+                  (isEmailVerified &&
+                    (status?.subscription?.status === 'active' || currentUser?.plan_tier))
+                ) {
+                  navigate('/plataforma', { replace: true })
+                }
               }}
               className="w-full h-12 text-base font-bold"
               disabled={checking}

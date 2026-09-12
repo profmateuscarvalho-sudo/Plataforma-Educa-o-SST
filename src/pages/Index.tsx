@@ -22,7 +22,7 @@ export default function Index() {
   const [magBannerDismissed, setMagBannerDismissed] = useState(false)
   const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   useEffect(() => {
     if (sessionStorage.getItem('mag_banner_dismissed') === 'true') {
@@ -36,22 +36,24 @@ export default function Index() {
     }
   }, [user, authLoading, navigate])
 
+  const currentLang = i18n.language?.startsWith('es') ? 'es' : 'pt-BR'
+
   useEffect(() => {
     getCourses()
       .then((res) => setCourses(res.slice(0, 3)))
       .catch(console.error)
 
-    getMagazines()
+    getMagazines({ language: currentLang })
       .then((mags) => {
         const featured = mags.find((m) => m.is_featured) || mags[0]
-        if (featured) setFeaturedMag(featured)
+        setFeaturedMag(featured || null)
       })
       .catch(console.error)
 
     getNews()
       .then((res) => setLatestNews(res.slice(0, 3)))
       .catch(console.error)
-  }, [])
+  }, [currentLang])
 
   return (
     <div className="flex flex-col min-h-screen relative">

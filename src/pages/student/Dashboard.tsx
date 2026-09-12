@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/use-auth'
 import { useStudentCatalog } from '@/hooks/use-student-catalog'
 import { useStudentAccess } from '@/hooks/use-student-access'
@@ -21,8 +22,8 @@ import {
   ClipboardList,
   Video,
   Calendar,
-  MessagesSquare,
   ChevronRight,
+  BookX,
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { ClockDisplay } from '@/components/student/ClockDisplay'
@@ -65,6 +66,7 @@ const ph = (q: string, w = 800, h = 500) => `https://img.usecurling.com/p/${w}/$
 
 export default function StudentDashboard() {
   const { user, loading } = useAuth()
+  const { t, i18n } = useTranslation()
   const cat = useStudentCatalog()
   const access = useStudentAccess()
   const navigate = useNavigate()
@@ -77,6 +79,8 @@ export default function StudentDashboard() {
   const [featuredMagazine, setFeaturedMagazine] = useState<Magazine | null>(null)
   const [debates, setDebates] = useState<AgoraDebate[]>([])
   const [docCoverIndex, setDocCoverIndex] = useState(0)
+
+  const currentLang = i18n.language?.startsWith('es') ? 'es' : 'pt-BR'
 
   useTrackAccess('Hub', [view])
 
@@ -122,13 +126,13 @@ export default function StudentDashboard() {
     getAnnouncements()
       .then(setAnnouncements)
       .catch(() => {})
-    getFeaturedMagazine()
+    getFeaturedMagazine(currentLang)
       .then(setFeaturedMagazine)
       .catch(() => {})
     getDebates("status != 'encerrado'")
       .then(setDebates)
       .catch(() => {})
-  }, [user])
+  }, [user, currentLang])
 
   if (loading || !user) return <div className="p-12 text-center text-slate-500">Carregando...</div>
 
@@ -647,36 +651,47 @@ export default function StudentDashboard() {
               </div>
             )}
             {view === 'revistas' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs text-slate-500 font-medium">
+                    {currentLang === 'es' ? 'Revistas en Español 🇪🇸' : 'Revistas em Português 🇧🇷'}
+                  </span>
+                </div>
                 {cat.magazines.length === 0 ? (
-                  <p className="text-slate-500 col-span-full text-center py-12">
-                    Nenhuma revista disponível.
-                  </p>
+                  <div className="bg-white border rounded-2xl p-12 text-center text-slate-500 space-y-3">
+                    <BookX className="w-12 h-12 text-slate-300 mx-auto" />
+                    <p className="font-medium text-slate-700">{t('dashboard.noMagazines')}</p>
+                    <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                      {t('revistas.noneBody')}
+                    </p>
+                  </div>
                 ) : (
-                  cat.magazines.map((mag) => (
-                    <button
-                      key={mag.id}
-                      onClick={() => setSelectedMag(mag)}
-                      className="group text-left"
-                    >
-                      <div className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-200 shadow-md group-hover:shadow-2xl transition-all group-hover:-translate-y-1">
-                        {mag.thumbnail ? (
-                          <img
-                            src={pb.files.getUrl(mag, mag.thumbnail)}
-                            alt={mag.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Newspaper className="w-12 h-12 text-slate-400" />
-                          </div>
-                        )}
-                      </div>
-                      <h3 className="font-serif font-bold text-sm text-secondary mt-3 line-clamp-2">
-                        {mag.title}
-                      </h3>
-                    </button>
-                  ))
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {cat.magazines.map((mag) => (
+                      <button
+                        key={mag.id}
+                        onClick={() => setSelectedMag(mag)}
+                        className="group text-left"
+                      >
+                        <div className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-200 shadow-md group-hover:shadow-2xl transition-all group-hover:-translate-y-1">
+                          {mag.thumbnail ? (
+                            <img
+                              src={pb.files.getUrl(mag, mag.thumbnail)}
+                              alt={mag.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Newspaper className="w-12 h-12 text-slate-400" />
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="font-serif font-bold text-sm text-secondary mt-3 line-clamp-2">
+                          {mag.title}
+                        </h3>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             )}

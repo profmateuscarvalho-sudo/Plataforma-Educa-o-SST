@@ -17,8 +17,11 @@ import {
   LessonCompletion,
 } from '@/types'
 
+import { useTranslation } from 'react-i18next'
+
 export function useStudentCatalog() {
   const { user } = useAuth()
+  const { i18n } = useTranslation()
   const [courses, setCourses] = useState<Course[]>([])
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [mentorships, setMentorships] = useState<Mentorship[]>([])
@@ -28,12 +31,14 @@ export function useStudentCatalog() {
   const [completions, setCompletions] = useState<LessonCompletion[]>([])
   const [loading, setLoading] = useState(true)
 
+  const currentLang = i18n.language?.startsWith('es') ? 'es' : 'pt-BR'
+
   useEffect(() => {
     if (!user) return
     setLoading(true)
     Promise.all([
       getCourses().catch(() => []),
-      getMagazines().catch(() => []),
+      getMagazines({ language: currentLang }).catch(() => []),
       getMentorships().catch(() => []),
       getSimulados(true).catch(() => []),
       getDocProjects().catch(() => []),
@@ -50,7 +55,7 @@ export function useStudentCatalog() {
         setCompletions(comp as LessonCompletion[])
       })
       .finally(() => setLoading(false))
-  }, [user])
+  }, [user, currentLang])
 
   return { courses, magazines, mentorships, simulados, documentaries, plans, completions, loading }
 }

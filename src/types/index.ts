@@ -88,6 +88,7 @@ export interface Magazine extends RecordModel {
   thumbnail: string
   is_featured: boolean
   is_free?: boolean
+  language?: 'pt-BR' | 'es' | string
 }
 
 export interface SupportMessage extends RecordModel {

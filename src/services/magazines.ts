@@ -1,17 +1,24 @@
 import pb from '@/lib/pocketbase/client'
 import { Magazine } from '@/types'
 
-export const getMagazines = async () => {
-  return await pb.collection('magazines').getFullList<Magazine>({ sort: '-created' })
+export const getMagazines = async (options?: { language?: string }) => {
+  const filter = options?.language ? `language = '${options.language}'` : undefined
+  return await pb.collection('magazines').getFullList<Magazine>({
+    sort: '-created',
+    filter,
+  })
 }
 
 /**
  * Returns the current month's magazine: the most recent one flagged as
  * featured, or — if none is featured — simply the newest by created date.
+ * Optionally filtered by language.
  */
-export const getFeaturedMagazine = async () => {
+export const getFeaturedMagazine = async (language?: string) => {
+  const filter = language ? `language = '${language}'` : undefined
   const list = await pb.collection('magazines').getFullList<Magazine>({
     sort: '-created',
+    filter,
   })
   return list.find((m) => m.is_featured) || list[0] || null
 }

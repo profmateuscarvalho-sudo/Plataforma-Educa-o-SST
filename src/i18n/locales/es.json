@@ -247,8 +247,10 @@
     "summaryUnavailable": "Resumen no disponible para esta edición.",
     "noneTitle": "Ninguna revista publicada",
     "noneBody": "Nuestro acervo está en preparación. Pronto tendremos nuevas ediciones repletas de conocimiento en SST para usted.",
-    "pageTitle": "Revistas | Educación SST",
-    "metaDescription": "Acervo Científico de publicaciones en Seguridad y Salud en el Trabajo."
+    "pageTitle": "Revistas | Educação SST",
+    "metaDescription": "Acervo Científico de publicaciones en Seguridad y Salud en el Trabajo.",
+    "filterPortuguese": "Ediciones en Portugués",
+    "filterSpanish": "Ediciones en Español"
   },
   "noticias": {
     "title": "Noticias en SST",

@@ -5,14 +5,17 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog'
 import { useSearchParams } from 'react-router-dom'
 import { BookOpen, BookX, Loader2, ImageOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { getMagazines } from '@/services/magazines'
 import { Magazine } from '@/types'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { setMetaTags } from '@/lib/utils'
 import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
+import { AppLanguage } from '@/i18n'
 
 function MagazineCard({ mag }: { mag: Magazine }) {
+  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const [isProcessing, setIsProcessing] = useState(false)
   const [open, setOpen] = useState(searchParams.get('revista') === mag.id)
@@ -68,18 +71,18 @@ function MagazineCard({ mag }: { mag: Magazine }) {
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center bg-slate-200/50 text-slate-400 gap-3">
               <ImageOff className="w-12 h-12 opacity-40" />
-              <span className="text-sm font-medium">Capa indisponível</span>
+              <span className="text-sm font-medium">{t('revistas.coverUnavailable')}</span>
             </div>
           )}
 
           {isProcessing && !imgUrl && (
             <div className="absolute top-3 right-3 bg-yellow-400 text-black text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Processando
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t('revistas.processing')}
             </div>
           )}
           {!mag.is_free && (
             <div className="absolute top-3 left-3 bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-              Acesso para assinantes
+              {t('revistas.subscribersAccess')}
             </div>
           )}
 
@@ -92,7 +95,7 @@ function MagazineCard({ mag }: { mag: Magazine }) {
                   handleOpenChange(true)
                 }}
               >
-                <BookOpen className="w-4 h-4 mr-2" /> Ler Edição
+                <BookOpen className="w-4 h-4 mr-2" /> {t('revistas.readEdition')}
               </Button>
             </DialogTrigger>
           </div>
@@ -100,14 +103,14 @@ function MagazineCard({ mag }: { mag: Magazine }) {
         <CardContent className="p-6 flex-grow flex flex-col bg-white">
           {mag.is_featured && (
             <span className="text-xs font-bold text-accent mb-2 uppercase tracking-wider">
-              Edição Destaque
+              {t('revistas.featuredEdition')}
             </span>
           )}
           <h3 className="font-serif font-bold text-xl text-emerald-950 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors mb-3">
             {mag.title}
           </h3>
           <p className="text-slate-600 line-clamp-3 flex-grow leading-relaxed text-sm">
-            {mag.summary || 'Resumo não disponível para esta edição.'}
+            {mag.summary || t('revistas.summaryUnavailable')}
           </p>
         </CardContent>
       </Card>
@@ -133,20 +136,26 @@ function MagazineCard({ mag }: { mag: Magazine }) {
 }
 
 export default function Revistas() {
+  const { t, i18n } = useTranslation()
   const [searchParams] = useSearchParams()
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Normaliza o idioma ativo (ex: "es" ou "pt-BR")
+  const currentLang: AppLanguage = i18n.language?.startsWith('es') ? 'es' : 'pt-BR'
+
   const loadData = useCallback(async () => {
     try {
-      const data = await getMagazines()
+      setLoading(true)
+      // Carrega revistas no idioma atual selecionado pelo aluno
+      const data = await getMagazines({ language: currentLang })
       setMagazines(data)
     } catch (err) {
       console.error('Error fetching magazines:', err)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [currentLang])
 
   useEffect(() => {
     loadData()
@@ -174,24 +183,26 @@ export default function Revistas() {
       }
     } else {
       setMetaTags({
-        title: 'Revistas | Educação SST',
-        description: 'Acervo Científico de publicações em Segurança e Saúde no Trabalho.',
+        title: t('revistas.pageTitle'),
+        description: t('revistas.metaDescription'),
         url: window.location.href,
       })
     }
-  }, [searchParams, magazines])
+  }, [searchParams, magazines, t])
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
       <section className="bg-emerald-950 text-white py-20 border-b-4 border-yellow-400">
         <div className="container px-4 text-center max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-emerald-200 text-xs font-semibold mb-4 backdrop-blur-sm">
+            <span>{currentLang === 'es' ? '🇪🇸' : '🇧🇷'}</span>
+            <span>{currentLang === 'es' ? 'Edición en Español' : 'Edição em Português'}</span>
+          </div>
           <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-yellow-400 drop-shadow-sm">
-            Acervo Científico
+            {t('revistas.title')}
           </h1>
           <p className="text-lg text-emerald-100/90 leading-relaxed font-light">
-            Acesso gratuito às nossas publicações periódicas com artigos focados em Segurança e
-            Saúde no Trabalho, Fatores Humanos, Nova Visão de Segurança, Gestão e Gerenciamentos dos
-            Riscos Ocupacionais e muito mais.&nbsp;&nbsp;
+            {t('revistas.subtitle')}
           </p>
         </div>
       </section>
@@ -213,13 +224,13 @@ export default function Revistas() {
             <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6">
               <BookX className="w-12 h-12 text-slate-400" />
             </div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium mb-3">
+              <span>{currentLang === 'es' ? '🇪🇸 Español' : '🇧🇷 Português'}</span>
+            </div>
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-emerald-950 mb-3">
-              Nenhuma revista publicada
+              {t('revistas.noneTitle')}
             </h2>
-            <p className="text-slate-500 max-w-md text-lg">
-              Nosso acervo está sendo preparado. Em breve, teremos novas edições repletas de
-              conhecimento em SST para você.
-            </p>
+            <p className="text-slate-500 max-w-md text-lg">{t('revistas.noneBody')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

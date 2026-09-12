@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T19:39:45.868Z",
+  "generatedAt": "2026-09-12T18:38:04.196Z",
   "collections": [
     {
       "name": "users",
@@ -270,6 +270,13 @@
           "type": "bool",
           "required": false,
           "system": false
+        },
+        {
+          "name": "language",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["pt-BR", "es"]
         }
       ],
       "indexes": []

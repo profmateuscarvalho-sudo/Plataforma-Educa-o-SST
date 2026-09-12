@@ -248,7 +248,9 @@
     "noneTitle": "Nenhuma revista publicada",
     "noneBody": "Nosso acervo está sendo preparado. Em breve, teremos novas edições repletas de conhecimento em SST para você.",
     "pageTitle": "Revistas | Educação SST",
-    "metaDescription": "Acervo Científico de publicações em Segurança e Saúde no Trabalho."
+    "metaDescription": "Acervo Científico de publicações em Segurança e Saúde no Trabalho.",
+    "filterPortuguese": "Edições em Português",
+    "filterSpanish": "Edições em Espanhol"
   },
   "noticias": {
     "title": "Notícias em SST",

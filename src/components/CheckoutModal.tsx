@@ -13,6 +13,7 @@ import { CreditCard, Loader2, CheckCircle2 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { AvailableSlot } from '@/types'
+import { loadIpagScript } from '@/lib/ipag'
 
 interface CheckoutModalProps {
   open?: boolean
@@ -75,6 +76,7 @@ export function CheckoutModal({
     if (isModalOpen) {
       setIsSuccess(false)
       setIsLoading(false)
+      loadIpagScript().catch(() => {})
     }
   }, [isModalOpen])
 

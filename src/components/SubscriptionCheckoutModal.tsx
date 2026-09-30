@@ -24,6 +24,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { createSubscription } from '@/services/subscriptions'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
+import { loadIpagScript, tokenizeCard } from '@/lib/ipag'
 
 export function SubscriptionCheckoutModal({
   isOpen,
@@ -55,6 +56,10 @@ export function SubscriptionCheckoutModal({
       setBillingCycle(plan.interval === 'yearly' ? 'yearly' : 'monthly')
       setPaymentMethod('pix')
       setInstallments(1)
+      // Pre-load the iPag tokenizer script so it is ready when the user submits
+      loadIpagScript().catch(() => {
+        // Silent background preload fail — will retry on submit
+      })
     }
   }, [isOpen, plan])
 
@@ -111,14 +116,35 @@ export function SubscriptionCheckoutModal({
     if (paymentMethod === 'card') {
       const cardNumber = (formData.get('card_number') as string) || ''
       const expiry = (formData.get('expiry') as string) || ''
-      const [month, year] = expiry.split('/')
+      const [rawMonth, rawYear] = expiry.split('/')
+      const holder = (formData.get('card_name') as string) || ''
+      const cvv = (formData.get('cvv') as string) || ''
+      const method = detectCardBrand(cardNumber)
+
+      let token: string | null = null
+      try {
+        token = await tokenizeCard({
+          holder,
+          number: cardNumber,
+          expiryMonth: rawMonth || '',
+          expiryYear: rawYear || '',
+          cvv,
+        })
+      } catch (tokenErr: any) {
+        toast({
+          title: 'Erro ao validar cartão',
+          description: tokenErr?.message || 'Não foi possível tokenizar o cartão com segurança.',
+          variant: 'destructive',
+        })
+        setIsLoading(false)
+        return
+      }
+
+      // Envia APENAS: type: "card", card: { token: response.token, method: bandeira, installments: parcelas }
+      // NÃO envia mais number, cvv, expiry_month, expiry_year do cartão para o backend.
       payload.card = {
-        method: detectCardBrand(cardNumber),
-        holder: formData.get('card_name') as string,
-        number: cardNumber.replace(/\s/g, ''),
-        expiry_month: month || '',
-        expiry_year: year ? '20' + year : '',
-        cvv: formData.get('cvv') as string,
+        token,
+        method,
         installments: billingCycle === 'yearly' ? installments : 1,
       }
     }

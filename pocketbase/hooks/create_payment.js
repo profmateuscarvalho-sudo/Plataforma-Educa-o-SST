@@ -20,18 +20,24 @@ routerAdd(
       throw new BadRequestError("type must be 'card' or 'pix'")
     }
     if (body.type === 'card') {
-      if (
-        !body.card ||
-        !body.card.method ||
-        !body.card.holder ||
-        !body.card.number ||
-        !body.card.expiry_month ||
-        !body.card.expiry_year ||
-        !body.card.cvv
-      ) {
-        throw new BadRequestError(
-          'card object with method, holder, number, expiry_month, expiry_year, and cvv is required for card payments',
-        )
+      if (!body.card || !body.card.method) {
+        throw new BadRequestError('card object with method is required for card payments')
+      }
+      if (body.card.token) {
+        // Tokenized card: only token and method (and optional installments) are required
+      } else {
+        // Legacy card without token: full card data is required
+        if (
+          !body.card.holder ||
+          !body.card.number ||
+          !body.card.expiry_month ||
+          !body.card.expiry_year ||
+          !body.card.cvv
+        ) {
+          throw new BadRequestError(
+            'card object with holder, number, expiry_month, expiry_year, and cvv is required when token is not provided',
+          )
+        }
       }
     }
 
@@ -126,13 +132,17 @@ routerAdd(
         method: body.card.method,
         capture: true,
         installments: body.card.installments || 1,
-        card: {
-          holder: body.card.holder,
-          number: body.card.number,
-          expiry_month: body.card.expiry_month,
-          expiry_year: body.card.expiry_year,
-          cvv: body.card.cvv,
-        },
+        card: body.card.token
+          ? {
+              token: body.card.token,
+            }
+          : {
+              holder: body.card.holder,
+              number: body.card.number,
+              expiry_month: body.card.expiry_month,
+              expiry_year: body.card.expiry_year,
+              cvv: body.card.cvv,
+            },
       }
     } else if (body.type === 'pix') {
       paymentData.payment = {

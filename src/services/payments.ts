@@ -17,11 +17,12 @@ export const getUserPayments = async (userId: string) => {
 
 export interface CreatePaymentCard {
   method: string
-  holder: string
-  number: string
-  expiry_month: string
-  expiry_year: string
-  cvv: string
+  token?: string
+  holder?: string
+  number?: string
+  expiry_month?: string
+  expiry_year?: string
+  cvv?: string
   installments?: number
 }
 

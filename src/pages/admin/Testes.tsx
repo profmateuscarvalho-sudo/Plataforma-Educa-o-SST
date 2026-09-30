@@ -22,6 +22,7 @@ import {
   ExternalLink,
   Check,
   CreditCard,
+  KeyRound,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { createPayment, type CreatePaymentPayload } from '@/services/payments'
@@ -30,6 +31,7 @@ import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { ShieldAlert } from 'lucide-react'
 import { BACKEND_URL } from '@/lib/constants'
+import { tokenizeCard, IPAG_API_ID, IS_IPAG_SANDBOX } from '@/lib/ipag'
 
 const CARD_BRANDS = [
   { value: 'visa', label: 'Visa' },
@@ -64,6 +66,8 @@ export default function AdminTestes() {
   const [cardExpiryYear, setCardExpiryYear] = useState('')
   const [cardCvv, setCardCvv] = useState('')
   const [cardBrand, setCardBrand] = useState('')
+  const [useTokenization, setUseTokenization] = useState(true)
+  const [, setGeneratedToken] = useState<string | null>(null)
   const { user } = useAuth()
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityResult, setSecurityResult] = useState<TestResult | null>(null)
@@ -129,14 +133,47 @@ export default function AdminTestes() {
     }
 
     if (paymentType === 'card') {
-      payload.card = {
-        method: cardBrand,
-        holder: cardHolder,
-        number: cardNumber,
-        expiry_month: cardExpiryMonth,
-        expiry_year: cardExpiryYear,
-        cvv: cardCvv,
+      if (useTokenization) {
+        try {
+          const token = await tokenizeCard({
+            holder: cardHolder,
+            number: cardNumber,
+            expiryMonth: cardExpiryMonth,
+            expiryYear: cardExpiryYear,
+            cvv: cardCvv,
+          })
+          setGeneratedToken(token)
+          payload.card = {
+            method: cardBrand,
+            token,
+          }
+        } catch (tokErr: any) {
+          setLoading(false)
+          setResult({
+            success: false,
+            status: 0,
+            data: { error: 'Falha na tokenização no navegador', details: tokErr?.message },
+          })
+          toast({
+            title: 'Erro na tokenização',
+            description: tokErr?.message || 'Falha ao gerar token do cartão',
+            variant: 'destructive',
+          })
+          return
+        }
+      } else {
+        setGeneratedToken(null)
+        payload.card = {
+          method: cardBrand,
+          holder: cardHolder,
+          number: cardNumber,
+          expiry_month: cardExpiryMonth,
+          expiry_year: cardExpiryYear,
+          cvv: cardCvv,
+        }
       }
+    } else {
+      setGeneratedToken(null)
     }
 
     try {
@@ -248,10 +285,30 @@ export default function AdminTestes() {
 
             {paymentType === 'card' && (
               <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <CreditCard className="w-4 h-4" />
-                  Dados do Cartão
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <CreditCard className="w-4 h-4" />
+                    Dados do Cartão
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={useTokenization}
+                      onChange={(e) => setUseTokenization(e.target.checked)}
+                      className="rounded border-slate-300"
+                    />
+                    <span>Tokenizar no cliente (iPag.js)</span>
+                  </label>
                 </div>
+                {useTokenization && (
+                  <div className="text-xs bg-blue-50 text-blue-700 p-2.5 rounded border border-blue-100 flex items-center gap-2">
+                    <KeyRound className="w-4 h-4 shrink-0" />
+                    <span>
+                      Ambiente: <strong>{IS_IPAG_SANDBOX ? 'Sandbox' : 'Produção'}</strong> · ID
+                      iPag: <code>{IPAG_API_ID || '(não definido)'}</code>
+                    </span>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="cardNumber">Número do Cartão</Label>
                   <Input

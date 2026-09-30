@@ -52,7 +52,8 @@ routerAdd(
 
     const callbackUrl = $secrets.get('IPAG_CALLBACK_URL') || ''
 
-    var fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    var fiveMinAgoDate = new Date(Date.now() - 5 * 60 * 1000)
+    var fiveMinAgo = fiveMinAgoDate.toISOString().slice(0, 19).replace('T', ' ')
     var recentPayments
     try {
       recentPayments = $app.findRecordsByFilter(

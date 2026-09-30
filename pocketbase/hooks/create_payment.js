@@ -68,6 +68,7 @@ routerAdd(
     if (recentPayments.length >= 5) {
       return e.json(429, {
         error: 'Muitas tentativas de pagamento. Aguarde alguns minutos e tente novamente.',
+        debug_recent_payments_count: recentPayments.length, // TODO: remover debug
       })
     }
 
@@ -240,6 +241,7 @@ routerAdd(
       payment_id: paymentRecordId,
       ipag_id: ipagUuid,
       status: mappedStatus,
+      debug_recent_payments_count: recentPayments.length, // TODO: remover debug
     }
 
     if (body.type === 'pix' && attributes.pix) {

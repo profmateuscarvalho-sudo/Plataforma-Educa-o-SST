@@ -53,7 +53,7 @@ interface TestResult {
 
 export default function AdminTestes() {
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<'idle' | 'tokenizing' | 'paying'>('idle')
   const [result, setResult] = useState<TestResult | null>(null)
   const [paymentType, setPaymentType] = useState<'pix' | 'card'>('pix')
   const [amount, setAmount] = useState('10.00')
@@ -123,7 +123,6 @@ export default function AdminTestes() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setResult(null)
 
     const payload: CreatePaymentPayload = {
@@ -134,6 +133,7 @@ export default function AdminTestes() {
 
     if (paymentType === 'card') {
       if (useTokenization) {
+        setStep('tokenizing')
         try {
           const token = await tokenizeCard({
             holder: cardHolder,
@@ -142,13 +142,16 @@ export default function AdminTestes() {
             expiryYear: cardExpiryYear,
             cvv: cardCvv,
           })
+          if (!token) {
+            throw new Error('Sem token retornado')
+          }
           setGeneratedToken(token)
           payload.card = {
             method: cardBrand,
             token,
           }
         } catch (tokErr: any) {
-          setLoading(false)
+          setStep('idle')
           setResult({
             success: false,
             status: 0,
@@ -156,7 +159,9 @@ export default function AdminTestes() {
           })
           toast({
             title: 'Erro na tokenização',
-            description: tokErr?.message || 'Falha ao gerar token do cartão',
+            description:
+              tokErr?.message ||
+              'Não foi possível validar o cartão. Verifique os dados e tente novamente.',
             variant: 'destructive',
           })
           return
@@ -176,6 +181,8 @@ export default function AdminTestes() {
       setGeneratedToken(null)
     }
 
+    setStep('paying')
+
     try {
       const data = await createPayment(payload)
       setResult({ success: true, status: 200, data })
@@ -190,7 +197,7 @@ export default function AdminTestes() {
         variant: 'destructive',
       })
     } finally {
-      setLoading(false)
+      setStep('idle')
     }
   }
 
@@ -386,11 +393,16 @@ export default function AdminTestes() {
               </div>
             )}
 
-            <Button type="submit" disabled={loading} className="w-full md:w-auto">
-              {loading ? (
+            <Button type="submit" disabled={step !== 'idle'} className="w-full md:w-auto">
+              {step === 'tokenizing' ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processando...
+                  Conectando com segurança...
+                </>
+              ) : step === 'paying' ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processando pagamento...
                 </>
               ) : (
                 <>

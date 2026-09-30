@@ -22,6 +22,7 @@ import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { createSubscription } from '@/services/subscriptions'
+import { createPayment } from '@/services/payments'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
 import { loadIpagScript, tokenizeCard } from '@/lib/ipag'
@@ -38,7 +39,7 @@ export function SubscriptionCheckoutModal({
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card'>('pix')
   const [installments, setInstallments] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
+  const [step, setStep] = useState<'idle' | 'tokenizing' | 'paying'>('idle')
   const [isSuccess, setIsSuccess] = useState(false)
   const [pixData, setPixData] = useState<{
     qrcode: string
@@ -51,7 +52,7 @@ export function SubscriptionCheckoutModal({
   useEffect(() => {
     if (isOpen && plan) {
       setIsSuccess(false)
-      setIsLoading(false)
+      setStep('idle')
       setPixData(null)
       setBillingCycle(plan.interval === 'yearly' ? 'yearly' : 'monthly')
       setPaymentMethod('pix')
@@ -88,13 +89,6 @@ export function SubscriptionCheckoutModal({
   const handlePayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!plan || !user) return
-    setIsLoading(true)
-
-    try {
-      await createSubscription(user.id, plan.id)
-    } catch {
-      // Best effort — proceed with payment regardless
-    }
 
     const formData = new FormData(e.currentTarget)
     const cpfCnpj = (formData.get('cpf_cnpj') as string) || ''
@@ -114,6 +108,8 @@ export function SubscriptionCheckoutModal({
     }
 
     if (paymentMethod === 'card') {
+      setStep('tokenizing')
+
       const cardNumber = (formData.get('card_number') as string) || ''
       const expiry = (formData.get('expiry') as string) || ''
       const [rawMonth, rawYear] = expiry.split('/')
@@ -130,30 +126,38 @@ export function SubscriptionCheckoutModal({
           expiryYear: rawYear || '',
           cvv,
         })
-      } catch (tokenErr: any) {
+        if (!token) {
+          throw new Error('Sem token retornado')
+        }
+      } catch {
+        setStep('idle')
         toast({
           title: 'Erro ao validar cartão',
-          description: tokenErr?.message || 'Não foi possível tokenizar o cartão com segurança.',
+          description: 'Não foi possível validar o cartão. Verifique os dados e tente novamente.',
           variant: 'destructive',
         })
-        setIsLoading(false)
         return
       }
 
-      // Envia APENAS: type: "card", card: { token: response.token, method: bandeira, installments: parcelas }
-      // NÃO envia mais number, cvv, expiry_month, expiry_year do cartão para o backend.
       payload.card = {
         token,
         method,
         installments: billingCycle === 'yearly' ? installments : 1,
       }
+
+      setStep('paying')
+    } else {
+      setStep('paying')
     }
 
     try {
-      const response = await pb.send('/backend/v1/create-payment', {
-        method: 'POST',
-        body: payload,
-      })
+      await createSubscription(user.id, plan.id)
+    } catch {
+      // Best effort — proceed with payment regardless
+    }
+
+    try {
+      const response = await createPayment(payload as any)
 
       if (paymentMethod === 'pix') {
         if (response.pix) {
@@ -182,7 +186,7 @@ export function SubscriptionCheckoutModal({
         variant: 'destructive',
       })
     } finally {
-      setIsLoading(false)
+      setStep('idle')
     }
   }
 
@@ -402,13 +406,23 @@ export function SubscriptionCheckoutModal({
                   </TabsContent>
                 </Tabs>
 
-                <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
-                  {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                <Button type="submit" className="w-full h-11 text-base" disabled={step !== 'idle'}>
+                  {step === 'tokenizing' ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Conectando com segurança...
+                    </>
+                  ) : step === 'paying' ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Processando pagamento...
+                    </>
                   ) : (
-                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    <>
+                      <ShieldCheck className="w-4 h-4 mr-2" />
+                      Pagar de forma segura
+                    </>
                   )}
-                  Pagar de forma segura
                 </Button>
                 <p className="text-xs text-center text-slate-400">
                   Seus dados são criptografados e processados diretamente pelo iPag.

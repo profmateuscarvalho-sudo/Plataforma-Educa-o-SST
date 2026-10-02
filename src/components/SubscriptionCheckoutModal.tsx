@@ -41,6 +41,7 @@ export function SubscriptionCheckoutModal({
   const [installments, setInstallments] = useState(1)
   const [step, setStep] = useState<'idle' | 'tokenizing' | 'paying'>('idle')
   const [isSuccess, setIsSuccess] = useState(false)
+  const [activePaymentId, setActivePaymentId] = useState<string | null>(null)
   const [pixData, setPixData] = useState<{
     qrcode: string
     qrcode64?: string
@@ -53,6 +54,7 @@ export function SubscriptionCheckoutModal({
     if (isOpen && plan) {
       setIsSuccess(false)
       setStep('idle')
+      setActivePaymentId(null)
       setPixData(null)
       setBillingCycle(plan.interval === 'yearly' ? 'yearly' : 'monthly')
       setPaymentMethod('pix')
@@ -63,6 +65,40 @@ export function SubscriptionCheckoutModal({
       })
     }
   }, [isOpen, plan])
+
+  // Polling Pix a cada 3s enquanto pixData e activePaymentId estiverem ativos
+  useEffect(() => {
+    if (!isOpen || !pixData || !activePaymentId || isSuccess) return
+
+    let isSubscribed = true
+
+    const interval = setInterval(async () => {
+      try {
+        const paymentRecord = await pb.collection('payments').getOne(activePaymentId)
+        if (!isSubscribed) return
+
+        if (paymentRecord.status === 'paid') {
+          clearInterval(interval)
+          await refreshUser()
+          setIsSuccess(true)
+          toast({
+            title: 'Pagamento Pix confirmado!',
+            description: 'Sua assinatura foi ativada com sucesso.',
+          })
+          setTimeout(() => {
+            if (isSubscribed) setIsOpen(false)
+          }, 3000)
+        }
+      } catch (err) {
+        // Ignora erros transitórios no polling
+      }
+    }, 3000)
+
+    return () => {
+      isSubscribed = false
+      clearInterval(interval)
+    }
+  }, [isOpen, pixData, activePaymentId, isSuccess, refreshUser, setIsOpen, toast])
 
   if (!plan) return null
 
@@ -78,12 +114,47 @@ export function SubscriptionCheckoutModal({
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
   const detectCardBrand = (number: string): string => {
-    const clean = number.replace(/\s/g, '')
-    if (clean.startsWith('4')) return 'visa'
-    if (clean.startsWith('5') || clean.startsWith('2')) return 'mastercard'
-    if (clean.startsWith('3')) return 'amex'
-    if (clean.startsWith('6')) return 'elo'
-    return 'credit'
+    const cleanNumber = number.replace(/\s/g, '')
+
+    // Faixas Elo conhecidas (incluindo as que começam com 4)
+    const eloPrefixes = [
+      '4011',
+      '431274',
+      '438935',
+      '451416',
+      '457393',
+      '4576',
+      '504175',
+      '5067',
+      '509',
+      '627780',
+      '636297',
+      '636368',
+      '650',
+      '6516',
+      '6550',
+    ]
+
+    let detectedBrand = 'visa'
+    if (
+      eloPrefixes.some((prefix) => cleanNumber.startsWith(prefix)) ||
+      cleanNumber.startsWith('6')
+    ) {
+      detectedBrand = 'elo'
+    } else if (cleanNumber.startsWith('4')) {
+      detectedBrand = 'visa'
+    } else if (cleanNumber.startsWith('5') || cleanNumber.startsWith('2')) {
+      detectedBrand = 'mastercard'
+    } else if (cleanNumber.startsWith('3')) {
+      detectedBrand = 'amex'
+    } else {
+      detectedBrand = 'visa'
+    }
+
+    // TODO: remover debug
+    console.log('[DEBUG Bandeira iPag]', { input: number, cleanNumber, detectedBrand })
+
+    return detectedBrand
   }
 
   const handlePayment = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -160,13 +231,15 @@ export function SubscriptionCheckoutModal({
       const response = await createPayment(payload as any)
 
       if (paymentMethod === 'pix') {
-        if (response.pix) {
+        if (response.pix && response.payment_id) {
+          setActivePaymentId(response.payment_id)
           setPixData(response.pix)
           toast({
             title: 'QR Code gerado!',
             description: 'Escaneie para pagar com Pix.',
           })
         } else {
+          setStep('idle')
           throw new Error('Falha ao gerar QR Code Pix.')
         }
       } else {
@@ -176,15 +249,25 @@ export function SubscriptionCheckoutModal({
           await refreshUser()
           setTimeout(() => setIsOpen(false), 3000)
         } else {
-          throw new Error('Pagamento não aprovado. Verifique os dados e tente novamente.')
+          // Pagamento recusado pelo gateway/banco: volta imediatamente para idle,
+          // mantém os dados digitados e avisa o usuário para tentar outro cartão
+          setStep('idle')
+          toast({
+            title: 'Pagamento recusado',
+            description: 'Pagamento recusado, tente outro cartão.',
+            variant: 'destructive',
+          })
+          return
         }
       }
     } catch (err: any) {
+      setStep('idle')
       toast({
         title: 'Erro ao processar pagamento',
-        description: err?.message || 'Verifique os dados e tente novamente.',
+        description: err?.message || 'Pagamento recusado, tente outro cartão.',
         variant: 'destructive',
       })
+      return
     } finally {
       setStep('idle')
     }

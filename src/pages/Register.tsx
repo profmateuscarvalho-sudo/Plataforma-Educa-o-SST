@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/use-auth'
@@ -9,10 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { SquareLogo } from '@/components/ui/Logos'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { Check } from 'lucide-react'
+import { Check, Sparkles, Award, Crown } from 'lucide-react'
 import { LocationSelect } from '@/components/LocationSelect'
 import { PasswordStrengthChecker } from '@/components/PasswordStrengthChecker'
 import { useProfessionalTags } from '@/hooks/use-professional-tags'
+import { getSubscriptionPlans } from '@/services/subscription-plans'
+import { SubscriptionPlan } from '@/types'
+import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -28,6 +31,11 @@ export default function Register() {
   const [searchParams] = useSearchParams()
   const planId = searchParams.get('planId') || undefined
   const { tags: availableTags } = useProfessionalTags()
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([])
+  const [selectedPlanTier, setSelectedPlanTier] = useState<'free' | 'prata' | 'ouro'>('free')
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false)
+  const [checkoutPlan, setCheckoutPlan] = useState<SubscriptionPlan | null>(null)
+
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -39,6 +47,25 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [passError, setPassError] = useState('')
   const [tagsError, setTagsError] = useState('')
+
+  useEffect(() => {
+    getSubscriptionPlans()
+      .then((loadedPlans) => {
+        setPlans(loadedPlans)
+        if (planId) {
+          const match = loadedPlans.find((p) => p.id === planId)
+          if (match) {
+            const lower = match.name.toLowerCase()
+            if (lower.includes('ouro')) setSelectedPlanTier('ouro')
+            else if (lower.includes('prata')) setSelectedPlanTier('prata')
+            else setSelectedPlanTier('free')
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load subscription plans:', err)
+      })
+  }, [planId])
 
   const toggleTag = (tag: string) => {
     setTagsError('')
@@ -75,8 +102,29 @@ export default function Register() {
       return
     }
 
+    // Acha o ID do plano selecionado
+    let chosenPlan: SubscriptionPlan | undefined
+    if (selectedPlanTier === 'ouro') {
+      chosenPlan = plans.find((p) => p.name.toLowerCase().includes('ouro') && p.price > 0)
+    } else if (selectedPlanTier === 'prata') {
+      chosenPlan = plans.find((p) => p.name.toLowerCase().includes('prata') && p.price > 0)
+    } else {
+      chosenPlan = plans.find((p) => p.name.toLowerCase().includes('free') || p.price === 0)
+    }
+
+    const effectivePlanId = chosenPlan?.id || planId
+
     setLoading(true)
-    const { error } = await signUp(name, email, pass, phone, selectedTags, city, state, planId)
+    const { error } = await signUp(
+      name,
+      email,
+      pass,
+      phone,
+      selectedTags,
+      city,
+      state,
+      effectivePlanId,
+    )
     setLoading(false)
 
     if (error) {
@@ -90,13 +138,31 @@ export default function Register() {
         title: t('auth.register.successTitle'),
         description: t('auth.register.successDesc'),
       })
-      if (planId) {
-        navigate(`/subscription-pending?planId=${planId}`)
+
+      // Se plano pago foi escolhido, abrir checkout modal diretamente sem passar pelo Free
+      if (selectedPlanTier !== 'free' && chosenPlan) {
+        setCheckoutPlan(chosenPlan)
+        setCheckoutModalOpen(true)
+      } else if (effectivePlanId && selectedPlanTier !== 'free') {
+        navigate(`/subscription-pending?planId=${effectivePlanId}`)
       } else {
         navigate('/subscription-pending')
       }
     }
   }
+
+  const handleCheckoutModalClose = (open: boolean) => {
+    setCheckoutModalOpen(open)
+    if (!open) {
+      navigate('/plataforma')
+    }
+  }
+
+  const formatPrice = (v: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+
+  const prataPlan = plans.find((p) => p.name.toLowerCase().includes('prata') && p.price > 0)
+  const ouroPlan = plans.find((p) => p.name.toLowerCase().includes('ouro') && p.price > 0)
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -114,6 +180,95 @@ export default function Register() {
         </CardHeader>
         <CardContent className="pt-6">
           <form onSubmit={handleRegister} className="space-y-5">
+            {/* Escolha do Plano */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-800">
+                Escolha o seu plano de acesso
+              </Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlanTier('free')}
+                  className={cn(
+                    'p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between relative',
+                    selectedPlanTier === 'free'
+                      ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+                      : 'border-slate-200 bg-white hover:border-slate-300',
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-bold text-sm flex items-center gap-1.5 text-slate-800">
+                      <Sparkles className="w-4 h-4 text-slate-500" />
+                      Free
+                    </span>
+                    {selectedPlanTier === 'free' && (
+                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-lg font-extrabold text-slate-900">Grátis</span>
+                  <span className="text-[11px] text-slate-500 mt-1">Acesso essencial</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlanTier('prata')}
+                  className={cn(
+                    'p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between relative',
+                    selectedPlanTier === 'prata'
+                      ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50/40'
+                      : 'border-slate-200 bg-white hover:border-slate-300',
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-bold text-sm flex items-center gap-1.5 text-blue-700">
+                      <Award className="w-4 h-4 text-blue-500" />
+                      Prata
+                    </span>
+                    {selectedPlanTier === 'prata' && (
+                      <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-lg font-extrabold text-blue-700">
+                    {prataPlan ? formatPrice(prataPlan.price) : 'R$ 49,90'}
+                    <span className="text-xs font-normal text-slate-500">/mês</span>
+                  </span>
+                  <span className="text-[11px] text-slate-500 mt-1">Todos os cursos + ao vivo</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlanTier('ouro')}
+                  className={cn(
+                    'p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between relative',
+                    selectedPlanTier === 'ouro'
+                      ? 'border-amber-500 ring-2 ring-amber-200 bg-amber-50/40'
+                      : 'border-slate-200 bg-white hover:border-slate-300',
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-bold text-sm flex items-center gap-1.5 text-amber-700">
+                      <Crown className="w-4 h-4 text-amber-500" />
+                      Ouro
+                    </span>
+                    {selectedPlanTier === 'ouro' && (
+                      <span className="w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-lg font-extrabold text-amber-700">
+                    {ouroPlan ? formatPrice(ouroPlan.price) : 'R$ 89,90'}
+                    <span className="text-xs font-normal text-slate-500">/mês</span>
+                  </span>
+                  <span className="text-[11px] text-slate-500 mt-1">Completo + Revista física</span>
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">{t('auth.register.fullName')}</Label>
@@ -234,6 +389,12 @@ export default function Register() {
           </form>
         </CardContent>
       </Card>
+
+      <SubscriptionCheckoutModal
+        isOpen={checkoutModalOpen}
+        setIsOpen={handleCheckoutModalClose}
+        plan={checkoutPlan}
+      />
     </div>
   )
 }

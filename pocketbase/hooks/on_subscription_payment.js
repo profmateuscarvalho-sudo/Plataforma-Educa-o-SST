@@ -137,14 +137,49 @@ onRecordAfterUpdateSuccess((e) => {
 
     var subscriptionId = ''
     try {
-      var subscription = $app.findFirstRecordByFilter(
-        'subscriptions',
-        "user = '" + userId + "' && status = 'pending'",
-      )
-      subscription.set('status', 'active')
-      $app.save(subscription)
-      subscriptionId = subscription.id
-    } catch (_) {}
+      // Busca assinatura pendente ou qualquer assinatura existente do usuário (permite upgrades de quem já tem assinatura)
+      var subscription = null
+      try {
+        subscription = $app.findFirstRecordByFilter(
+          'subscriptions',
+          "user = '" + userId + "' && status = 'pending'",
+        )
+      } catch (_) {
+        try {
+          subscription = $app.findFirstRecordByFilter(
+            'subscriptions',
+            "user = '" + userId + "'",
+            '-created',
+          )
+        } catch (_) {
+          subscription = null
+        }
+      }
+
+      if (subscription) {
+        subscription.set('status', 'active')
+        if (planId) {
+          subscription.set('plan', planId)
+        }
+        $app.save(subscription)
+        subscriptionId = subscription.id
+      } else {
+        // Se não existir nenhuma, cria novo registro em subscriptions
+        var subsCol = $app.findCollectionByNameOrId('subscriptions')
+        var newSub = new Record(subsCol)
+        newSub.set('user', userId)
+        newSub.set('status', 'active')
+        if (planId) {
+          newSub.set('plan', planId)
+        }
+        $app.save(newSub)
+        subscriptionId = newSub.id
+      }
+    } catch (subErr) {
+      $app
+        .logger()
+        .error('Failed to locate or create/update active subscription', 'error', subErr.message)
+    }
 
     $app
       .logger()

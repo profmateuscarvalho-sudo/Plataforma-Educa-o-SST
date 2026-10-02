@@ -198,47 +198,94 @@ onRecordAfterCreateSuccess((e) => {
   var emailSent = false
   var errorMsg = ''
 
-  try {
-    var emailRes = $http.send({
-      url: 'https://api.brevo.com/v3/smtp/email',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
-      body: JSON.stringify({
-        sender: { name: 'Educação SST', email: 'assinante@educacaosst.com.br' },
-        to: [{ email: userEmail, name: userName }],
-        subject: subject,
-        htmlContent: htmlContent,
-      }),
-      timeout: 30,
-    })
+  // Disparo imediato do e-mail via Brevo SMTP com timeout ágil de 10s e 1 retry rápido em caso de timeout
+  for (var attempt = 1; attempt <= 2; attempt++) {
+    try {
+      var emailRes = $http.send({
+        url: 'https://api.brevo.com/v3/smtp/email',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+        body: JSON.stringify({
+          sender: { name: 'Educação SST', email: 'assinante@educacaosst.com.br' },
+          to: [{ email: userEmail, name: userName }],
+          subject: subject,
+          htmlContent: htmlContent,
+        }),
+        timeout: 10,
+      })
 
-    if (emailRes.statusCode >= 200 && emailRes.statusCode < 300) {
-      emailSent = true
+      if (emailRes.statusCode >= 200 && emailRes.statusCode < 300) {
+        emailSent = true
+        errorMsg = ''
+        $app
+          .logger()
+          .info(
+            'Activation email sent successfully',
+            'email',
+            userEmail,
+            'type',
+            emailType,
+            'attempt',
+            attempt,
+            'subscriptionId',
+            e.record.id,
+          )
+        break
+      } else {
+        var errBody = emailRes.body
+          ? String.fromCharCode.apply(null, new Uint8Array(emailRes.body))
+          : 'unknown'
+        errorMsg = errBody
+        $app
+          .logger()
+          .error(
+            'Brevo activation email failed',
+            'attempt',
+            attempt,
+            'status',
+            emailRes.statusCode,
+            'body',
+            errBody,
+          )
+        // Se foi erro 4xx que não é rate-limit, não adianta tentar novamente
+        if (
+          emailRes.statusCode >= 400 &&
+          emailRes.statusCode < 500 &&
+          emailRes.statusCode !== 429
+        ) {
+          break
+        }
+      }
+    } catch (err) {
+      errorMsg = err.message
       $app
         .logger()
-        .info(
-          'Activation email sent',
-          'email',
-          userEmail,
-          'type',
-          emailType,
-          'subscriptionId',
-          e.record.id,
-        )
-    } else {
-      var errBody = emailRes.body
-        ? String.fromCharCode.apply(null, new Uint8Array(emailRes.body))
-        : 'unknown'
-      errorMsg = errBody
-      $app
-        .logger()
-        .error('Brevo activation email failed', 'status', emailRes.statusCode, 'body', errBody)
+        .error('Failed to send activation email attempt ' + attempt, 'error', err.message)
     }
-  } catch (err) {
-    errorMsg = err.message
-    $app.logger().error('Failed to send activation email', 'error', err.message)
   }
 
+  // Grava o log de e-mail IMEDIATAMENTE após a tentativa de envio para não atrasar
+  var logRecord = null
+  try {
+    var logsCol = $app.findCollectionByNameOrId('email_logs')
+    logRecord = new Record(logsCol)
+    logRecord.set('recipient_email', userEmail)
+    logRecord.set('recipient_name', userName)
+    logRecord.set('email_type', emailType)
+    logRecord.set('sent', emailSent)
+    logRecord.set('sent_at', emailSent ? new Date().toISOString() : '')
+    logRecord.set('brevo_synced', false)
+    logRecord.set('brevo_list_id', 7)
+    logRecord.set('brevo_status', 0)
+    logRecord.set('error_message', errorMsg)
+    logRecord.set('user', userId)
+    logRecord.set('subscription', e.record.id)
+    $app.save(logRecord)
+  } catch (logErr) {
+    $app.logger().error('Failed to log email', 'error', logErr.message)
+  }
+
+  // Sincronização de contato no Brevo (operação secundária que não pode travar ou comprometer o envio do e-mail)
   var brevoSynced = false
   var brevoStatus = 0
 
@@ -253,7 +300,7 @@ onRecordAfterCreateSuccess((e) => {
         listIds: [7],
         updateEnabled: true,
       }),
-      timeout: 30,
+      timeout: 8,
     })
     brevoStatus = contactRes.statusCode
     brevoSynced = contactRes.statusCode >= 200 && contactRes.statusCode < 300
@@ -263,28 +310,16 @@ onRecordAfterCreateSuccess((e) => {
         .error('Brevo contact sync failed on subscription', 'status', contactRes.statusCode)
     } else {
       $app.logger().info('User synced to Brevo List 7 on subscription', 'email', userEmail)
+      if (logRecord && logRecord.id) {
+        try {
+          logRecord.set('brevo_synced', true)
+          logRecord.set('brevo_status', brevoStatus)
+          $app.save(logRecord)
+        } catch (_) {}
+      }
     }
   } catch (err) {
     $app.logger().error('Failed to sync user to Brevo on subscription', 'error', err.message)
-  }
-
-  try {
-    var logsCol = $app.findCollectionByNameOrId('email_logs')
-    var logRecord = new Record(logsCol)
-    logRecord.set('recipient_email', userEmail)
-    logRecord.set('recipient_name', userName)
-    logRecord.set('email_type', emailType)
-    logRecord.set('sent', emailSent)
-    logRecord.set('sent_at', emailSent ? new Date().toISOString() : '')
-    logRecord.set('brevo_synced', brevoSynced)
-    logRecord.set('brevo_list_id', 7)
-    logRecord.set('brevo_status', brevoStatus)
-    logRecord.set('error_message', errorMsg)
-    logRecord.set('user', userId)
-    logRecord.set('subscription', e.record.id)
-    $app.save(logRecord)
-  } catch (logErr) {
-    $app.logger().error('Failed to log email', 'error', logErr.message)
   }
 
   return e.next()

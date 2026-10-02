@@ -188,55 +188,76 @@ routerAdd(
     var emailSent = false
     var errorMsg = ''
 
-    try {
-      var emailRes = $http.send({
-        url: 'https://api.brevo.com/v3/smtp/email',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
-        body: JSON.stringify({
-          sender: { name: 'Educação SST', email: 'assinante@educacaosst.com.br' },
-          to: [{ email: userEmail, name: userName }],
-          subject: subject,
-          htmlContent: htmlContent,
-        }),
-        timeout: 30,
-      })
+    for (var attempt = 1; attempt <= 2; attempt++) {
+      try {
+        var emailRes = $http.send({
+          url: 'https://api.brevo.com/v3/smtp/email',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+          body: JSON.stringify({
+            sender: { name: 'Educação SST', email: 'assinante@educacaosst.com.br' },
+            to: [{ email: userEmail, name: userName }],
+            subject: subject,
+            htmlContent: htmlContent,
+          }),
+          timeout: 10,
+        })
 
-      if (emailRes.statusCode >= 200 && emailRes.statusCode < 300) {
-        emailSent = true
-        $app
-          .logger()
-          .info(
-            'Resend activation email sent',
-            'email',
-            userEmail,
-            'type',
-            emailType,
-            'userId',
-            userId,
-          )
-      } else {
-        var errBody = emailRes.body
-          ? String.fromCharCode.apply(null, new Uint8Array(emailRes.body))
-          : 'unknown'
-        errorMsg = errBody
+        if (emailRes.statusCode >= 200 && emailRes.statusCode < 300) {
+          emailSent = true
+          errorMsg = ''
+          $app
+            .logger()
+            .info(
+              'Resend activation email sent',
+              'email',
+              userEmail,
+              'type',
+              emailType,
+              'attempt',
+              attempt,
+              'userId',
+              userId,
+            )
+          break
+        } else {
+          var errBody = emailRes.body
+            ? String.fromCharCode.apply(null, new Uint8Array(emailRes.body))
+            : 'unknown'
+          errorMsg = errBody
+          $app
+            .logger()
+            .error(
+              'Brevo resend activation failed',
+              'attempt',
+              attempt,
+              'status',
+              emailRes.statusCode,
+              'body',
+              errBody,
+              'userId',
+              userId,
+            )
+          if (
+            emailRes.statusCode >= 400 &&
+            emailRes.statusCode < 500 &&
+            emailRes.statusCode !== 429
+          ) {
+            break
+          }
+        }
+      } catch (err) {
+        errorMsg = err.message
         $app
           .logger()
           .error(
-            'Brevo resend activation failed',
-            'status',
-            emailRes.statusCode,
-            'body',
-            errBody,
+            'Failed to send resend activation email attempt ' + attempt,
+            'error',
+            err.message,
             'userId',
             userId,
           )
       }
-    } catch (err) {
-      errorMsg = err.message
-      $app
-        .logger()
-        .error('Failed to send resend activation email', 'error', err.message, 'userId', userId)
     }
 
     try {

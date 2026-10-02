@@ -23,9 +23,19 @@ export default function SubscriptionPending() {
   const refreshUserRef = useRef(refreshUser)
   refreshUserRef.current = refreshUser
 
+  const isFetchingRef = useRef(false)
+  const lastRefreshTimeRef = useRef(0)
+
   const fetchStatus = useCallback(async () => {
+    if (isFetchingRef.current) return
+    isFetchingRef.current = true
     try {
-      await refreshUserRef.current()
+      // Throttle authRefresh to at most once every 10 seconds to avoid 429 Too Many Requests
+      const now = Date.now()
+      if (now - lastRefreshTimeRef.current > 10000) {
+        lastRefreshTimeRef.current = now
+        await refreshUserRef.current()
+      }
       const s = await getPendingStatus()
       setStatus(s)
 
@@ -59,6 +69,7 @@ export default function SubscriptionPending() {
     } catch {
       setStatus(null)
     } finally {
+      isFetchingRef.current = false
       setLoading(false)
       setChecking(false)
     }

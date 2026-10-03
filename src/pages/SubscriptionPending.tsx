@@ -54,14 +54,14 @@ export default function SubscriptionPending() {
         new Date(currentUser!.contract_end_date!) >= new Date()
 
       // Se o usuário já tiver acesso confirmado por assinatura ativa, plano pago, contrato ou admin,
-      // ou for conta Free verificada, vai direto para /plataforma
-      const isEmailVerified = Boolean(currentUser?.email_verificado || currentUser?.verified)
+      // ou for conta Free, vai direto para /plataforma
+      const isFreeAccount = currentUser?.plan_tier === 'free' || !currentUser?.plan_tier
       const hasConfirmedAccess =
         currentUser?.role === 'admin' ||
         isSubActive ||
         isPaidPlan ||
         hasValidContract ||
-        (isEmailVerified && currentUser?.plan_tier === 'free')
+        isFreeAccount
 
       if (hasConfirmedAccess) {
         navigate('/plataforma', { replace: true })
@@ -69,10 +69,8 @@ export default function SubscriptionPending() {
       }
 
       if (planId && !isSubActive && s?.state !== 'manual_verification') {
-        if (isEmailVerified) {
-          navigate(`/planos?planId=${planId}&checkout=1`, { replace: true })
-          return
-        }
+        navigate(`/planos?planId=${planId}&checkout=1`, { replace: true })
+        return
       }
     } catch {
       setStatus(null)
@@ -104,9 +102,9 @@ export default function SubscriptionPending() {
       status?.subscription?.status === 'active' ||
       access.subscriptions.some((s) => s.status === 'active')
     const isPaidPlan = user.plan_tier === 'prata' || user.plan_tier === 'ouro'
-    const isEmailVerified = Boolean(user.email_verificado || (user as any).verified)
+    const isFreeAccount = user.plan_tier === 'free' || !user.plan_tier
 
-    if (isSubActive || isPaidPlan || (isEmailVerified && user.plan_tier === 'free')) {
+    if (isSubActive || isPaidPlan || isFreeAccount) {
       navigate('/plataforma', { replace: true })
     }
   }, [
@@ -244,15 +242,13 @@ export default function SubscriptionPending() {
                   plan_tier?: string
                   contract_end_date?: string
                 } | null
-                const isEmailVerified = Boolean(
-                  currentUser?.email_verificado || currentUser?.verified,
-                )
                 const isPaidPlan =
                   currentUser?.plan_tier === 'prata' || currentUser?.plan_tier === 'ouro'
                 const isSubActive = status?.subscription?.status === 'active'
                 const hasValidContract =
                   Boolean(currentUser?.contract_end_date) &&
                   new Date(currentUser!.contract_end_date!) >= new Date()
+                const isFreeAccount = currentUser?.plan_tier === 'free' || !currentUser?.plan_tier
 
                 if (
                   currentUser?.role === 'admin' ||
@@ -260,7 +256,7 @@ export default function SubscriptionPending() {
                   isSubActive ||
                   isPaidPlan ||
                   hasValidContract ||
-                  (isEmailVerified && currentUser?.plan_tier === 'free')
+                  isFreeAccount
                 ) {
                   navigate('/plataforma', { replace: true })
                 }

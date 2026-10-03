@@ -72,9 +72,9 @@ export function LandingRegisterForm() {
     } else {
       toast({
         title: 'Cadastro realizado com sucesso!',
-        description: 'E-mail de ativação enviado! Verifique sua caixa de entrada e pasta de spam.',
+        description: 'Bem-vindo(a) à plataforma Educação SST!',
       })
-      navigate('/subscription-pending')
+      navigate('/plataforma')
     }
   }
 

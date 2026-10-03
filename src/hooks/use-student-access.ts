@@ -51,9 +51,8 @@ export function useStudentAccess() {
     if (user?.plan_tier === 'prata' || user?.plan_tier === 'ouro') return true
     // Usuários com contrato válido
     if (user?.contract_end_date && new Date(user.contract_end_date) >= new Date()) return true
-    // Usuário free verificado tem acesso à plataforma no tier free
-    const isVerified = Boolean(user?.email_verificado || (user as any)?.verified)
-    if (user?.plan_tier === 'free' && isVerified) return true
+    // Aluno com plano free tem acesso imediato pelo simples fato de estar autenticado (sem exigir confirmação de e-mail)
+    if (user?.plan_tier === 'free' || !user?.plan_tier) return true
     // Pagamentos aprovados anteriores
     if (payments.length > 0) return true
     return false

@@ -144,9 +144,10 @@ export default function Register() {
         setCheckoutPlan(chosenPlan)
         setCheckoutModalOpen(true)
       } else if (effectivePlanId && selectedPlanTier !== 'free') {
-        navigate(`/subscription-pending?planId=${effectivePlanId}`)
+        navigate(`/planos?planId=${effectivePlanId}&checkout=1`)
       } else {
-        navigate('/subscription-pending')
+        // Fluxo Free: acesso imediato ao Dashboard
+        navigate('/plataforma')
       }
     }
   }

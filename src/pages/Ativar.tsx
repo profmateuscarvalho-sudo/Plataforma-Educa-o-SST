@@ -41,9 +41,8 @@ export default function Ativar() {
           verified?: boolean
         } | null
 
-        const isEmailVerified = Boolean(currentUser?.email_verificado || currentUser?.verified)
         const isPaidTier = currentUser?.plan_tier === 'ouro' || currentUser?.plan_tier === 'prata'
-        const isFreeTier = currentUser?.plan_tier === 'free' && isEmailVerified
+        const isFreeTier = currentUser?.plan_tier === 'free' || !currentUser?.plan_tier
         const hasValidContract =
           Boolean(currentUser?.contract_end_date) &&
           new Date(currentUser!.contract_end_date!) >= new Date()
@@ -52,7 +51,7 @@ export default function Ativar() {
         if (isAdmin || isPaidTier || isFreeTier || hasValidContract) {
           setStatus('success')
         } else {
-          // Conta com e-mail verificado, mas o pagamento do plano pago ainda aguarda confirmação
+          // Pagamento do plano pago ainda aguarda confirmação
           setStatus('awaiting_payment')
         }
       })
@@ -75,9 +74,8 @@ export default function Ativar() {
       verified?: boolean
     } | null
 
-    const isEmailVerified = Boolean(currentUser?.email_verificado || currentUser?.verified)
     const isPaidTier = currentUser?.plan_tier === 'ouro' || currentUser?.plan_tier === 'prata'
-    const isFreeTier = currentUser?.plan_tier === 'free' && isEmailVerified
+    const isFreeTier = currentUser?.plan_tier === 'free' || !currentUser?.plan_tier
     const hasValidContract =
       Boolean(currentUser?.contract_end_date) &&
       new Date(currentUser!.contract_end_date!) >= new Date()
@@ -86,7 +84,7 @@ export default function Ativar() {
     if (isAdmin || isPaidTier || isFreeTier || hasValidContract) {
       navigate('/plataforma')
     } else {
-      // Leva para a tela de espera informativa em vez de deixar o layout rejeitar
+      // Em caso de plano pago aguardando pagamento
       navigate('/subscription-pending')
     }
   }, [navigate, refreshUser])

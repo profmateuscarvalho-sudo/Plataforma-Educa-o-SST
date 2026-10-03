@@ -49,22 +49,34 @@ export const IPAG_API_ID: string =
 
 /**
  * Differentiates sandbox vs production.
- * If VITE_IPAG_ENV is 'production' or import.meta.env.PROD is true without an explicit sandbox override,
- * or if VITE_IPAG_IS_SANDBOX === 'false'.
+ * Considers:
+ * - VITE_IPAG_BASE_URL or VITE_IPAG_URL (if containing 'sandbox' -> sandbox, if containing 'api.ipag' -> prod)
+ * - VITE_IPAG_ENV ('production' / 'prod' vs 'sandbox' / 'dev')
+ * - VITE_IPAG_SANDBOX or VITE_IPAG_IS_SANDBOX ('true'/'1' vs 'false'/'0')
+ * - Default: in production build (import.meta.env.PROD === true), use production (api.ipag.com.br);
+ *   in development, sandbox.
  */
 export const IS_IPAG_SANDBOX: boolean = (() => {
+  const baseUrl = (
+    (import.meta.env.VITE_IPAG_BASE_URL as string | undefined) ||
+    (import.meta.env.VITE_IPAG_URL as string | undefined) ||
+    ''
+  ).toLowerCase()
+  if (baseUrl.includes('sandbox')) return true
+  if (baseUrl.includes('api.ipag.com.br')) return false
+
   const explicitEnv = (import.meta.env.VITE_IPAG_ENV as string | undefined)?.toLowerCase()
   if (explicitEnv === 'production' || explicitEnv === 'prod') return false
   if (explicitEnv === 'sandbox' || explicitEnv === 'dev' || explicitEnv === 'development')
     return true
 
-  const sandboxFlag = import.meta.env.VITE_IPAG_SANDBOX as string | undefined
+  const sandboxFlag = (
+    (import.meta.env.VITE_IPAG_SANDBOX as string | undefined) ||
+    (import.meta.env.VITE_IPAG_IS_SANDBOX as string | undefined)
+  )?.toLowerCase()
   if (sandboxFlag === 'true' || sandboxFlag === '1') return true
   if (sandboxFlag === 'false' || sandboxFlag === '0') return false
 
-  // Padrão: em build de produção (import.meta.env.PROD === true), utiliza sempre ambiente de PRODUÇÃO
-  // a menos que explicitamente configurado para sandbox via VITE_IPAG_ENV ou VITE_IPAG_SANDBOX.
-  // Em desenvolvimento local/dev, utiliza sandbox.
   return !import.meta.env.PROD
 })()
 

@@ -14,7 +14,9 @@ export default function Ativar() {
   const navigate = useNavigate()
   const { refreshUser } = useAuth()
   const token = searchParams.get('token')
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [status, setStatus] = useState<'loading' | 'success' | 'awaiting_payment' | 'error'>(
+    'loading',
+  )
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
@@ -30,7 +32,29 @@ export default function Ativar() {
           pb.authStore.save(result.token, result.record as any)
         }
         await refreshUser()
-        setStatus('success')
+
+        const currentUser = pb.authStore.record as {
+          role?: string
+          plan_tier?: string
+          contract_end_date?: string
+          email_verificado?: boolean
+          verified?: boolean
+        } | null
+
+        const isEmailVerified = Boolean(currentUser?.email_verificado || currentUser?.verified)
+        const isPaidTier = currentUser?.plan_tier === 'ouro' || currentUser?.plan_tier === 'prata'
+        const isFreeTier = currentUser?.plan_tier === 'free' && isEmailVerified
+        const hasValidContract =
+          Boolean(currentUser?.contract_end_date) &&
+          new Date(currentUser!.contract_end_date!) >= new Date()
+        const isAdmin = currentUser?.role === 'admin'
+
+        if (isAdmin || isPaidTier || isFreeTier || hasValidContract) {
+          setStatus('success')
+        } else {
+          // Conta com e-mail verificado, mas o pagamento do plano pago ainda aguarda confirmação
+          setStatus('awaiting_payment')
+        }
       })
       .catch((err: unknown) => {
         setStatus('error')
@@ -41,13 +65,31 @@ export default function Ativar() {
       })
   }, [token, refreshUser])
 
-  const handleGoToDashboard = useCallback(() => {
-    if (pb.authStore.isValid) {
+  const handleGoToDashboard = useCallback(async () => {
+    await refreshUser()
+    const currentUser = pb.authStore.record as {
+      role?: string
+      plan_tier?: string
+      contract_end_date?: string
+      email_verificado?: boolean
+      verified?: boolean
+    } | null
+
+    const isEmailVerified = Boolean(currentUser?.email_verificado || currentUser?.verified)
+    const isPaidTier = currentUser?.plan_tier === 'ouro' || currentUser?.plan_tier === 'prata'
+    const isFreeTier = currentUser?.plan_tier === 'free' && isEmailVerified
+    const hasValidContract =
+      Boolean(currentUser?.contract_end_date) &&
+      new Date(currentUser!.contract_end_date!) >= new Date()
+    const isAdmin = currentUser?.role === 'admin'
+
+    if (isAdmin || isPaidTier || isFreeTier || hasValidContract) {
       navigate('/plataforma')
     } else {
-      navigate('/login?redirect=/plataforma')
+      // Leva para a tela de espera informativa em vez de deixar o layout rejeitar
+      navigate('/subscription-pending')
     }
-  }, [navigate])
+  }, [navigate, refreshUser])
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4">
@@ -61,6 +103,7 @@ export default function Ativar() {
             <CardDescription className="text-base mt-2">
               {status === 'loading' && 'Validando seu token...'}
               {status === 'success' && 'Sua assinatura está ativa!'}
+              {status === 'awaiting_payment' && 'E-mail confirmado com sucesso!'}
               {status === 'error' && 'Não foi possível ativar'}
             </CardDescription>
           </div>
@@ -80,6 +123,25 @@ export default function Ativar() {
               </p>
               <Button onClick={handleGoToDashboard} className="w-full h-12 text-lg font-bold">
                 Ir para o Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          )}
+          {status === 'awaiting_payment' && (
+            <div className="flex flex-col items-center gap-4 py-8 animate-fade-in-up">
+              <CheckCircle2 className="w-16 h-16 text-amber-500" />
+              <p className="text-slate-700 text-center font-medium">
+                Seu e-mail foi validado! Estamos aguardando a confirmação do pagamento junto à
+                instituição bancária.
+              </p>
+              <p className="text-slate-500 text-xs text-center">
+                Assim que a operadora processar o pagamento, seu acesso será liberado
+                automaticamente.
+              </p>
+              <Button
+                onClick={() => navigate('/subscription-pending')}
+                className="w-full h-12 text-lg font-bold"
+              >
+                Acompanhar Status <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           )}

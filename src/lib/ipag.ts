@@ -62,7 +62,9 @@ export const IS_IPAG_SANDBOX: boolean = (() => {
   if (sandboxFlag === 'true' || sandboxFlag === '1') return true
   if (sandboxFlag === 'false' || sandboxFlag === '0') return false
 
-  // By default in dev/test we use sandbox, or check Vite mode
+  // Padrão: em build de produção (import.meta.env.PROD === true), utiliza sempre ambiente de PRODUÇÃO
+  // a menos que explicitamente configurado para sandbox via VITE_IPAG_ENV ou VITE_IPAG_SANDBOX.
+  // Em desenvolvimento local/dev, utiliza sandbox.
   return !import.meta.env.PROD
 })()
 

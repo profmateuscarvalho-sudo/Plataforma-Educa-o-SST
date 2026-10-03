@@ -193,11 +193,199 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       $apis.recordAuthResponse(e, user)
       return
     } else {
+      // Plano PAGO (Prata, Ouro, etc.)
+      // Verifica se há pagamento pendente ou recente para consultar o gateway iPag
+      var payment = null
+      try {
+        payment = $app.findFirstRecordByFilter(
+          'payments',
+          "user = '" + userId + "' && product_type = 'subscription'",
+          '-created',
+        )
+      } catch (_) {
+        try {
+          payment = $app.findFirstRecordByFilter('payments', "user = '" + userId + "'", '-created')
+        } catch (_) {}
+      }
+
+      var paymentApproved = false
+      var billingCycle = 'monthly'
+      if (payment) {
+        billingCycle = payment.getString('billing_cycle') || 'monthly'
+        var currentPayStatus = payment.getString('status')
+        if (currentPayStatus === 'paid') {
+          paymentApproved = true
+        } else {
+          // Consulta ativa à API do iPag
+          var apiId = $secrets.get('IPAG_API_ID') || $os.getenv('IPAG_API_ID')
+          var apiKey = $secrets.get('IPAG_API_KEY') || $os.getenv('IPAG_API_KEY')
+          var baseUrl = (
+            $secrets.get('IPAG_BASE_URL') ||
+            $os.getenv('IPAG_BASE_URL') ||
+            'https://api.ipag.com.br'
+          ).replace(/\/+$/, '')
+
+          if (apiId && apiKey) {
+            var authString = apiId + ':' + apiKey
+            var authBase64 = ''
+            try {
+              authBase64 = btoa(authString)
+            } catch (_) {
+              var bytes = []
+              for (var bi = 0; bi < authString.length; bi++) {
+                bytes.push(authString.charCodeAt(bi))
+              }
+              authBase64 = String.fromCharCode.apply(null, bytes)
+            }
+
+            try {
+              var consultRes = $http.send({
+                url: baseUrl + '/service/consult?order_id=' + payment.id,
+                method: 'GET',
+                headers: {
+                  Authorization: 'Basic ' + authBase64,
+                  'x-api-version': '2',
+                },
+                timeout: 15,
+              })
+
+              if (consultRes.statusCode >= 200 && consultRes.statusCode < 300) {
+                var consultData = null
+                try {
+                  consultData = consultRes.json
+                } catch (_) {
+                  consultData = consultRes.body
+                    ? String.fromCharCode.apply(null, new Uint8Array(consultRes.body))
+                    : null
+                }
+                var attributes = consultData ? consultData.attributes || consultData : {}
+                var rawStatus = ''
+                if (
+                  attributes.status &&
+                  typeof attributes.status === 'object' &&
+                  attributes.status.message
+                ) {
+                  rawStatus = attributes.status.message
+                } else if (attributes.status != null) {
+                  rawStatus = String(attributes.status)
+                }
+
+                var upper = (rawStatus || '').toUpperCase()
+                var isPaid =
+                  upper.indexOf('APPROV') !== -1 ||
+                  upper.indexOf('CAPTUR') !== -1 ||
+                  upper.indexOf('PAID') !== -1
+
+                var ipagUuid =
+                  (consultData && (consultData.uuid || consultData.id)) ||
+                  attributes.uuid ||
+                  attributes.id ||
+                  ''
+
+                if (isPaid) {
+                  paymentApproved = true
+                  payment.set('status', 'paid')
+                  if (ipagUuid) {
+                    payment.set('ipag_id', ipagUuid)
+                  }
+                  $app.save(payment)
+                  $app
+                    .logger()
+                    .info(
+                      '[ativar_assinatura] Pagamento ' +
+                        payment.id +
+                        ' confirmado via consulta iPag',
+                      'userId',
+                      userId,
+                      'rawStatus',
+                      rawStatus,
+                    )
+                }
+              }
+            } catch (consultErr) {
+              $app
+                .logger()
+                .warn('[ativar_assinatura] Falha ao consultar iPag', 'error', consultErr.message)
+            }
+          }
+        }
+      }
+
+      if (paymentApproved) {
+        // Atualiza subscription para 'active'
+        subscription.set('status', 'active')
+        $app.save(subscription)
+
+        // Deriva tier a partir de planName
+        var paidNameLower = planName.toLowerCase()
+        var paidTier = 'prata'
+        if (paidNameLower.indexOf('ouro') !== -1) {
+          paidTier = 'ouro'
+        } else if (paidNameLower.indexOf('prata') !== -1) {
+          paidTier = 'prata'
+        }
+
+        user.set('plan_tier', paidTier)
+        user.set('subscription_billing', billingCycle)
+
+        // Calcula contract_end_date
+        var paidBaseDate = new Date()
+        var currentEnd = user.getString('contract_end_date')
+        if (currentEnd) {
+          var existing = new Date(currentEnd)
+          if (existing > paidBaseDate) {
+            paidBaseDate = existing
+          }
+        }
+
+        if (billingCycle === 'yearly') {
+          paidBaseDate.setFullYear(paidBaseDate.getFullYear() + 1)
+        } else {
+          paidBaseDate.setMonth(paidBaseDate.getMonth() + 1)
+        }
+
+        var pMonth = paidBaseDate.getMonth() + 1
+        var pDay = paidBaseDate.getDate()
+        var pDateStr =
+          paidBaseDate.getFullYear() +
+          '-' +
+          (pMonth < 10 ? '0' + pMonth : '' + pMonth) +
+          '-' +
+          (pDay < 10 ? '0' + pDay : '' + pDay)
+
+        user.set('contract_end_date', pDateStr)
+        $app.save(user)
+
+        $app
+          .logger()
+          .info(
+            'Paid subscription activated successfully upon email activation',
+            'userId',
+            userId,
+            'plan',
+            planName,
+            'tier',
+            paidTier,
+            'contract_end_date',
+            pDateStr,
+          )
+
+        $apis.recordAuthResponse(e, user)
+        return
+      }
+
+      // Pagamento ainda não confirmado ou pendente no iPag
       $app.save(user)
 
       $app
         .logger()
-        .info('Email verified for paid plan (no email sent)', 'userId', userId, 'plan', planName)
+        .info(
+          'Email verified for paid plan, payment still awaiting confirmation',
+          'userId',
+          userId,
+          'plan',
+          planName,
+        )
 
       $apis.recordAuthResponse(e, user)
       return

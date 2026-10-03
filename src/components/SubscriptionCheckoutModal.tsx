@@ -114,35 +114,46 @@ export function SubscriptionCheckoutModal({
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
   const detectCardBrand = (number: string): string => {
-    const cleanNumber = number.replace(/\s/g, '')
+    const cleanNumber = number.replace(/\D/g, '')
 
-    // Faixas Elo conhecidas (incluindo as que começam com 4)
-    const eloPrefixes = [
-      '4011',
+    // Faixas Elo co-branded iniciando em 4 apenas com BIN completo de 6 dígitos confirmado pelo script oficial iPag
+    const elo4Prefixes = [
+      '401178',
+      '401179',
       '431274',
       '438935',
       '451416',
       '457393',
-      '4576',
+      '457631',
+      '457632',
+    ]
+
+    // Faixas Elo iniciando em 5 ou 6
+    const eloOtherPrefixes = [
       '504175',
       '5067',
       '509',
       '627780',
       '636297',
       '636368',
+      '636369',
       '650',
       '6516',
       '6550',
     ]
 
     let detectedBrand = 'visa'
-    if (
-      eloPrefixes.some((prefix) => cleanNumber.startsWith(prefix)) ||
-      cleanNumber.startsWith('6')
-    ) {
+
+    if (elo4Prefixes.some((prefix) => cleanNumber.startsWith(prefix))) {
       detectedBrand = 'elo'
     } else if (cleanNumber.startsWith('4')) {
+      // Qualquer número iniciado com 4 sem BIN Elo de 6 dígitos confirmado é VISA
       detectedBrand = 'visa'
+    } else if (eloOtherPrefixes.some((prefix) => cleanNumber.startsWith(prefix))) {
+      detectedBrand = 'elo'
+    } else if (cleanNumber.startsWith('6')) {
+      // Cartões com 6 costumam ser Elo/Discover/Hipercard
+      detectedBrand = 'elo'
     } else if (cleanNumber.startsWith('5') || cleanNumber.startsWith('2')) {
       detectedBrand = 'mastercard'
     } else if (cleanNumber.startsWith('3')) {
@@ -197,14 +208,24 @@ export function SubscriptionCheckoutModal({
           expiryYear: rawYear || '',
           cvv,
         })
+        // Log de debug do createToken com sucesso
+        console.log('[DEBUG createToken iPag]', { success: true, token, method })
         if (!token) {
           throw new Error('Sem token retornado')
         }
-      } catch {
+      } catch (tokErr: any) {
+        // Log de debug do erro retornado pelo iPag no createToken
+        console.error('[DEBUG createToken iPag]', {
+          success: false,
+          error: tokErr?.message || tokErr,
+          method,
+        })
         setStep('idle')
         toast({
           title: 'Erro ao validar cartão',
-          description: 'Não foi possível validar o cartão. Verifique os dados e tente novamente.',
+          description:
+            tokErr?.message ||
+            'Não foi possível validar o cartão. Verifique os dados e tente novamente.',
           variant: 'destructive',
         })
         return

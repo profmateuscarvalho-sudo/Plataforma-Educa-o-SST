@@ -75,7 +75,6 @@ routerAdd(
     }
 
     const callbackUrl =
-      $secrets.get('IPAG_CALLBACK_URL') ||
       'https://educacao-sst-premium-969c2.shrd00.internal.goskip.dev/backend/v1/ipag-webhook'
 
     var fiveMinAgoDate = new Date(Date.now() - 5 * 60 * 1000)

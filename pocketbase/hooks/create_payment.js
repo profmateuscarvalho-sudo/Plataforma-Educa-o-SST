@@ -215,6 +215,20 @@ routerAdd(
       }
     }
 
+    // Log do payload exato que será enviado ao iPag (mascarando dados ultra-sensíveis de cartão se houver)
+    var loggedPayload = JSON.parse(JSON.stringify(paymentData))
+    if (loggedPayload.payment && loggedPayload.payment.card && loggedPayload.payment.card.cvv) {
+      loggedPayload.payment.card.cvv = '***'
+    }
+    if (loggedPayload.payment && loggedPayload.payment.card && loggedPayload.payment.card.number) {
+      loggedPayload.payment.card.number =
+        loggedPayload.payment.card.number.slice(0, 6) +
+        '******' +
+        loggedPayload.payment.card.number.slice(-4)
+    }
+    console.log('[DEBUG_IPAG_PAYLOAD_SENT] ' + JSON.stringify(loggedPayload))
+
+    var tIpagStart = Date.now()
     var res
     try {
       res = $http.send({
@@ -222,6 +236,7 @@ routerAdd(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
           Authorization: 'Basic ' + authBase64,
           'x-api-version': '2',
         },
@@ -229,6 +244,8 @@ routerAdd(
         timeout: 30,
       })
     } catch (err) {
+      var tIpagErr = Date.now() - tIpagStart
+      console.log('[DEBUG_IPAG_HTTP_ERROR] duration=' + tIpagErr + 'ms error=' + err.message)
       $app.logger().error('iPag connection error', 'error', err.message)
       updatePaymentStatus(paymentRecordId, 'failed', '')
       return e.json(500, {
@@ -237,20 +254,39 @@ routerAdd(
       })
     }
 
+    var tIpagDuration = Date.now() - tIpagStart
+    console.log(
+      '[DEBUG_IPAG_RESPONSE_STATUS] status=' + res.statusCode + ' duration=' + tIpagDuration + 'ms',
+    )
+
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      var errorBody
-      try {
-        errorBody = res.json
-      } catch (_) {
-        errorBody = res.body
-          ? String.fromCharCode.apply(null, new Uint8Array(res.body))
-          : 'Unknown error'
+      var rawBodyString = ''
+      if (res.raw) {
+        rawBodyString = String(res.raw)
+      } else if (res.body) {
+        try {
+          rawBodyString = String.fromCharCode.apply(null, new Uint8Array(res.body))
+        } catch (_) {
+          rawBodyString = String(res.body)
+        }
       }
+      var errorBody = res.json || rawBodyString || 'Unknown error'
+      console.log(
+        '[DEBUG_IPAG_RESPONSE_406_BODY] status=' +
+          res.statusCode +
+          ' body=' +
+          JSON.stringify(errorBody) +
+          ' raw=' +
+          rawBodyString,
+      )
       $app.logger().error('iPag API returned error', 'status', res.statusCode, 'body', errorBody)
       updatePaymentStatus(paymentRecordId, 'failed', '')
       return e.json(res.statusCode, {
         error: 'iPag API error',
+        status: res.statusCode,
         details: errorBody,
+        raw: rawBodyString,
+        payload_sent: loggedPayload,
       })
     }
 

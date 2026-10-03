@@ -32,6 +32,7 @@ import pb from '@/lib/pocketbase/client'
 import { ShieldAlert } from 'lucide-react'
 import { BACKEND_URL } from '@/lib/constants'
 import { tokenizeCard, IPAG_API_ID, IS_IPAG_SANDBOX, resolveIpagPublicId } from '@/lib/ipag'
+import { formatCpf, sanitizeCpf, validateCpf } from '@/lib/cpf'
 
 const CARD_BRANDS = [
   { value: 'visa', label: 'Visa' },
@@ -58,7 +59,8 @@ export default function AdminTestes() {
   const [paymentType, setPaymentType] = useState<'pix' | 'card'>('pix')
   const [amount, setAmount] = useState('10.00')
   const [customerName, setCustomerName] = useState('João da Silva Teste')
-  const [cpfCnpj, setCpfCnpj] = useState('12345678909')
+  const [cpfCnpj, setCpfCnpj] = useState('799.993.388-01')
+  const [cpfError, setCpfError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [cardNumber, setCardNumber] = useState('')
   const [cardHolder, setCardHolder] = useState('')
@@ -163,14 +165,32 @@ export default function AdminTestes() {
     }
   }
 
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCpf(e.target.value)
+    setCpfCnpj(formatted)
+    if (cpfError) {
+      const res = validateCpf(formatted)
+      if (res.valid) setCpfError(null)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setResult(null)
 
+    const cpfValidation = validateCpf(cpfCnpj)
+    if (!cpfValidation.valid) {
+      const msg = cpfValidation.error || 'CPF inválido.'
+      setCpfError(msg)
+      toast({ title: 'CPF inválido', description: msg, variant: 'destructive' })
+      return
+    }
+    setCpfError(null)
+
     const payload: CreatePaymentPayload = {
       type: paymentType,
       amount: parseFloat(amount),
-      customer: { name: customerName, cpf_cnpj: cpfCnpj },
+      customer: { name: customerName, cpf_cnpj: sanitizeCpf(cpfCnpj) },
       product_type: 'test',
     }
     if (paymentType === 'card') {
@@ -321,13 +341,25 @@ export default function AdminTestes() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cpfCnpj">CPF / CNPJ</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="cpfCnpj">CPF (Sanitizado no envio)</Label>
+                  {cpfError && (
+                    <span className="text-xs text-destructive font-medium">{cpfError}</span>
+                  )}
+                </div>
                 <Input
                   id="cpfCnpj"
                   value={cpfCnpj}
-                  onChange={(e) => setCpfCnpj(e.target.value)}
+                  onChange={handleCpfChange}
+                  onBlur={() => {
+                    const res = validateCpf(cpfCnpj)
+                    if (!res.valid) setCpfError(res.error || 'CPF inválido.')
+                    else setCpfError(null)
+                  }}
                   required
-                  placeholder="12345678909"
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                  className={cpfError ? 'border-destructive' : ''}
                 />
               </div>
             </div>

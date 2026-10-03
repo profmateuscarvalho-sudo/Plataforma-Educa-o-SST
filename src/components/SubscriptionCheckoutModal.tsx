@@ -17,7 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CreditCard, Loader2, CheckCircle2, Copy, QrCode, ShieldCheck, Zap } from 'lucide-react'
+import {
+  CreditCard,
+  Loader2,
+  CheckCircle2,
+  Copy,
+  QrCode,
+  ShieldCheck,
+  Zap,
+  AlertCircle,
+} from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
@@ -26,6 +35,7 @@ import { createPayment, type CreatePaymentPayload } from '@/services/payments'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
 import { loadIpagScript, tokenizeCard } from '@/lib/ipag'
+import { formatCpf, sanitizeCpf, validateCpf } from '@/lib/cpf'
 
 export function SubscriptionCheckoutModal({
   isOpen,
@@ -47,6 +57,8 @@ export function SubscriptionCheckoutModal({
     qrcode64?: string
     link?: string
   } | null>(null)
+  const [cpfValue, setCpfValue] = useState('')
+  const [cpfError, setCpfError] = useState<string | null>(null)
   const { toast } = useToast()
   const { user, refreshUser } = useAuth()
 
@@ -56,6 +68,7 @@ export function SubscriptionCheckoutModal({
       setStep('idle')
       setActivePaymentId(null)
       setPixData(null)
+      setCpfError(null)
       setBillingCycle(plan.interval === 'yearly' ? 'yearly' : 'monthly')
       setPaymentMethod('pix')
       setInstallments(1)
@@ -168,12 +181,54 @@ export function SubscriptionCheckoutModal({
     return detectedBrand
   }
 
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCpf(e.target.value)
+    setCpfValue(formatted)
+    if (cpfError) {
+      const result = validateCpf(formatted)
+      if (result.valid) {
+        setCpfError(null)
+      }
+    }
+  }
+
+  const handleCpfBlur = () => {
+    if (!cpfValue.trim()) {
+      setCpfError('CPF é obrigatório.')
+      return
+    }
+    const result = validateCpf(cpfValue)
+    if (!result.valid) {
+      setCpfError(result.error || 'CPF inválido.')
+    } else {
+      setCpfError(null)
+    }
+  }
+
   const handlePayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!plan || !user) return
 
     const formData = new FormData(e.currentTarget)
-    const cpfCnpj = (formData.get('cpf_cnpj') as string) || ''
+    const rawCpf = cpfValue || (formData.get('cpf_cnpj') as string) || ''
+
+    // Validação estrita do CPF com dígitos verificadores (módulo 11)
+    const cpfValidation = validateCpf(rawCpf)
+    if (!cpfValidation.valid) {
+      const errorMessage =
+        cpfValidation.error || 'CPF inválido. Verifique os números e tente novamente.'
+      setCpfError(errorMessage)
+      toast({
+        title: 'CPF inválido',
+        description: errorMessage,
+        variant: 'destructive',
+      })
+      return
+    }
+    setCpfError(null)
+
+    // Sanitiza garantindo exatamente 11 dígitos numéricos limpos
+    const cleanCpf = sanitizeCpf(rawCpf)
 
     const payload: CreatePaymentPayload = {
       amount: currentPrice,
@@ -183,7 +238,7 @@ export function SubscriptionCheckoutModal({
       billing_cycle: billingCycle,
       customer: {
         name: user.name || user.email || '',
-        cpf_cnpj: cpfCnpj,
+        cpf_cnpj: cleanCpf,
         email: user.email,
         phone: user.phone || '',
       },
@@ -405,13 +460,32 @@ export function SubscriptionCheckoutModal({
             ) : (
               <form onSubmit={handlePayment} className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">CPF</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="checkout-cpf" className="text-xs">
+                      CPF
+                    </Label>
+                    {cpfError && (
+                      <span className="text-[11px] text-destructive font-medium flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {cpfError}
+                      </span>
+                    )}
+                  </div>
                   <Input
+                    id="checkout-cpf"
                     name="cpf_cnpj"
                     required
+                    value={cpfValue}
+                    onChange={handleCpfChange}
+                    onBlur={handleCpfBlur}
                     placeholder="000.000.000-00"
-                    className="h-10"
-                    maxLength={18}
+                    className={cn(
+                      'h-10 font-mono tracking-wide',
+                      cpfError && 'border-destructive focus-visible:ring-destructive',
+                    )}
+                    maxLength={14}
+                    inputMode="numeric"
+                    autoComplete="off"
                   />
                 </div>
 

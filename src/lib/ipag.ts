@@ -13,6 +13,8 @@
  * - iPag.createToken() -> Promise<{ token: string, ... }>
  */
 
+import pb from '@/lib/pocketbase/client'
+
 declare global {
   interface Window {
     iPag?: {
@@ -42,7 +44,8 @@ declare global {
 
 /**
  * Public iPag API ID used by the client tokenizer.
- * Can be configured via VITE_IPAG_API_ID or VITE_IPAG_ID.
+ * Configured at build time via VITE_IPAG_API_ID or VITE_IPAG_ID,
+ * with runtime fallback to GET /backend/v1/ipag/public-config (IPAG_API_ID secret).
  */
 export const IPAG_API_ID: string =
   (import.meta.env.VITE_IPAG_API_ID as string) || (import.meta.env.VITE_IPAG_ID as string) || ''
@@ -84,13 +87,60 @@ export const IPAG_SCRIPT_URL: string = IS_IPAG_SANDBOX
   ? 'https://sandbox.ipag.com.br/js/dist/ipag.js'
   : 'https://api.ipag.com.br/js/dist/ipag.js'
 
+let runtimePublicId: string | null = null
+let fetchConfigPromise: Promise<string> | null = null
+
+/**
+ * Fetches the public iPag ID from the backend public endpoint if not set at build time.
+ * Caches the result in-memory so network request is made only once.
+ */
+export async function resolveIpagPublicId(): Promise<string> {
+  if (IPAG_API_ID && IPAG_API_ID.trim()) {
+    return IPAG_API_ID.trim()
+  }
+
+  if (runtimePublicId) {
+    return runtimePublicId
+  }
+
+  if (fetchConfigPromise) {
+    return fetchConfigPromise
+  }
+
+  fetchConfigPromise = (async () => {
+    try {
+      const data = await pb.send<{ ipag_id?: string; is_sandbox?: boolean }>(
+        '/backend/v1/ipag/public-config',
+        { method: 'GET' },
+      )
+      const fetchedId = (data?.ipag_id || '').trim()
+      if (fetchedId) {
+        runtimePublicId = fetchedId
+        return fetchedId
+      }
+    } catch (err: any) {
+      console.warn('[iPag] Falha ao obter identificador público em runtime:', err?.message || err)
+    }
+    return ''
+  })()
+
+  const id = await fetchConfigPromise
+  fetchConfigPromise = null
+  return id
+}
+
 let scriptLoadingPromise: Promise<void> | null = null
 
 /**
- * Ensures the iPag tokenizer script is loaded on the page.
+ * Ensures the iPag tokenizer script is loaded on the page and preheats public config.
  */
 export function loadIpagScript(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve()
+
+  // Pre-fetch public ID in background while script loads
+  if (!IPAG_API_ID) {
+    resolveIpagPublicId().catch(() => {})
+  }
 
   if (window.iPag) {
     return Promise.resolve()
@@ -145,13 +195,12 @@ export interface TokenizeCardParams {
  * Uses window.iPag to generate a secure single-use card token in the browser.
  */
 export async function tokenizeCard(params: TokenizeCardParams): Promise<string> {
-  await loadIpagScript()
+  const [, apiId] = await Promise.all([loadIpagScript(), resolveIpagPublicId()])
 
   if (!window.iPag) {
     throw new Error('A biblioteca iPag não foi carregada no navegador.')
   }
 
-  const apiId = IPAG_API_ID
   if (!apiId) {
     throw new Error(
       'Identificador público do iPag não configurado (VITE_IPAG_API_ID). Por favor, configure a variável de ambiente.',

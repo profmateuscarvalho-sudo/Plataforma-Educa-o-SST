@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,7 +31,7 @@ import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { ShieldAlert } from 'lucide-react'
 import { BACKEND_URL } from '@/lib/constants'
-import { tokenizeCard, IPAG_API_ID, IS_IPAG_SANDBOX } from '@/lib/ipag'
+import { tokenizeCard, IPAG_API_ID, IS_IPAG_SANDBOX, resolveIpagPublicId } from '@/lib/ipag'
 
 const CARD_BRANDS = [
   { value: 'visa', label: 'Visa' },
@@ -74,6 +74,15 @@ export default function AdminTestes() {
   const [syncOrderId, setSyncOrderId] = useState('6ceigkbvl7pinu5')
   const [syncLoading, setSyncLoading] = useState(false)
   const [syncResult, setSyncResult] = useState<any>(null)
+  const [activeIpagId, setActiveIpagId] = useState(IPAG_API_ID)
+
+  useEffect(() => {
+    resolveIpagPublicId()
+      .then((id) => {
+        if (id) setActiveIpagId(id)
+      })
+      .catch(() => {})
+  }, [])
 
   const handleManualSync = async () => {
     if (!syncOrderId.trim()) {
@@ -345,7 +354,7 @@ export default function AdminTestes() {
                     <KeyRound className="w-4 h-4 shrink-0" />
                     <span>
                       Ambiente: <strong>{IS_IPAG_SANDBOX ? 'Sandbox' : 'Produção'}</strong> · ID
-                      iPag: <code>{IPAG_API_ID || '(não definido)'}</code>
+                      iPag: <code>{activeIpagId || '(não definido)'}</code>
                     </span>
                   </div>
                 )}

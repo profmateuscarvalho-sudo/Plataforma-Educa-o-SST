@@ -7,8 +7,20 @@ routerAdd(
 
     var subscription = null
     try {
-      subscription = $app.findFirstRecordByFilter('subscriptions', "user = '" + userId + "'")
-    } catch (_) {}
+      // Prioritize active subscription if user has one
+      subscription = $app.findFirstRecordByFilter(
+        'subscriptions',
+        "user = '" + userId + "' && status = 'active'",
+      )
+    } catch (_) {
+      try {
+        subscription = $app.findFirstRecordByFilter(
+          'subscriptions',
+          "user = '" + userId + "'",
+          '-created',
+        )
+      } catch (_) {}
+    }
 
     var emailLog = null
     try {

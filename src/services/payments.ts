@@ -10,7 +10,7 @@ export const getPayments = async () => {
 
 export const getUserPayments = async (userId: string) => {
   return await pb.collection('payments').getFullList<Payment>({
-    filter: `user="${userId}"`,
+    filter: `user='${userId}'`,
     sort: '-created',
   })
 }

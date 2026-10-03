@@ -16,7 +16,7 @@ export default function StudentLayout() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/login')
+      navigate('/login', { replace: true })
       return
     }
     if (
@@ -26,7 +26,7 @@ export default function StudentLayout() {
       user.role !== 'admin' &&
       !access.hasSubscriptionAccess
     ) {
-      navigate('/subscription-pending')
+      navigate('/subscription-pending', { replace: true })
     }
   }, [user?.id, user?.role, loading, access.loading, access.hasSubscriptionAccess, navigate])
 

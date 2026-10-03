@@ -99,6 +99,7 @@ export function UserEditDialog({ user, open, setOpen, onSuccess }: UserEditDialo
     if (!user) return
     setSaving(true)
     try {
+      const isPaid = planTier === 'prata' || planTier === 'ouro'
       await pb.collection('users').update(user.id, {
         name,
         email,
@@ -110,7 +111,28 @@ export function UserEditDialog({ user, open, setOpen, onSuccess }: UserEditDialo
         subscription_billing: billing,
         contract_end_date: contractEnd || undefined,
         professional_tags: tags,
+        ...(isPaid ? { email_verificado: true } : {}),
       })
+
+      // Se for plano pago ou upgrade, assegurar que a assinatura fique active
+      if (isPaid) {
+        try {
+          const subs = await pb.collection('subscriptions').getFullList({
+            filter: `user = '${user.id}'`,
+            sort: '-created',
+          })
+          if (subs.length > 0) {
+            for (const sub of subs) {
+              if (sub.status !== 'active') {
+                await pb.collection('subscriptions').update(sub.id, { status: 'active' })
+              }
+            }
+          }
+        } catch {
+          /* ignore non-blocking error */
+        }
+      }
+
       toast({ title: 'Aluno atualizado com sucesso' })
       setOpen(false)
       onSuccess()

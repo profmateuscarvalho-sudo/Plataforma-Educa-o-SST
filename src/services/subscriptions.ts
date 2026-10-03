@@ -55,7 +55,7 @@ export const getPendingStatus = (): Promise<PendingStatus> =>
 
 export const getUserSubscriptions = (userId: string) =>
   pb.collection('subscriptions').getFullList({
-    filter: `user = "${userId}"`,
+    filter: `user = '${userId}'`,
     sort: '-created',
     expand: 'plan',
   })

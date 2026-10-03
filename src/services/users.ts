@@ -16,10 +16,30 @@ export const getAdmins = async () => {
 }
 
 export const updateUserPlan = async (userId: string, planTier: string, billing: string) => {
-  return await pb.collection('users').update<User>(userId, {
+  const isPaid = planTier === 'prata' || planTier === 'ouro'
+  const updatedUser = await pb.collection('users').update<User>(userId, {
     plan_tier: planTier,
     subscription_billing: billing,
+    ...(isPaid ? { email_verificado: true } : {}),
   })
+
+  if (isPaid) {
+    try {
+      const subs = await pb.collection('subscriptions').getFullList({
+        filter: `user = '${userId}'`,
+        sort: '-created',
+      })
+      for (const sub of subs) {
+        if (sub.status !== 'active') {
+          await pb.collection('subscriptions').update(sub.id, { status: 'active' })
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return updatedUser
 }
 
 export const updateUserProfile = async (userId: string, data: Record<string, any>) => {

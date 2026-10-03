@@ -45,8 +45,16 @@ export function useStudentAccess() {
 
   const hasSubscriptionAccess = useMemo(() => {
     if (user?.role === 'admin') return true
+    // Assinatura ativa no banco dá acesso
     if (subscriptions.some((s) => s.status === 'active')) return true
+    // Usuários com plano pago (prata ou ouro)
     if (user?.plan_tier === 'prata' || user?.plan_tier === 'ouro') return true
+    // Usuários com contrato válido
+    if (user?.contract_end_date && new Date(user.contract_end_date) >= new Date()) return true
+    // Usuário free verificado tem acesso à plataforma no tier free
+    const isVerified = Boolean(user?.email_verificado || (user as any)?.verified)
+    if (user?.plan_tier === 'free' && isVerified) return true
+    // Pagamentos aprovados anteriores
     if (payments.length > 0) return true
     return false
   }, [user, subscriptions, payments])

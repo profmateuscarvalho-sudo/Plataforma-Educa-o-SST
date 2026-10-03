@@ -44,25 +44,33 @@ export default function SubscriptionPending() {
         verified?: boolean
         role?: string
         plan_tier?: string
+        contract_end_date?: string
       } | null
-      const isEmailVerified = Boolean(currentUser?.email_verificado || currentUser?.verified)
+
       const isSubActive = s?.subscription?.status === 'active'
+      const isPaidPlan = currentUser?.plan_tier === 'prata' || currentUser?.plan_tier === 'ouro'
+      const hasValidContract =
+        Boolean(currentUser?.contract_end_date) &&
+        new Date(currentUser!.contract_end_date!) >= new Date()
 
-      if ((isSubActive || isEmailVerified) && !hasRefreshedRef.current) {
-        hasRefreshedRef.current = true
-      }
-
-      if (
+      // Se o usuário já tiver acesso confirmado por assinatura ativa, plano pago, contrato ou admin,
+      // ou for conta Free verificada, vai direto para /plataforma
+      const isEmailVerified = Boolean(currentUser?.email_verificado || currentUser?.verified)
+      const hasConfirmedAccess =
         currentUser?.role === 'admin' ||
-        (isEmailVerified && (isSubActive || currentUser?.plan_tier))
-      ) {
+        isSubActive ||
+        isPaidPlan ||
+        hasValidContract ||
+        (isEmailVerified && currentUser?.plan_tier === 'free')
+
+      if (hasConfirmedAccess) {
         navigate('/plataforma', { replace: true })
         return
       }
 
       if (planId && !isSubActive && s?.state !== 'manual_verification') {
         if (isEmailVerified) {
-          navigate(`/planos?planId=${planId}&checkout=1`)
+          navigate(`/planos?planId=${planId}&checkout=1`, { replace: true })
           return
         }
       }
@@ -82,17 +90,23 @@ export default function SubscriptionPending() {
 
   useEffect(() => {
     if (!user) return
-    const isEmailVerified = Boolean(user.email_verificado || (user as any).verified)
+    // Evita redirecionar prematuramente enquanto access ainda está carregando do banco
+    if (access.loading) return
+
+    // Se useStudentAccess conceder acesso (seja por assinaturas ativas, plano ouro/prata,
+    // contrato ou free verificado), redireciona imediatamente
+    if (access.hasSubscriptionAccess || user.role === 'admin') {
+      navigate('/plataforma', { replace: true })
+      return
+    }
+
     const isSubActive =
       status?.subscription?.status === 'active' ||
       access.subscriptions.some((s) => s.status === 'active')
-    const hasActiveStatus = access.hasSubscriptionAccess || isSubActive || Boolean(user.plan_tier)
+    const isPaidPlan = user.plan_tier === 'prata' || user.plan_tier === 'ouro'
+    const isEmailVerified = Boolean(user.email_verificado || (user as any).verified)
 
-    if (
-      user.role === 'admin' ||
-      (!access.loading && access.hasSubscriptionAccess) ||
-      (isEmailVerified && hasActiveStatus)
-    ) {
+    if (isSubActive || isPaidPlan || (isEmailVerified && user.plan_tier === 'free')) {
       navigate('/plataforma', { replace: true })
     }
   }, [
@@ -228,15 +242,25 @@ export default function SubscriptionPending() {
                   verified?: boolean
                   role?: string
                   plan_tier?: string
+                  contract_end_date?: string
                 } | null
                 const isEmailVerified = Boolean(
                   currentUser?.email_verificado || currentUser?.verified,
                 )
+                const isPaidPlan =
+                  currentUser?.plan_tier === 'prata' || currentUser?.plan_tier === 'ouro'
+                const isSubActive = status?.subscription?.status === 'active'
+                const hasValidContract =
+                  Boolean(currentUser?.contract_end_date) &&
+                  new Date(currentUser!.contract_end_date!) >= new Date()
+
                 if (
                   currentUser?.role === 'admin' ||
                   access.hasSubscriptionAccess ||
-                  (isEmailVerified &&
-                    (status?.subscription?.status === 'active' || currentUser?.plan_tier))
+                  isSubActive ||
+                  isPaidPlan ||
+                  hasValidContract ||
+                  (isEmailVerified && currentUser?.plan_tier === 'free')
                 ) {
                   navigate('/plataforma', { replace: true })
                 }

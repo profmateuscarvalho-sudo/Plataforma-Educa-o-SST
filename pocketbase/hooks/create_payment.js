@@ -7,6 +7,24 @@ routerAdd(
 
     if (!userId) throw new UnauthorizedError('auth required')
 
+    // Verificação estrita para fluxo de assinatura:
+    // product_type='subscription', plan_id e billing_cycle DEVEM ser fornecidos
+    if (body.product_type === 'subscription' || body.plan_id || body.billing_cycle) {
+      if (!body.product_type || body.product_type !== 'subscription') {
+        throw new BadRequestError(
+          "product_type deve ser 'subscription' para pagamentos de assinatura",
+        )
+      }
+      if (!body.plan_id || typeof body.plan_id !== 'string' || body.plan_id.trim() === '') {
+        throw new BadRequestError('plan_id é obrigatório para pagamentos de assinatura')
+      }
+      if (body.billing_cycle !== 'monthly' && body.billing_cycle !== 'yearly') {
+        throw new BadRequestError(
+          "billing_cycle deve ser 'monthly' ou 'yearly' para pagamentos de assinatura",
+        )
+      }
+    }
+
     if (!body.amount || body.amount <= 0) {
       throw new BadRequestError('amount is required and must be greater than 0')
     }
@@ -99,13 +117,21 @@ routerAdd(
       paymentRecord.set('user', userId)
       paymentRecord.set('amount', body.amount)
       paymentRecord.set('status', 'pending')
-      paymentRecord.set('product_type', body.product_type || '')
-      if (body.plan_id) {
+
+      if (body.product_type === 'subscription') {
+        paymentRecord.set('product_type', 'subscription')
         paymentRecord.set('plan_id', body.plan_id)
-      }
-      if (body.billing_cycle) {
         paymentRecord.set('billing_cycle', body.billing_cycle)
+      } else {
+        paymentRecord.set('product_type', body.product_type || '')
+        if (body.plan_id) {
+          paymentRecord.set('plan_id', body.plan_id)
+        }
+        if (body.billing_cycle) {
+          paymentRecord.set('billing_cycle', body.billing_cycle)
+        }
       }
+
       if (body.mentorship_id) {
         paymentRecord.set('mentorship_id', body.mentorship_id)
       }

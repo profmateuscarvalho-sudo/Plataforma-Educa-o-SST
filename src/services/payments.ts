@@ -37,6 +37,8 @@ export interface CreatePaymentPayload {
   }
   card?: CreatePaymentCard
   product_type?: string
+  plan_id?: string
+  billing_cycle?: 'monthly' | 'yearly'
   mentorship_id?: string
   selected_slots?: { date: string; time: string }[]
 }

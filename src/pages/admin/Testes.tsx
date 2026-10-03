@@ -71,6 +71,39 @@ export default function AdminTestes() {
   const { user } = useAuth()
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityResult, setSecurityResult] = useState<TestResult | null>(null)
+  const [syncOrderId, setSyncOrderId] = useState('6ceigkbvl7pinu5')
+  const [syncLoading, setSyncLoading] = useState(false)
+  const [syncResult, setSyncResult] = useState<any>(null)
+
+  const handleManualSync = async () => {
+    if (!syncOrderId.trim()) {
+      toast({ title: 'Informe o ID do pagamento', variant: 'destructive' })
+      return
+    }
+    setSyncLoading(true)
+    setSyncResult(null)
+    try {
+      const response = await pb.send<any>('/backend/v1/admin/sync-ipag-payment', {
+        method: 'POST',
+        body: JSON.stringify({ order_id: syncOrderId.trim() }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+      setSyncResult(response)
+      toast({
+        title: 'Consulta iPag concluída',
+        description: `Status: ${response.raw_status || 'N/A'} (Pago: ${response.is_paid ? 'Sim' : 'Não'})`,
+      })
+    } catch (err: any) {
+      setSyncResult({ error: err?.message || String(err), response: err?.response })
+      toast({
+        title: 'Erro ao consultar iPag',
+        description: err?.message || 'Verifique o log',
+        variant: 'destructive',
+      })
+    } finally {
+      setSyncLoading(false)
+    }
+  }
 
   const handleSecurityTest = async () => {
     if (!user) {
@@ -129,8 +162,8 @@ export default function AdminTestes() {
       type: paymentType,
       amount: parseFloat(amount),
       customer: { name: customerName, cpf_cnpj: cpfCnpj },
+      product_type: 'test',
     }
-
     if (paymentType === 'card') {
       if (useTokenization) {
         setStep('tokenizing')
@@ -584,6 +617,82 @@ export default function AdminTestes() {
                   </pre>
                 </CardContent>
               </Card>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-blue-300">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg text-blue-900">
+            <Send className="w-5 h-5 text-blue-600" />
+            Sincronização / Consulta Manual de Pagamento iPag
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-slate-600">
+            Consulta diretamente a API de produção do iPag (
+            <code className="bg-slate-100 px-1 py-0.5 rounded text-xs">
+              GET /service/consult?order_id=...
+            </code>
+            ) com as credenciais salvas nos secrets. Se o pagamento estiver confirmado/pago,
+            atualiza o status para{' '}
+            <code className="bg-slate-100 px-1 py-0.5 rounded text-xs">paid</code> e ativa
+            automaticamente o plano do usuário.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 items-end">
+            <div className="space-y-1.5 flex-1 w-full">
+              <Label htmlFor="syncOrderId">ID do Pagamento (order_id)</Label>
+              <Input
+                id="syncOrderId"
+                value={syncOrderId}
+                onChange={(e) => setSyncOrderId(e.target.value)}
+                placeholder="6ceigkbvl7pinu5"
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={handleManualSync}
+              disabled={syncLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {syncLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Consultando iPag...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Consultar e Sincronizar
+                </>
+              )}
+            </Button>
+          </div>
+
+          {syncResult && (
+            <div className="space-y-3 pt-2">
+              <Alert
+                className={
+                  syncResult.is_paid
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                    : 'border-blue-500 bg-blue-50 text-blue-800'
+                }
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>
+                  Status retornado pelo iPag:{' '}
+                  <strong>{syncResult.raw_status || syncResult.status || 'Não retornado'}</strong>
+                </AlertTitle>
+                <AlertDescription>
+                  {syncResult.is_paid
+                    ? `Pagamento confirmado como PAGO! Status atualizado na base: ${syncResult.new_status}.`
+                    : `Pagamento ainda não consta como pago no gateway iPag (status: ${syncResult.raw_status || 'desconhecido'}).`}
+                </AlertDescription>
+              </Alert>
+              <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-auto text-xs font-mono max-h-80">
+                {JSON.stringify(syncResult, null, 2)}
+              </pre>
             </div>
           )}
         </CardContent>

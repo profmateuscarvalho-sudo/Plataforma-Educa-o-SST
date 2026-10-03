@@ -134,7 +134,6 @@ onRecordAfterUpdateSuccess((e) => {
     user.set('subscription_billing', billingCycle || 'monthly')
     user.set('email_verificado', true)
     $app.save(user)
-
     var subscriptionId = ''
     try {
       // Busca assinatura pendente ou qualquer assinatura existente do usuário (permite upgrades de quem já tem assinatura)

@@ -22,7 +22,7 @@ import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { createSubscription } from '@/services/subscriptions'
-import { createPayment } from '@/services/payments'
+import { createPayment, type CreatePaymentPayload } from '@/services/payments'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
 import { loadIpagScript, tokenizeCard } from '@/lib/ipag'
@@ -164,14 +164,14 @@ export function SubscriptionCheckoutModal({
     const formData = new FormData(e.currentTarget)
     const cpfCnpj = (formData.get('cpf_cnpj') as string) || ''
 
-    const payload: Record<string, any> = {
+    const payload: CreatePaymentPayload = {
       amount: currentPrice,
       type: paymentMethod,
       product_type: 'subscription',
       plan_id: plan.id,
       billing_cycle: billingCycle,
       customer: {
-        name: user.name || user.email,
+        name: user.name || user.email || '',
         cpf_cnpj: cpfCnpj,
         email: user.email,
         phone: user.phone || '',
@@ -228,7 +228,7 @@ export function SubscriptionCheckoutModal({
     }
 
     try {
-      const response = await createPayment(payload as any)
+      const response = await createPayment(payload)
 
       if (paymentMethod === 'pix') {
         if (response.pix && response.payment_id) {

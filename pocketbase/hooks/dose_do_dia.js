@@ -371,14 +371,6 @@ cronAdd('dose_lembrete', '*/30 * * * *', () => {
     if (!ativo) continue
     var hora = u.get('lembrete_diario_hora') || '19:00'
 
-    var nowBrt = new Date()
-    var utc3 = nowBrt.getTime() + nowBrt.getTimezoneOffset() * 60000
-    var brt3 = new Date(utc3 - 3 * 3600000)
-    var hh = ('0' + brt3.getUTCHours()).slice(-2)
-    var mm = ('0' + brt3.getUTCMinutes()).slice(-2)
-    var nowHHMM = hh + ':' + mm
-    if (nowHHMM !== hora) continue
-
     var userId = u.id
 
     // Já respondeu hoje? Pula.

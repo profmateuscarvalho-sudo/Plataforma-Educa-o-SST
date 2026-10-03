@@ -1,5 +1,10 @@
 routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
-  var body = e.requestInfo().body || {}
+  var body = {}
+  try {
+    body = e.requestInfo().body || {}
+  } catch (_) {
+    body = {}
+  }
   var token = (body.token || '').trim()
 
   if (!token) return e.badRequestError('Token é obrigatório')

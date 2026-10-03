@@ -8,7 +8,12 @@ routerAdd(
       return e.unauthorizedError('Acesso restrito para administradores')
     }
 
-    var body = e.requestInfo().body || {}
+    var body = {}
+    try {
+      body = e.requestInfo().body || {}
+    } catch (_) {
+      body = {}
+    }
     var orderId = body.order_id || ''
 
     if (!orderId) {

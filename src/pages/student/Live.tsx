@@ -54,23 +54,30 @@ export default function StudentLive() {
     : `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${session.panda_video_id}`
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-80px)] bg-slate-950 text-slate-200">
-      <div className="h-16 border-b border-white/10 flex items-center px-4 md:px-8 gap-4 bg-slate-900 shrink-0">
-        <Button variant="ghost" size="sm" asChild className="text-slate-400 hover:text-white">
+    <div className="flex flex-col min-h-[calc(100vh-80px)] bg-background text-foreground">
+      <div className="h-16 border-b border-border flex items-center px-4 md:px-8 gap-4 bg-card shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="text-muted-foreground hover:text-foreground rounded-full min-h-[40px] px-3"
+        >
           <Link to="/plataforma/live-sessions">
             <ChevronLeft className="mr-2 w-4 h-4" /> Voltar
           </Link>
         </Button>
-        <div className="h-6 w-px bg-white/10 mx-2 hidden md:block" />
-        <h1 className="font-medium truncate text-white">{session.title}</h1>
+        <div className="h-6 w-px bg-border mx-2 hidden md:block" />
+        <h1 className="font-serif font-semibold truncate text-foreground text-sm md:text-base">
+          {session.title}
+        </h1>
         <div className="ml-auto flex items-center gap-2">
           {session.status === 'live' && (
             <span className="flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-[#B4472E] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#B4472E]"></span>
             </span>
           )}
-          <span className="text-sm font-bold uppercase tracking-wider">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {session.status === 'live'
               ? 'AO VIVO'
               : session.status === 'finished'
@@ -82,27 +89,27 @@ export default function StudentLive() {
       <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-144px)]">
         <div className="flex-1 flex flex-col p-4 md:p-8 gap-6 overflow-y-auto">
           <div
-            className="bg-black w-full rounded-2xl overflow-hidden shadow-2xl relative border border-white/5"
+            className="bg-black w-full rounded-[28px] overflow-hidden relative border border-border"
             style={{ paddingTop: '56.25%' }}
           >
             {session.status === 'scheduled' ? (
-              <div className="absolute inset-0 flex items-center justify-center text-slate-500">
+              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
                 Transmissão inicia em {new Date(session.scheduled_at).toLocaleString()}
               </div>
             ) : session.status === 'finished' &&
               user?.plan_tier === 'free' &&
               user?.role !== 'admin' ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-center p-8 gap-3">
-                <Lock className="w-12 h-12 text-amber-400" />
-                <p className="text-white text-lg font-semibold">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-card text-center p-8 gap-3">
+                <Lock className="w-12 h-12 text-primary" />
+                <p className="text-foreground text-lg font-serif font-semibold">
                   Conteúdo disponível para membros Prata e Ouro
                 </p>
-                <p className="text-slate-400 text-sm max-w-md">
+                <p className="text-muted-foreground text-sm max-w-md">
                   Faça upgrade do seu plano para acessar as gravações das aulas ao vivo.
                 </p>
                 <Button
                   asChild
-                  className="bg-amber-500 hover:bg-amber-600 text-white mt-2 text-base font-semibold px-6 h-12"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground mt-2 font-semibold px-8 min-h-[52px] rounded-full"
                 >
                   <Link to="/planos">Faça um upgrade para ter acesso</Link>
                 </Button>
@@ -117,24 +124,26 @@ export default function StudentLive() {
             )}
           </div>
           <div>
-            <h2 className="text-2xl font-serif font-bold text-white mb-2">{session.title}</h2>
-            <p className="text-slate-400 whitespace-pre-wrap leading-relaxed">
+            <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
+              {session.title}
+            </h2>
+            <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed text-sm">
               {session.description}
             </p>
           </div>
         </div>
-        <div className="w-full lg:w-96 shrink-0 bg-slate-900 border-l border-white/10 flex flex-col h-full">
+        <div className="w-full lg:w-96 shrink-0 bg-card border-l border-border flex flex-col h-full text-card-foreground">
           <Tabs defaultValue="chat" className="flex flex-col h-full">
-            <TabsList className="w-full grid grid-cols-2 rounded-none bg-slate-950 p-0 h-14">
+            <TabsList className="w-full grid grid-cols-2 rounded-none bg-muted/50 p-1 h-14 border-b border-border">
               <TabsTrigger
                 value="chat"
-                className="rounded-none data-[state=active]:bg-slate-900 data-[state=active]:border-b-2 data-[state=active]:border-primary"
+                className="rounded-full data-[state=active]:bg-card data-[state=active]:text-foreground text-xs font-semibold"
               >
                 Chat Geral
               </TabsTrigger>
               <TabsTrigger
                 value="questions"
-                className="rounded-none data-[state=active]:bg-slate-900 data-[state=active]:border-b-2 data-[state=active]:border-primary"
+                className="rounded-full data-[state=active]:bg-card data-[state=active]:text-foreground text-xs font-semibold"
               >
                 Perguntas
               </TabsTrigger>
@@ -146,10 +155,10 @@ export default function StudentLive() {
               >
                 {messages.map((m) => (
                   <div key={m.id} className="text-sm">
-                    <span className="font-bold text-primary mr-2">
+                    <span className="font-serif font-semibold text-foreground mr-2">
                       {m.expand?.user?.name || 'Aluno'}:
                     </span>
-                    <span className="text-slate-300 break-words">{m.content}</span>
+                    <span className="text-muted-foreground break-words">{m.content}</span>
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
@@ -163,26 +172,26 @@ export default function StudentLive() {
                   .map((m) => (
                     <div
                       key={m.id}
-                      className="text-sm bg-primary/10 border border-primary/20 p-3 rounded-lg"
+                      className="text-sm bg-primary/10 border border-primary/20 p-4 rounded-[18px]"
                     >
-                      <span className="font-bold text-primary block mb-1">
+                      <span className="font-serif font-semibold text-foreground block mb-1">
                         {m.expand?.user?.name || 'Aluno'} perguntou:
                       </span>
-                      <span className="text-slate-200">{m.content}</span>
+                      <span className="text-foreground/90">{m.content}</span>
                     </div>
                   ))}
                 <div ref={messagesEndRef} />
               </TabsContent>
             </div>
             {session.status === 'live' && (
-              <form onSubmit={handleSend} className="p-4 bg-slate-950 border-t border-white/10">
+              <form onSubmit={handleSend} className="p-4 bg-card border-t border-border">
                 <div className="flex items-center gap-2 mb-2">
-                  <label className="text-xs flex items-center gap-2 text-slate-400 cursor-pointer">
+                  <label className="text-xs flex items-center gap-2 text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"
                       checked={isQuestion}
                       onChange={(e) => setIsQuestion(e.target.checked)}
-                      className="rounded bg-slate-800 border-white/20"
+                      className="rounded border-border text-primary focus:ring-ring"
                     />
                     Marcar como Pergunta
                   </label>
@@ -192,9 +201,13 @@ export default function StudentLive() {
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Digite sua mensagem..."
-                    className="bg-slate-900 border-white/10"
+                    className="rounded-full border-border bg-card text-foreground min-h-[44px] px-4"
                   />
-                  <Button type="submit" size="icon">
+                  <Button
+                    type="submit"
+                    size="icon"
+                    className="shrink-0 rounded-full w-11 h-11 bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>

@@ -20,21 +20,21 @@ export default function StudentCaseFeed() {
   }, [])
 
   return (
-    <div className="min-h-[calc(100vh-56px)] bg-slate-50 flex flex-col">
-      <div className="bg-gradient-to-br from-teal-700 via-emerald-800 to-teal-900 text-white py-8 px-4 shrink-0">
+    <div className="min-h-[calc(100vh-56px)] bg-background text-foreground flex flex-col">
+      <div className="border-b border-border bg-card py-8 px-4 shrink-0">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
-              <MessagesSquare className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-foreground">
+              <MessagesSquare className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-serif font-bold text-white">Feed de Cases</h1>
-              <p className="text-emerald-100/70 text-sm">
+              <h1 className="text-2xl font-serif font-semibold text-foreground">Feed de Cases</h1>
+              <p className="text-muted-foreground text-sm">
                 Compartilhe e discuta casos profissionais
               </p>
             </div>
           </div>
-          <BackToHub />
+          <BackToHub className="border-[1.5px] border-foreground bg-transparent text-foreground hover:bg-muted rounded-full min-h-[40px] px-4" />
         </div>
       </div>
       <div className="max-w-7xl mx-auto p-4 flex-1 w-full">

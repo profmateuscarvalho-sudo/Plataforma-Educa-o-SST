@@ -106,59 +106,71 @@ export default function StudentProfile() {
   const canUpgrade = userTier !== 'ouro'
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50">
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-10">
+    <div className="min-h-[calc(100vh-4rem)] bg-background text-foreground">
+      <div className="border-b border-border bg-card py-8">
         <div className="container px-4 max-w-4xl">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-5">
             {user && <ProfileAvatar user={user} size="lg" editable />}
             <div>
-              <h1 className="text-3xl font-serif font-bold text-yellow-400">Meu Perfil</h1>
-              <p className="text-slate-300 text-sm mt-1">Gerencie suas informações e segurança</p>
+              <h1 className="text-2xl sm:text-3xl font-serif font-semibold text-foreground">
+                Meu Perfil
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Gerencie suas informações e segurança
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       <div className="container px-4 max-w-4xl py-8 space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
+        <Card className="rounded-[28px] border-border bg-card text-card-foreground shadow-none">
+          <CardHeader className="p-6 sm:p-8 pb-4">
+            <CardTitle className="flex items-center gap-2 text-xl font-serif font-semibold text-foreground">
               <UserIcon className="w-5 h-5 text-primary" /> Informações Pessoais
             </CardTitle>
-            <CardDescription>Atualize seus dados cadastrais</CardDescription>
+            <CardDescription className="text-muted-foreground text-sm">
+              Atualize seus dados cadastrais
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 sm:p-8 pt-0">
             <form onSubmit={handleSaveInfo} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-xs font-semibold text-muted-foreground">
+                  Nome Completo
+                </Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="h-11"
+                  className="rounded-full border-border bg-card text-foreground min-h-[48px] px-4"
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs font-semibold text-muted-foreground">
+                    E-mail
+                  </Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-11"
+                    className="rounded-full border-border bg-card text-foreground min-h-[48px] px-4"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone" className="text-xs font-semibold text-muted-foreground">
+                    Telefone
+                  </Label>
                   <Input
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(formatPhone(e.target.value))}
                     placeholder="(00) 00000-0000"
-                    className="h-11"
+                    className="rounded-full border-border bg-card text-foreground min-h-[48px] px-4"
                   />
                 </div>
               </div>
@@ -169,7 +181,9 @@ export default function StudentProfile() {
                 onCityChange={setCity}
               />
               <div className="space-y-2">
-                <Label>Perfil Profissional</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Perfil Profissional
+                </Label>
                 <div className="flex flex-wrap gap-2">
                   {availableTags.map((p) => (
                     <button
@@ -181,10 +195,10 @@ export default function StudentProfile() {
                         )
                       }
                       className={cn(
-                        'px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5',
+                        'px-4 py-2 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 border',
                         tags.includes(p)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-muted text-foreground border-border hover:border-foreground/30',
                       )}
                     >
                       {tags.includes(p) && <Check className="w-3.5 h-3.5" />}
@@ -193,67 +207,90 @@ export default function StudentProfile() {
                   ))}
                 </div>
               </div>
-              <Button type="submit" disabled={savingInfo} className="h-11">
-                {savingInfo ? 'Salvando...' : 'Salvar Alterações'}
-              </Button>
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  disabled={savingInfo}
+                  className="min-h-[52px] px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                >
+                  {savingInfo ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
+        <Card className="rounded-[28px] border-border bg-card text-card-foreground shadow-none">
+          <CardHeader className="p-6 sm:p-8 pb-4">
+            <CardTitle className="flex items-center gap-2 text-xl font-serif font-semibold text-foreground">
               <Lock className="w-5 h-5 text-primary" /> Segurança
             </CardTitle>
-            <CardDescription>Altere sua senha de acesso</CardDescription>
+            <CardDescription className="text-muted-foreground text-sm">
+              Altere sua senha de acesso
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 sm:p-8 pt-0">
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="newPass">Nova Senha</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="newPass" className="text-xs font-semibold text-muted-foreground">
+                    Nova Senha
+                  </Label>
                   <Input
                     id="newPass"
                     type="password"
                     value={newPass}
                     onChange={(e) => setNewPass(e.target.value)}
                     required
-                    className="h-11"
+                    className="rounded-full border-border bg-card text-foreground min-h-[48px] px-4"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPass">Confirmar Senha</Label>
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="confirmPass"
+                    className="text-xs font-semibold text-muted-foreground"
+                  >
+                    Confirmar Senha
+                  </Label>
                   <Input
                     id="confirmPass"
                     type="password"
                     value={confirmPass}
                     onChange={(e) => setConfirmPass(e.target.value)}
                     required
-                    className="h-11"
+                    className="rounded-full border-border bg-card text-foreground min-h-[48px] px-4"
                   />
                 </div>
               </div>
-              <Button type="submit" disabled={savingPass} className="h-11">
-                {savingPass ? 'Alterando...' : 'Alterar Senha'}
-              </Button>
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  disabled={savingPass}
+                  className="min-h-[52px] px-8 rounded-full border-[1.5px] border-foreground bg-transparent text-foreground hover:bg-muted font-semibold"
+                >
+                  {savingPass ? 'Alterando...' : 'Alterar Senha'}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
+        <Card className="rounded-[28px] border-border bg-card text-card-foreground shadow-none">
+          <CardHeader className="p-6 sm:p-8 pb-4">
+            <CardTitle className="flex items-center gap-2 text-xl font-serif font-semibold text-foreground">
               <CreditCard className="w-5 h-5 text-primary" /> Assinatura e Pagamentos
             </CardTitle>
-            <CardDescription>Histórico de transações e plano atual</CardDescription>
+            <CardDescription className="text-muted-foreground text-sm">
+              Histórico de transações e plano atual
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-lg bg-slate-50 border">
+          <CardContent className="p-6 sm:p-8 pt-0 space-y-6">
+            <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-[20px] bg-muted/60 border border-border">
               <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5 text-slate-400" />
+                <Shield className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="font-medium text-slate-800">Status da Assinatura</p>
-                  <p className="text-sm text-slate-500">
+                  <p className="font-semibold text-foreground text-sm">Status da Assinatura</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {hasActiveSub
                       ? `Ativa até ${format(new Date(user!.contract_end_date!), 'dd/MM/yyyy', { locale: ptBR })}`
                       : 'Sem assinatura ativa'}
@@ -261,21 +298,23 @@ export default function StudentProfile() {
                 </div>
               </div>
               <Badge
-                variant={hasActiveSub ? 'default' : 'outline'}
-                className={
+                className={cn(
+                  'rounded-full px-3 py-1 text-xs font-semibold',
                   hasActiveSub
-                    ? 'bg-emerald-500 hover:bg-emerald-600 border-transparent text-white'
-                    : 'text-slate-500'
-                }
+                    ? 'bg-[#E3F1E9] text-[#1F6B4A] dark:bg-[#1F6B4A]/30 dark:text-[#E3F1E9] border border-[#1F6B4A]/30'
+                    : 'bg-muted text-muted-foreground border-border',
+                )}
               >
                 {hasActiveSub ? 'Ativo' : 'Inativo'}
               </Badge>
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-3">Histórico de Pagamentos</h4>
+              <h4 className="text-sm font-serif font-semibold text-foreground mb-3">
+                Histórico de Pagamentos
+              </h4>
               {payments.length === 0 ? (
-                <p className="text-sm text-slate-500 py-4 text-center">
+                <p className="text-sm text-muted-foreground py-4 text-center">
                   Nenhum pagamento registrado.
                 </p>
               ) : (
@@ -283,29 +322,30 @@ export default function StudentProfile() {
                   {payments.map((p) => (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between p-3 rounded-lg border bg-white"
+                      className="flex items-center justify-between p-4 rounded-[20px] border border-border bg-card"
                     >
                       <div>
-                        <p className="text-sm font-medium text-slate-800">
+                        <p className="text-sm font-semibold text-foreground">
                           {p.product_type || 'Produto'}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {format(new Date(p.created), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold text-slate-700">
+                        <span className="text-sm font-serif font-semibold text-foreground">
                           R$ {(p.amount || 0).toFixed(2)}
                         </span>
                         <Badge
                           variant="outline"
-                          className={
+                          className={cn(
+                            'rounded-full px-3 py-0.5 text-xs font-semibold',
                             p.status === 'paid'
-                              ? 'border-emerald-500 text-emerald-600'
+                              ? 'border-[#1F6B4A]/30 bg-[#E3F1E9] text-[#1F6B4A] dark:bg-[#1F6B4A]/20 dark:text-[#E3F1E9]'
                               : p.status === 'pending'
-                                ? 'border-amber-500 text-amber-600'
-                                : 'border-red-500 text-red-600'
-                          }
+                                ? 'border-primary/40 bg-primary/10 text-foreground'
+                                : 'border-[#B4472E]/30 bg-[#FAE7E1] text-[#B4472E] dark:bg-[#B4472E]/20 dark:text-[#FAE7E1]',
+                          )}
                         >
                           {p.status === 'paid'
                             ? 'Pago'
@@ -321,20 +361,25 @@ export default function StudentProfile() {
             </div>
 
             {canUpgrade && (
-              <div className="p-4 rounded-lg bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
-                <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="p-5 rounded-[22px] bg-muted/60 border border-border">
+                <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                      <Crown className="w-5 h-5 text-amber-600" />
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-foreground">
+                      <Crown className="w-5 h-5 text-foreground" />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-800">Fazer Upgrade de Plano</p>
-                      <p className="text-sm text-slate-500">
+                      <p className="font-serif font-semibold text-foreground">
+                        Fazer Upgrade de Plano
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Desbloqueie documentários, cursos e mais recursos
                       </p>
                     </div>
                   </div>
-                  <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white">
+                  <Button
+                    asChild
+                    className="min-h-[44px] px-6 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                  >
                     <Link to="/planos">
                       Fazer Upgrade <ArrowUpRight className="w-4 h-4 ml-1" />
                     </Link>
@@ -345,15 +390,19 @@ export default function StudentProfile() {
 
             {plans.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-slate-700 mb-3">Planos Disponíveis</h4>
+                <h4 className="text-sm font-serif font-semibold text-foreground mb-3">
+                  Planos Disponíveis
+                </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {plans.map((plan) => (
-                    <div key={plan.id} className="p-4 rounded-lg border bg-white">
-                      <p className="font-bold text-slate-800">{plan.name}</p>
-                      <p className="text-sm text-slate-500 mb-2">{plan.description}</p>
-                      <p className="text-lg font-bold text-primary">
+                    <div key={plan.id} className="p-5 rounded-[22px] border border-border bg-card">
+                      <p className="font-serif font-semibold text-foreground">{plan.name}</p>
+                      <p className="text-xs text-muted-foreground mb-3 mt-1 leading-relaxed">
+                        {plan.description}
+                      </p>
+                      <p className="text-lg font-serif font-semibold text-foreground">
                         R$ {plan.price.toFixed(2)}
-                        <span className="text-sm font-normal text-slate-400">
+                        <span className="text-xs font-normal text-muted-foreground">
                           /{plan.interval === 'monthly' ? 'mês' : 'ano'}
                         </span>
                       </p>

@@ -57,25 +57,25 @@ export default function LiveSessions() {
   const recordings = sessions.filter((s) => s.status === 'finished')
 
   return (
-    <div className="min-h-[calc(100vh-56px)] bg-slate-50">
-      <div className="bg-gradient-to-br from-red-700 via-slate-800 to-slate-900 text-white py-8 px-4">
+    <div className="min-h-[calc(100vh-56px)] bg-background text-foreground">
+      <div className="border-b border-border bg-card py-8 px-4">
         <div className="container max-w-6xl">
           <Button
             variant="ghost"
             onClick={() => navigate('/plataforma')}
-            className="text-white/80 hover:text-white mb-4 -ml-4"
+            className="text-muted-foreground hover:text-foreground mb-4 -ml-4 rounded-full min-h-[40px] px-3"
           >
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar ao Hub
           </Button>
-          <h1 className="text-3xl md:text-4xl font-serif font-bold text-white flex items-center gap-3">
-            <Radio className="w-8 h-8 text-red-400" /> Aulas ao Vivo
+          <h1 className="text-3xl md:text-4xl font-serif font-semibold text-foreground flex items-center gap-3">
+            <Radio className="w-8 h-8 text-primary" /> Aulas ao Vivo
           </h1>
-          <p className="text-white/60 mt-2">
+          <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
             Acompanhe transmissões ao vivo e assista gravações de sessões anteriores.
           </p>
-          <div className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-300 backdrop-blur-sm shadow-lg">
-            <Calendar className="w-4 h-4" />
-            <span className="text-sm font-bold tracking-wide">
+          <div className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-full bg-primary/10 border border-border text-foreground">
+            <Calendar className="w-4 h-4 text-primary" />
+            <span className="text-xs sm:text-sm font-semibold tracking-wide">
               Início das transmissões em Agosto
             </span>
           </div>
@@ -85,29 +85,33 @@ export default function LiveSessions() {
       <div className="container max-w-6xl px-4 py-8 space-y-10">
         {liveNow.length > 0 && (
           <section className="animate-fade-in">
-            <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" /> Ao Vivo Agora
+            <h2 className="text-xl font-serif font-semibold text-foreground mb-4 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#B4472E] animate-pulse" /> Ao Vivo Agora
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {liveNow.map((s) => (
                 <div
                   key={s.id}
-                  className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow"
+                  className="bg-card text-card-foreground rounded-[28px] border border-border overflow-hidden hover:border-foreground/30 transition-all flex flex-col justify-between"
                 >
-                  <div className="relative aspect-video bg-slate-900 flex items-center justify-center">
-                    <div className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                  <div className="relative aspect-video bg-muted flex items-center justify-center">
+                    <div className="bg-[#FAE7E1] text-[#B4472E] dark:bg-[#B4472E]/30 dark:text-[#FAE7E1] text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-[#B4472E]/30">
                       <Radio className="w-3.5 h-3.5 animate-pulse" /> AO VIVO
                     </div>
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-serif font-bold text-slate-800 mb-2">{s.title}</h3>
-                    {s.instructor_name && (
-                      <p className="text-sm text-slate-500 flex items-center gap-1.5">
-                        <User className="w-4 h-4" /> {s.instructor_name}
-                      </p>
-                    )}
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-serif font-semibold text-lg text-foreground mb-2">
+                        {s.title}
+                      </h3>
+                      {s.instructor_name && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <User className="w-4 h-4 text-primary" /> {s.instructor_name}
+                        </p>
+                      )}
+                    </div>
                     <Button
-                      className="w-full mt-4 bg-red-600 hover:bg-red-700"
+                      className="w-full mt-5 min-h-[52px] rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
                       onClick={() => navigate(`/plataforma/live/${s.id}`)}
                     >
                       Acessar Transmissão
@@ -120,11 +124,11 @@ export default function LiveSessions() {
         )}
 
         <section className="animate-fade-in">
-          <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-serif font-semibold text-foreground mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-primary" /> Próximas Transmissões
           </h2>
           {scheduled.length === 0 ? (
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400">
+            <div className="bg-card text-card-foreground p-8 rounded-[28px] border border-border text-center text-muted-foreground text-sm">
               Nenhuma transmissão programada.
             </div>
           ) : (
@@ -134,25 +138,31 @@ export default function LiveSessions() {
                 return (
                   <div
                     key={s.id}
-                    className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 hover:shadow-lg transition-shadow"
+                    className="bg-card text-card-foreground rounded-[28px] border border-border p-6 hover:border-foreground/30 transition-all flex flex-col justify-between"
                   >
-                    <h3 className="font-serif font-bold text-slate-800 mb-3 line-clamp-2">
-                      {s.title}
-                    </h3>
-                    {s.instructor_name && (
-                      <p className="text-sm text-slate-500 flex items-center gap-1.5 mb-2">
-                        <User className="w-4 h-4" /> {s.instructor_name}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 text-sm text-slate-600 mb-4">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4 text-slate-400" /> {date}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-slate-400" /> {time}
-                      </span>
+                    <div>
+                      <h3 className="font-serif font-semibold text-lg text-foreground mb-3 line-clamp-2">
+                        {s.title}
+                      </h3>
+                      {s.instructor_name && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+                          <User className="w-4 h-4 text-primary" /> {s.instructor_name}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4 text-primary" /> {date}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-4 h-4 text-primary" /> {time}
+                        </span>
+                      </div>
                     </div>
-                    <Button variant="outline" className="w-full" disabled>
+                    <Button
+                      variant="outline"
+                      className="w-full min-h-[52px] rounded-full border-[1.5px] border-foreground bg-transparent text-foreground opacity-60 font-semibold"
+                      disabled
+                    >
                       Agendada
                     </Button>
                   </div>
@@ -163,11 +173,11 @@ export default function LiveSessions() {
         </section>
 
         <section className="animate-fade-in">
-          <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-serif font-semibold text-foreground mb-4 flex items-center gap-2">
             <Video className="w-5 h-5 text-primary" /> Gravações
           </h2>
           {recordings.length === 0 ? (
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400">
+            <div className="bg-card text-card-foreground p-8 rounded-[28px] border border-border text-center text-muted-foreground text-sm">
               Nenhuma gravação disponível.
             </div>
           ) : (
@@ -175,28 +185,28 @@ export default function LiveSessions() {
               {recordings.map((s) => (
                 <div
                   key={s.id}
-                  className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
+                  className="bg-card text-card-foreground rounded-[28px] border border-border overflow-hidden hover:border-foreground/30 transition-all group cursor-pointer"
                   onClick={() => setPlaying(s)}
                 >
-                  <div className="relative aspect-video bg-slate-900">
+                  <div className="relative aspect-video bg-muted">
                     <img
                       src="https://img.usecurling.com/p/800/500?q=video%20recording&color=gray"
                       alt={s.title}
-                      className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity"
+                      className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <div className="w-14 h-14 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Play className="w-6 h-6 text-white fill-white" />
                       </div>
                     </div>
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-serif font-bold text-slate-800 mb-1 line-clamp-2">
+                  <div className="p-6">
+                    <h3 className="font-serif font-semibold text-foreground mb-1 line-clamp-2 text-base">
                       {s.title}
                     </h3>
                     {s.instructor_name && (
-                      <p className="text-sm text-slate-500 flex items-center gap-1.5">
-                        <User className="w-4 h-4" /> {s.instructor_name}
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-2">
+                        <User className="w-4 h-4 text-primary" /> {s.instructor_name}
                       </p>
                     )}
                   </div>
@@ -208,11 +218,11 @@ export default function LiveSessions() {
       </div>
 
       <Dialog open={!!playing} onOpenChange={(open) => !open && setPlaying(null)}>
-        <DialogContent className="max-w-5xl w-[95vw] p-0 overflow-hidden bg-black border-none">
+        <DialogContent className="max-w-5xl w-[95vw] p-0 overflow-hidden bg-card text-card-foreground border border-border rounded-[28px]">
           <DialogTitle className="sr-only">{playing?.title}</DialogTitle>
           {playing && (
             <div className="flex flex-col">
-              <div className="aspect-video">
+              <div className="aspect-video bg-black">
                 {getPandaUrl(playing.panda_video_id) ? (
                   <iframe
                     src={getPandaUrl(playing.panda_video_id)}
@@ -221,15 +231,17 @@ export default function LiveSessions() {
                     allowFullScreen
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white/50">
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
                     Vídeo não disponível.
                   </div>
                 )}
               </div>
-              <div className="p-4 bg-black">
-                <h3 className="text-white font-serif font-bold">{playing.title}</h3>
+              <div className="p-6 bg-card border-t border-border">
+                <h3 className="text-foreground font-serif font-semibold text-lg">
+                  {playing.title}
+                </h3>
                 {playing.instructor_name && (
-                  <p className="text-white/60 text-sm mt-1">{playing.instructor_name}</p>
+                  <p className="text-muted-foreground text-xs mt-1">{playing.instructor_name}</p>
                 )}
               </div>
             </div>

@@ -35,10 +35,13 @@ export function QuizPlayer({ quiz }: { quiz: Quiz }) {
     }
   }, [quiz.id])
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Carregando quiz...</div>
+  if (loading)
+    return <div className="p-8 text-center text-muted-foreground">Carregando quiz...</div>
   if (questions.length === 0)
     return (
-      <div className="p-8 text-center text-slate-400">Nenhuma pergunta cadastrada neste quiz.</div>
+      <div className="p-8 text-center text-muted-foreground">
+        Nenhuma pergunta cadastrada neste quiz.
+      </div>
     )
 
   if (finished) {
@@ -46,19 +49,22 @@ export function QuizPlayer({ quiz }: { quiz: Quiz }) {
     const passed = percentage >= 70
 
     return (
-      <div className="bg-slate-900 p-8 md:p-12 rounded-2xl border border-white/10 text-center flex flex-col items-center animate-fade-in-up">
+      <div className="bg-card text-card-foreground p-8 md:p-12 rounded-[28px] border border-border text-center flex flex-col items-center animate-fade-in-up">
         <div
-          className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${passed ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500'}`}
+          className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${
+            passed
+              ? 'bg-[#E3F1E9] text-[#1F6B4A] dark:bg-[#1F6B4A]/20 dark:text-[#E3F1E9]'
+              : 'bg-primary/20 text-foreground'
+          }`}
         >
           <Medal className="w-10 h-10" />
         </div>
-        <h2 className="text-3xl font-serif font-bold text-white mb-3">Quiz Concluído!</h2>
-        <p className="text-xl text-slate-300 mb-8">
-          Você acertou <strong className="text-white">{score}</strong> de {questions.length}{' '}
+        <h2 className="text-3xl font-serif font-semibold text-foreground mb-3">Quiz Concluído!</h2>
+        <p className="text-base text-muted-foreground mb-8">
+          Você acertou <strong className="text-foreground">{score}</strong> de {questions.length}{' '}
           perguntas ({percentage}%).
         </p>
         <Button
-          size="lg"
           onClick={() => {
             setCurrentIndex(0)
             setScore(0)
@@ -66,6 +72,7 @@ export function QuizPlayer({ quiz }: { quiz: Quiz }) {
             setShowFeedback(false)
             setSelectedOption('')
           }}
+          className="min-h-[52px] px-8 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
         >
           <RotateCcw className="w-5 h-5 mr-2" /> Tentar Novamente
         </Button>
@@ -76,47 +83,48 @@ export function QuizPlayer({ quiz }: { quiz: Quiz }) {
   const q = questions[currentIndex]
 
   return (
-    <div className="bg-slate-900 p-6 md:p-10 rounded-2xl border border-white/10 space-y-8 shadow-2xl animate-fade-in">
+    <div className="bg-card text-card-foreground p-6 md:p-10 rounded-[28px] border border-border space-y-8 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-serif font-bold text-white mb-4">{quiz.title}</h2>
-        <div className="flex items-center gap-4 text-sm font-medium text-slate-400">
+        <h2 className="text-2xl font-serif font-semibold text-foreground mb-4">{quiz.title}</h2>
+        <div className="flex items-center gap-4 text-sm font-medium text-muted-foreground">
           <span className="shrink-0">
             Questão {currentIndex + 1} de {questions.length}
           </span>
-          <Progress
-            value={(currentIndex / questions.length) * 100}
-            className="flex-1 bg-slate-800"
-          />
+          <Progress value={(currentIndex / questions.length) * 100} className="flex-1 bg-muted" />
         </div>
       </div>
 
-      <div className="text-xl text-slate-200 font-medium leading-relaxed">{q.question}</div>
+      <div className="text-lg md:text-xl text-foreground font-serif font-semibold leading-relaxed">
+        {q.question}
+      </div>
 
       <RadioGroup
         value={selectedOption}
         onValueChange={setSelectedOption}
         disabled={showFeedback}
-        className="space-y-4"
+        className="space-y-3"
       >
         {q.options.map((opt, i) => {
           const isThisCorrect = i.toString() === q.correct_option
           const isSelected = selectedOption === i.toString()
           let itemClass =
-            'flex items-center space-x-4 p-5 rounded-xl border border-white/5 bg-slate-800/50 transition-all cursor-pointer'
+            'flex items-center space-x-4 min-h-[52px] p-4 md:p-5 rounded-[18px] border border-border bg-card transition-all cursor-pointer'
 
           if (showFeedback) {
             itemClass += ' cursor-default'
             if (isThisCorrect) {
-              itemClass += ' border-emerald-500 bg-emerald-500/10 text-emerald-400'
+              itemClass +=
+                ' border-[#1F6B4A] bg-[#E3F1E9] text-[#1F6B4A] dark:bg-[#1F6B4A]/20 dark:border-[#1F6B4A] dark:text-[#E3F1E9] font-semibold'
             } else if (isSelected && !isThisCorrect) {
-              itemClass += ' border-red-500 bg-red-500/10 text-red-400'
+              itemClass +=
+                ' border-[#B4472E] bg-[#FAE7E1] text-[#B4472E] dark:bg-[#B4472E]/20 dark:border-[#B4472E] dark:text-[#FAE7E1]'
             } else {
-              itemClass += ' opacity-40'
+              itemClass += ' opacity-55'
             }
           } else {
-            itemClass += ' hover:bg-slate-800 hover:border-white/20'
+            itemClass += ' hover:bg-muted/60 hover:border-foreground/30'
             if (isSelected) {
-              itemClass += ' border-primary bg-primary/10'
+              itemClass += ' border-primary bg-primary/10 ring-2 ring-primary/40'
             }
           }
 
@@ -126,34 +134,32 @@ export function QuizPlayer({ quiz }: { quiz: Quiz }) {
                 value={i.toString()}
                 className={showFeedback ? 'border-current text-current' : ''}
               />
-              <span className="flex-1 text-base leading-relaxed">{opt}</span>
+              <span className="flex-1 text-sm md:text-base leading-relaxed">{opt}</span>
               {showFeedback && isThisCorrect && (
-                <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-[#1F6B4A] dark:text-[#E3F1E9] shrink-0" />
               )}
               {showFeedback && isSelected && !isThisCorrect && (
-                <XCircle className="w-6 h-6 text-red-500 shrink-0" />
+                <XCircle className="w-5 h-5 text-[#B4472E] dark:text-[#FAE7E1] shrink-0" />
               )}
             </Label>
           )
         })}
       </RadioGroup>
 
-      <div className="pt-6 border-t border-white/10 flex justify-end">
+      <div className="pt-6 border-t border-border flex justify-end">
         {!showFeedback ? (
           <Button
-            size="lg"
             onClick={() => {
               setShowFeedback(true)
               if (selectedOption === q.correct_option) setScore((s) => s + 1)
             }}
             disabled={!selectedOption}
-            className="px-10 text-base"
+            className="min-h-[52px] px-8 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 text-sm md:text-base"
           >
             Confirmar Resposta
           </Button>
         ) : (
           <Button
-            size="lg"
             onClick={() => {
               if (currentIndex < questions.length - 1) {
                 setCurrentIndex((i) => i + 1)
@@ -163,7 +169,7 @@ export function QuizPlayer({ quiz }: { quiz: Quiz }) {
                 setFinished(true)
               }
             }}
-            className="px-10 text-base bg-white text-slate-900 hover:bg-slate-200"
+            className="min-h-[52px] px-8 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 text-sm md:text-base"
           >
             {currentIndex < questions.length - 1 ? 'Próxima Questão' : 'Ver Resultado Final'}
           </Button>

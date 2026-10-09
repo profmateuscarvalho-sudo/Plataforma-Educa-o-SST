@@ -150,13 +150,13 @@ export default function AgoraRoom() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] text-slate-800 pb-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 font-sans">
       {/* Barra Superior de Navegação */}
-      <div className="bg-[#2C5F7C] text-white py-4 px-4 md:px-8 border-b border-[#C4A43A]/30">
+      <div className="bg-card text-card-foreground py-4 px-4 md:px-8 border-b border-border">
         <div className="container max-w-6xl mx-auto flex items-center justify-between">
           <Link
             to="/plataforma/agora"
-            className="inline-flex items-center gap-1.5 text-slate-300 hover:text-white text-xs font-semibold transition-colors"
+            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-xs font-semibold transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Voltar para a Ágora
           </Link>
@@ -166,7 +166,7 @@ export default function AgoraRoom() {
               href={waShareUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-border bg-card text-foreground hover:bg-muted text-xs font-semibold transition-all"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Compartilhar no WhatsApp</span>

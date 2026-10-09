@@ -73,25 +73,25 @@ export default function StudentDocumentaries() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 overflow-x-hidden pb-20">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden pb-20">
       <div className="absolute top-6 left-6 z-50 flex items-center gap-6">
         <Button
           variant="ghost"
-          className="text-white hover:bg-white/20 px-4 h-10 rounded-full bg-black/30 backdrop-blur border border-white/10"
+          className="text-foreground hover:bg-muted px-4 min-h-[44px] rounded-full bg-card/80 backdrop-blur border border-border"
           onClick={() => navigate('/plataforma')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" /> Voltar ao Hub
         </Button>
         <div className="hidden sm:flex items-center gap-2.5">
           <SquareLogo variant="yellow" className="w-8 h-8" />
-          <Logo className="text-white drop-shadow-md" />
+          <Logo className="text-foreground" />
         </div>
       </div>
 
       {featured && (
-        <div className="relative h-[85vh] w-full flex items-center">
+        <div className="relative min-h-[75vh] md:h-[85vh] w-full flex items-center">
           {!canWatch(featured) && (
-            <div className="absolute top-20 left-6 z-30 flex items-center gap-2 bg-amber-500/90 text-white px-4 py-2 rounded-full text-sm font-bold backdrop-blur">
+            <div className="absolute top-20 left-6 z-30 flex items-center gap-2 bg-[#FAE7E1] text-[#B4472E] dark:bg-[#B4472E]/30 dark:text-[#FAE7E1] border border-[#B4472E]/30 px-4 py-2 rounded-full text-xs font-semibold backdrop-blur">
               <Lock className="w-4 h-4" /> Conteúdo Exclusivo — Faça Upgrade
             </div>
           )}
@@ -99,37 +99,35 @@ export default function StudentDocumentaries() {
             <img
               src={getCover(featured)}
               alt={featured.title}
-              className="w-full h-full object-cover opacity-70"
+              className="w-full h-full object-cover opacity-40 dark:opacity-50"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
           </div>
-          <div className="relative z-10 container px-8 md:px-16 max-w-5xl mx-0">
+          <div className="relative z-10 container px-6 md:px-16 max-w-5xl mx-0 pt-20 md:pt-0">
             {featured.is_free && (
-              <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 mb-4 text-xs font-bold uppercase tracking-widest px-3 py-1">
+              <Badge className="bg-[#E3F1E9] text-[#1F6B4A] dark:bg-[#1F6B4A]/30 dark:text-[#E3F1E9] border border-[#1F6B4A]/30 mb-4 text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full">
                 Acesso Liberado
               </Badge>
             )}
-            <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight mb-4 drop-shadow-2xl">
+            <h1 className="text-4xl md:text-6xl font-serif font-semibold tracking-tight mb-4 text-foreground">
               {featured.title}
             </h1>
-            <p className="text-lg md:text-xl text-zinc-300 mb-8 line-clamp-3 max-w-2xl font-light">
+            <p className="text-base md:text-lg text-muted-foreground mb-8 line-clamp-3 max-w-2xl font-normal leading-relaxed">
               {featured.description}
             </p>
             <div className="flex flex-wrap gap-4">
               {canWatch(featured) ? (
                 <>
                   <Button
-                    size="lg"
-                    className="bg-white text-black hover:bg-zinc-200 text-lg font-bold px-8 h-14 rounded-full"
+                    className="min-h-[52px] px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
                     onClick={() => handleSelectDoc(featured)}
                   >
                     <Play className="w-5 h-5 mr-2 fill-current" /> Assistir Agora
                   </Button>
                   <Button
-                    size="lg"
                     variant="outline"
-                    className="bg-zinc-800/60 border-zinc-500/50 text-white hover:bg-zinc-700/80 text-lg px-8 h-14 rounded-full backdrop-blur-sm"
+                    className="min-h-[52px] px-8 rounded-full border-[1.5px] border-foreground bg-transparent text-foreground hover:bg-muted font-semibold"
                     asChild
                   >
                     <Link to={`/plataforma/documentarios/${featured.id}`}>
@@ -139,8 +137,7 @@ export default function StudentDocumentaries() {
                 </>
               ) : (
                 <Button
-                  size="lg"
-                  className="bg-amber-500 text-black hover:bg-amber-400 text-lg font-bold px-8 h-14 rounded-full"
+                  className="min-h-[52px] px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
                   onClick={handleLockedClick}
                 >
                   <Lock className="w-5 h-5 mr-2" /> Faça Upgrade para Assistir
@@ -151,9 +148,11 @@ export default function StudentDocumentaries() {
         </div>
       )}
 
-      <div className="relative z-20 -mt-16 sm:-mt-24 space-y-12">
-        <div className="px-8 md:px-16">
-          <h2 className="text-2xl font-bold mb-6 text-zinc-100">Adicionados Recentemente</h2>
+      <div className="relative z-20 -mt-10 sm:-mt-16 space-y-12">
+        <div className="px-6 md:px-16">
+          <h2 className="text-xl md:text-2xl font-serif font-semibold mb-6 text-foreground">
+            Adicionados Recentemente
+          </h2>
           <Carousel opts={{ align: 'start', loop: false }} className="w-full">
             <CarouselContent className="-ml-4 pb-8 pt-4">
               {projects.map((p) => {
@@ -163,31 +162,33 @@ export default function StudentDocumentaries() {
                     <img
                       src={getCover(p)}
                       alt={p.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     {!accessible && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                        <div className="w-14 h-14 rounded-full bg-amber-500/90 flex items-center justify-center">
-                          <Lock className="w-6 h-6 text-white" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                          <Lock className="w-5 h-5" />
                         </div>
                       </div>
                     )}
                     {accessible && (
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-50 group-hover:scale-100">
-                        <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur border border-white/40 flex items-center justify-center">
-                          <Play className="w-6 h-6 text-white fill-white ml-1" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                          <Play className="w-5 h-5 fill-current ml-0.5" />
                         </div>
                       </div>
                     )}
-                    <div className="absolute bottom-0 inset-x-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                      <h3 className="font-bold text-sm text-white line-clamp-1">{p.title}</h3>
+                    <div className="absolute bottom-0 inset-x-0 p-4">
+                      <h3 className="font-serif font-semibold text-sm text-white line-clamp-1">
+                        {p.title}
+                      </h3>
                       {p.is_free ? (
-                        <p className="text-xs text-emerald-400 font-medium mt-1">Acesso Liberado</p>
+                        <p className="text-xs text-[#E3F1E9] font-medium mt-1">Acesso Liberado</p>
                       ) : accessible ? (
-                        <p className="text-xs text-zinc-300 font-medium mt-1">Disponível</p>
+                        <p className="text-xs text-white/80 font-medium mt-1">Disponível</p>
                       ) : (
-                        <p className="text-xs text-amber-400 font-medium mt-1">Acesso Restrito</p>
+                        <p className="text-xs text-primary font-medium mt-1">Acesso Restrito</p>
                       )}
                     </div>
                   </>
@@ -199,11 +200,7 @@ export default function StudentDocumentaries() {
                   >
                     <button
                       onClick={() => handleSelectDoc(p)}
-                      className={`group relative block w-full aspect-video rounded-xl overflow-hidden bg-zinc-800 transition-all hover:scale-105 hover:z-30 duration-500 border text-left ${
-                        accessible
-                          ? 'border-zinc-800 hover:border-zinc-500 hover:shadow-2xl hover:shadow-black/50'
-                          : 'border-zinc-800 hover:border-amber-600/50 hover:shadow-2xl hover:shadow-black/50'
-                      }`}
+                      className="group relative block w-full aspect-video rounded-[24px] overflow-hidden bg-card border border-border text-left hover:border-foreground/30 transition-all"
                     >
                       {cardContent}
                     </button>
@@ -211,8 +208,8 @@ export default function StudentDocumentaries() {
                 )
               })}
             </CarouselContent>
-            <CarouselPrevious className="left-4 bg-black/50 border-white/20 hover:bg-black text-white w-12 h-12" />
-            <CarouselNext className="right-4 bg-black/50 border-white/20 hover:bg-black text-white w-12 h-12" />
+            <CarouselPrevious className="left-4 rounded-full border-border bg-card text-foreground hover:bg-muted w-11 h-11" />
+            <CarouselNext className="right-4 rounded-full border-border bg-card text-foreground hover:bg-muted w-11 h-11" />
           </Carousel>
         </div>
       </div>

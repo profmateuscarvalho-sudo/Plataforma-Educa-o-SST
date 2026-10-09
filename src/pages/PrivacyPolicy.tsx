@@ -9,21 +9,24 @@ export default function PrivacyPolicy() {
   const email = 'contato@educacaosst.com.br'
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="container mx-auto px-4 py-16 lg:py-24 max-w-4xl">
-        <div className="flex items-center gap-4 mb-10">
-          <div className="bg-primary/10 p-3 rounded-full">
-            <Shield className="w-8 h-8 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-serif font-bold text-secondary">
-              Política de Privacidade — Educação SST
+    <div className="min-h-screen bg-background pb-20">
+      <div className="bg-background border-b border-border">
+        <div className="container mx-auto px-4 pt-[72px] pb-[56px] text-left max-w-4xl">
+          <div className="space-y-4">
+            <span className="label-overline">Termos e Conformidade</span>
+            <h1 className="title-h2-fluid font-serif font-semibold text-foreground tracking-tight">
+              Política de Privacidade
             </h1>
-            <p className="text-sm text-slate-500 mt-1">Última atualização: Julho 2026</p>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+              Diretrizes de proteção e tratamento de dados em conformidade com a LGPD (Lei nº
+              13.709/2018).
+            </p>
           </div>
         </div>
+      </div>
 
-        <div className="prose prose-slate max-w-none prose-headings:font-serif prose-headings:text-secondary prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-p:leading-relaxed prose-li:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <div className="prose prose-slate max-w-none prose-headings:font-serif prose-headings:text-foreground prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-p:leading-relaxed prose-li:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
           <p>
             A Educação SST valoriza a privacidade dos usuários de suas plataformas, incluindo o Hub
             de Estudos e o Agente de Inteligência Artificial disponibilizado via WhatsApp e via

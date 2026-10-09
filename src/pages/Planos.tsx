@@ -10,6 +10,7 @@ import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModa
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
 import { getPlanButtonState } from '@/lib/plan-utils'
+import { PageHeader } from '@/components/PageHeader'
 
 const DEFAULT_PLANS = [
   {
@@ -137,18 +138,12 @@ export default function Planos() {
   })
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <section className="bg-secondary text-white py-20 relative overflow-hidden">
-        <div className="container px-4 relative z-10 text-center">
-          <Badge className="bg-accent text-secondary mb-4">Planos de Assinatura</Badge>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-            Escolha seu plano de acesso
-          </h1>
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-            Tenha acesso ilimitado a todos os cursos, materiais e certificados da plataforma.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen bg-background pb-24">
+      <PageHeader
+        badge="Planos de Assinatura"
+        title="Escolha seu plano de acesso"
+        description="Tenha acesso ilimitado a todos os cursos, materiais e certificados da plataforma."
+      />
 
       {isExpired && (
         <div className="container px-4 mt-8">

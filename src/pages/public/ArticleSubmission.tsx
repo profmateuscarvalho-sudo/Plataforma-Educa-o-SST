@@ -90,159 +90,182 @@ export default function ArticleSubmission() {
     )
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8">
-      <Card className="shadow-lg">
-        <CardHeader className="bg-slate-50 border-b">
-          <CardTitle className="text-3xl text-center font-serif text-secondary py-4">
-            Submissão de Artigo para Revista
-          </CardTitle>
-          <div className="bg-white p-4 rounded-md text-sm mt-4 border border-slate-200 text-slate-600 shadow-sm">
-            <strong className="text-primary font-semibold block mb-1">
-              Normas de Conformidade:
-            </strong>
-            Seu artigo deve ter entre 2000 a 5000 palavras, estar formatado segundo as normas da
-            ABNT e focado em SST. O envio do documento original é obrigatório.
+    <div className="min-h-screen bg-background pb-20">
+      <div className="bg-background border-b border-border">
+        <div className="container mx-auto px-4 pt-[72px] pb-[56px] text-left max-w-4xl">
+          <div className="space-y-4">
+            <span className="label-overline">Revista Educação SST</span>
+            <h1 className="title-h2-fluid font-serif font-semibold text-foreground tracking-tight">
+              Submissão de Artigo para Revista
+            </h1>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+              Envie sua produção acadêmica ou relato prático para análise do nosso conselho
+              editorial.
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="p-6 md:p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold border-b pb-2 text-slate-800 flex items-center">
-                <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
-                  1
-                </span>
-                Dados do Autor
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="font-semibold text-slate-700">Nome Completo*</Label>
-                  <Input {...register('authorName', { required: true })} className="bg-slate-50" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-semibold text-slate-700">Email*</Label>
-                  <Input
-                    type="email"
-                    {...register('email', { required: true })}
-                    className="bg-slate-50"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-semibold text-slate-700">Telefone</Label>
-                  <Input {...register('phone')} className="bg-slate-50" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-semibold text-slate-700">Fotos do Autor (Máx 3)</Label>
-                  <Input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    {...register('authorPhotos')}
-                    className="bg-slate-50 file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 file:font-semibold"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="font-semibold text-slate-700">Minibiografia</Label>
-                <Textarea {...register('bio')} rows={4} className="bg-slate-50" />
-              </div>
-            </div>
+        </div>
+      </div>
 
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold border-b pb-2 text-slate-800 flex items-center">
-                <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
-                  2
-                </span>
-                Arquivo do Artigo
-              </h3>
+      <div className="max-w-4xl mx-auto p-4 md:p-8">
+        <Card className="shadow-sm border-border bg-card">
+          <CardHeader className="border-b border-border">
+            <div className="bg-muted p-4 rounded-xl text-sm border border-border text-foreground">
+              <strong className="text-foreground font-semibold block mb-1">
+                Normas de Conformidade:
+              </strong>
+              Seu artigo deve ter entre 2000 a 5000 palavras, estar formatado segundo as normas da
+              ABNT e focado em SST. O envio do documento original é obrigatório.
+            </div>
+          </CardHeader>
+          <CardContent className="p-6 md:p-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label className="font-semibold text-slate-700">Título do Artigo*</Label>
-                  <Input
-                    {...register('title', { required: true })}
-                    className="bg-slate-50 text-lg py-6"
-                  />
+                <h3 className="text-xl font-semibold border-b pb-2 text-slate-800 flex items-center">
+                  <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
+                    1
+                  </span>
+                  Dados do Autor
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-700">Nome Completo*</Label>
+                    <Input
+                      {...register('authorName', { required: true })}
+                      className="bg-slate-50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-700">Email*</Label>
+                    <Input
+                      type="email"
+                      {...register('email', { required: true })}
+                      className="bg-slate-50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-700">Telefone</Label>
+                    <Input {...register('phone')} className="bg-slate-50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-700">Fotos do Autor (Máx 3)</Label>
+                    <Input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      {...register('authorPhotos')}
+                      className="bg-slate-50 file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 file:font-semibold"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-semibold text-slate-700">
-                    Arquivo (.doc, .docx ou .pdf)*
-                  </Label>
-                  <Input
-                    type="file"
-                    accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,application/pdf"
-                    {...register('articleFile', { required: true })}
-                    className="bg-slate-50 file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 file:font-semibold"
-                  />
-                  <p className="text-xs text-slate-500 font-medium mt-1">
-                    Envie uma versão única em Word ou PDF para revisão e diagramação.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-semibold text-slate-700">Imagens e Gráficos Anexos</Label>
-                  <Input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    {...register('articlePhotos')}
-                    className="bg-slate-50 file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 file:font-semibold"
-                  />
+                  <Label className="font-semibold text-slate-700">Minibiografia</Label>
+                  <Textarea {...register('bio')} rows={4} className="bg-slate-50" />
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold border-b pb-2 text-slate-800 flex items-center">
-                <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
-                  3
-                </span>
-                Autorizações
-              </h3>
-              <div className="space-y-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Checkbox id="img-auth" {...register('imageAuthSigned')} className="w-5 h-5" />
-                    <Label htmlFor="img-auth" className="text-base cursor-pointer">
-                      Autorizo o uso da minha imagem na revista
-                    </Label>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8">
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold border-b pb-2 text-slate-800 flex items-center">
+                  <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
+                    2
+                  </span>
+                  Arquivo do Artigo
+                </h3>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-700">Título do Artigo*</Label>
                     <Input
-                      placeholder="Nome Completo Assinatura"
-                      {...register('imageAuthName')}
-                      className="bg-white"
+                      {...register('title', { required: true })}
+                      className="bg-slate-50 text-lg py-6"
                     />
-                    <Input type="date" {...register('imageAuthDate')} className="bg-white" />
                   </div>
-                </div>
-                <div className="h-px bg-slate-200" />
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id="art-auth"
-                      {...register('articleAuthSigned')}
-                      className="w-5 h-5"
-                    />
-                    <Label htmlFor="art-auth" className="text-base cursor-pointer">
-                      Autorizo a publicação deste artigo de minha autoria
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-700">
+                      Arquivo (.doc, .docx ou .pdf)*
                     </Label>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8">
                     <Input
-                      placeholder="Nome Completo Assinatura"
-                      {...register('articleAuthName')}
-                      className="bg-white"
+                      type="file"
+                      accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,application/pdf"
+                      {...register('articleFile', { required: true })}
+                      className="bg-slate-50 file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 file:font-semibold"
                     />
-                    <Input type="date" {...register('articleAuthDate')} className="bg-white" />
+                    <p className="text-xs text-slate-500 font-medium mt-1">
+                      Envie uma versão única em Word ou PDF para revisão e diagramação.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-700">
+                      Imagens e Gráficos Anexos
+                    </Label>
+                    <Input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      {...register('articlePhotos')}
+                      className="bg-slate-50 file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 file:font-semibold"
+                    />
                   </div>
                 </div>
               </div>
-            </div>
 
-            <Button type="submit" size="lg" className="w-full text-lg h-14" disabled={loading}>
-              {loading ? 'Enviando Submissão...' : 'Enviar Submissão do Artigo'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold border-b pb-2 text-slate-800 flex items-center">
+                  <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
+                    3
+                  </span>
+                  Autorizações
+                </h3>
+                <div className="space-y-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <Checkbox
+                        id="img-auth"
+                        {...register('imageAuthSigned')}
+                        className="w-5 h-5"
+                      />
+                      <Label htmlFor="img-auth" className="text-base cursor-pointer">
+                        Autorizo o uso da minha imagem na revista
+                      </Label>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8">
+                      <Input
+                        placeholder="Nome Completo Assinatura"
+                        {...register('imageAuthName')}
+                        className="bg-white"
+                      />
+                      <Input type="date" {...register('imageAuthDate')} className="bg-white" />
+                    </div>
+                  </div>
+                  <div className="h-px bg-slate-200" />
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <Checkbox
+                        id="art-auth"
+                        {...register('articleAuthSigned')}
+                        className="w-5 h-5"
+                      />
+                      <Label htmlFor="art-auth" className="text-base cursor-pointer">
+                        Autorizo a publicação deste artigo de minha autoria
+                      </Label>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8">
+                      <Input
+                        placeholder="Nome Completo Assinatura"
+                        {...register('articleAuthName')}
+                        className="bg-white"
+                      />
+                      <Input type="date" {...register('articleAuthDate')} className="bg-white" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button type="submit" size="lg" className="w-full text-lg h-14" disabled={loading}>
+                {loading ? 'Enviando Submissão...' : 'Enviar Submissão do Artigo'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

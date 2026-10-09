@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Check, Users, MessageSquare, TrendingUp, Target, Award } from 'lucide-react'
 import { getMagazineLandingPage } from '@/services/magazine_management'
 import type { MagazineLandingPage } from '@/types'
+import { PageHeader } from '@/components/PageHeader'
 
 export default function Anuncie() {
   const [data, setData] = useState<MagazineLandingPage | null>(null)
@@ -35,82 +36,54 @@ export default function Anuncie() {
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Hero Section */}
-      <section className="relative bg-secondary overflow-hidden py-24 lg:py-32">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://img.usecurling.com/p/1920/1080?q=factory&color=black"
-            alt="Background"
-            className="w-full h-full object-cover opacity-20 mix-blend-overlay"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-secondary/80 to-secondary" />
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10 flex flex-col items-center text-center">
-          <Badge className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm py-1.5 px-4 mb-8 font-medium">
-            Mídia Kit Educação SST
-          </Badge>
-          <h1
-            className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight max-w-4xl tracking-tight"
-            dangerouslySetInnerHTML={{
-              __html: data.hero_title.replace(
-                'Revista Educação SST',
-                '<span class="text-accent">Revista Educação SST</span>',
-              ),
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header Padronizado */}
+      <PageHeader
+        badge="Mídia Kit Educação SST"
+        title={data.hero_title}
+        description={data.hero_description}
+      >
+        <div className="flex flex-col sm:flex-row gap-4 pt-2">
+          <Button size="lg" className="h-12 px-8 text-base font-bold shadow-none" asChild>
+            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+              <MessageSquare className="w-5 h-5 mr-2" /> {data.cta_text}
+            </a>
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-12 px-8 text-base font-bold"
+            onClick={() => {
+              document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' })
             }}
-          />
-          <p className="text-xl md:text-2xl text-slate-300 max-w-2xl mb-12 font-light leading-relaxed">
-            {data.hero_description}
-          </p>
+          >
+            Ver Planos
+          </Button>
+        </div>
+      </PageHeader>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-16">
-            <Button
-              size="lg"
-              className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-white"
-              asChild
-            >
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                <MessageSquare className="w-5 h-5 mr-2" /> {data.cta_text}
-              </a>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 px-8 text-lg font-bold border-accent text-accent hover:bg-accent hover:text-secondary"
-              onClick={() => {
-                document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' })
-              }}
-            >
-              Ver Planos
-            </Button>
-          </div>
-
-          {/* Social Proof */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 md:p-8 rounded-2xl flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 shadow-2xl">
+      {/* Social Proof */}
+      <section className="border-b border-border bg-card py-10">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-16 max-w-2xl">
             <div className="flex items-center gap-4">
-              <div className="bg-accent/20 p-4 rounded-full">
-                <Users className="w-8 h-8 text-accent" />
+              <div className="bg-primary/20 p-3 rounded-full text-foreground">
+                <Users className="w-6 h-6 text-foreground" />
               </div>
               <div className="text-left">
-                <p className="text-4xl font-black text-white leading-none mb-1">
+                <p className="text-3xl font-black text-foreground leading-none mb-1">
                   {data.readers_count}
                 </p>
-                <p className="text-sm font-medium text-slate-300 uppercase tracking-wider">
-                  Leitores Ativos
-                </p>
+                <p className="label-overline">Leitores Ativos</p>
               </div>
             </div>
-            <div className="hidden md:block w-px h-16 bg-white/20" />
             <div className="flex items-center gap-4">
-              <div className="bg-green-500/20 p-4 rounded-full">
-                <Target className="w-8 h-8 text-green-400" />
+              <div className="bg-primary/20 p-3 rounded-full text-foreground">
+                <Target className="w-6 h-6 text-foreground" />
               </div>
               <div className="text-left">
-                <p className="text-4xl font-black text-white leading-none mb-1">Alto</p>
-                <p className="text-sm font-medium text-slate-300 uppercase tracking-wider">
-                  Engajamento
-                </p>
+                <p className="text-3xl font-black text-foreground leading-none mb-1">Alto</p>
+                <p className="label-overline">Engajamento</p>
               </div>
             </div>
           </div>

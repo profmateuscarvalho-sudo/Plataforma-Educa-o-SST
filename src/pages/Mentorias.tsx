@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckoutModal } from '@/components/CheckoutModal'
+import { PageHeader } from '@/components/PageHeader'
 import { getMentorships } from '@/services/mentorships'
 import { Mentorship, Mentor } from '@/types'
 import { Calendar, Video, GraduationCap, Star, AlertCircle } from 'lucide-react'
@@ -47,17 +48,17 @@ export default function Mentorias() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     )
 
   if (error)
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-slate-600 mb-4">{error}</p>
+          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={() => window.location.reload()} variant="outline">
             Tentar novamente
           </Button>
@@ -66,19 +67,12 @@ export default function Mentorias() {
     )
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <section className="bg-secondary text-white py-24 relative overflow-hidden">
-        <div className="container px-4 relative z-10 text-center max-w-4xl mx-auto">
-          <span className="text-accent font-bold tracking-widest uppercase text-sm mb-4 block">
-            Acompanhamento Exclusivo
-          </span>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold mb-6">Mentorias</h1>
-          <p className="text-xl text-slate-300 font-light mb-10">
-            Acelere sua trajetória profissional com o direcionamento de especialistas da área de
-            Segurança e Saúde no Trabalho.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen bg-background pb-24">
+      <PageHeader
+        badge="Acompanhamento Exclusivo"
+        title="Mentorias"
+        description="Acelere sua trajetória profissional com o direcionamento de especialistas da área de Segurança e Saúde no Trabalho."
+      />
 
       <section className="container px-4 mt-16 max-w-5xl mx-auto">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 md:p-12">

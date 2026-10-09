@@ -13,6 +13,7 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { setMetaTags } from '@/lib/utils'
 import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
 import { AppLanguage } from '@/i18n'
+import { PageHeader } from '@/components/PageHeader'
 
 function MagazineCard({ mag }: { mag: Magazine }) {
   const { t } = useTranslation()
@@ -191,21 +192,19 @@ export default function Revistas() {
   }, [searchParams, magazines, t])
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <section className="bg-emerald-950 text-white py-20 border-b-4 border-yellow-400">
-        <div className="container px-4 text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-emerald-200 text-xs font-semibold mb-4 backdrop-blur-sm">
-            <span>{currentLang === 'es' ? '🇪🇸' : '🇧🇷'}</span>
-            <span>{currentLang === 'es' ? 'Edición en Español' : 'Edição em Português'}</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-yellow-400 drop-shadow-sm">
-            {t('revistas.title')}
-          </h1>
-          <p className="text-lg text-emerald-100/90 leading-relaxed font-light">
-            {t('revistas.subtitle')}
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen bg-background pb-24">
+      <PageHeader
+        badge={
+          <span className="inline-flex items-center gap-2">
+            <span className="label-overline">{t('nav.magazines', 'Revistas Digitais')}</span>
+            <span className="text-xs text-muted-foreground/80">
+              · {currentLang === 'es' ? '🇪🇸 Edición en Español' : '🇧🇷 Edição em Português'}
+            </span>
+          </span>
+        }
+        title={t('revistas.title')}
+        description={t('revistas.subtitle')}
+      />
 
       <section className="container px-4 pt-16">
         {loading ? (

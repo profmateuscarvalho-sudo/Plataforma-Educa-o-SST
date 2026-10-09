@@ -109,124 +109,133 @@ export default function WorkplaceSubmission() {
   }
 
   return (
-    <div className="container max-w-2xl py-12">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-800">Meu Local de Trabalho</h1>
-        <p className="text-slate-500 mt-2">
-          Compartilhe conosco um pouco sobre o seu dia a dia profissional, sua área de atuação e
-          fotos do seu ambiente de trabalho.
-        </p>
+    <div className="min-h-screen bg-background pb-20">
+      <div className="bg-background border-b border-border">
+        <div className="container mx-auto px-4 pt-[72px] pb-[56px] text-left max-w-2xl">
+          <div className="space-y-4">
+            <span className="label-overline">Comunidade SST</span>
+            <h1 className="title-h2-fluid font-serif font-semibold text-foreground tracking-tight">
+              Meu Local de Trabalho
+            </h1>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+              Compartilhe conosco um pouco sobre o seu dia a dia profissional, sua área de atuação e
+              fotos do seu ambiente de trabalho.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações Profissionais</CardTitle>
-          <CardDescription>
-            Preencha o formulário abaixo com seus dados e até 3 fotos do local.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="professional_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Seu Nome Completo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: João da Silva" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid md:grid-cols-2 gap-6">
+      <div className="container max-w-2xl py-8">
+        <Card className="shadow-sm border-border bg-card">
+          <CardHeader>
+            <CardTitle>Informações Profissionais</CardTitle>
+            <CardDescription>
+              Preencha o formulário abaixo com seus dados e até 3 fotos do local.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="job_title"
+                  name="professional_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cargo Atual</FormLabel>
+                      <FormLabel>Seu Nome Completo</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Técnico em SST" {...field} />
+                        <Input placeholder="Ex: João da Silva" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="job_title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cargo Atual</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Técnico em SST" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cidade/Estado</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: São Paulo - SP" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
-                  name="city"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cidade/Estado</FormLabel>
+                      <FormLabel>Descrição do Local de Trabalho</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: São Paulo - SP" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição do Local de Trabalho</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Conte-nos um pouco sobre a empresa, as atividades que você realiza e as características do ambiente..."
-                        className="min-h-[120px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="photos"
-                render={({ field: { value, onChange, ...fieldProps } }) => (
-                  <FormItem>
-                    <FormLabel>Fotos do Local (Máximo de 3 fotos)</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center gap-4">
-                        <Input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          className="file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files.length > 3) {
-                              toast.error('Selecione no máximo 3 fotos.')
-                              e.target.value = ''
-                              return
-                            }
-                            onChange(e.target.files)
-                          }}
-                          {...fieldProps}
+                        <Textarea
+                          placeholder="Conte-nos um pouco sobre a empresa, as atividades que você realiza e as características do ambiente..."
+                          className="min-h-[120px]"
+                          {...field}
                         />
-                        <Camera className="w-5 h-5 text-slate-400" />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Enviando...' : 'Enviar Informações'}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <FormField
+                  control={form.control}
+                  name="photos"
+                  render={({ field: { value, onChange, ...fieldProps } }) => (
+                    <FormItem>
+                      <FormLabel>Fotos do Local (Máximo de 3 fotos)</FormLabel>
+                      <FormControl>
+                        <div className="flex items-center gap-4">
+                          <Input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            className="file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files.length > 3) {
+                                toast.error('Selecione no máximo 3 fotos.')
+                                e.target.value = ''
+                                return
+                              }
+                              onChange(e.target.files)
+                            }}
+                            {...fieldProps}
+                          />
+                          <Camera className="w-5 h-5 text-slate-400" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? 'Enviando...' : 'Enviar Informações'}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

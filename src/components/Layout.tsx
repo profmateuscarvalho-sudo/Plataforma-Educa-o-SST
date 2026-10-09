@@ -267,14 +267,14 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="bg-secondary text-slate-200 py-16">
+      <footer className="bg-[#1C1B18] text-[#D9D4C8] py-16 border-t border-[#2b2823]">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <SquareLogo variant="yellow" />
-              <Logo className="text-white" />
+              <Logo className="text-[#FAF8F3]" />
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed">{t('footer.about')}</p>
+            <p className="text-[#D9D4C8]/80 text-sm leading-relaxed">{t('footer.about')}</p>
             <div className="pt-2">
               <LanguageSwitcher variant="dark" />
             </div>
@@ -283,7 +283,8 @@ export default function Layout() {
                 href="https://www.instagram.com/revista.educacaosst"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white/10 p-2 rounded-full text-white hover:bg-primary transition-colors"
+                className="bg-white/10 p-2 rounded-full text-[#FAF8F3] hover:bg-primary hover:text-foreground transition-colors"
+                aria-label="Instagram"
               >
                 <Instagram className="w-5 h-5" />
               </a>
@@ -291,7 +292,8 @@ export default function Layout() {
                 href="https://wa.me/5518997425195"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white/10 p-2 rounded-full text-white hover:bg-green-500 transition-colors"
+                className="bg-white/10 p-2 rounded-full text-[#FAF8F3] hover:bg-primary hover:text-foreground transition-colors"
+                aria-label="WhatsApp"
               >
                 <MessageCircle className="w-5 h-5" />
               </a>
@@ -299,68 +301,72 @@ export default function Layout() {
                 href="https://www.linkedin.com/company/revista-educacao-sst"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white/10 p-2 rounded-full text-white hover:bg-blue-600 transition-colors"
+                className="bg-white/10 p-2 rounded-full text-[#FAF8F3] hover:bg-primary hover:text-foreground transition-colors"
+                aria-label="LinkedIn"
               >
                 <Linkedin className="w-5 h-5" />
               </a>
             </div>
           </div>
           <div>
-            <h4 className="font-serif font-bold text-lg text-white mb-6">
+            <h4 className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#FAF8F3] mb-6 font-sans">
               {t('footer.quickLinks')}
             </h4>
-            <ul className="space-y-3 text-sm text-slate-400">
+            <ul className="space-y-3 text-sm text-[#D9D4C8]/80">
               <li>
-                <Link to="/cursos" className="hover:text-white transition-colors">
+                <Link to="/cursos" className="hover:text-[#FAF8F3] transition-colors">
                   {t('footer.allCourses')}
                 </Link>
               </li>
               <li>
-                <Link to="/mentorias" className="hover:text-white transition-colors">
+                <Link to="/mentorias" className="hover:text-[#FAF8F3] transition-colors">
                   {t('footer.mentorships')}
                 </Link>
               </li>
               <li>
-                <Link to="/revistas" className="hover:text-white transition-colors">
+                <Link to="/revistas" className="hover:text-[#FAF8F3] transition-colors">
                   {t('footer.digitalMagazines')}
                 </Link>
               </li>
               <li>
-                <Link to="/noticias" className="hover:text-white transition-colors">
+                <Link to="/noticias" className="hover:text-[#FAF8F3] transition-colors">
                   {t('footer.sectorNews')}
                 </Link>
               </li>
               {FEATURE_FLAGS.anunciePage && (
                 <li>
-                  <Link to="/anuncie-na-revista" className="hover:text-white transition-colors">
+                  <Link to="/anuncie-na-revista" className="hover:text-[#FAF8F3] transition-colors">
                     {t('footer.advertise')}
                   </Link>
                 </li>
               )}
               <li>
-                <Link to="/submeter-artigo" className="hover:text-white transition-colors">
+                <Link to="/submeter-artigo" className="hover:text-[#FAF8F3] transition-colors">
                   {t('footer.submitArticle')}
                 </Link>
               </li>
               <li>
-                <Link to="/politica-de-privacidade" className="hover:text-white transition-colors">
+                <Link
+                  to="/politica-de-privacidade"
+                  className="hover:text-[#FAF8F3] transition-colors"
+                >
                   {t('footer.privacyPolicy')}
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-serif font-bold text-lg text-white mb-6">
+            <h4 className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#FAF8F3] mb-6 font-sans">
               {t('footer.contactUs')}
             </h4>
-            <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+            <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
               <a
                 href="https://wa.me/5518997425195"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 text-slate-200 hover:text-green-400 transition-colors font-medium text-sm group"
+                className="inline-flex items-center gap-2.5 text-[#D9D4C8] hover:text-[#FAF8F3] transition-colors font-medium text-sm group"
               >
-                <div className="bg-green-500/20 text-green-400 p-2 rounded-lg group-hover:bg-green-500 group-hover:text-white transition-colors">
+                <div className="bg-primary/20 text-primary p-2 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                   <MessageCircle className="w-5 h-5" />
                 </div>
                 <span>(18) 99742-5195</span>
@@ -368,18 +374,19 @@ export default function Layout() {
             </div>
           </div>
           <div>
-            <h4 className="font-serif font-bold text-lg text-white mb-6">
+            <h4 className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#FAF8F3] mb-6 font-sans">
               {t('footer.areasOfPractice')}
             </h4>
-            <ul className="space-y-3 text-sm text-slate-400">
+            <ul className="space-y-3 text-sm text-[#D9D4C8]/80">
               <li className="flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-accent" /> {t('footer.occupationalMedicine')}
+                <GraduationCap className="w-4 h-4 text-primary" />{' '}
+                {t('footer.occupationalMedicine')}
               </li>
               <li className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-accent" /> {t('footer.occupationalSafety')}
+                <BookOpen className="w-4 h-4 text-primary" /> {t('footer.occupationalSafety')}
               </li>
               <li className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-accent" /> {t('footer.sstManagement')}
+                <Users className="w-4 h-4 text-primary" /> {t('footer.sstManagement')}
               </li>
             </ul>
           </div>

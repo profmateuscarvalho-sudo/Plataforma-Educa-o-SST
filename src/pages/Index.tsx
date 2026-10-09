@@ -60,61 +60,47 @@ export default function Index() {
       <BannerDisplay location="Home - Topo" className="px-4 pt-4 max-w-[88rem] mx-auto" />
       <section
         id="hero"
-        className="min-h-screen flex items-center overflow-hidden bg-secondary relative pt-20 pb-8 scroll-mt-16"
+        className="min-h-screen flex items-center overflow-hidden bg-background relative pt-12 pb-8 scroll-mt-16 border-b border-border"
       >
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://img.usecurling.com/p/1920/1080?q=factory&color=black"
-            alt="Background"
-            className="w-full h-full object-cover opacity-30 mix-blend-overlay"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-secondary via-secondary/90 to-secondary/80" />
-        </div>
-
         <div className="container relative z-10 px-4 max-w-[88rem] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
-            <div className="lg:col-span-4 space-y-5 animate-fade-in-up">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary backdrop-blur-sm font-medium text-sm">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                {t('hero.badge')}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-5 space-y-5 animate-hero-in">
+              <div>
+                <span className="label-overline">{t('hero.badge')}</span>
               </div>
-              <h1 className="text-4xl md:text-5xl xl:text-6xl font-serif font-bold text-white leading-tight">
-                {t('hero.title')} <span className="text-accent">{t('hero.titleHighlight')}</span>
+              <h1 className="title-h1-home text-foreground">
+                {t('hero.title')} <em>{t('hero.titleHighlight')}</em>
               </h1>
-              <p className="text-base md:text-lg text-slate-300 max-w-xl leading-relaxed font-light">
+              <p className="text-base md:text-lg text-muted-foreground max-w-xl leading-relaxed font-normal">
                 {t('hero.subtitle')}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button
-                  size="lg"
-                  className="h-12 px-7 text-base font-bold bg-primary hover:bg-primary/90 text-white"
-                  asChild
-                >
+                <Button size="lg" className="h-12 px-7 text-base font-bold shadow-none" asChild>
                   <Link to="/register">{t('hero.ctaFree')}</Link>
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-12 px-7 text-base font-bold border-accent text-accent hover:bg-accent hover:text-secondary"
+                  className="h-12 px-7 text-base font-bold"
                   asChild
                 >
                   <a href="#planos">{t('hero.ctaPlans')}</a>
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <div className="flex items-center gap-1.5 text-sm text-slate-300">
+              <div className="flex flex-wrap gap-4 pt-2">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-medium">
                   <Check className="w-4 h-4 text-primary" /> {t('hero.featureCourses')}
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-slate-300">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-medium">
                   <Check className="w-4 h-4 text-primary" /> {t('hero.featureMagazines')}
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-slate-300">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-medium">
                   <Check className="w-4 h-4 text-primary" /> {t('hero.featureDocumentaries')}
                 </div>
               </div>
             </div>
 
-            <div className="lg:col-span-8 flex items-center justify-center">
+            <div className="lg:col-span-7 flex items-center justify-center">
               <div className="w-full max-w-md sm:max-w-lg lg:max-w-2xl xl:max-w-3xl">
                 <StudentHomePreview />
               </div>

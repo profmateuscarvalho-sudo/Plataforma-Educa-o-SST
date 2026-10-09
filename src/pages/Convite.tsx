@@ -89,28 +89,29 @@ export default function Convite() {
   }, [user, authLoading, navigate])
 
   return (
-    <div className="flex flex-col">
-      <section className="min-h-[80vh] flex items-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pt-20 pb-12">
-        <div className="container px-4 max-w-4xl mx-auto text-center space-y-6 animate-fade-in-up">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary font-medium text-sm">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            #SejaEducaçãoSST
+    <div className="flex flex-col bg-background min-h-screen">
+      <div className="bg-background border-b border-border">
+        <div className="container mx-auto px-4 pt-[72px] pb-[56px] text-left max-w-4xl">
+          <div className="space-y-4">
+            <span className="label-overline">#SejaEducaçãoSST</span>
+            <h1 className="title-h2-fluid font-serif font-semibold text-foreground tracking-tight">
+              Comece sua jornada em SST gratuitamente
+            </h1>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+              Acesse cursos, revistas científicas, aulas ao vivo e uma comunidade de profissionais.
+              Sem cartão de crédito.
+            </p>
+            <div className="pt-2 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <Button size="lg" className="h-12 px-8 text-base font-bold shadow-none" asChild>
+                <Link to="/register">
+                  Começar Grátis Agora <ArrowRight className="ml-2 w-5 h-5" />
+                </Link>
+              </Button>
+              <span className="text-xs text-muted-foreground">100% gratuito · sem cartão</span>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold leading-tight">
-            Comece sua jornada em <span className="text-accent">SST</span> gratuitamente
-          </h1>
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-            Acesse cursos, revistas científicas, aulas ao vivo e uma comunidade de profissionais.
-            Sem cartão de crédito.
-          </p>
-          <Button size="lg" className="h-14 px-8 text-lg font-bold" asChild>
-            <Link to="/register">
-              Começar Grátis Agora <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
-          </Button>
-          <p className="text-sm text-slate-400">100% Gratuito e sem cartão de crédito</p>
         </div>
-      </section>
+      </div>
 
       <section className="py-20 bg-slate-50">
         <div className="container px-4 max-w-5xl mx-auto">

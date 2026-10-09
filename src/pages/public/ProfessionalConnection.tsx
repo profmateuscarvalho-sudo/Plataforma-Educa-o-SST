@@ -75,51 +75,61 @@ export default function ProfessionalConnection() {
     )
 
   return (
-    <div className="max-w-3xl mx-auto p-4 md:p-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">Conexão Profissional</CardTitle>
-          <p className="text-center text-muted-foreground mt-2">
-            Responda às perguntas abaixo para participar da nossa próxima edição.
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Nome Completo*</Label>
-                <Input {...register('name', { required: true })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Email*</Label>
-                <Input type="email" {...register('email', { required: true })} />
-              </div>
-            </div>
+    <div className="min-h-screen bg-background pb-20">
+      <div className="bg-background border-b border-border">
+        <div className="container mx-auto px-4 pt-[72px] pb-[56px] text-left max-w-3xl">
+          <div className="space-y-4">
+            <span className="label-overline">Revista Educação SST</span>
+            <h1 className="title-h2-fluid font-serif font-semibold text-foreground tracking-tight">
+              Conexão Profissional
+            </h1>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+              Responda às perguntas abaixo para participar da nossa próxima edição.
+            </p>
+          </div>
+        </div>
+      </div>
 
-            <div className="space-y-2">
-              <Label>Envie suas fotos (Até 5 fotos)</Label>
-              <Input type="file" multiple accept="image/*" {...register('photos')} />
-            </div>
-
-            <div className="space-y-6 pt-4 border-t">
-              <h3 className="text-lg font-semibold">Entrevista</h3>
-              {questions.map((q, i) => (
-                <div key={i} className="space-y-2">
-                  <Label className="text-base text-slate-800">{q}</Label>
-                  <Textarea {...register(`q${i}`)} rows={3} placeholder="Sua resposta..." />
+      <div className="max-w-3xl mx-auto p-4 md:p-8">
+        <Card className="shadow-sm border-border bg-card">
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nome Completo*</Label>
+                  <Input {...register('name', { required: true })} />
                 </div>
-              ))}
-              {questions.length === 0 && (
-                <p className="text-sm text-slate-500">Nenhuma pergunta definida no momento.</p>
-              )}
-            </div>
+                <div className="space-y-2">
+                  <Label>Email*</Label>
+                  <Input type="email" {...register('email', { required: true })} />
+                </div>
+              </div>
 
-            <Button type="submit" className="w-full" disabled={loading || questions.length === 0}>
-              {loading ? 'Enviando...' : 'Enviar Respostas'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="space-y-2">
+                <Label>Envie suas fotos (Até 5 fotos)</Label>
+                <Input type="file" multiple accept="image/*" {...register('photos')} />
+              </div>
+
+              <div className="space-y-6 pt-4 border-t">
+                <h3 className="text-lg font-semibold">Entrevista</h3>
+                {questions.map((q, i) => (
+                  <div key={i} className="space-y-2">
+                    <Label className="text-base text-slate-800">{q}</Label>
+                    <Textarea {...register(`q${i}`)} rows={3} placeholder="Sua resposta..." />
+                  </div>
+                ))}
+                {questions.length === 0 && (
+                  <p className="text-sm text-slate-500">Nenhuma pergunta definida no momento.</p>
+                )}
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading || questions.length === 0}>
+                {loading ? 'Enviando...' : 'Enviar Respostas'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

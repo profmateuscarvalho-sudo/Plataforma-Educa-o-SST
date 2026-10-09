@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { getSimulados } from '@/services/simulados'
 import { Badge } from '@/components/ui/badge'
+import { PageHeader } from '@/components/PageHeader'
 import pb from '@/lib/pocketbase/client'
 import type { Simulado } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
@@ -21,34 +22,22 @@ export default function PublicSimulados() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      <div className="bg-primary text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl">
-            <Badge
-              variant="secondary"
-              className="mb-4 bg-white/20 hover:bg-white/30 text-white border-none"
-            >
-              <ClipboardList className="w-4 h-4 mr-2" />
-              Teste seus conhecimentos
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">Simulados SST</h1>
-            <p className="text-lg text-primary-foreground/90">
-              Acesse simulados interativos criados por especialistas. Pratique para concursos,
-              certificações e aprimore sua base teórica.
-            </p>
-            {user && (
-              <Link
-                to="/plataforma"
-                className="inline-flex items-center gap-2 mt-4 px-4 h-10 rounded-lg bg-white/15 hover:bg-white/25 text-white text-sm font-medium backdrop-blur transition-colors"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Voltar ao Hub
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background pb-20">
+      <PageHeader
+        badge="Teste seus conhecimentos"
+        title="Simulados SST"
+        description="Acesse simulados interativos criados por especialistas. Pratique para concursos, certificações e aprimore sua base teórica."
+      >
+        {user && (
+          <Link
+            to="/plataforma"
+            className="inline-flex items-center gap-2 px-4 h-10 rounded-full bg-secondary text-secondary-foreground text-sm font-medium hover:bg-secondary/90 transition-colors"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Voltar ao Hub
+          </Link>
+        )}
+      </PageHeader>
 
       <div className="container mx-auto px-4 py-12">
         {loading ? (

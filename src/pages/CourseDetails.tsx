@@ -10,6 +10,7 @@ import { Course } from '@/types'
 import pb from '@/lib/pocketbase/client'
 import { setMetaTags } from '@/lib/utils'
 import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
+import { PageHeader } from '@/components/PageHeader'
 import { useToast } from '@/hooks/use-toast'
 
 export default function CourseDetails() {
@@ -45,23 +46,18 @@ export default function CourseDetails() {
     : 'https://img.usecurling.com/p/800/400?q=education&color=green'
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <section className="bg-secondary text-white py-20">
-        <div className="container px-4">
-          <div className="max-w-4xl space-y-6">
-            <Badge className="bg-primary text-white hover:bg-primary">{course.category}</Badge>
-            <h1 className="text-4xl md:text-6xl font-serif font-bold leading-tight">
-              {course.title}
-            </h1>
-            <p className="text-xl text-slate-300">{course.description}</p>
-            <div className="flex flex-wrap gap-6 pt-4 text-sm font-medium">
-              <div className="flex items-center gap-2">
-                <Award className="text-accent w-5 h-5" /> Certificado de Conclusão
-              </div>
-            </div>
+    <div className="min-h-screen bg-background pb-24">
+      <PageHeader
+        badge={course.category || 'Curso'}
+        title={course.title}
+        description={course.description}
+      >
+        <div className="flex flex-wrap gap-6 text-sm font-medium text-foreground">
+          <div className="flex items-center gap-2">
+            <Award className="text-primary w-5 h-5" /> Certificado de Conclusão
           </div>
         </div>
-      </section>
+      </PageHeader>
 
       <div className="container px-4 mt-12">
         <div className="flex flex-col lg:flex-row gap-12 items-start">

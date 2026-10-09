@@ -6,23 +6,26 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-bold transition-all duration-200 outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 select-none min-h-[44px]',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        default:
+          'rounded-full bg-primary text-primary-foreground font-bold hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(28,27,24,0.16)] transition-all duration-250',
+        destructive:
+          'rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:-translate-y-0.5 transition-all duration-250',
         outline:
-          'border border-input bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'text-foreground hover:bg-accent hover:text-accent-foreground',
-        link: 'text-foreground underline-offset-4 hover:underline',
+          'rounded-full border-[1.5px] border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background transition-all duration-250',
+        secondary:
+          'rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:-translate-y-0.5 transition-all duration-250',
+        ghost: 'rounded-full text-foreground hover:bg-muted transition-colors duration-200',
+        link: 'editorial-link text-foreground font-semibold p-0 h-auto min-h-0',
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-md px-3',
-        lg: 'h-11 rounded-md px-8',
-        icon: 'h-10 w-10',
+        default: 'min-h-[52px] px-7 py-3 text-sm',
+        sm: 'min-h-[44px] px-5 py-2 text-xs',
+        lg: 'min-h-[56px] px-9 py-4 text-base',
+        icon: 'min-h-[44px] min-w-[44px] h-11 w-11 rounded-full p-0',
       },
     },
     defaultVariants: {

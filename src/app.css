@@ -9,34 +9,33 @@
 
 :root {
   /* Surfaces */
-  --sst-page: #faf8f3;
-  --sst-card: #ffffff;
+  --sst-page: #171613;
+  --sst-card: #211f1b;
   /* Text */
-  --sst-text: #15170f;
-  --sst-text-2: #767a6e;
+  --sst-text: #f4f1e8;
+  --sst-text-2: #b9b3a6;
   /* Lines / borders */
-  --sst-line: #eae6dc;
-  --sst-line-soft: #f1eee6;
+  --sst-line: #35322c;
+  --sst-line-soft: #2b2823;
   /* Brand — amber */
-  --sst-amber: #ffc220;
-  --sst-amber-wash: #fff1cc;
-  --sst-amber-ink: #8a6400;
-  /* Completion — green */
-  --sst-green: #00bf63;
-  --sst-green-wash: #dff6ea;
+  --sst-amber: #fdbe2d;
+  --sst-amber-wash: #382c10;
+  --sst-amber-ink: #fdbe2d;
+  /* Completion — success green */
+  --sst-green: #1f6b4a;
+  --sst-green-wash: #143024;
   /* Audiovisual — blue */
   --sst-blue: #2e7cf6;
-  --sst-blue-wash: #e3edff;
-  /* Magazine — purple */
-  --sst-purple: #7c5cff;
-  --sst-purple-wash: #eee9ff;
-  /* Red — live */
-  --sst-red: #ef4444;
+  --sst-blue-wash: #16243d;
+  /* Magazine — deep / editorial */
+  --sst-purple: #fdbe2d;
+  --sst-purple-wash: #211f1b;
+  /* Red — danger */
+  --sst-red: #b4472e;
 
   /* Typography */
-  --sst-font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
-  --sst-font-body: 'Inter', system-ui, sans-serif;
-
+  --sst-font-display: 'Instrument Sans', system-ui, sans-serif;
+  --sst-font-body: 'Instrument Sans', system-ui, sans-serif;
   /* Radii */
   --sst-r-card-lg: 26px;
   --sst-r-card: 20px;

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,26 +6,61 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Tema claro (padrão) */
+    --background: 43 41% 97%; /* #FAF8F3 creme */
+    --foreground: 45 8% 10%; /* #1C1B18 tinta */
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 45 8% 10%; /* #1C1B18 */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 145 100% 39%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 40 98% 60%;
-    --accent-foreground: 0 0% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 145 100% 39%;
-    --radius: 0.75rem;
+    --popover-foreground: 45 8% 10%;
+    --primary: 42 98% 58%; /* #FDBE2D amarelo logo */
+    --primary-foreground: 45 8% 10%; /* #1C1B18 tinta sobre amarelo */
+    --secondary: 45 8% 10%; /* #1C1B18 */
+    --secondary-foreground: 43 41% 97%; /* #FAF8F3 */
+    --muted: 43 35% 92%; /* #F2EEE4 creme mais escuro */
+    --muted-foreground: 41 9% 34%; /* #5F5A4F */
+    --accent: 42 98% 58%; /* #FDBE2D */
+    --accent-foreground: 45 8% 10%;
+    --destructive: 11 59% 44%; /* #B4472E */
+    --destructive-foreground: 43 41% 97%;
+    --border: 41 26% 86%; /* #E4DED1 */
+    --input: 41 26% 86%;
+    --ring: 45 8% 10%; /* #1C1B18 */
+    --radius: 0.875rem;
+
+    /* Novas cores da identidade */
+    --deep: 164 46% 17%; /* #173F33 verde-escuro editorial */
+    --deep-foreground: 43 27% 93%; /* #F4F1E8 */
+    --success: 154 55% 27%; /* #1F6B4A */
+    --danger: 11 59% 44%; /* #B4472E */
+  }
+
+  .dark {
+    /* Tema escuro (Hub e /app) */
+    --background: 45 9% 8%; /* #171613 */
+    --foreground: 43 27% 93%; /* #F4F1E8 */
+    --card: 40 10% 12%; /* #211F1B */
+    --card-foreground: 43 27% 93%; /* #F4F1E8 */
+    --popover: 40 10% 12%;
+    --popover-foreground: 43 27% 93%;
+    --muted: 40 10% 12%; /* #211F1B */
+    --muted-foreground: 39 12% 69%; /* #B9B3A6 */
+    --border: 40 9% 19%; /* #35322C */
+    --input: 40 9% 19%;
+    --primary: 42 98% 58%; /* #FDBE2D */
+    --primary-foreground: 45 8% 10%; /* #1C1B18 */
+    --secondary: 43 27% 93%; /* #F4F1E8 */
+    --secondary-foreground: 45 8% 10%; /* #1C1B18 */
+    --accent: 42 98% 58%;
+    --accent-foreground: 45 8% 10%;
+    --destructive: 11 59% 44%;
+    --destructive-foreground: 43 27% 93%;
+    --ring: 42 98% 58%;
+
+    --deep: 164 46% 17%; /* #173F33 */
+    --deep-foreground: 43 27% 93%;
+    --success: 154 55% 27%;
+    --danger: 11 59% 44%;
   }
 }
 
@@ -35,6 +70,8 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-size: 17px;
+    line-height: 1.6;
   }
   h1,
   h2,
@@ -42,7 +79,19 @@
   h4,
   h5,
   h6 {
-    @apply font-serif tracking-tight;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+  }
+  h1 em,
+  h1 i,
+  h2 em,
+  h2 i,
+  h3 em,
+  h3 i {
+    font-style: italic;
+    font-weight: inherit;
   }
 }
 
@@ -73,8 +122,99 @@
   .animate-fade-in {
     animation: fade-in 0.3s ease-out forwards;
   }
+
+  /* Fade + subida 18px em 0.9s (topo da página) */
+  @keyframes hero-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-hero-in {
+    opacity: 0;
+    animation: hero-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: calc(var(--delay-idx, 0) * 0.08s);
+  }
+
+  /* Trocas de conteúdo em painéis (fade 0.45s) */
+  @keyframes panel-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .animate-panel-fade {
+    animation: panel-fade 0.45s ease-out forwards;
+  }
+
+  /* Rótulos pequenos acima de títulos */
+  .label-overline {
+    font-family: 'Instrument Sans', system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Títulos fluidos */
+  .title-h1-home {
+    font-size: clamp(38px, 8.4vw, 120px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+  .title-h2-fluid {
+    font-size: clamp(32px, 4.4vw, 56px);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    font-weight: 600;
+  }
+  .title-h3-fluid {
+    font-size: clamp(24px, 3vw, 40px);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    font-weight: 600;
+  }
+
+  /* Assinatura de marca: canto inferior esquerdo bem arredondado */
+  .brand-corner {
+    border-radius: 8px 8px 8px 72px;
+  }
+
+  /* Link editorial com seta "→" e sublinhado expansivo */
+  .editorial-link {
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    position: relative;
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.25s ease;
+  }
+  .editorial-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background-color: currentColor;
+    transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .editorial-link:hover::after {
+    width: 100%;
+  }
+
   .glass-header {
-    @apply bg-background/95 backdrop-blur-md border-b border-border/40 supports-[backdrop-filter]:bg-background/80;
+    @apply bg-background/95 backdrop-blur-md border-b border-border supports-[backdrop-filter]:bg-background/90;
   }
   .dashboard-3d {
     transform-style: preserve-3d;
@@ -121,5 +261,19 @@
   }
   .animate-dashboard-float {
     animation: dashboard-float 3s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-hero-in,
+    .animate-panel-fade,
+    .animate-fade-in-up,
+    .animate-fade-in,
+    .animate-dashboard-float,
+    .dashboard-shine {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
   }
 }

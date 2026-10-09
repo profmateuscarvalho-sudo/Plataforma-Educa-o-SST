@@ -29,6 +29,7 @@ import { Logo, SquareLogo } from './ui/Logos'
 import { useAuth } from '@/hooks/use-auth'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { InstallBanner, InstallInstructionsDialog, useInstallFlow } from './InstallBanner'
+import { MagazineTopBar } from './MagazineTopBar'
 import pb from '@/lib/pocketbase/client'
 import { FEATURE_FLAGS } from '@/lib/constants'
 
@@ -37,17 +38,19 @@ export default function Layout() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { t } = useTranslation()
-  const { isIOS, run: runInstall } = useInstallFlow()
+  const { run: runInstall } = useInstallFlow()
   const [installOpen, setInstallOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleInstall = () => runInstall(() => setInstallOpen(true))
 
   useEffect(() => {
     window.scrollTo(0, 0)
+    setMobileMenuOpen(false)
   }, [location.pathname])
 
+  // Itens na mesma ordem e com as mesmas rotas de hoje, removido "Início" conforme spec
   const navigation = [
-    { name: t('nav.home'), href: '/' },
     { name: t('nav.courses'), href: '/cursos' },
     { name: t('nav.mentorships'), href: '/mentorias' },
     { name: t('nav.simulados'), href: '/simulados' },
@@ -60,54 +63,69 @@ export default function Layout() {
   ]
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50 w-full glass-header">
-        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 group">
-            <SquareLogo variant="yellow" className="group-hover:scale-105 transition-transform" />
-            <Logo className="hidden lg:flex" />
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      {/* Faixa da Revista (substitui o pop-up, rola com a página) */}
+      <MagazineTopBar />
+
+      <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
+          {/* Esquerda: Logo (44px) + "EDUCAÇÃO SST." */}
+          <Link to="/" className="flex items-center gap-3 shrink-0 group">
+            <SquareLogo
+              variant="yellow"
+              className="h-11 w-11 transition-transform group-hover:scale-105"
+            />
+            <Logo />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  location.pathname === item.href
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-slate-600'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+          {/* Centro: menu desktop (>= 900px / min-[900px]:flex) */}
+          <nav className="hidden min-[900px]:flex items-center gap-7">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`text-[15px] font-medium transition-colors hover:text-foreground relative py-1 ${
+                    isActive ? 'text-foreground' : 'text-muted-foreground'
+                  }`}
+                >
+                  {item.name}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
+                  )}
+                </Link>
+              )
+            })}
           </nav>
 
-          <div className="hidden md:flex items-center gap-4">
-            {user ? (
-              <>
+          {/* Direita: idioma, Área do Assinante e Assinar grátis */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden min-[900px]:flex items-center gap-4">
+              <LanguageSwitcher />
+
+              {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="flex items-center gap-1.5 rounded-full"
+                      className="flex items-center gap-2 rounded-full p-1 hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       aria-label={t('nav.panel')}
                     >
                       {user.avatar ? (
                         <img
                           src={pb.files.getUrl(user, user.avatar)}
                           alt={user.name}
-                          className="w-9 h-9 rounded-full object-cover border-2 border-primary/20"
+                          className="w-9 h-9 rounded-full object-cover border-2 border-border"
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                        <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                           {user.name?.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <ChevronDown className="w-4 h-4 text-slate-500" />
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent align="end" className="w-56 bg-card border-border">
                     <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
@@ -129,55 +147,78 @@ export default function Layout() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <LanguageSwitcher />
-              </>
-            ) : (
-              <>
-                <LanguageSwitcher />
-                <Button variant="ghost" asChild className="font-medium text-slate-600">
-                  <Link to="/login">{t('nav.subscriberArea')}</Link>
-                </Button>
-                <Button asChild className="font-medium shadow-sm">
-                  <Link to="/planos">{t('nav.subscribe')}</Link>
-                </Button>
-              </>
-            )}
-          </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="editorial-link text-[15px] text-foreground font-semibold px-2 py-1"
+                >
+                  {t('nav.subscriberArea')}
+                </Link>
+              )}
+            </div>
 
-          <Sheet>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] border-l-0">
-              <SheetHeader className="text-left mb-8">
-                <SheetTitle>
-                  <div className="flex items-center gap-2.5">
-                    <SquareLogo variant="yellow" className="w-8 h-8" />
-                    <Logo />
+            {/* Botão primário visível sempre (desktop e mobile <900px) */}
+            <Button asChild size="default" className="shadow-none">
+              <Link to="/planos">Assinar grátis</Link>
+            </Button>
+
+            {/* Abaixo de 900px: botão hambúrguer */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild className="min-[900px]:hidden">
+                <Button variant="ghost" size="icon" aria-label="Abrir menu">
+                  <Menu className="w-6 h-6 text-foreground" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-[320px] bg-background border-border p-6 flex flex-col justify-between"
+              >
+                <div>
+                  <SheetHeader className="text-left mb-6 pb-4 border-b border-border">
+                    <SheetTitle>
+                      <div className="flex items-center gap-2.5">
+                        <SquareLogo variant="yellow" className="w-9 h-9" />
+                        <Logo />
+                      </div>
+                    </SheetTitle>
+                  </SheetHeader>
+
+                  <nav className="flex flex-col gap-2">
+                    {navigation.map((item) => {
+                      const isActive = location.pathname === item.href
+                      return (
+                        <Link
+                          key={item.name}
+                          to={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`text-base font-semibold py-2.5 px-3 rounded-lg flex items-center justify-between transition-colors ${
+                            isActive
+                              ? 'bg-muted text-foreground border-l-4 border-primary'
+                              : 'text-foreground/80 hover:bg-muted'
+                          }`}
+                        >
+                          <span>{item.name}</span>
+                          <ChevronRight className="w-4 h-4 opacity-50" />
+                        </Link>
+                      )
+                    })}
+                  </nav>
+                </div>
+
+                <div className="flex flex-col gap-3 pt-6 border-t border-border">
+                  <div className="flex items-center justify-between px-2 mb-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Idioma
+                    </span>
+                    <LanguageSwitcher />
                   </div>
-                </SheetTitle>
-              </SheetHeader>{' '}
-              <div className="flex flex-col gap-6">
-                <nav className="flex flex-col gap-4">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className="text-lg font-medium text-slate-700 hover:text-primary flex justify-between"
-                    >
-                      {item.name} <ChevronRight className="w-5 h-5 opacity-50" />
-                    </Link>
-                  ))}
-                </nav>
-                <div className="h-px bg-border my-2" />
-                <div className="flex flex-col gap-3">
+
                   {user ? (
                     <>
                       <Link
                         to={user.role === 'admin' ? '/admin' : '/plataforma'}
-                        className="flex items-center gap-3 mb-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-muted"
                       >
                         {user.avatar ? (
                           <img
@@ -186,56 +227,39 @@ export default function Layout() {
                             className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
                             {user.name?.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span className="font-medium text-slate-700">{user.name}</span>
+                        <span className="font-semibold text-foreground truncate">{user.name}</span>
                       </Link>
-                      <Button className="w-full justify-start text-lg h-12" asChild>
+                      <Button variant="outline" asChild className="w-full justify-start">
                         <Link to={user.role === 'admin' ? '/admin' : '/plataforma'}>
-                          <LayoutDashboard className="mr-2" /> {t('nav.panel')}
+                          <LayoutDashboard className="mr-2 w-4 h-4" /> {t('nav.panel')}
                         </Link>
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-lg h-12"
-                        onClick={handleInstall}
-                      >
-                        <Smartphone className="mr-2" /> {t('install.menuItem')}
-                      </Button>
-                      <div className="px-1">
-                        <LanguageSwitcher />
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-lg h-12"
+                        className="w-full justify-start"
                         onClick={() => {
                           signOut()
                           navigate('/')
                         }}
                       >
-                        <LogOut className="mr-2" /> {t('nav.logout')}
+                        <LogOut className="mr-2 w-4 h-4" /> {t('nav.logout')}
                       </Button>
                     </>
                   ) : (
-                    <>
-                      <div className="px-1">
-                        <LanguageSwitcher />
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-lg h-12"
-                        asChild
-                      >
-                        <Link to="/login">{t('nav.subscriberArea')}</Link>
-                      </Button>
-                    </>
+                    <Button variant="outline" asChild className="w-full">
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                        {t('nav.subscriberArea')}
+                      </Link>
+                    </Button>
                   )}
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </header>
 

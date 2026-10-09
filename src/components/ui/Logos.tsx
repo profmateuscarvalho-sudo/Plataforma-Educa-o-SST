@@ -49,10 +49,13 @@ export function LogoIcon({
 export function Logo({ className }: { className?: string }) {
   return (
     <div
-      className={cn('flex items-center font-bold text-2xl tracking-tighter font-sans', className)}
+      className={cn(
+        'flex items-baseline font-bold text-[15px] tracking-[0.06em] font-sans text-foreground select-none',
+        className,
+      )}
     >
-      <span className="text-accent">EDUCAÇÃO</span>
-      <span className="text-primary">SST.</span>
+      <span>EDUCAÇÃO SST</span>
+      <span className="text-primary font-black ml-[1px]">.</span>
     </div>
   )
 }
@@ -85,7 +88,7 @@ export function SquareLogo({
     <img
       src={logoSrc}
       alt="Educação SST"
-      className={cn('w-12 h-12 object-contain shrink-0 select-none', className)}
+      className={cn('h-11 w-11 object-contain shrink-0 select-none', className)}
       loading="eager"
       decoding="async"
     />

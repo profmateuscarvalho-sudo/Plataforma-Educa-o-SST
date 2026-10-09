@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LogoWordmark, SquareLogo } from './ui/Logos'
+import { SquareLogo } from './ui/Logos'
 import { useAuth } from '@/hooks/use-auth'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { InstallBanner, InstallInstructionsDialog, useInstallFlow } from './InstallBanner'
@@ -69,13 +69,12 @@ export default function Layout() {
 
       <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
-          {/* Esquerda: Símbolo "E." (44px) + Wordmark horizontal (30px), escondido em celular se faltar espaço */}
-          <Link to="/" className="flex items-center gap-3 shrink-0 group">
+          {/* Esquerda: Símbolo "E." amarelo (44px), link para a página inicial */}
+          <Link to="/" className="flex items-center shrink-0 group" aria-label="Educação SST">
             <SquareLogo
               variant="yellow"
               className="h-11 w-11 transition-transform group-hover:scale-105"
             />
-            <LogoWordmark height={30} className="hidden sm:block" />
           </Link>
 
           {/* Centro: menu desktop (>= 1150px / min-[1150px]:flex) */}
@@ -176,10 +175,14 @@ export default function Layout() {
                 <div>
                   <SheetHeader className="text-left mb-6 pb-4 border-b border-border">
                     <SheetTitle>
-                      <div className="flex items-center gap-2.5">
-                        <SquareLogo variant="yellow" className="w-9 h-9" />
-                        <LogoWordmark height={26} />
-                      </div>
+                      <Link
+                        to="/"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="inline-flex items-center"
+                        aria-label="Educação SST"
+                      >
+                        <SquareLogo variant="yellow" className="h-11 w-11" />
+                      </Link>
                     </SheetTitle>
                   </SheetHeader>
 
@@ -270,9 +273,14 @@ export default function Layout() {
       <footer className="bg-[#1C1B18] text-[#D9D4C8] py-16 border-t border-[#2b2823]">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <SquareLogo variant="yellow" />
-              <LogoWordmark height={30} />
+            <div className="flex items-center">
+              <Link
+                to="/"
+                className="inline-flex items-center transition-transform hover:scale-105"
+                aria-label="Educação SST"
+              >
+                <SquareLogo variant="yellow" className="h-11 w-11" />
+              </Link>
             </div>
             <p className="text-[#D9D4C8]/80 text-sm leading-relaxed">{t('footer.about')}</p>
             <p className="text-primary font-semibold text-sm tracking-wide">#SejaEducaçãoSST</p>

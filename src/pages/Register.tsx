@@ -12,8 +12,9 @@ import { Check, Sparkles, Award, Crown, Loader2 } from 'lucide-react'
 import { LocationSelect } from '@/components/LocationSelect'
 import { PasswordStrengthChecker } from '@/components/PasswordStrengthChecker'
 import { useProfessionalTags } from '@/hooks/use-professional-tags'
-import { getSubscriptionPlans } from '@/services/subscription-plans'
+import { useSubscriptionPlans } from '@/hooks/use-subscription-plans'
 import { SubscriptionPlan } from '@/types'
+import { Skeleton } from '@/components/ui/skeleton'
 import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
 
 const formatPhone = (value: string) => {
@@ -30,7 +31,12 @@ export default function Register() {
   const [searchParams] = useSearchParams()
   const planId = searchParams.get('planId') || undefined
   const { tags: availableTags } = useProfessionalTags()
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([])
+  const {
+    plans,
+    loading: plansLoading,
+    error: plansError,
+    refetch: refetchPlans,
+  } = useSubscriptionPlans()
   const [selectedPlanTier, setSelectedPlanTier] = useState<'free' | 'prata' | 'ouro'>('free')
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false)
   const [checkoutPlan, setCheckoutPlan] = useState<SubscriptionPlan | null>(null)
@@ -48,23 +54,16 @@ export default function Register() {
   const [tagsError, setTagsError] = useState('')
 
   useEffect(() => {
-    getSubscriptionPlans()
-      .then((loadedPlans) => {
-        setPlans(loadedPlans)
-        if (planId) {
-          const match = loadedPlans.find((p) => p.id === planId)
-          if (match) {
-            const lower = match.name.toLowerCase()
-            if (lower.includes('ouro')) setSelectedPlanTier('ouro')
-            else if (lower.includes('prata')) setSelectedPlanTier('prata')
-            else setSelectedPlanTier('free')
-          }
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load subscription plans:', err)
-      })
-  }, [planId])
+    if (planId && plans.length > 0) {
+      const match = plans.find((p) => p.id === planId)
+      if (match) {
+        const lower = match.name.toLowerCase()
+        if (lower.includes('ouro')) setSelectedPlanTier('ouro')
+        else if (lower.includes('prata')) setSelectedPlanTier('prata')
+        else setSelectedPlanTier('free')
+      }
+    }
+  }, [planId, plans])
 
   const toggleTag = (tag: string) => {
     setTagsError('')
@@ -185,88 +184,131 @@ export default function Register() {
               <Label className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]">
                 Escolha o seu plano de acesso
               </Label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedPlanTier('free')}
-                  className={cn(
-                    'p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between relative',
-                    selectedPlanTier === 'free'
-                      ? 'border-[#1C1B18] ring-2 ring-[#FDBE2D] bg-[#FAF8F3]'
-                      : 'border-[#E4DED1] bg-white hover:border-[#1C1B18]',
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-sm flex items-center gap-1.5 text-[#1C1B18]">
-                      <Sparkles className="w-4 h-4 text-[#FDBE2D]" />
-                      Free
-                    </span>
-                    {selectedPlanTier === 'free' && (
-                      <span className="w-4 h-4 rounded-full bg-[#1C1B18] text-[#FAF8F3] flex items-center justify-center text-xs">
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-lg font-extrabold text-[#1C1B18]">Grátis</span>
-                  <span className="text-[11px] text-[#5F5A4F] mt-1">Acesso essencial</span>
-                </button>
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedPlanTier('prata')}
-                  className={cn(
-                    'p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between relative',
-                    selectedPlanTier === 'prata'
-                      ? 'border-[#173F33] ring-2 ring-[#173F33]/20 bg-[#FAF8F3]'
-                      : 'border-[#E4DED1] bg-white hover:border-[#1C1B18]',
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-sm flex items-center gap-1.5 text-[#173F33]">
-                      <Award className="w-4 h-4 text-[#173F33]" />
-                      Prata
-                    </span>
-                    {selectedPlanTier === 'prata' && (
-                      <span className="w-4 h-4 rounded-full bg-[#173F33] text-[#F4F1E8] flex items-center justify-center text-xs">
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-lg font-extrabold text-[#173F33]">
-                    {prataPlan ? formatPrice(prataPlan.price) : 'R$ 49,90'}
-                    <span className="text-xs font-normal text-[#5F5A4F]">/mês</span>
-                  </span>
-                  <span className="text-[11px] text-[#5F5A4F] mt-1">Todos os cursos + ao vivo</span>
-                </button>
+              {plansLoading && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="p-3.5 rounded-2xl border border-[#E4DED1] bg-white min-h-[92px] flex flex-col justify-between"
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <Skeleton className="h-4 w-16 bg-[#E4DED1]/70" />
+                      </div>
+                      <Skeleton className="h-6 w-24 bg-[#E4DED1]/70" />
+                      <Skeleton className="h-3 w-28 bg-[#E4DED1]/70 mt-1" />
+                    </div>
+                  ))}
+                </div>
+              )}
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedPlanTier('ouro')}
-                  className={cn(
-                    'p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between relative',
-                    selectedPlanTier === 'ouro'
-                      ? 'border-[#1C1B18] ring-2 ring-[#FDBE2D] bg-[#FAF8F3]'
-                      : 'border-[#E4DED1] bg-white hover:border-[#1C1B18]',
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-sm flex items-center gap-1.5 text-[#1C1B18]">
-                      <Crown className="w-4 h-4 text-[#FDBE2D]" />
-                      Ouro
-                    </span>
-                    {selectedPlanTier === 'ouro' && (
-                      <span className="w-4 h-4 rounded-full bg-[#1C1B18] text-[#FDBE2D] flex items-center justify-center text-xs">
-                        ✓
-                      </span>
+              {!plansLoading && plansError && (
+                <div className="p-3 rounded-2xl border border-[#E4DED1] bg-[#FAF8F3] text-center space-y-2">
+                  <p className="text-xs text-[#5F5A4F]">
+                    Não foi possível carregar os planos. Tente novamente.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refetchPlans()}
+                    className="h-8 text-xs rounded-full border-[#1C1B18]"
+                  >
+                    Tentar novamente
+                  </Button>
+                </div>
+              )}
+
+              {!plansLoading && !plansError && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPlanTier('free')}
+                    className={cn(
+                      'p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between relative',
+                      selectedPlanTier === 'free'
+                        ? 'border-[#1C1B18] ring-2 ring-[#FDBE2D] bg-[#FAF8F3]'
+                        : 'border-[#E4DED1] bg-white hover:border-[#1C1B18]',
                     )}
-                  </div>
-                  <span className="text-lg font-extrabold text-[#1C1B18]">
-                    {ouroPlan ? formatPrice(ouroPlan.price) : 'R$ 89,90'}
-                    <span className="text-xs font-normal text-[#5F5A4F]">/mês</span>
-                  </span>
-                  <span className="text-[11px] text-[#5F5A4F] mt-1">Completo + Revista física</span>
-                </button>
-              </div>
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-bold text-sm flex items-center gap-1.5 text-[#1C1B18]">
+                        <Sparkles className="w-4 h-4 text-[#FDBE2D]" />
+                        Free
+                      </span>
+                      {selectedPlanTier === 'free' && (
+                        <span className="w-4 h-4 rounded-full bg-[#1C1B18] text-[#FAF8F3] flex items-center justify-center text-xs">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-lg font-extrabold text-[#1C1B18]">Grátis</span>
+                    <span className="text-[11px] text-[#5F5A4F] mt-1">Acesso essencial</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPlanTier('prata')}
+                    className={cn(
+                      'p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between relative',
+                      selectedPlanTier === 'prata'
+                        ? 'border-[#173F33] ring-2 ring-[#173F33]/20 bg-[#FAF8F3]'
+                        : 'border-[#E4DED1] bg-white hover:border-[#1C1B18]',
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-bold text-sm flex items-center gap-1.5 text-[#173F33]">
+                        <Award className="w-4 h-4 text-[#173F33]" />
+                        Prata
+                      </span>
+                      {selectedPlanTier === 'prata' && (
+                        <span className="w-4 h-4 rounded-full bg-[#173F33] text-[#F4F1E8] flex items-center justify-center text-xs">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-lg font-extrabold text-[#173F33]">
+                      {prataPlan ? formatPrice(prataPlan.price) : 'Consulte'}
+                      {prataPlan && (
+                        <span className="text-xs font-normal text-[#5F5A4F]">/mês</span>
+                      )}
+                    </span>
+                    <span className="text-[11px] text-[#5F5A4F] mt-1">
+                      Todos os cursos + ao vivo
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPlanTier('ouro')}
+                    className={cn(
+                      'p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between relative',
+                      selectedPlanTier === 'ouro'
+                        ? 'border-[#1C1B18] ring-2 ring-[#FDBE2D] bg-[#FAF8F3]'
+                        : 'border-[#E4DED1] bg-white hover:border-[#1C1B18]',
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-bold text-sm flex items-center gap-1.5 text-[#1C1B18]">
+                        <Crown className="w-4 h-4 text-[#FDBE2D]" />
+                        Ouro
+                      </span>
+                      {selectedPlanTier === 'ouro' && (
+                        <span className="w-4 h-4 rounded-full bg-[#1C1B18] text-[#FDBE2D] flex items-center justify-center text-xs">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-lg font-extrabold text-[#1C1B18]">
+                      {ouroPlan ? formatPrice(ouroPlan.price) : 'Consulte'}
+                      {ouroPlan && <span className="text-xs font-normal text-[#5F5A4F]">/mês</span>}
+                    </span>
+                    <span className="text-[11px] text-[#5F5A4F] mt-1">
+                      Completo + Revista física
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -170,10 +170,12 @@
 
   /* Títulos fluidos */
   .title-h1-home {
-    font-size: clamp(38px, 8.4vw, 120px);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    font-weight: 600;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(36px, 6.2vw, 80px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    font-weight: 800;
+    text-wrap: balance;
   }
   .title-h2-fluid {
     font-size: clamp(32px, 4.4vw, 56px);

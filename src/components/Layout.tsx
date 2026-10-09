@@ -283,7 +283,6 @@ export default function Layout() {
               </Link>
             </div>
             <p className="text-[#D9D4C8]/80 text-sm leading-relaxed">{t('footer.about')}</p>
-            <p className="text-primary font-semibold text-sm tracking-wide">#SejaEducaçãoSST</p>
             <div className="pt-2">
               <LanguageSwitcher variant="dark" />
             </div>

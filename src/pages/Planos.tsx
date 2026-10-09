@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { AlertCircle } from 'lucide-react'
-import { getSubscriptionPlans } from '@/services/subscription-plans'
 import { useAuth } from '@/hooks/use-auth'
+import { useSubscriptionPlans } from '@/hooks/use-subscription-plans'
 import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
 import { SubscriptionPlan } from '@/types'
 import { PageHeader } from '@/components/PageHeader'
 import { HomePlansSection } from '@/components/HomePlansSection'
 
 export default function Planos() {
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([])
+  const { plans } = useSubscriptionPlans()
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const { user } = useAuth()
@@ -17,10 +17,6 @@ export default function Planos() {
   const isExpired = searchParams.get('expired') === '1'
   const checkoutPlanId = searchParams.get('planId')
   const isCheckout = searchParams.get('checkout') === '1'
-
-  useEffect(() => {
-    getSubscriptionPlans().then(setPlans).catch(console.error)
-  }, [])
 
   useEffect(() => {
     if (isCheckout && checkoutPlanId && user && plans.length > 0) {

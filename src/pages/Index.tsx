@@ -163,22 +163,24 @@ export default function Index() {
               style={{ borderRadius: '20px' }}
             >
               <span className="w-2 h-2 rounded-full bg-[#FDBE2D] shrink-0" />
-              <span>Profissional de Segurança e Saúde no Trabalho</span>
+              <span>#SejaEducaçãoSST</span>
             </span>
           </div>
 
-          {/* Título enorme (h1) em duas linhas */}
-          <h1 className="title-h1-home text-[#1C1B18] mb-12 sm:mb-16">
-            <span className="block text-[#7F7869] font-normal font-serif">Menos informação.</span>
-            <span className="block font-serif italic text-[#1C1B18] mt-1">
-              Mais{' '}
+          {/* Título enorme (h1) */}
+          <h1 className="title-h1-home text-[#1C1B18] text-foreground mb-12 sm:mb-16">
+            <span className="block not-italic font-extrabold text-[#1C1B18] text-foreground">
+              O ecossistema de aprendizagem
+            </span>
+            <span className="block italic font-extrabold text-[#1C1B18] text-foreground mt-1">
+              para o{' '}
               <span
                 className="inline-block relative"
                 style={{
                   boxShadow: 'inset 0 -0.24em 0 #FDBE2D',
                 }}
               >
-                direção.
+                profissional de SST.
               </span>
             </span>
           </h1>
@@ -188,9 +190,9 @@ export default function Index() {
             {/* Coluna esquerda */}
             <div className="lg:col-span-5 flex flex-col justify-between space-y-8 pt-2">
               <p className="text-lg sm:text-[20px] text-[#5F5A4F] leading-relaxed font-normal">
-                O Hub de estudos reúne Revista, cursos, aulas ao vivo e simulados de Segurança e
-                Saúde no Trabalho em um só lugar, num itinerário que parte da sua realidade de
-                trabalho.
+                O Hub de estudos reúne, em um só lugar, revista, cursos, aulas ao vivo, simulados,
+                documentários e caderno de estudos digital: um itinerário de Segurança e Saúde no
+                Trabalho que parte da sua realidade de trabalho.
               </p>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 pt-2">
@@ -487,7 +489,7 @@ export default function Index() {
       <section className="py-[72px] lg:py-[112px] bg-[#FDBE2D] text-[#1C1B18] relative">
         <div className="max-w-[1200px] mx-auto px-6 text-center">
           <h2 className="title-h2-fluid text-[#1C1B18] mb-4">
-            Comece pela edição <em>deste mês.</em>
+            Menos informação. <em>Mais direção.</em>
           </h2>
           <p className="text-base sm:text-xl text-[#1C1B18]/85 max-w-xl mx-auto mb-8 font-normal leading-relaxed">
             Crie sua conta no plano Free e leia a Revista hoje. O resto do itinerário você descobre

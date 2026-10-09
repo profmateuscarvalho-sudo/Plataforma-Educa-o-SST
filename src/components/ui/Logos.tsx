@@ -1,8 +1,9 @@
 import React from 'react'
 import logoSrc from '@/assets/logo-e-4958a.png'
+import wordmarkSrc from '@/assets/logo-educacao-sst-fc67e.png'
 import { cn } from '@/lib/utils'
 
-export { logoSrc }
+export { logoSrc, wordmarkSrc }
 
 /**
  * Brand logo icon of Educação SST:
@@ -43,6 +44,25 @@ export function LogoIcon({
       {/* Render via high-res raster asset for pixel-perfect reproduction */}
       <image href={logoSrc} width="1000" height="1000" preserveAspectRatio="xMidYMid meet" />
     </svg>
+  )
+}
+
+export function LogoWordmark({
+  className,
+  height = 30,
+}: {
+  className?: string
+  height?: number | string
+}) {
+  return (
+    <img
+      src={wordmarkSrc}
+      alt="Educação SST"
+      style={{ height: typeof height === 'number' ? `${height}px` : height, width: 'auto' }}
+      className={cn('object-contain shrink-0 select-none block max-w-none', className)}
+      loading="eager"
+      decoding="async"
+    />
   )
 }
 

@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Logo, SquareLogo } from './ui/Logos'
+import { LogoWordmark, SquareLogo } from './ui/Logos'
 import { useAuth } from '@/hooks/use-auth'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { InstallBanner, InstallInstructionsDialog, useInstallFlow } from './InstallBanner'
@@ -69,13 +69,13 @@ export default function Layout() {
 
       <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
-          {/* Esquerda: Logo (44px) + "EDUCAÇÃO SST." */}
+          {/* Esquerda: Símbolo "E." (44px) + Wordmark horizontal (30px), escondido em celular se faltar espaço */}
           <Link to="/" className="flex items-center gap-3 shrink-0 group">
             <SquareLogo
               variant="yellow"
               className="h-11 w-11 transition-transform group-hover:scale-105"
             />
-            <Logo />
+            <LogoWordmark height={30} className="hidden sm:block" />
           </Link>
 
           {/* Centro: menu desktop (>= 1150px / min-[1150px]:flex) */}
@@ -178,7 +178,7 @@ export default function Layout() {
                     <SheetTitle>
                       <div className="flex items-center gap-2.5">
                         <SquareLogo variant="yellow" className="w-9 h-9" />
-                        <Logo />
+                        <LogoWordmark height={26} />
                       </div>
                     </SheetTitle>
                   </SheetHeader>
@@ -272,7 +272,7 @@ export default function Layout() {
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <SquareLogo variant="yellow" />
-              <Logo className="text-[#FAF8F3]" />
+              <LogoWordmark height={30} />
             </div>
             <p className="text-[#D9D4C8]/80 text-sm leading-relaxed">{t('footer.about')}</p>
             <div className="pt-2">

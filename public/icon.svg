@@ -1,5 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#FFC220"/>
-  <text x="50%" y="50%" dy="0.08em" text-anchor="middle" dominant-baseline="central" font-family="'Bricolage Grotesque','Inter',system-ui,sans-serif" font-weight="800" font-size="380" fill="#15170F">E</text>
-  <circle cx="398" cy="398" r="16" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="100%" height="100%">
+  <!-- Speech-bubble rounded container in amber yellow (#FDB913) -->
+  <!-- Top-left, top-right, bottom-right are square/flat edges within the bounding box, bottom-left is curved inward like a speech tail -->
+  <path d="M185 185 H815 V815 H340 C240 815 185 740 185 640 Z" fill="#FDB913"/>
+  
+  <!-- Bold "E" in white -->
+  <!-- Vertical stem -->
+  <path d="M335 303 H635 V379 H419 V454 H613 V530 H419 V617 H635 V693 H335 Z" fill="#FFFFFF"/>
+  
+  <!-- Dot at bottom right of the E -->
+  <circle cx="704" cy="643" r="52" fill="#FFFFFF"/>
 </svg>

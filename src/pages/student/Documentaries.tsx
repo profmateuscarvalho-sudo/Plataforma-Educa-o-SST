@@ -82,7 +82,10 @@ export default function StudentDocumentaries() {
         >
           <ArrowLeft className="w-4 h-4 mr-2" /> Voltar ao Hub
         </Button>
-        <Logo className="text-white drop-shadow-md hidden sm:block" />
+        <div className="hidden sm:flex items-center gap-2.5">
+          <img src="/icon.svg" alt="Educação SST" className="w-8 h-8 object-contain" />
+          <Logo className="text-white drop-shadow-md" />
+        </div>
       </div>
 
       {featured && (

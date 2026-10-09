@@ -72,7 +72,7 @@ export default function ResetPassword() {
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-2xl border-none">
         <CardHeader className="space-y-4 text-center items-center pb-8">
-          <SquareLogo variant="black" className="w-16 h-16 text-5xl mb-2" />
+          <SquareLogo variant="yellow" className="w-16 h-16 mb-2" />
           <div>
             <CardTitle className="font-serif text-3xl text-secondary">Redefinir Senha</CardTitle>
             <CardDescription className="text-base mt-2">

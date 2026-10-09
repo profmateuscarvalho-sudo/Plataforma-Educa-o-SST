@@ -169,7 +169,7 @@ export default function Register() {
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <Card className="w-full max-w-2xl border border-slate-200 shadow-sm">
         <CardHeader className="space-y-3 text-center items-center pb-6 border-b border-slate-100">
-          <SquareLogo variant="yellow" className="w-14 h-14 text-4xl mb-1" />
+          <SquareLogo variant="yellow" className="w-14 h-14 mb-1" />
           <div>
             <CardTitle className="font-serif text-2xl text-secondary">
               {t('auth.register.title')}

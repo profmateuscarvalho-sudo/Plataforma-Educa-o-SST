@@ -153,9 +153,12 @@ export default function Layout() {
             <SheetContent side="right" className="w-[300px] border-l-0">
               <SheetHeader className="text-left mb-8">
                 <SheetTitle>
-                  <Logo />
+                  <div className="flex items-center gap-2.5">
+                    <SquareLogo variant="yellow" className="w-8 h-8" />
+                    <Logo />
+                  </div>
                 </SheetTitle>
-              </SheetHeader>
+              </SheetHeader>{' '}
               <div className="flex flex-col gap-6">
                 <nav className="flex flex-col gap-4">
                   {navigation.map((item) => (

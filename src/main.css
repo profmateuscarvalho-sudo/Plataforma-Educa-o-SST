@@ -263,12 +263,27 @@
     animation: dashboard-float 3s ease-in-out infinite;
   }
 
+  /* Capa da revista flutuação lenta (8s, 8px) */
+  @keyframes mag-float-slow {
+    0%,
+    100% {
+      transform: translateY(0) rotate(3deg);
+    }
+    50% {
+      transform: translateY(-8px) rotate(3deg);
+    }
+  }
+  .animate-mag-float {
+    animation: mag-float-slow 8s ease-in-out infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-hero-in,
     .animate-panel-fade,
     .animate-fade-in-up,
     .animate-fade-in,
     .animate-dashboard-float,
+    .animate-mag-float,
     .dashboard-shine {
       animation: none !important;
       opacity: 1 !important;

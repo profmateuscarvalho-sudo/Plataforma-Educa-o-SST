@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-09T01:42:32.507Z",
+  "generatedAt": "2026-10-09T01:58:42.208Z",
   "collections": [
     {
       "name": "users",
@@ -3653,6 +3653,61 @@
       "indexes": [
         "CREATE UNIQUE INDEX idx_agora_apoios_voto_user ON agora_apoios (voto_id, usuario_id)",
         "CREATE INDEX idx_agora_apoios_voto ON agora_apoios (voto_id)"
+      ]
+    },
+    {
+      "name": "lista_espera",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "plano",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_lista_espera_email ON lista_espera (email)",
+        "CREATE INDEX idx_lista_espera_plano ON lista_espera (plano)"
       ]
     }
   ]

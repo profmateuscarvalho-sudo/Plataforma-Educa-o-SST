@@ -105,35 +105,42 @@ export default function CourseLesson() {
 
   const isSubscriptionExpired =
     !user.contract_end_date || new Date(user.contract_end_date) < new Date()
-  if (!course) return <div className="p-8 text-white">Carregando aula...</div>
+  if (!course)
+    return (
+      <div className="p-8 text-muted-foreground min-h-[calc(100vh-64px)] flex items-center justify-center font-medium">
+        Carregando aula...
+      </div>
+    )
 
   const courseAccess = hasAccess({ is_free: course.is_free, title: course.title })
   if (user.role === 'student' && !courseAccess) {
     return (
-      <div className="flex flex-col min-h-screen bg-slate-950 text-slate-200 items-center justify-center p-8">
-        <Lock className="w-16 h-16 text-amber-500 mb-4" />
-        <h2 className="text-2xl font-bold mb-2 text-white">Acesso Restrito</h2>
-        <p className="text-slate-400 mb-6 text-center max-w-md">
+      <div className="flex flex-col min-h-[calc(100vh-64px)] bg-background text-foreground items-center justify-center p-8">
+        <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+          <Lock className="w-8 h-8 text-primary" />
+        </div>
+        <h2 className="text-2xl font-serif font-bold mb-2 text-foreground">Acesso Restrito</h2>
+        <p className="text-muted-foreground mb-6 text-center max-w-md text-sm">
           Este curso é exclusivo para assinantes ou requer compra individual para ser acessado.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button
             onClick={() => navigate('/planos')}
-            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold min-h-[52px] px-6"
           >
             Ver Planos de Assinatura
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate(`/cursos/${course.id}`)}
-            className="border-white/20 hover:bg-white/10 text-white"
+            className="rounded-full border-[1.5px] border-foreground text-foreground hover:bg-muted min-h-[52px] px-6 font-semibold"
           >
             Comprar Curso
           </Button>
           <Button
             variant="ghost"
             onClick={() => navigate('/plataforma')}
-            className="text-slate-400 hover:text-white"
+            className="rounded-full text-muted-foreground hover:text-foreground min-h-[52px] px-6"
           >
             Voltar ao Hub
           </Button>
@@ -183,31 +190,38 @@ export default function CourseLesson() {
   const iframeUrl = getPandaUrl(videoId)
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-80px)] bg-slate-950 text-slate-200">
-      <div className="h-16 border-b border-white/10 flex items-center px-4 md:px-8 gap-4 bg-slate-900 shrink-0">
+    <div className="flex flex-col min-h-[calc(100vh-64px)] bg-background text-foreground">
+      {/* Top bar de navegação do player */}
+      <div className="h-16 border-b border-border flex items-center px-4 md:px-8 gap-4 bg-card shrink-0">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate(user.role === 'admin' ? '/admin/cursos' : '/plataforma')}
-          className="text-slate-400 hover:text-white"
+          className="rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
         >
-          <ChevronLeft className="mr-2 w-4 h-4" /> Voltar
+          <ChevronLeft className="mr-1.5 w-4 h-4" /> Voltar
         </Button>
-        <div className="h-6 w-px bg-white/10 mx-2 hidden md:block" />
-        <h1 className="font-medium truncate text-white flex-1">{course.title}</h1>
+        <div className="h-5 w-px bg-border mx-1 hidden md:block" />
+        <h1 className="font-serif font-bold text-base md:text-lg truncate text-foreground flex-1">
+          {course.title}
+        </h1>
         <div className="hidden md:flex items-center gap-3 w-48">
-          <Progress value={progress} className="h-2" />
-          <span className="text-xs font-bold">{Math.round(progress)}%</span>
+          <Progress value={progress} className="h-2 bg-muted [&>div]:bg-primary" />
+          <span className="text-xs font-semibold text-muted-foreground">
+            {Math.round(progress)}%
+          </span>
         </div>
       </div>
+
       <div className="flex-1 flex flex-col lg:flex-row max-w-[1400px] mx-auto w-full p-4 md:p-8 gap-8 items-start">
         <div className="flex-1 w-full space-y-6">
           {activeItem?.type === 'quiz' ? (
             <QuizPlayer quiz={activeItem.data} />
           ) : (
             <>
+              {/* Moldura do vídeo com border-radius 28px */}
               <div
-                className="bg-black w-full rounded-2xl overflow-hidden shadow-2xl relative border border-white/5"
+                className="bg-black w-full rounded-[28px] overflow-hidden shadow-xl relative border border-border"
                 style={{ paddingTop: '56.25%' }}
               >
                 {iframeUrl ? (
@@ -218,41 +232,57 @@ export default function CourseLesson() {
                     allowFullScreen
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-500">
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm font-medium">
                     Vídeo não disponível
                   </div>
                 )}
               </div>
-              <div className="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-white/10">
+
+              {/* Barra de ação: Concluir e próxima aula */}
+              <div className="flex justify-between items-center bg-card p-4 rounded-[28px] border border-border">
                 <Button
-                  variant={isCurrentCompleted ? 'outline' : 'default'}
                   onClick={handleCompleteNext}
                   className={cn(
-                    'gap-2',
-                    isCurrentCompleted && 'text-emerald-400 border-emerald-500/50',
+                    'rounded-full font-bold gap-2 min-h-[52px] px-6 transition-all',
+                    isCurrentCompleted
+                      ? 'bg-muted text-success border border-success/40 hover:bg-muted/80'
+                      : 'bg-primary hover:bg-primary/90 text-primary-foreground',
                   )}
                 >
                   <CheckCircle2 className="w-5 h-5" />{' '}
                   {isCurrentCompleted ? 'Concluída' : 'Concluir e Próxima Aula'}
                 </Button>
               </div>
-              <div className="bg-slate-900 p-6 md:p-8 rounded-2xl border border-white/10">
-                <h2 className="text-2xl font-serif font-bold text-white mb-4">{activeTitle}</h2>
-                <p className="text-slate-400 whitespace-pre-wrap leading-relaxed">{activeDesc}</p>
-                <div className="mt-8 pt-8 border-t border-white/10">
-                  <h3 className="font-bold text-lg mb-4">Avalie esta aula</h3>
+
+              {/* Informações da aula e avaliações */}
+              <div className="bg-card p-6 md:p-8 rounded-[28px] border border-border text-card-foreground">
+                <h2 className="text-2xl font-serif font-bold text-foreground mb-3">
+                  {activeTitle}
+                </h2>
+                <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed text-sm">
+                  {activeDesc || 'Sem descrição cadastrada para esta aula.'}
+                </p>
+
+                <div className="mt-8 pt-8 border-t border-border">
+                  <h3 className="font-serif font-bold text-lg mb-4 text-foreground">
+                    Avalie esta aula
+                  </h3>
                   <div className="space-y-4">
                     <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map((s) => (
                         <button
                           key={s}
+                          type="button"
                           onClick={() => setMyRating(s)}
-                          className="focus:outline-none"
+                          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full p-1"
+                          aria-label={`Nota ${s}`}
                         >
                           <Star
                             className={cn(
-                              'w-8 h-8 transition-colors',
-                              myRating >= s ? 'fill-yellow-400 text-yellow-400' : 'text-slate-600',
+                              'w-7 h-7 transition-colors',
+                              myRating >= s
+                                ? 'fill-primary text-primary'
+                                : 'text-muted-foreground/40',
                             )}
                           />
                         </button>
@@ -262,34 +292,44 @@ export default function CourseLesson() {
                       placeholder="Deixe um comentário (opcional)..."
                       value={myComment}
                       onChange={(e) => setMyComment(e.target.value)}
-                      className="bg-slate-950 border-white/10 text-slate-200"
+                      className="bg-background border-border text-foreground rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     />
-                    <Button onClick={submitRating} disabled={!myRating}>
+                    <Button
+                      onClick={submitRating}
+                      disabled={!myRating}
+                      className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold min-h-[52px] px-6 disabled:opacity-50"
+                    >
                       Enviar Avaliação
                     </Button>
                   </div>
+
                   {ratings.length > 0 && (
-                    <div className="mt-8 space-y-4">
-                      <h4 className="font-bold text-sm text-slate-400">
+                    <div className="mt-8 space-y-3">
+                      <h4 className="font-sans font-bold text-xs uppercase tracking-wider text-muted-foreground">
                         Comentários da Comunidade
                       </h4>
                       {ratings
                         .filter((r) => r.comment)
                         .map((r) => (
-                          <div key={r.id} className="bg-slate-950 p-4 rounded-lg">
-                            <div className="flex justify-between mb-2">
-                              <span className="font-bold text-sm">
+                          <div
+                            key={r.id}
+                            className="bg-muted/40 p-4 rounded-2xl border border-border"
+                          >
+                            <div className="flex justify-between items-center mb-1.5">
+                              <span className="font-semibold text-xs text-foreground">
                                 {r.expand?.user?.name || 'Aluno'}
                               </span>
-                              <span className="flex text-yellow-400">
+                              <span className="flex text-primary">
                                 {Array(r.rating)
                                   .fill(0)
                                   .map((_, i) => (
-                                    <Star key={i} className="w-3 h-3 fill-current" />
+                                    <Star key={i} className="w-3.5 h-3.5 fill-current" />
                                   ))}
                               </span>
                             </div>
-                            <p className="text-slate-400 text-sm">{r.comment}</p>
+                            <p className="text-muted-foreground text-xs leading-relaxed">
+                              {r.comment}
+                            </p>
                           </div>
                         ))}
                     </div>
@@ -299,8 +339,10 @@ export default function CourseLesson() {
             </>
           )}
         </div>
-        <div className="w-full lg:w-80 shrink-0 bg-slate-900 rounded-2xl border border-white/10 overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-white/10 font-bold text-white tracking-wide">
+
+        {/* Barra lateral de módulos / aulas */}
+        <div className="w-full lg:w-80 shrink-0 bg-card rounded-[28px] border border-border overflow-hidden flex flex-col text-card-foreground">
+          <div className="p-5 border-b border-border font-serif font-bold text-foreground">
             Conteúdo do Curso
           </div>
           <Accordion type="single" collapsible defaultValue={modules[0]?.id} className="w-full">
@@ -308,30 +350,31 @@ export default function CourseLesson() {
               <AccordionItem
                 value={mod.id}
                 key={mod.id}
-                className="border-white/10 border-b-0 border-t first:border-t-0"
+                className="border-border border-b-0 border-t first:border-t-0"
               >
-                <AccordionTrigger className="px-5 py-4 hover:bg-white/5 hover:no-underline text-sm font-semibold text-slate-200 text-left">
+                <AccordionTrigger className="px-5 py-4 hover:bg-muted/50 hover:no-underline text-sm font-semibold text-foreground text-left">
                   {mod.title}
                 </AccordionTrigger>
                 <AccordionContent className="pb-0">
-                  <div className="flex flex-col bg-slate-950/50">
+                  <div className="flex flex-col bg-muted/20">
                     {lessons
                       .filter((l) => l.module === mod.id)
                       .map((l) => (
                         <button
                           key={l.id}
+                          type="button"
                           onClick={() => setActiveItem({ type: 'lesson', data: l })}
                           className={cn(
-                            'text-left px-6 py-3.5 text-sm flex items-start gap-3 transition-colors border-l-2',
+                            'text-left px-6 py-3.5 text-xs sm:text-sm flex items-start gap-3 transition-colors border-l-2',
                             activeItem?.type === 'lesson' && activeItem.data.id === l.id
-                              ? 'bg-primary/20 text-primary border-primary font-medium'
-                              : 'text-slate-400 hover:text-white hover:bg-white/5 border-transparent',
+                              ? 'bg-primary/15 text-foreground border-primary font-semibold'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/40 border-transparent',
                           )}
                         >
                           {completions.some((c) => c.lesson === l.id) ? (
-                            <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />
+                            <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-success" />
                           ) : (
-                            <PlayCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                            <PlayCircle className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
                           )}
                           <span className="line-clamp-2">{l.title}</span>
                         </button>
@@ -341,15 +384,16 @@ export default function CourseLesson() {
                       .map((q) => (
                         <button
                           key={q.id}
+                          type="button"
                           onClick={() => setActiveItem({ type: 'quiz', data: q })}
                           className={cn(
-                            'text-left px-6 py-3.5 text-sm flex items-start gap-3 transition-colors border-l-2',
+                            'text-left px-6 py-3.5 text-xs sm:text-sm flex items-start gap-3 transition-colors border-l-2',
                             activeItem?.type === 'quiz' && activeItem.data.id === q.id
-                              ? 'bg-primary/20 text-primary border-primary font-medium'
-                              : 'text-slate-400 hover:text-white hover:bg-white/5 border-transparent',
+                              ? 'bg-primary/15 text-foreground border-primary font-semibold'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/40 border-transparent',
                           )}
                         >
-                          <CheckSquare className="w-4 h-4 mt-0.5 shrink-0" />
+                          <CheckSquare className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
                           <span className="line-clamp-2">{q.title}</span>
                         </button>
                       ))}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight, Newspaper, ExternalLink } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Newspaper } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BackToHub } from '@/components/student/BackToHub'
 import pb from '@/lib/pocketbase/client'
@@ -28,31 +28,39 @@ export default function MagazineReader() {
 
   if (loading)
     return (
-      <div className="min-h-[calc(100vh-56px)] bg-slate-50 flex items-center justify-center text-slate-500">
+      <div className="min-h-[calc(100vh-64px)] bg-background flex items-center justify-center text-muted-foreground font-medium text-sm">
         Carregando revista...
       </div>
     )
 
   if (!magazine)
     return (
-      <div className="min-h-[calc(100vh-56px)] bg-slate-50 flex flex-col items-center justify-center text-slate-500 gap-4">
-        <Newspaper className="w-12 h-12 text-slate-300" />
-        <p>Revista não encontrada.</p>
-        <Button variant="outline" onClick={() => navigate('/plataforma')}>
+      <div className="min-h-[calc(100vh-64px)] bg-background flex flex-col items-center justify-center text-muted-foreground gap-4 p-6">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+          <Newspaper className="w-8 h-8 stroke-[1.75]" />
+        </div>
+        <p className="text-foreground font-serif font-bold text-lg">Revista não encontrada.</p>
+        <Button
+          variant="outline"
+          onClick={() => navigate('/plataforma')}
+          className="rounded-full border-[1.5px] border-foreground text-foreground hover:bg-muted min-h-[52px] px-6 font-semibold"
+        >
           Voltar ao Hub
         </Button>
       </div>
     )
 
   return (
-    <div className="min-h-[calc(100vh-56px)] bg-slate-900 flex flex-col">
-      <div className="bg-slate-800/80 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between gap-3">
+    <div className="min-h-[calc(100vh-64px)] bg-background flex flex-col text-foreground">
+      <div className="bg-card border-b border-border px-4 md:px-6 py-3.5 flex items-center justify-between gap-3 text-card-foreground">
         <div className="flex items-center gap-3 min-w-0">
-          <BackToHub className="text-white/80 hover:text-white hover:bg-white/10" />
+          <BackToHub className="text-foreground hover:bg-muted" />
           <div className="min-w-0">
-            <h1 className="text-white font-serif font-bold text-lg truncate">{magazine.title}</h1>
+            <h1 className="text-foreground font-serif font-bold text-base md:text-lg truncate">
+              {magazine.title}
+            </h1>
             {magazine.summary && (
-              <p className="text-slate-400 text-xs line-clamp-1">{magazine.summary}</p>
+              <p className="text-muted-foreground text-xs line-clamp-1">{magazine.summary}</p>
             )}
           </div>
         </div>
@@ -62,47 +70,47 @@ export default function MagazineReader() {
             size="sm"
             disabled={!prevMag}
             onClick={() => prevMag && navigate(`/plataforma/revista/${prevMag.id}`)}
-            className="text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-30"
+            className="rounded-full text-foreground hover:bg-muted disabled:opacity-30 h-9 px-3.5"
           >
-            <ChevronLeft className="w-4 h-4" /> Anterior
+            <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
           </Button>
           <Button
             variant="ghost"
             size="sm"
             disabled={!nextMag}
             onClick={() => nextMag && navigate(`/plataforma/revista/${nextMag.id}`)}
-            className="text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-30"
+            className="rounded-full text-foreground hover:bg-muted disabled:opacity-30 h-9 px-3.5"
           >
-            Próxima <ChevronRight className="w-4 h-4" />
+            Próxima <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-2 md:p-4">
+      <div className="flex-1 flex items-center justify-center p-3 md:p-6 bg-muted/20">
         {magazine.embed_code ? (
           <div
-            className="w-full h-full max-w-[1200px] bg-white rounded-lg overflow-hidden shadow-2xl [&>iframe]:w-full [&>iframe]:h-[80vh]"
+            className="w-full h-full max-w-[1200px] bg-card rounded-[28px] overflow-hidden shadow-sm border border-border [&>iframe]:w-full [&>iframe]:h-[80vh]"
             dangerouslySetInnerHTML={{ __html: magazine.embed_code }}
           />
         ) : magazine.fliphtml5_link ? (
           <iframe
             src={magazine.fliphtml5_link}
-            className="w-full max-w-[1200px] h-[80vh] bg-white rounded-lg shadow-2xl border-none"
-            allowFullScreen
-            scrolling="no"
+            className="w-full max-w-[1200px] h-[80vh] bg-card rounded-[28px] shadow-sm border border-border"
             title={magazine.title}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center text-slate-400 gap-4 py-24">
-            <Newspaper className="w-16 h-16 text-slate-600" />
-            <p className="text-center max-w-sm">
+          <div className="flex flex-col items-center justify-center text-muted-foreground gap-4 py-20 bg-card rounded-[28px] border border-border p-8 max-w-lg mx-auto w-full text-center">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+              <Newspaper className="w-8 h-8 stroke-[1.75]" />
+            </div>
+            <p className="text-sm text-muted-foreground max-w-sm">
               Esta edição ainda não possui conteúdo publicado para leitura.
             </p>
             {magazine.thumbnail && (
               <img
                 src={pb.files.getUrl(magazine, magazine.thumbnail)}
                 alt={magazine.title}
-                className="max-h-72 rounded-lg shadow-lg object-contain"
+                className="max-h-72 rounded-2xl shadow-sm border border-border object-contain"
               />
             )}
           </div>

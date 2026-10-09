@@ -63,7 +63,7 @@ export default function Layout() {
   ]
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* Faixa da Revista (substitui o pop-up, rola com a página) */}
       <MagazineTopBar />
 
@@ -78,8 +78,8 @@ export default function Layout() {
             <Logo />
           </Link>
 
-          {/* Centro: menu desktop (>= 900px / min-[900px]:flex) */}
-          <nav className="hidden min-[900px]:flex items-center gap-7">
+          {/* Centro: menu desktop (>= 1150px / min-[1150px]:flex) */}
+          <nav className="hidden min-[1150px]:flex items-center gap-7">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href
               return (
@@ -101,7 +101,7 @@ export default function Layout() {
 
           {/* Direita: idioma, Área do Assinante e Assinar grátis */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="hidden min-[900px]:flex items-center gap-4">
+            <div className="hidden min-[1150px]:flex items-center gap-4">
               <LanguageSwitcher />
 
               {user ? (
@@ -157,14 +157,14 @@ export default function Layout() {
               )}
             </div>
 
-            {/* Botão primário visível sempre (desktop e mobile <900px) */}
+            {/* Botão primário visível sempre (desktop e mobile <1150px) */}
             <Button asChild size="default" className="shadow-none">
               <Link to="/planos">Assinar grátis</Link>
             </Button>
 
-            {/* Abaixo de 900px: botão hambúrguer */}
+            {/* Abaixo de 1150px: botão hambúrguer */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild className="min-[900px]:hidden">
+              <SheetTrigger asChild className="min-[1150px]:hidden">
                 <Button variant="ghost" size="icon" aria-label="Abrir menu">
                   <Menu className="w-6 h-6 text-foreground" />
                 </Button>
@@ -263,7 +263,7 @@ export default function Layout() {
         </div>
       </header>
 
-      <main className="flex-grow">
+      <main className="flex-grow min-w-0">
         <Outlet />
       </main>
 

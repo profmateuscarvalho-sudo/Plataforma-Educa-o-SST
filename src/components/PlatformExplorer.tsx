@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { formatMagazineTitle } from '@/lib/magazine-utils'
 
 interface PlatformExplorerProps {
   magazineCount: number
@@ -36,10 +37,7 @@ export function PlatformExplorer({
             <span className="font-bold uppercase tracking-wider text-[11px] text-[#7F7869] mr-2">
               EDIÇÃO DO MÊS
             </span>
-            <span>
-              Nº {latestMagazine?.number || '32'} ·{' '}
-              {latestMagazine?.title || 'Revista Educação SST'}
-            </span>
+            <span>{formatMagazineTitle(latestMagazine?.title) || 'Edição nº 32'}</span>
           </div>
           <Link
             to="/revistas"

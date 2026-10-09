@@ -4,6 +4,7 @@ import { ArrowRight, BookOpen } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { getMagazines } from '@/services/magazines'
 import { Magazine } from '@/types'
+import { formatMagazineTitle } from '@/lib/magazine-utils'
 
 /**
  * Faixa superior editorial da Revista do Mês.
@@ -43,7 +44,7 @@ export function MagazineTopBar() {
           Revista do Mês:
         </span>
         <span className="font-medium text-deep-foreground/90 max-w-md truncate">
-          {magazine.title}
+          {formatMagazineTitle(magazine.title)}
         </span>
         <Link
           to={`/revistas?revista=${magazine.id}`}

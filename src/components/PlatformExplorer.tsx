@@ -115,7 +115,7 @@ export function PlatformExplorer({
       num: '05',
       navLabel: 'Simulados',
       title: 'Simulados',
-      paragraph: `${simuladoCount} simulados interativos sobre as NRs e Fatores Humanos. A Dose do dia, lá em cima, sai daqui.`,
+      paragraph: `${simuladoCount} simulados interativos sobre as NRs e Fatores Humanos.`,
       footer: (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           {latestSimuladoTitle && (

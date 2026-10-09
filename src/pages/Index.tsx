@@ -2,16 +2,26 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
-import { ArrowRight, BookOpen } from 'lucide-react'
+import {
+  ArrowRight,
+  BookOpen,
+  Newspaper,
+  Radio,
+  ClipboardList,
+  Users,
+  Film,
+  Sparkles,
+  BellRing,
+  ChevronRight,
+} from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { getMagazines } from '@/services/magazines'
 import { getNews } from '@/services/news'
 import { getCourses } from '@/services/courses'
 import { getSimulados } from '@/services/simulados'
 import { getLiveSessions } from '@/services/live'
-import { getPublicDailyDose, PublicDailyDose } from '@/services/publicDose'
-import { Magazine, News } from '@/types'
-import { DailyDoseCard } from '@/components/DailyDoseCard'
+import { Magazine, News, LiveSession } from '@/types'
+import { CategoryCard } from '@/components/student/CategoryCard'
 import { PlatformExplorer } from '@/components/PlatformExplorer'
 import { HomePlansSection } from '@/components/HomePlansSection'
 import { BannerDisplay } from '@/components/BannerDisplay'
@@ -28,9 +38,8 @@ export default function Index() {
   const [latestCourseTitle, setLatestCourseTitle] = useState<string | null>(null)
   const [simuladoCount, setSimuladoCount] = useState<number>(0)
   const [latestSimuladoTitle, setLatestSimuladoTitle] = useState<string | null>(null)
+  const [nextLive, setNextLive] = useState<LiveSession | null>(null)
   const [nextLiveTitle, setNextLiveTitle] = useState<string | null>(null)
-  const [dailyDose, setDailyDose] = useState<PublicDailyDose | null>(null)
-  const [doseLoading, setDoseLoading] = useState(true)
 
   // Redireciona estudante logado para a plataforma
   useEffect(() => {
@@ -81,21 +90,14 @@ export default function Index() {
     // 5. Aulas ao vivo (próxima aula)
     getLiveSessions()
       .then((lives) => {
-        const upcoming = lives.find((l) => l.status === 'scheduled') || lives[0]
+        const upcoming =
+          lives.find((l) => l.status === 'scheduled' || l.status === 'live') || lives[0]
         if (upcoming) {
+          setNextLive(upcoming)
           setNextLiveTitle(upcoming.title)
         }
       })
       .catch(() => {})
-
-    // 6. Dose do dia (pública, determinística)
-    getPublicDailyDose()
-      .then((res) => {
-        setDailyDose(res)
-      })
-      .finally(() => {
-        setDoseLoading(false)
-      })
   }, [])
 
   // Extrai número da revista mais recente (ex: "Revista nº32" -> "32")
@@ -112,6 +114,36 @@ export default function Index() {
       return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')
     } catch {
       return ''
+    }
+  }
+
+  const formatLiveDateTime = (dateStr?: string) => {
+    if (!dateStr) return ''
+    try {
+      const d = new Date(dateStr)
+      const day = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+      const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      return `${day} às ${time}`
+    } catch {
+      return ''
+    }
+  }
+
+  // Seis módulos do Hub (mesmos ícones do Dashboard, ordem solicitada: Cursos, Revistas, Aulas ao vivo, Simulados, Mentorias, Documentários)
+  const hubModules = [
+    { title: 'Cursos', icon: BookOpen },
+    { title: 'Revistas', icon: Newspaper },
+    { title: 'Aulas ao vivo', icon: Radio },
+    { title: 'Simulados', icon: ClipboardList },
+    { title: 'Mentorias', icon: Users },
+    { title: 'Documentários', icon: Film },
+  ]
+
+  const scrollToPlataforma = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    const target = document.getElementById('plataforma')
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
@@ -153,8 +185,9 @@ export default function Index() {
             {/* Coluna esquerda */}
             <div className="lg:col-span-5 flex flex-col justify-between space-y-8 pt-2">
               <p className="text-lg sm:text-[20px] text-[#5F5A4F] leading-relaxed font-normal">
-                Revista, cursos, aulas ao vivo e simulados de Segurança e Saúde no Trabalho,
-                reunidos em um itinerário de estudo que parte da sua realidade de trabalho.
+                O Hub de estudos reúne Revista, cursos, aulas ao vivo e simulados de Segurança e
+                Saúde no Trabalho em um só lugar, num itinerário que parte da sua realidade de
+                trabalho.
               </p>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 pt-2">
@@ -174,32 +207,103 @@ export default function Index() {
               </div>
             </div>
 
-            {/* Coluna direita: composição sobreposta Capa + Dose do dia */}
-            <div className="lg:col-span-7 flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-[460px] pt-4 pb-4">
-                {/* a) Capa da Revista mais recente (~270px, 3:4, alinhada à direita, inclinada 3 graus, flutuação lenta) */}
-                <div className="flex justify-end pr-2 sm:pr-4">
-                  <div className="w-[230px] sm:w-[270px] aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_24px_50px_-12px_rgba(28,27,24,0.35)] border border-[#E4DED1] bg-[#FAF8F3] relative z-10 animate-mag-float origin-bottom-right">
-                    {featuredMag && featuredMag.thumbnail ? (
-                      <img
-                        src={pb.files.getUrl(featuredMag, featuredMag.thumbnail)}
-                        alt={featuredMag.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-[#173F33] text-[#FAF8F3]">
-                        <BookOpen className="w-12 h-12 text-[#FDBE2D] mb-3" />
-                        <span className="font-serif font-bold text-lg">Revista Educação SST</span>
-                        <span className="text-xs text-[#FAF8F3]/70 mt-1">Edição do Mês</span>
-                      </div>
-                    )}
+            {/* Coluna direita: Prévia do Hub de estudos */}
+            <div className="lg:col-span-7 flex flex-col items-center lg:items-end w-full">
+              <Link
+                to="/planos"
+                className="group block w-full max-w-[560px] text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label="Conhecer o Hub de estudos nos planos"
+              >
+                <div className="w-full bg-card text-foreground brand-corner border border-border shadow-[0_18px_45px_rgba(28,27,24,0.08)] p-5 sm:p-7 relative transition-shadow duration-300 group-hover:shadow-[0_24px_55px_rgba(28,27,24,0.12)]">
+                  {/* Cabeçalho do Hub */}
+                  <div className="pb-4 sm:pb-5 border-b border-border/70 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div>
+                      <span className="label-overline text-[10px] sm:text-[11px] text-muted-foreground block mb-1">
+                        HUB DE ESTUDOS
+                      </span>
+                      <h2 className="font-serif text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-snug">
+                        Bom dia. Sua área de estudos.
+                      </h2>
+                    </div>
+                    {/* Selo pílula amarela "Plano Free" */}
+                    <div className="self-start shrink-0">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary text-primary-foreground shadow-sm">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Plano Free
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* b) Sobreposto à parte de baixo da capa, alinhado à esquerda: Cartão "Dose do dia" */}
-                <div className="relative z-20 -mt-24 sm:-mt-28 pl-0 sm:pl-2">
-                  <DailyDoseCard dose={dailyDose} loading={doseLoading} />
+                  {/* Grade com seis módulos (3 colunas no desktop, 2 no celular, sem contagem) */}
+                  <div className="pt-5 sm:pt-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
+                      {hubModules.map((m) => (
+                        <div key={m.title} tabIndex={-1} aria-hidden="true">
+                          <CategoryCard
+                            title={m.title}
+                            icon={m.icon}
+                            compact
+                            className="h-full pointer-events-none bg-background/60 hover:translate-y-0 hover:shadow-none"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Bloco "AVISOS" com itens dinâmicos */}
+                  {(nextLive || featuredMag) && (
+                    <div className="mt-5 sm:mt-6 pt-4 border-t border-border/70">
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <BellRing className="w-3.5 h-3.5 text-primary" />
+                        <span className="label-overline text-[10px] text-muted-foreground">
+                          AVISOS
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {nextLive && (
+                          <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/60 text-xs">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-2 h-2 rounded-full bg-danger shrink-0 animate-pulse" />
+                              <span className="font-semibold text-foreground truncate">
+                                {nextLive.status === 'live' ? 'Ao vivo agora:' : 'Próxima aula:'}{' '}
+                                {nextLive.title}
+                              </span>
+                            </div>
+                            <span className="text-[11px] font-mono text-muted-foreground shrink-0">
+                              {nextLive.status === 'live'
+                                ? 'Agora'
+                                : formatLiveDateTime(nextLive.scheduled_at)}
+                            </span>
+                          </div>
+                        )}
+                        {featuredMag && (
+                          <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/60 text-xs">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                              <span className="font-semibold text-foreground truncate">
+                                Revista mais recente: {featuredMag.title}
+                              </span>
+                            </div>
+                            <span className="text-[11px] text-muted-foreground shrink-0 flex items-center font-semibold">
+                              Ler <ChevronRight className="w-3 h-3 ml-0.5" />
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
+              </Link>
+
+              {/* Link de texto abaixo do cartão, alinhado à direita */}
+              <div className="w-full max-w-[560px] flex justify-end mt-3 pr-1">
+                <a
+                  href="#plataforma"
+                  onClick={scrollToPlataforma}
+                  className="editorial-link text-sm sm:text-base font-semibold text-[#1C1B18] hover:text-[#173F33]"
+                >
+                  Ver o que tem no Hub &rarr;
+                </a>
               </div>
             </div>
           </div>
@@ -207,38 +311,7 @@ export default function Index() {
       </section>
 
       {/* =========================================================================
-          SEÇÃO 2: A PLATAFORMA (fundo --muted #F2EEE4)
-          ========================================================================= */}
-      <section className="py-[72px] lg:py-[112px] bg-[#F2EEE4] relative">
-        <div className="max-w-[1200px] mx-auto px-6">
-          <div className="mb-10 sm:mb-14">
-            <span className="label-overline">A PLATAFORMA</span>
-            <h2 className="title-h2-fluid text-[#1C1B18] mt-2 mb-3">
-              Um itinerário, <em>não um catálogo.</em>
-            </h2>
-            <p className="text-base sm:text-lg text-[#5F5A4F] max-w-2xl">
-              Escolha por onde começar. Cada parte da plataforma conversa com as outras.
-            </p>
-          </div>
-
-          <PlatformExplorer
-            magazineCount={magazines.length || 32}
-            latestMagazine={
-              featuredMag
-                ? { number: latestMagazineNumber, title: featuredMag.title }
-                : { number: '32', title: 'Edição de Setembro' }
-            }
-            courseCount={courseCount}
-            latestCourseTitle={latestCourseTitle}
-            nextLiveTitle={nextLiveTitle}
-            simuladoCount={simuladoCount || 5}
-            latestSimuladoTitle={latestSimuladoTitle}
-          />
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SEÇÃO 3: REVISTA (fundo --deep #173F33, texto --deep-foreground #F4F1E8)
+          SEÇÃO 2: REVISTA (fundo --deep #173F33, texto --deep-foreground #F4F1E8)
           ========================================================================= */}
       <section className="py-[72px] lg:py-[112px] bg-[#173F33] text-[#F4F1E8] relative overflow-hidden">
         <div className="max-w-[1200px] mx-auto px-6">
@@ -308,6 +381,40 @@ export default function Index() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SEÇÃO 3: A PLATAFORMA (fundo --background #FAF8F3)
+          ========================================================================= */}
+      <section
+        id="plataforma"
+        className="py-[72px] lg:py-[112px] bg-[#FAF8F3] scroll-mt-16 relative"
+      >
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="mb-10 sm:mb-14">
+            <span className="label-overline">A PLATAFORMA</span>
+            <h2 className="title-h2-fluid text-[#1C1B18] mt-2 mb-3">
+              Um itinerário, <em>não um catálogo.</em>
+            </h2>
+            <p className="text-base sm:text-lg text-[#5F5A4F] max-w-2xl">
+              Escolha por onde começar. Cada parte da plataforma conversa com as outras.
+            </p>
+          </div>
+
+          <PlatformExplorer
+            magazineCount={magazines.length || 32}
+            latestMagazine={
+              featuredMag
+                ? { number: latestMagazineNumber, title: featuredMag.title }
+                : { number: '32', title: 'Edição de Setembro' }
+            }
+            courseCount={courseCount}
+            latestCourseTitle={latestCourseTitle}
+            nextLiveTitle={nextLiveTitle}
+            simuladoCount={simuladoCount || 5}
+            latestSimuladoTitle={latestSimuladoTitle}
+          />
         </div>
       </section>
 

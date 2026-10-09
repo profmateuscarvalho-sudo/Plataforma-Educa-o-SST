@@ -234,16 +234,21 @@ export default function Index() {
                     </div>
                   </div>
 
-                  {/* Grade com seis módulos (3 colunas no desktop, 2 no celular, sem contagem) */}
+                  {/* Grade com seis módulos (3 colunas iguais, 2 colunas abaixo de 480px, gap 10px) */}
                   <div className="pt-5 sm:pt-6">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
+                    <div
+                      className="w-full grid gap-[10px] [grid-template-columns:repeat(2,minmax(0,1fr))] min-[480px]:[grid-template-columns:repeat(3,minmax(0,1fr))]"
+                      style={{
+                        gap: '10px',
+                      }}
+                    >
                       {hubModules.map((m) => (
-                        <div key={m.title} tabIndex={-1} aria-hidden="true">
+                        <div key={m.title} className="w-full flex" tabIndex={-1} aria-hidden="true">
                           <CategoryCard
                             title={m.title}
                             icon={m.icon}
                             compact
-                            className="h-full pointer-events-none bg-background/60 hover:translate-y-0 hover:shadow-none"
+                            className="w-full min-h-[92px] h-full pointer-events-none bg-background/60 hover:translate-y-0 hover:shadow-none flex flex-col justify-between items-start text-left"
                           />
                         </div>
                       ))}

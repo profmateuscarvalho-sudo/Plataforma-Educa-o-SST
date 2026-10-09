@@ -125,47 +125,49 @@ export function AgentChatWidget() {
   if (!isOpen) {
     return (
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 animate-fade-in">
-        <div className="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-yellow-400/30 max-w-[260px]">
+        <div className="bg-card text-card-foreground px-5 py-3.5 rounded-[22px] shadow-[0_18px_40px_rgba(28,27,24,0.12)] border border-border max-w-[280px]">
           <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-yellow-400 shrink-0" />
-            <span className="font-bold text-sm">Agente de IA</span>
+            <Sparkles className="w-4 h-4 text-primary shrink-0" />
+            <span className="font-serif font-bold text-sm text-foreground">Agente de IA</span>
           </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Tire suas dúvidas sobre NRs, EPIs, ergonomia e muito mais!
           </p>
         </div>
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
-          className="group w-20 h-20 rounded-full bg-primary hover:bg-primary/90 shadow-2xl flex items-center justify-center transition-transform hover:scale-110 border-4 border-white"
+          className="group relative w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-primary hover:bg-primary/90 shadow-[0_12px_32px_rgba(253,190,45,0.4)] flex items-center justify-center transition-all duration-300 hover:scale-105 border-2 border-background cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label="Abrir Agente IA"
         >
-          <Bot className="w-10 h-10 text-primary-foreground group-hover:scale-110 transition-transform" />
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+          <Bot className="w-8 h-8 text-primary-foreground transition-transform duration-300 group-hover:scale-110" />
+          <span className="absolute top-0 right-0 w-4 h-4 bg-success rounded-full border-2 border-background animate-pulse" />
         </button>
       </div>
     )
   }
 
   const containerClass = isMaximized
-    ? 'fixed inset-2 z-[70] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border-2 border-primary/20 animate-fade-in'
-    : 'fixed bottom-6 right-6 z-[60] w-[570px] h-[720px] max-h-[calc(100vh-3rem)] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-fade-in-up'
+    ? 'fixed inset-2 z-[70] bg-card text-card-foreground rounded-[28px] shadow-[0_24px_60px_rgba(28,27,24,0.2)] flex flex-col overflow-hidden border border-border animate-fade-in'
+    : 'fixed bottom-6 right-6 z-[60] w-[540px] max-w-[calc(100vw-2rem)] h-[680px] max-h-[calc(100vh-3rem)] bg-card text-card-foreground rounded-[28px] shadow-[0_24px_60px_rgba(28,27,24,0.18)] flex flex-col overflow-hidden border border-border animate-fade-in-up'
 
   return (
     <div className={containerClass}>
-      <div className="bg-slate-900 text-white p-4 flex items-center justify-between gap-2 border-b border-yellow-400/20">
+      {/* Top bar em --card com borda fina */}
+      <div className="bg-card text-card-foreground px-5 py-4 flex items-center justify-between gap-3 border-b border-border">
         <div className="flex items-center gap-3 min-w-0">
           <div className="relative shrink-0">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border-2 border-yellow-400/40">
-              <Bot className="w-7 h-7 text-yellow-400" />
+            <div className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
+              <Bot className="w-6 h-6" />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success rounded-full border-2 border-card" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-bold text-base flex items-center gap-2">
+            <h3 className="font-serif font-bold text-base flex items-center gap-2 text-foreground">
               <span className="truncate">Agente de IA</span>
-              <Sparkles className="w-4 h-4 text-yellow-400 shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
             </h3>
-            <p className="text-xs text-slate-400 truncate">
+            <p className="text-xs text-muted-foreground truncate">
               Especialista em SST • {usage.used} de {usage.limit === 999999 ? '∞' : usage.limit}{' '}
               perguntas
             </p>
@@ -173,47 +175,51 @@ export function AgentChatWidget() {
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <button
+            type="button"
             onClick={() => setIsMaximized((prev) => !prev)}
             title={isMaximized ? 'Restaurar' : 'Maximizar'}
-            className="p-2.5 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
-            {isMaximized ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
           <button
+            type="button"
             onClick={handleNewConversation}
             title="Nova conversa"
-            className="p-2.5 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
           </button>
           <button
+            type="button"
             onClick={() => {
               setIsOpen(false)
               setIsMaximized(false)
             }}
             title="Fechar"
-            className="p-2.5 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       </div>
 
+      {/* Área de mensagens: janela em --card, aluno em --muted, agente sem fundo */}
       <div
         className={cn(
-          'flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50',
+          'flex-1 overflow-y-auto p-5 space-y-4 bg-card',
           isMaximized && 'max-w-4xl mx-auto w-full',
         )}
       >
         {messages.length === 0 && !isStreaming && (
-          <div className="text-center py-12">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20">
-              <Bot className="w-10 h-10 text-primary" />
+          <div className="text-center py-12 px-4">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4 border border-border text-foreground">
+              <Bot className="w-8 h-8" />
             </div>
-            <h4 className="font-bold text-lg text-slate-700 mb-2">
+            <h4 className="font-serif font-bold text-lg text-foreground mb-2">
               Olá! Sou o Agente IA Educação SST
             </h4>
-            <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+            <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
               Estou aqui para responder suas dúvidas sobre Normas Regulamentadoras (NRs), EPIs,
               ergonomia, riscos ocupacionais e muito mais. Como posso ajudar você hoje?
             </p>
@@ -221,11 +227,12 @@ export function AgentChatWidget() {
               {['O que é a NR-6?', 'Como funciona a NR-17?', 'Tipos de EPI'].map((suggestion) => (
                 <button
                   key={suggestion}
+                  type="button"
                   onClick={() => {
                     setInput(suggestion)
                     setTimeout(() => handleSend(), 0)
                   }}
-                  className="px-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-600 hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors"
+                  className="px-3.5 py-1.5 rounded-full bg-muted border border-border text-xs font-medium text-foreground hover:border-primary hover:bg-primary/10 transition-colors"
                 >
                   {suggestion}
                 </button>
@@ -237,31 +244,32 @@ export function AgentChatWidget() {
           const isLast = i === messages.length - 1
           const showTyping = msg.role === 'assistant' && msg.content === '' && isStreaming && isLast
           return (
-            <div key={i} className={cn('flex gap-2.5', msg.role === 'user' && 'justify-end')}>
+            <div
+              key={i}
+              className={cn('flex gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}
+            >
               {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                  <Bot className="w-5 h-5 text-primary" />
+                <div className="w-8 h-8 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0 mt-0.5 text-foreground">
+                  <Bot className="w-4 h-4" />
                 </div>
               )}
               <div
                 className={cn(
-                  'rounded-xl p-3 max-w-[80%]',
+                  'rounded-2xl p-4 max-w-[85%] text-sm leading-relaxed',
                   msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white border border-slate-200 shadow-sm',
+                    ? 'bg-muted text-foreground border border-border'
+                    : 'bg-transparent text-foreground p-1 pl-0',
                 )}
               >
                 {showTyping ? (
-                  <p className="text-sm text-slate-400 animate-pulse">Digitando...</p>
+                  <p className="text-sm text-muted-foreground animate-pulse">Digitando...</p>
                 ) : (
-                  <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                    {msg.content}
-                  </p>
+                  <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                 )}
               </div>
               {msg.role === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0 mt-1">
-                  <User className="w-5 h-5 text-slate-500" />
+                <div className="w-8 h-8 rounded-xl bg-primary/20 text-foreground flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                  <User className="w-4 h-4" />
                 </div>
               )}
             </div>
@@ -269,13 +277,14 @@ export function AgentChatWidget() {
         })}
         {error && (
           <div className="text-center py-2">
-            <p className="text-sm text-red-500 mb-2">{error}</p>
+            <p className="text-sm text-danger mb-2">{error}</p>
             <button
+              type="button"
               onClick={() => {
                 setError(null)
                 handleSend()
               }}
-              className="text-xs text-primary hover:underline font-medium"
+              className="text-xs text-primary hover:underline font-semibold"
             >
               Tentar novamente
             </button>
@@ -284,7 +293,8 @@ export function AgentChatWidget() {
         <div ref={endRef} />
       </div>
 
-      <div className="border-t border-slate-200 p-3 flex gap-2 bg-white">
+      {/* Caixa de input */}
+      <div className="border-t border-border p-3.5 flex gap-2 bg-card">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -296,16 +306,17 @@ export function AgentChatWidget() {
           }}
           placeholder="Digite sua pergunta..."
           disabled={isStreaming}
-          className="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+          className="flex-1 px-4 py-2.5 rounded-full border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50"
         />
         <button
+          type="button"
           onClick={handleSend}
           disabled={!input.trim() || isStreaming}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50 shrink-0 flex items-center gap-1.5"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-5 py-2.5 rounded-full transition-colors disabled:opacity-50 shrink-0 flex items-center gap-1.5 h-11"
           aria-label="Enviar"
         >
           <Send className="w-4 h-4" />
-          <span className="text-sm font-medium hidden sm:inline">Enviar</span>
+          <span className="text-sm font-semibold hidden sm:inline">Enviar</span>
         </button>
       </div>
     </div>

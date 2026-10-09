@@ -45,40 +45,40 @@ export function InstallInstructionsDialog({
   const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
-        <DialogTitle>{t('install.ios.title')}</DialogTitle>
-        <DialogDescription>{t('install.ios.subtitle')}</DialogDescription>
+      <DialogContent className="max-w-sm rounded-[28px] border border-border bg-card text-card-foreground p-6">
+        <DialogTitle className="font-serif text-xl font-bold text-foreground">
+          {t('install.ios.title')}
+        </DialogTitle>
+        <DialogDescription className="text-sm text-muted-foreground">
+          {t('install.ios.subtitle')}
+        </DialogDescription>
 
         <ol className="mt-4 space-y-4">
           <li className="flex items-start gap-3">
-            <span
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold"
-              style={{ backgroundColor: '#FFC220', color: '#241B00' }}
-            >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold bg-primary text-primary-foreground shadow-sm">
               1
             </span>
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-800">{t('install.ios.step1')}</p>
-              <p className="text-xs text-slate-500">{t('install.ios.step1Desc')}</p>
+              <p className="text-sm font-semibold text-foreground">{t('install.ios.step1')}</p>
+              <p className="text-xs text-muted-foreground">{t('install.ios.step1Desc')}</p>
             </div>
-            <Share className="h-5 w-5 shrink-0 text-slate-700" />
+            <Share className="h-5 w-5 shrink-0 text-muted-foreground" />
           </li>
           <li className="flex items-start gap-3">
-            <span
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold"
-              style={{ backgroundColor: '#FFC220', color: '#241B00' }}
-            >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold bg-primary text-primary-foreground shadow-sm">
               2
             </span>
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-800">{t('install.ios.step2')}</p>
-              <p className="text-xs text-slate-500">{t('install.ios.step2Desc')}</p>
+              <p className="text-sm font-semibold text-foreground">{t('install.ios.step2')}</p>
+              <p className="text-xs text-muted-foreground">{t('install.ios.step2Desc')}</p>
             </div>
-            <Plus className="h-5 w-5 shrink-0 text-slate-700" />
+            <Plus className="h-5 w-5 shrink-0 text-muted-foreground" />
           </li>
         </ol>
 
-        {!isIOS && <p className="mt-2 text-xs text-slate-500">{t('install.ios.fallback')}</p>}
+        {!isIOS && (
+          <p className="mt-2 text-xs text-muted-foreground">{t('install.ios.fallback')}</p>
+        )}
       </DialogContent>
     </Dialog>
   )
@@ -155,31 +155,30 @@ export function InstallBanner() {
   return (
     <>
       <div
-        className="fixed bottom-0 left-0 right-0 z-[80] md:hidden shadow-[0_-6px_20px_rgba(0,0,0,0.18)]"
-        style={{ backgroundColor: '#FFC220', color: '#241B00' }}
+        className="fixed bottom-3 left-3 right-3 z-[80] md:hidden"
         role="dialog"
         aria-label={t('install.banner.aria')}
       >
-        <div className="mx-auto flex items-center gap-3 px-4 py-3" style={{ maxWidth: 480 }}>
+        <div className="mx-auto flex items-center gap-3 p-3.5 bg-card text-card-foreground rounded-[28px] border border-border shadow-[0_18px_40px_rgba(28,27,24,0.14)] max-w-[480px]">
           <img
             src="/icon-192.png"
             alt={t('install.banner.appName')}
-            className="shrink-0 rounded-xl"
-            style={{ width: 40, height: 40 }}
+            className="shrink-0 rounded-2xl w-10 h-10 object-cover border border-border"
           />
-          <p className="flex-1 min-w-0 text-sm font-semibold leading-snug">
+          <p className="flex-1 min-w-0 text-xs sm:text-sm font-semibold leading-snug text-foreground line-clamp-2">
             {t('install.banner.message')}
           </p>
           <button
+            type="button"
             onClick={install}
-            className="shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-transform active:scale-95"
-            style={{ backgroundColor: '#241B00', color: '#FFC220' }}
+            className="shrink-0 rounded-full px-4 py-2 text-xs sm:text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-transform active:scale-95 shadow-sm"
           >
             {t('install.banner.install')}
           </button>
           <button
+            type="button"
             onClick={dismiss}
-            className="shrink-0 px-1 py-2 text-sm font-medium opacity-70 hover:opacity-100"
+            className="shrink-0 px-2 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
             {t('install.banner.notNow')}
           </button>

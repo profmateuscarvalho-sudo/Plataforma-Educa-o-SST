@@ -44,25 +44,20 @@ import { getDebates } from '@/services/agora'
 import { AgoraCountdown } from '@/components/agora/AgoraCountdown'
 import { BellRing, Radio, Megaphone, Crown, Award, Sparkles, Landmark } from 'lucide-react'
 
-const tierConfig: Record<string, { label: string; icon: typeof Crown; className: string }> = {
+const tierConfig: Record<string, { label: string; icon: typeof Crown }> = {
   free: {
     label: 'Plano Free',
     icon: Sparkles,
-    className: 'bg-slate-600 text-slate-200 border-slate-500',
   },
   prata: {
     label: 'Plano Prata',
     icon: Award,
-    className: 'bg-gradient-to-r from-slate-300 to-slate-400 text-slate-800 border-slate-300',
   },
   ouro: {
     label: 'Plano Ouro',
     icon: Crown,
-    className: 'bg-gradient-to-r from-yellow-400 to-amber-500 text-amber-950 border-yellow-400',
   },
 }
-
-const ph = (q: string, w = 800, h = 500) => `https://img.usecurling.com/p/${w}/${h}?q=${q}`
 
 export default function StudentDashboard() {
   const { user, loading } = useAuth()
@@ -78,33 +73,10 @@ export default function StudentDashboard() {
   const [announcements, setAnnouncements] = useState<PlatformAnnouncement[]>([])
   const [featuredMagazine, setFeaturedMagazine] = useState<Magazine | null>(null)
   const [debates, setDebates] = useState<AgoraDebate[]>([])
-  const [docCoverIndex, setDocCoverIndex] = useState(0)
 
   const currentLang = i18n.language?.startsWith('es') ? 'es' : 'pt-BR'
 
   useTrackAccess('Hub', [view])
-
-  // Sorteio inicial baseado no dia — cada acesso ao hub pode começar de um
-  // documentário diferente, distribuindo as capas entre os alunos.
-  useEffect(() => {
-    if (docProjects.length > 1) {
-      const seed = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) // muda por dia
-      setDocCoverIndex(seed % docProjects.length)
-    }
-  }, [docProjects])
-
-  // Rotação automática das capas a cada 3 segundos enquanto o aluno está no
-  // hub, alternando entre todos os documentários disponíveis. Depende do
-  // array `docProjects` (e não apenas de `.length`) para que o efeito seja
-  // recriado quando os dados chegam de forma assíncrona, garantindo que o
-  // closure do intervalo sempre enxergue a lista atualizada.
-  useEffect(() => {
-    if (docProjects.length <= 1 || view !== 'hub') return
-    const interval = setInterval(() => {
-      setDocCoverIndex((prev) => (prev + 1) % docProjects.length)
-    }, 8000)
-    return () => clearInterval(interval)
-  }, [docProjects, view])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -134,7 +106,13 @@ export default function StudentDashboard() {
       .catch(() => {})
   }, [user, currentLang])
 
-  if (loading || !user) return <div className="p-12 text-center text-slate-500">Carregando...</div>
+  if (loading || !user) {
+    return (
+      <div className="p-12 text-center text-muted-foreground font-medium text-sm">
+        Carregando...
+      </div>
+    )
+  }
 
   const userTier = user.role === 'admin' ? 'ouro' : user.plan_tier || 'free'
   const tier = tierConfig[userTier] || tierConfig.free
@@ -156,22 +134,12 @@ export default function StudentDashboard() {
   }
   const visibleLives = liveSessions.filter(isLiveVisible)
 
-  // Capa rotativa da seção de documentários: usa a foto do documentário atual
-  // (definido pelo índice rotativo docCoverIndex). Cai para o placeholder
-  // quando não há documentários ou quando o item não tem fotos.
-  const featuredDoc = docProjects[docCoverIndex] || docProjects[0]
-  const docCoverUrl = featuredDoc?.presentation_photos?.length
-    ? pb.files.getUrl(featuredDoc, featuredDoc.presentation_photos[0])
-    : ph('documentary%20film')
-
   const cards = [
     {
       title: 'Cursos',
       desc: 'Formação completa em SST',
       icon: BookOpen,
       count: cat.courses.length,
-      img: ph('online%20course'),
-      gradient: 'from-emerald-600 to-teal-800',
       action: () => setView('cursos'),
     },
     {
@@ -179,8 +147,6 @@ export default function StudentDashboard() {
       desc: 'Acervo científico digital',
       icon: Newspaper,
       count: cat.magazines.length,
-      img: ph('digital%20magazine'),
-      gradient: 'from-blue-600 to-cyan-800',
       action: () => setView('revistas'),
     },
     {
@@ -188,8 +154,6 @@ export default function StudentDashboard() {
       desc: 'Sessões com especialistas',
       icon: Users,
       count: mentorships.length,
-      img: ph('mentorship%20meeting'),
-      gradient: 'from-rose-600 to-pink-800',
       action: () => setView('mentorias'),
     },
     {
@@ -197,8 +161,6 @@ export default function StudentDashboard() {
       desc: 'Produções audiovisuais',
       icon: Film,
       count: cat.documentaries.length,
-      img: docCoverUrl,
-      gradient: 'from-purple-600 to-indigo-800',
       action: () => navigate('/plataforma/documentarios'),
     },
     {
@@ -206,8 +168,6 @@ export default function StudentDashboard() {
       desc: 'Transmissões e gravações',
       icon: Radio,
       count: liveSessions.length,
-      img: ph('live%20streaming'),
-      gradient: 'from-red-600 to-rose-800',
       action: () => navigate('/plataforma/live-sessions'),
     },
     {
@@ -215,8 +175,6 @@ export default function StudentDashboard() {
       desc: 'Teste seus conhecimentos',
       icon: ClipboardList,
       count: cat.simulados.length,
-      img: ph('exam%20test'),
-      gradient: 'from-cyan-600 to-blue-800',
       action: () => navigate('/plataforma/simulados'),
     },
     {
@@ -224,8 +182,6 @@ export default function StudentDashboard() {
       desc: 'Mapas e Notas',
       icon: BookMarked,
       count: 0,
-      img: ph('notebook%20study'),
-      gradient: 'from-amber-600 to-orange-800',
       action: () => navigate('/plataforma/caderno'),
     },
     {
@@ -233,8 +189,6 @@ export default function StudentDashboard() {
       desc: 'Discussões técnicas e votos',
       icon: Landmark,
       count: debates.length,
-      img: ph('debate%20discussion'),
-      gradient: 'from-[#C17A4E] to-[#8C4F2B]',
       action: () => navigate('/plataforma/agora'),
     },
     {
@@ -242,21 +196,20 @@ export default function StudentDashboard() {
       desc: 'Gerenciar conta',
       icon: User,
       count: 0,
-      img: ph('user%20profile'),
-      gradient: 'from-slate-700 to-slate-900',
       action: () => navigate('/plataforma/perfil'),
     },
   ]
 
   const imgThumb = (item: any) =>
-    item.thumbnail ? pb.files.getUrl(item, item.thumbnail) : ph('education')
+    item.thumbnail ? pb.files.getUrl(item, item.thumbnail) : undefined
 
   return (
-    <div className="min-h-[calc(100vh-56px)] bg-slate-50">
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-10">
-        <div className="container px-4 max-w-6xl flex items-center justify-between">
+    <div className="min-h-[calc(100vh-64px)] bg-background text-foreground">
+      {/* Cabeçalho de boas-vindas: fundo --background, título em Playfair, linha em --muted-foreground, selo pílula amarela com texto tinta */}
+      <div className="bg-background border-b border-border py-8 md:py-10">
+        <div className="container px-4 max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="flex items-center gap-5">
-            <Avatar className="w-16 h-16 border-2 border-yellow-400 bg-slate-800 shadow-xl">
+            <Avatar className="w-16 h-16 border border-border bg-card shadow-sm">
               {user.avatar ? (
                 <AvatarImage
                   src={pb.files.getUrl(user, user.avatar)}
@@ -264,20 +217,21 @@ export default function StudentDashboard() {
                   className="object-cover"
                 />
               ) : null}
-              <AvatarFallback className="bg-slate-800 text-yellow-400 text-2xl font-bold">
+              <AvatarFallback className="bg-muted text-foreground text-2xl font-bold font-serif">
                 {user.name?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-serif font-bold text-yellow-400 mb-1">
+              <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-1 tracking-tight">
                 {getGreeting()}, {user.name?.trim() || 'Aluno'}
               </h1>
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-slate-300 text-sm">Bem-vindo à sua área de estudos.</p>
-                <span
-                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${tier.className}`}
-                >
-                  <tier.icon className="w-3 h-3" />
+              <div className="flex items-center gap-3 flex-wrap">
+                <p className="text-muted-foreground text-sm font-sans">
+                  Bem-vindo à sua área de estudos.
+                </p>
+                {/* Selo do plano: pílula amarela com texto tinta */}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary text-primary-foreground shadow-sm">
+                  <tier.icon className="w-3.5 h-3.5" />
                   {tier.label}
                   {!isActive && userTier !== 'free' ? ' (Expirado)' : ''}
                 </span>
@@ -290,15 +244,16 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      <div className="container px-4 max-w-6xl py-8">
+      <div className="container px-4 max-w-6xl mx-auto py-8 md:py-10">
         {view === 'hub' ? (
-          <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+          <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
             <div className="space-y-10">
               {visibleLives.length > 0 && (
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-2">
-                    <Video className="w-5 h-5 text-red-500" /> Aulas Ao Vivo
-                  </h2>
+                  <div className="flex items-center gap-2 mb-5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-danger animate-pulse" />
+                    <h2 className="font-serif text-2xl font-bold text-foreground">Aulas Ao Vivo</h2>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {visibleLives.map((live) => {
                       const d = new Date(live.scheduled_at)
@@ -311,49 +266,59 @@ export default function StudentDashboard() {
                         hour: '2-digit',
                         minute: '2-digit',
                       })
+                      const liveThumb = live.thumbnail
+                        ? pb.files.getUrl(live, live.thumbnail)
+                        : undefined
                       return (
                         <div
                           key={live.id}
-                          className="overflow-hidden flex flex-col h-full border border-slate-200 rounded-xl bg-white hover:shadow-lg transition-shadow group"
+                          className="overflow-hidden flex flex-col h-full border border-border rounded-[28px] bg-card text-card-foreground hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(28,27,24,0.08)] transition-all group"
                         >
-                          <div className="relative aspect-[3/2] overflow-hidden bg-slate-100">
-                            <img
-                              src={
-                                live.thumbnail
-                                  ? pb.files.getUrl(live, live.thumbnail)
-                                  : ph('live%20streaming%20class')
-                              }
-                              alt={live.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <div className="absolute top-3 left-3">
-                              <div className="bg-red-600 text-white text-xs font-bold shadow-sm border-none px-2.5 py-1 rounded-full flex items-center">
-                                <Radio className="w-3.5 h-3.5 mr-1.5 animate-pulse" />
-                                Ao Vivo
+                          {liveThumb ? (
+                            <div className="relative aspect-[3/2] overflow-hidden bg-muted">
+                              <img
+                                src={liveThumb}
+                                alt={live.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                              <div className="absolute top-3 left-3">
+                                <div className="bg-danger text-white text-xs font-bold shadow-sm px-3 py-1 rounded-full flex items-center">
+                                  <Radio className="w-3.5 h-3.5 mr-1.5 animate-pulse" />
+                                  Ao Vivo
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="p-5 flex-grow flex flex-col">
-                            <h3 className="font-serif text-lg font-bold line-clamp-2 leading-tight text-slate-800 mb-3">
+                          ) : (
+                            <div className="p-6 pb-2 bg-muted/40 border-b border-border/50 flex items-center justify-between">
+                              <div className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center text-foreground group-hover:bg-primary/20 transition-colors">
+                                <Radio className="w-6 h-6 stroke-[1.75]" />
+                              </div>
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-danger text-white shadow-sm">
+                                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                                Ao Vivo
+                              </span>
+                            </div>
+                          )}
+                          <div className="p-6 flex-grow flex flex-col">
+                            <span className="label-overline mb-2">Transmissão</span>
+                            <h3 className="font-serif text-lg font-bold line-clamp-2 leading-tight text-foreground mb-3">
                               {live.title}
                             </h3>
-                            <div className="space-y-1.5 mt-auto">
-                              <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                                <Calendar className="w-4 h-4 text-slate-400" /> {dateStr} às{' '}
-                                {timeStr}
+                            <div className="space-y-1.5 mt-auto pt-3 border-t border-border">
+                              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5" /> {dateStr} às {timeStr}
                               </p>
                               {live.instructor_name && (
-                                <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                                  <User className="w-4 h-4 text-slate-400" /> Instrutor:{' '}
-                                  {live.instructor_name}
+                                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                  <User className="w-3.5 h-3.5" /> Instrutor: {live.instructor_name}
                                 </p>
                               )}
                             </div>
                           </div>
-                          <div className="p-5 pt-0 mt-auto flex justify-end">
+                          <div className="p-6 pt-0 mt-auto">
                             <Button
                               onClick={() => navigate(`/plataforma/live/${live.id}`)}
-                              className="w-full bg-red-600 hover:bg-red-700 text-white"
+                              className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11"
                             >
                               Acessar Transmissão
                             </Button>
@@ -366,7 +331,15 @@ export default function StudentDashboard() {
               )}
 
               <div>
-                <h2 className="text-xl font-bold text-slate-800 mb-5">Sua plataforma</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <span className="label-overline block mb-1">Módulos</span>
+                    <h2 className="font-serif text-2xl font-bold text-foreground">
+                      Sua plataforma
+                    </h2>
+                  </div>
+                </div>
+                {/* Blocos dos módulos (CategoryCard): cartões iguais em --card com borda fina --border, raio 28px, ícone em traço na cor --foreground, nome em Instrument Sans 600, contagem em --muted-foreground, hover com subida 4px e ponto amarelo */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {cards.map((c) => (
                     <CategoryCard
@@ -374,9 +347,7 @@ export default function StudentDashboard() {
                       title={c.title}
                       description={c.desc}
                       icon={c.icon}
-                      imageUrl={c.img}
                       count={c.count}
-                      gradient={c.gradient}
                       onClick={c.action}
                     />
                   ))}
@@ -385,29 +356,34 @@ export default function StudentDashboard() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-24">
-                <h2 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-                  <BellRing className="w-5 h-5 text-amber-500" /> Quadro de Avisos
-                </h2>
-                <div className="space-y-4">
-                  {/* Debates Ativos da Ágora com Card Completo e Contagem Regressiva */}
-                  {debates.length > 0 ? (
+              {/* Avisos em cartão branco/card, cada aviso em uma linha separada por fio, com ponto colorido (amarelo para novidade, success para confirmado, danger para ao vivo) */}
+              <div className="bg-card p-6 rounded-[28px] shadow-sm border border-border sticky top-24">
+                <div className="flex items-center justify-between mb-5 pb-3 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <BellRing className="w-4 h-4 text-primary" />
+                    <h2 className="font-serif text-lg font-bold text-foreground">
+                      Quadro de Avisos
+                    </h2>
+                  </div>
+                  <span className="label-overline text-[10px]">Atualizações</span>
+                </div>
+
+                <div className="divide-y divide-border">
+                  {/* Debates Ativos da Ágora */}
+                  {debates.length > 0 &&
                     debates.map((debate) => {
                       const mod = debate.expand?.moderador_id
                       const modName = mod?.name || mod?.email || 'Moderador'
-                      const tags = (debate.categoria_tags || '')
-                        .split(',')
-                        .map((t) => t.trim())
-                        .filter(Boolean)
-
                       return (
                         <div
                           key={debate.id}
-                          className="p-4 rounded-xl bg-gradient-to-br from-[#FAF8F3] to-[#F3EEE3] border border-[#C17A4E]/30 text-slate-800 shadow-sm space-y-3"
+                          className="py-4 first:pt-0 last:pb-0 space-y-2 cursor-pointer group"
+                          onClick={() => navigate(`/plataforma/agora/${debate.id}`)}
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#C17A4E]/15 text-[#8C4F2B]">
-                              <Landmark className="w-3 h-3 text-[#C17A4E]" />
+                            <span className="inline-flex items-center gap-2 text-xs font-semibold text-foreground">
+                              {/* Ponto amarelo para novidade */}
+                              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
                               Ágora de Debates
                             </span>
                             <AgoraCountdown
@@ -417,69 +393,23 @@ export default function StudentDashboard() {
                             />
                           </div>
 
-                          <div>
-                            <h3 className="font-serif font-bold text-sm text-slate-900 line-clamp-2 leading-snug">
-                              {debate.tema}
-                            </h3>
-                            <p className="text-xs text-slate-600 mt-1 flex items-center gap-1">
-                              <User className="w-3 h-3 text-slate-400" />
-                              <span>
-                                Moderador: <strong className="text-slate-800">{modName}</strong>
-                              </span>
-                            </p>
-                          </div>
+                          <h3 className="font-sans font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                            {debate.tema}
+                          </h3>
 
-                          {tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {tags.slice(0, 3).map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/80 border border-slate-200 text-slate-600"
-                                >
-                                  #{tag}
-                                </span>
-                              ))}
-                              {tags.length > 3 && (
-                                <span className="text-[10px] text-slate-400">
-                                  +{tags.length - 3}
-                                </span>
-                              )}
-                            </div>
-                          )}
-
-                          <Button
-                            size="sm"
-                            onClick={() => navigate(`/plataforma/agora/${debate.id}`)}
-                            className="w-full bg-[#C17A4E] hover:bg-[#A9663D] text-white font-bold text-xs h-8 shadow-sm"
-                          >
-                            Entrar no Debate <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                          </Button>
+                          <p className="text-xs text-muted-foreground flex items-center justify-between">
+                            <span>Mod: {modName}</span>
+                            <span className="inline-flex items-center font-semibold text-foreground text-xs group-hover:translate-x-0.5 transition-transform">
+                              Entrar <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                            </span>
+                          </p>
                         </div>
                       )
-                    })
-                  ) : (
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-[#FAF8F3] to-[#F3EEE3] border border-[#C17A4E]/30 text-slate-800 shadow-sm space-y-2.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#C17A4E]/15 text-[#8C4F2B]">
-                          <Landmark className="w-3 h-3 text-[#C17A4E]" />
-                          Ágora de Debates
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600">Nenhum debate ativo no momento.</p>
-                      <button
-                        type="button"
-                        onClick={() => navigate('/plataforma/agora/novo')}
-                        className="inline-flex items-center text-xs font-bold text-[#8C4F2B] hover:text-[#C17A4E] hover:underline"
-                      >
-                        Criar um debate <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
-                      </button>
-                    </div>
-                  )}
+                    })}
 
-                  {/* Avisos gerais cadastrados */}
+                  {/* Avisos cadastrados via PlatformAnnouncement */}
                   {announcements
                     .filter((a) => {
-                      // Se já exibimos o debate acima, não duplica se for tipo Ágora com o mesmo id
                       if (a.type?.includes('Ágora de Debates') && a.reference_id) {
                         return !debates.some((d) => d.id === a.reference_id)
                       }
@@ -488,81 +418,119 @@ export default function StudentDashboard() {
                     .map((a) => (
                       <div
                         key={a.id}
-                        className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 text-amber-900 cursor-pointer hover:bg-amber-100 transition-colors"
+                        className="py-4 first:pt-0 last:pb-0 cursor-pointer group space-y-1"
                         onClick={() => {
                           if (a.type?.includes('Ágora de Debates') && a.reference_id) {
                             navigate(`/plataforma/agora/${a.reference_id}`)
                           }
                         }}
                       >
-                        <Megaphone className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold">{a.title}</p>
-                          {a.type === 'Texto Customizado' && a.content && (
-                            <div
-                              className="text-sm prose prose-sm max-w-none mt-1 line-clamp-3"
-                              dangerouslySetInnerHTML={{ __html: a.content }}
-                            />
-                          )}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                          <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                            {a.title}
+                          </p>
                         </div>
+                        {a.type === 'Texto Customizado' && a.content && (
+                          <div
+                            className="text-xs text-muted-foreground pl-4 line-clamp-2 prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ __html: a.content }}
+                          />
+                        )}
                       </div>
                     ))}
 
+                  {/* Linha de Aula ao Vivo: ponto --danger */}
                   {visibleLives.length > 0 && (
                     <div
-                      className="flex items-start gap-3 p-3 rounded-lg bg-red-50 text-red-900 cursor-pointer hover:bg-red-100 transition-colors"
+                      className="py-4 first:pt-0 last:pb-0 cursor-pointer group space-y-1"
                       onClick={() => navigate(`/plataforma/live/${visibleLives[0].id}`)}
                     >
-                      <Radio className="w-5 h-5 text-red-600 shrink-0 mt-0.5 animate-pulse" />
-                      <div>
-                        <p className="text-sm font-bold">Próxima Aula ao Vivo</p>
-                        <p className="text-sm line-clamp-2">{visibleLives[0].title}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold text-danger">
+                          <span className="w-2 h-2 rounded-full bg-danger animate-pulse shrink-0" />
+                          Ao vivo agora
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Transmissão
+                        </span>
                       </div>
+                      <p className="text-xs font-medium text-foreground pl-4 line-clamp-2 group-hover:text-danger transition-colors">
+                        {visibleLives[0].title}
+                      </p>
                     </div>
                   )}
+
+                  {/* Linha de Novo Curso: ponto amarelo novidade */}
                   {cat.courses.length > 0 && (
                     <div
-                      className="flex items-start gap-3 p-3 rounded-lg bg-emerald-50 text-emerald-900 cursor-pointer hover:bg-emerald-100 transition-colors"
+                      className="py-4 first:pt-0 last:pb-0 cursor-pointer group space-y-1"
                       onClick={() => setView('cursos')}
                     >
-                      <BookOpen className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-bold">Novo Curso Adicionado</p>
-                        <p className="text-sm line-clamp-2">{cat.courses[0].title}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold text-foreground">
+                          <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                          Novo Curso
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Curso
+                        </span>
                       </div>
+                      <p className="text-xs font-medium text-muted-foreground pl-4 line-clamp-2 group-hover:text-foreground transition-colors">
+                        {cat.courses[0].title}
+                      </p>
                     </div>
                   )}
+
+                  {/* Linha de Novo Documentário: ponto amarelo */}
                   {docProjects.length > 0 && (
                     <div
-                      className="flex items-start gap-3 p-3 rounded-lg bg-purple-50 text-purple-900 cursor-pointer hover:bg-purple-100 transition-colors"
+                      className="py-4 first:pt-0 last:pb-0 cursor-pointer group space-y-1"
                       onClick={() => navigate('/plataforma/documentarios')}
                     >
-                      <Film className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-bold">Novo Documentário</p>
-                        <p className="text-sm line-clamp-2">{docProjects[0].title}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold text-foreground">
+                          <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                          Documentário
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Audiovisual
+                        </span>
                       </div>
+                      <p className="text-xs font-medium text-muted-foreground pl-4 line-clamp-2 group-hover:text-foreground transition-colors">
+                        {docProjects[0].title}
+                      </p>
                     </div>
                   )}
+
+                  {/* Linha de Mentoria: ponto --success (confirmado) */}
                   {mentorships.length > 0 && (
                     <div
-                      className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 text-blue-900 cursor-pointer hover:bg-blue-100 transition-colors"
+                      className="py-4 first:pt-0 last:pb-0 cursor-pointer group space-y-1"
                       onClick={() => setView('mentorias')}
                     >
-                      <Users className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-bold">Mentoria Disponível</p>
-                        <p className="text-sm line-clamp-2">{mentorships[0].title}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold text-foreground">
+                          <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                          Mentoria Confirmada
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Agenda
+                        </span>
                       </div>
+                      <p className="text-xs font-medium text-muted-foreground pl-4 line-clamp-2 group-hover:text-foreground transition-colors">
+                        {mentorships[0].title}
+                      </p>
                     </div>
                   )}
+
                   {debates.length === 0 &&
                     visibleLives.length === 0 &&
                     cat.courses.length === 0 &&
                     docProjects.length === 0 &&
                     mentorships.length === 0 &&
                     announcements.length === 0 && (
-                      <p className="text-sm text-slate-500 text-center py-4">
+                      <p className="text-xs text-muted-foreground text-center py-6">
                         Nenhum aviso no momento.
                       </p>
                     )}
@@ -571,41 +539,44 @@ export default function StudentDashboard() {
 
               {featuredMagazine && (
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <Newspaper className="w-5 h-5 text-blue-600" /> Revista do Mês
-                  </h2>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Newspaper className="w-4 h-4 text-primary" />
+                    <h2 className="font-serif text-lg font-bold text-foreground">Revista do Mês</h2>
+                  </div>
                   <button
+                    type="button"
                     onClick={() => navigate(`/plataforma/revista/${featuredMagazine.id}`)}
                     className="group block w-full text-left"
                   >
-                    <div className="flex flex-col gap-4 bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
-                      <div className="w-full aspect-[3/2] bg-slate-100 overflow-hidden">
-                        {featuredMagazine.thumbnail ? (
+                    <div className="flex flex-col bg-card rounded-[28px] border border-border overflow-hidden hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(28,27,24,0.08)] transition-all">
+                      {featuredMagazine.thumbnail ? (
+                        <div className="w-full aspect-[3/2] bg-muted overflow-hidden">
                           <img
                             src={pb.files.getUrl(featuredMagazine, featuredMagazine.thumbnail)}
                             alt={featuredMagazine.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Newspaper className="w-12 h-12 text-slate-400" />
+                        </div>
+                      ) : (
+                        <div className="p-6 pb-2 bg-muted/40 border-b border-border/50 flex items-center justify-between">
+                          <div className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center text-foreground group-hover:bg-primary/20 transition-colors">
+                            <Newspaper className="w-6 h-6 stroke-[1.75]" />
                           </div>
-                        )}
-                      </div>
-                      <div className="flex-1 p-4 pt-0 flex flex-col justify-center">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 mb-2">
-                          <Sparkles className="w-3.5 h-3.5" /> Edição em Destaque
-                        </span>
-                        <h3 className="font-serif text-lg font-bold text-slate-800 mb-1 line-clamp-2">
+                          <span className="label-overline">Edição</span>
+                        </div>
+                      )}
+                      <div className="p-6 flex flex-col justify-center">
+                        <span className="label-overline text-[11px] mb-2">Edição em Destaque</span>
+                        <h3 className="font-serif text-lg font-bold text-foreground mb-1 line-clamp-2">
                           {featuredMagazine.title}
                         </h3>
                         {featuredMagazine.summary && (
-                          <p className="text-sm text-slate-500 line-clamp-3 mb-3">
+                          <p className="text-sm text-muted-foreground line-clamp-3 mb-4 leading-relaxed">
                             {featuredMagazine.summary}
                           </p>
                         )}
-                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 group-hover:gap-2 transition-all">
-                          Ler agora <ChevronRight className="w-4 h-4" />
+                        <span className="editorial-link text-sm text-foreground">
+                          Ler agora <ChevronRight className="w-4 h-4 ml-1" />
                         </span>
                       </div>
                     </div>
@@ -617,16 +588,16 @@ export default function StudentDashboard() {
         ) : (
           <div className="animate-fade-in">
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => setView('hub')}
-              className="mb-6 text-slate-600 hover:text-secondary"
+              className="mb-8 rounded-full border-border hover:bg-muted text-foreground font-semibold px-5 h-11"
             >
               <ArrowLeft className="w-4 h-4 mr-2" /> Voltar ao Hub
             </Button>
             {view === 'cursos' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {cat.courses.length === 0 ? (
-                  <p className="text-slate-500 col-span-full text-center py-12">
+                  <p className="text-muted-foreground col-span-full text-center py-12">
                     Nenhum curso disponível.
                   </p>
                 ) : (
@@ -652,16 +623,18 @@ export default function StudentDashboard() {
             )}
             {view === 'revistas' && (
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs text-slate-500 font-medium">
+                <div className="flex items-center justify-between mb-6">
+                  <span className="label-overline">
                     {currentLang === 'es' ? 'Revistas en Español 🇪🇸' : 'Revistas em Português 🇧🇷'}
                   </span>
                 </div>
                 {cat.magazines.length === 0 ? (
-                  <div className="bg-white border rounded-2xl p-12 text-center text-slate-500 space-y-3">
-                    <BookX className="w-12 h-12 text-slate-300 mx-auto" />
-                    <p className="font-medium text-slate-700">{t('dashboard.noMagazines')}</p>
-                    <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  <div className="bg-card border border-border rounded-[28px] p-12 text-center text-muted-foreground space-y-3">
+                    <BookX className="w-12 h-12 text-muted-foreground/50 mx-auto" />
+                    <p className="font-serif text-lg font-semibold text-foreground">
+                      {t('dashboard.noMagazines')}
+                    </p>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                       {t('revistas.noneBody')}
                     </p>
                   </div>
@@ -670,10 +643,11 @@ export default function StudentDashboard() {
                     {cat.magazines.map((mag) => (
                       <button
                         key={mag.id}
+                        type="button"
                         onClick={() => setSelectedMag(mag)}
                         className="group text-left"
                       >
-                        <div className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-200 shadow-md group-hover:shadow-2xl transition-all group-hover:-translate-y-1">
+                        <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-muted border border-border shadow-sm group-hover:shadow-[0_18px_40px_rgba(28,27,24,0.12)] transition-all group-hover:-translate-y-1">
                           {mag.thumbnail ? (
                             <img
                               src={pb.files.getUrl(mag, mag.thumbnail)}
@@ -682,11 +656,11 @@ export default function StudentDashboard() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Newspaper className="w-12 h-12 text-slate-400" />
+                              <Newspaper className="w-12 h-12 text-muted-foreground/60" />
                             </div>
                           )}
                         </div>
-                        <h3 className="font-serif font-bold text-sm text-secondary mt-3 line-clamp-2">
+                        <h3 className="font-serif font-bold text-base text-foreground mt-3 line-clamp-2">
                           {mag.title}
                         </h3>
                       </button>
@@ -701,22 +675,22 @@ export default function StudentDashboard() {
       </div>
 
       <Dialog open={!!selectedMag} onOpenChange={(open) => !open && setSelectedMag(null)}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 overflow-hidden bg-black/5 border-none">
+        <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 overflow-hidden bg-card/95 border-border rounded-[28px]">
           <DialogTitle className="sr-only">{selectedMag?.title}</DialogTitle>
           {selectedMag?.embed_code ? (
             <div
-              className="w-full h-full bg-white [&>iframe]:w-full [&>iframe]:h-full"
+              className="w-full h-full bg-card [&>iframe]:w-full [&>iframe]:h-full"
               dangerouslySetInnerHTML={{ __html: selectedMag.embed_code }}
             />
           ) : selectedMag?.fliphtml5_link ? (
             <iframe
               src={selectedMag.fliphtml5_link}
-              className="w-full h-full border-none rounded-lg bg-white"
+              className="w-full h-full border-none rounded-[28px] bg-card"
               allowFullScreen
               scrolling="no"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-500">
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground font-medium text-sm">
               Conteúdo não disponível.
             </div>
           )}

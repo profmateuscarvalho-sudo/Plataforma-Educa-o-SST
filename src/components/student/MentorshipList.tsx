@@ -35,8 +35,8 @@ export function MentorshipList({ mentorships }: MentorshipListProps) {
 
   if (mentorships.length === 0) {
     return (
-      <p className="text-slate-500 col-span-full text-center py-12">
-        Nenhuma mentoria disponivel no momento.
+      <p className="text-muted-foreground col-span-full text-center py-12">
+        Nenhuma mentoria disponível no momento.
       </p>
     )
   }
@@ -89,41 +89,58 @@ export function MentorshipList({ mentorships }: MentorshipListProps) {
           return (
             <Card
               key={m.id}
-              className="overflow-hidden flex flex-col hover:shadow-xl transition-shadow group"
+              className="rounded-[28px] border border-border bg-card text-card-foreground overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(28,27,24,0.08)] group"
             >
-              {photoUrl && (
-                <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+              {photoUrl ? (
+                <div className="aspect-[4/3] overflow-hidden bg-muted">
                   <img
                     src={photoUrl}
                     alt={m.mentor_name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
+              ) : (
+                <div className="p-6 pb-2 bg-muted/40 border-b border-border/50 flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center text-foreground group-hover:bg-primary/20 transition-colors">
+                    <Calendar className="w-6 h-6 stroke-[1.75]" />
+                  </div>
+                  {!m.is_free && (
+                    <Badge className="bg-primary/20 text-foreground border-primary/30 rounded-full font-semibold px-2.5 py-0.5 text-xs border">
+                      Assinantes
+                    </Badge>
+                  )}
+                </div>
               )}
-              <CardHeader>
+              <CardHeader className="pt-5">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <CardTitle className="text-lg font-serif text-secondary">{m.title}</CardTitle>
-                    <p className="text-sm font-medium text-primary">
+                    <CardTitle className="text-lg font-serif font-bold text-foreground">
+                      {m.title}
+                    </CardTitle>
+                    <p className="text-sm font-semibold text-primary mt-1">
                       Com {mentor?.name || m.mentor_name}
                     </p>
                   </div>
-                  {!m.is_free && (
-                    <Badge className="bg-amber-100 text-amber-800 border-none shrink-0">
+                  {!m.is_free && photoUrl && (
+                    <Badge className="bg-primary/20 text-foreground border-primary/30 rounded-full font-semibold px-2.5 py-1 text-xs border shrink-0">
                       Assinantes
                     </Badge>
                   )}
                 </div>
               </CardHeader>
               <CardContent className="flex-1">
-                <p className="text-sm text-slate-600 line-clamp-3">{m.description}</p>
+                <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+                  {m.description}
+                </p>
                 {bio && (
-                  <p className="text-xs text-slate-400 line-clamp-2 mt-2">{stripHtml(bio)}</p>
+                  <p className="text-xs text-muted-foreground/80 line-clamp-2 mt-2 italic">
+                    {stripHtml(bio)}
+                  </p>
                 )}
                 {slots.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    <p className="text-xs font-semibold text-slate-700">
-                      Selecione os horarios (20% off em 2+):
+                  <div className="mt-4 space-y-2">
+                    <p className="text-xs font-semibold text-foreground">
+                      Selecione os horários (20% off em 2+):
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {slots.map((slot, i) => {
@@ -135,7 +152,11 @@ export function MentorshipList({ mentorships }: MentorshipListProps) {
                             key={i}
                             type="button"
                             onClick={() => toggleSlot(m.id, slot)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${isSelected ? 'bg-primary text-white border-primary' : 'bg-white text-slate-600 border-slate-200 hover:border-primary hover:text-primary'}`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                              isSelected
+                                ? 'bg-primary text-primary-foreground border-primary font-bold shadow-sm'
+                                : 'bg-card text-foreground border-border hover:border-primary hover:bg-muted'
+                            }`}
                           >
                             <Calendar className="w-3 h-3" />
                             {formatDate(slot.date)}
@@ -147,18 +168,22 @@ export function MentorshipList({ mentorships }: MentorshipListProps) {
                       })}
                     </div>
                     {selected.length >= 2 && (
-                      <p className="text-xs text-emerald-600 font-medium">
+                      <p className="text-xs text-success font-semibold">
                         Desconto de 20% aplicado! Total: {formatBRL(total)}
                       </p>
                     )}
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="flex items-center justify-between border-t pt-4">
-                <span className="text-lg font-bold text-slate-800">
+              <CardFooter className="flex items-center justify-between border-t border-border p-5">
+                <span className="text-lg font-bold text-foreground">
                   {m.is_free ? 'Gratuito' : formatBRL(m.price)}
                 </span>
-                <Button size="sm" onClick={() => handleCheckout(m)}>
+                <Button
+                  size="sm"
+                  onClick={() => handleCheckout(m)}
+                  className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-5 h-10 shadow-sm"
+                >
                   {m.is_free
                     ? 'Agendar'
                     : selected.length >= 2

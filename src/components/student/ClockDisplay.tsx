@@ -25,10 +25,12 @@ export function ClockDisplay() {
 
   return (
     <div className="flex flex-col items-end">
-      <span className="text-2xl font-mono font-bold text-yellow-400 tabular-nums tracking-tight">
+      <span className="text-2xl font-mono font-bold text-foreground tabular-nums tracking-tight">
         {time}
       </span>
-      <span className="text-sm text-slate-300 mt-0.5">{capitalizedDate}</span>
+      <span className="text-xs uppercase tracking-wider text-muted-foreground mt-0.5 font-sans font-medium">
+        {capitalizedDate}
+      </span>
     </div>
   )
 }

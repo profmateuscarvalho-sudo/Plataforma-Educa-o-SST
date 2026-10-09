@@ -37,8 +37,8 @@ export default function StudentLayout() {
   if (loading || !user) return null
   if (user.role !== 'admin' && access.loading)
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-500">Verificando assinatura...</p>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <p className="text-muted-foreground font-medium text-sm">Verificando assinatura...</p>
       </div>
     )
 
@@ -48,27 +48,31 @@ export default function StudentLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="h-14 bg-slate-900 sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 border-b border-white/10">
-        <Link to="/plataforma" className="flex items-center gap-2.5">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <header className="h-16 bg-card sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 border-b border-border shadow-[0_2px_8px_rgba(28,27,24,0.03)]">
+        <Link
+          to="/plataforma"
+          className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
+        >
           <SquareLogo variant="yellow" className="w-8 h-8" />
-          <Logo className="text-white" />
+          <Logo className="text-foreground" />
         </Link>
         <div className="flex items-center gap-3">
           {user.avatar ? (
             <img
               src={pb.files.getUrl(user, user.avatar)}
               alt={user.name}
-              className="w-8 h-8 rounded-full object-cover"
+              className="w-9 h-9 rounded-full object-cover border border-border"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-yellow-400/20 flex items-center justify-center text-yellow-400 font-bold text-xs">
+            <div className="w-9 h-9 rounded-full bg-primary/20 text-foreground font-bold text-xs flex items-center justify-center border border-border">
               {user.name?.charAt(0).toUpperCase()}
             </div>
           )}
           <button
+            type="button"
             onClick={handleSignOut}
-            className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-white/5 transition-colors"
+            className="text-muted-foreground hover:text-danger p-2 rounded-full hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             title="Sair"
           >
             <LogOut className="w-4 h-4" />

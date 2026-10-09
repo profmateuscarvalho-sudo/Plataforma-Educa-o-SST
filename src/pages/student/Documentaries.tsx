@@ -14,7 +14,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel'
-import { Logo } from '@/components/ui/Logos'
+import { Logo, SquareLogo } from '@/components/ui/Logos'
 import { Badge } from '@/components/ui/badge'
 
 export default function StudentDocumentaries() {
@@ -83,7 +83,7 @@ export default function StudentDocumentaries() {
           <ArrowLeft className="w-4 h-4 mr-2" /> Voltar ao Hub
         </Button>
         <div className="hidden sm:flex items-center gap-2.5">
-          <img src="/icon.svg" alt="Educação SST" className="w-8 h-8 object-contain" />
+          <SquareLogo variant="yellow" className="w-8 h-8" />
           <Logo className="text-white drop-shadow-md" />
         </div>
       </div>

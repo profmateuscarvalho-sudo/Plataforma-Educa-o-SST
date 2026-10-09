@@ -1,13 +1,13 @@
 import React from 'react'
-import logoSrc from '@/assets/logo-e-6d011.png'
+import logoSrc from '@/assets/logo-e-4958a.png'
 import { cn } from '@/lib/utils'
 
 export { logoSrc }
 
 /**
- * Speech-bubble logo icon of Educação SST:
- * Amber/yellow rounded square with prolonged curved tail on bottom-left,
- * containing a bold white "E" and a white dot "." at the bottom-right.
+ * Brand logo icon of Educação SST:
+ * Amber/yellow square (#FDB913) where ONLY the bottom-left corner has a large rounded radius
+ * (no speech-bubble tail), containing a bold white "E" and a white dot "." at the bottom-right.
  */
 export function LogoIcon({
   className,
@@ -31,21 +31,16 @@ export function LogoIcon({
       aria-label="Educação SST"
       role="img"
     >
-      {/* Speech-bubble badge: rounded top-left, top-right, bottom-right; extended curved tail at bottom-left */}
+      {/* Yellow shape: square with heavily rounded bottom-left corner (no tail) */}
+      <path d="M 185 185 H 815 V 815 H 360 C 240 815 185 760 185 640 V 185 Z" fill={fillColor} />
+      {/* Bold "E" in white */}
       <path
-        d="M 185 185
-           H 815
-           V 815
-           H 635
-           C 635 815, 340 815, 340 815
-           C 250 815, 185 750, 185 660
-           V 185 Z"
-        fill={fillColor}
-        className="hidden"
+        d="M 335 303 H 635 V 379 H 419 V 454 H 613 V 530 H 419 V 617 H 635 V 693 H 335 Z"
+        fill="#FFFFFF"
       />
-      {/* Exact speech-bubble shape matching the brand mark */}
-      <path d="M 185 185 H 815 V 815 H 340 C 240 815 185 745 185 640 Z" fill={fillColor} />
-      {/* Fallback to render via raster image for pixel-perfect reproduction while retaining SVG scalability */}
+      {/* White dot at bottom right */}
+      <circle cx="704" cy="643" r="52" fill="#FFFFFF" />
+      {/* Render via high-res raster asset for pixel-perfect reproduction */}
       <image href={logoSrc} width="1000" height="1000" preserveAspectRatio="xMidYMid meet" />
     </svg>
   )

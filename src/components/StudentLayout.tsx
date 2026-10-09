@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useStudentAccess } from '@/hooks/use-student-access'
 import { LogOut } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
-import { Logo } from '@/components/ui/Logos'
+import { Logo, SquareLogo } from '@/components/ui/Logos'
 import { WhatsAppFloat } from '@/components/WhatsAppFloat'
 import { AgentChatWidget } from '@/components/AgentChatWidget'
 
@@ -51,7 +51,7 @@ export default function StudentLayout() {
     <div className="min-h-screen bg-slate-50">
       <header className="h-14 bg-slate-900 sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 border-b border-white/10">
         <Link to="/plataforma" className="flex items-center gap-2.5">
-          <img src="/icon.svg" alt="Educação SST" className="w-8 h-8 object-contain" />
+          <SquareLogo variant="yellow" className="w-8 h-8" />
           <Logo className="text-white" />
         </Link>
         <div className="flex items-center gap-3">

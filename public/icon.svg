@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="100%" height="100%">
-  <!-- Speech-bubble rounded container in amber yellow (#FDB913) -->
-  <!-- Top-left, top-right, bottom-right are square/flat edges within the bounding box, bottom-left is curved inward like a speech tail -->
-  <path d="M185 185 H815 V815 H340 C240 815 185 740 185 640 Z" fill="#FDB913"/>
+  <!-- Container in amber yellow (#FDB913): square where ONLY bottom-left corner has a large radius, no speech-bubble tail -->
+  <path d="M185 185 H815 V815 H360 C240 815 185 760 185 640 V185 Z" fill="#FDB913"/>
   
   <!-- Bold "E" in white -->
-  <!-- Vertical stem -->
   <path d="M335 303 H635 V379 H419 V454 H613 V530 H419 V617 H635 V693 H335 Z" fill="#FFFFFF"/>
   
   <!-- Dot at bottom right of the E -->

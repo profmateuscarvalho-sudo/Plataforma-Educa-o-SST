@@ -1,9 +1,7 @@
 import { Course } from '@/types'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { PlayCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { ArrowRight } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 
 export function CourseCard({ course }: { course: Course }) {
@@ -11,52 +9,71 @@ export function CourseCard({ course }: { course: Course }) {
     ? pb.files.getUrl(course, course.thumbnail)
     : 'https://img.usecurling.com/p/600/400?q=education&color=green'
 
+  const planBadgeText = course.is_free ? 'Plano Free' : 'Plano Prata'
+
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group flex flex-col h-full border-slate-100">
-      <div className="relative aspect-[3/2] overflow-hidden">
+    <div className="bg-white rounded-[28px] border border-[#E4DED1] overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300 group">
+      {/* Imagem */}
+      <div className="relative aspect-[16/10] overflow-hidden bg-[#FAF8F3] shrink-0">
         <img
           src={imgUrl}
           alt={course.title}
-          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
-          <Badge variant="secondary" className="bg-white/95 text-secondary font-bold shadow-sm">
-            {course.category}
-          </Badge>
-          {!course.is_free && (
-            <Badge className="bg-amber-100 text-amber-800 font-bold shadow-sm border-none">
-              Acesso para assinantes
-            </Badge>
+        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+          {course.category && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/95 text-[#1C1B18] shadow-sm border border-[#E4DED1]">
+              {course.category}
+            </span>
           )}
+          <span
+            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
+              course.is_free ? 'bg-[#FDBE2D] text-[#1C1B18]' : 'bg-[#173F33] text-[#F4F1E8]'
+            }`}
+          >
+            {planBadgeText}
+          </span>
         </div>
       </div>
-      <CardHeader className="flex-none pb-2">
-        <h3 className="font-serif text-xl font-bold line-clamp-2 leading-tight text-secondary group-hover:text-primary transition-colors">
-          {course.title}
-        </h3>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        <p className="text-sm text-slate-500 line-clamp-3 mb-4">{course.description}</p>
-        <div className="flex items-center gap-4 text-sm font-medium text-slate-600">
-          <div className="flex items-center gap-1.5">
-            <PlayCircle className="w-4 h-4 text-primary" /> Acesso Imediato
-          </div>
+
+      {/* Conteúdo */}
+      <div className="p-6 sm:p-7 flex flex-col flex-grow justify-between space-y-4">
+        <div className="space-y-2">
+          <h3 className="font-serif text-xl sm:text-2xl font-semibold text-[#1C1B18] leading-tight line-clamp-2 group-hover:text-[#173F33] transition-colors">
+            {course.title}
+          </h3>
+          <p className="text-sm text-[#5F5A4F] line-clamp-1 font-normal leading-relaxed">
+            {course.description ||
+              'Curso prático com foco em aplicação profissional na rotina de SST.'}
+          </p>
         </div>
-      </CardContent>
-      <CardFooter className="pt-0 flex-none border-t border-slate-50 mt-auto p-6 flex justify-between items-center">
-        <span className="font-bold text-lg text-primary">
-          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-            course.price || 0,
-          )}
-        </span>
-        <Button
-          asChild
-          variant="outline"
-          className="font-medium hover:bg-primary hover:text-white border-primary text-primary transition-colors"
-        >
-          <Link to={`/cursos/${course.id}`}>Ver Detalhes</Link>
-        </Button>
-      </CardFooter>
-    </Card>
+
+        <div className="pt-2 flex items-center justify-between border-t border-[#E4DED1]">
+          <div>
+            <span className="text-xs uppercase tracking-wider text-[#7F7869] block font-bold">
+              {course.is_free ? 'Incluso' : 'Valor'}
+            </span>
+            <span className="font-bold text-lg sm:text-xl text-[#1C1B18]">
+              {course.is_free
+                ? 'Gratuito'
+                : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    course.price || 0,
+                  )}
+            </span>
+          </div>
+
+          <Button
+            asChild
+            size="default"
+            className="rounded-full font-bold bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] shadow-none h-11 px-5"
+          >
+            <Link to={`/cursos/${course.id}`} className="inline-flex items-center gap-1.5">
+              <span>Ver curso</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

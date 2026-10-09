@@ -5,11 +5,10 @@ import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { SquareLogo } from '@/components/ui/Logos'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { Check, Sparkles, Award, Crown } from 'lucide-react'
+import { Check, Sparkles, Award, Crown, Loader2 } from 'lucide-react'
 import { LocationSelect } from '@/components/LocationSelect'
 import { PasswordStrengthChecker } from '@/components/PasswordStrengthChecker'
 import { useProfessionalTags } from '@/hooks/use-professional-tags'
@@ -166,24 +165,24 @@ export default function Register() {
   const ouroPlan = plans.find((p) => p.name.toLowerCase().includes('ouro') && p.price > 0)
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <Card className="w-full max-w-2xl border border-slate-200 shadow-sm">
-        <CardHeader className="space-y-3 text-center items-center pb-6 border-b border-slate-100">
+    <div className="min-h-[calc(100vh-80px)] bg-[#FAF8F3] flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      {/* Formulário em cartão branco centralizado, raio 28px */}
+      <div className="w-full max-w-2xl bg-white rounded-[28px] border border-[#E4DED1] shadow-[0_16px_36px_rgba(28,27,24,0.06)] p-6 sm:p-10">
+        <div className="space-y-3 text-center flex flex-col items-center pb-6 border-b border-[#E4DED1]">
           <SquareLogo variant="yellow" className="w-14 h-14 mb-1" />
           <div>
-            <CardTitle className="font-serif text-2xl text-secondary">
+            <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-[#1C1B18]">
               {t('auth.register.title')}
-            </CardTitle>
-            <CardDescription className="text-sm mt-1.5">
-              {t('auth.register.subtitle')}
-            </CardDescription>
+            </h1>
+            <p className="text-sm text-[#5F5A4F] mt-1.5">{t('auth.register.subtitle')}</p>
           </div>
-        </CardHeader>
-        <CardContent className="pt-6">
+        </div>
+
+        <div className="pt-6">
           <form onSubmit={handleRegister} className="space-y-5">
             {/* Escolha do Plano */}
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-slate-800">
+              <Label className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]">
                 Escolha o seu plano de acesso
               </Label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -191,119 +190,134 @@ export default function Register() {
                   type="button"
                   onClick={() => setSelectedPlanTier('free')}
                   className={cn(
-                    'p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between relative',
+                    'p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between relative',
                     selectedPlanTier === 'free'
-                      ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                      : 'border-slate-200 bg-white hover:border-slate-300',
+                      ? 'border-[#1C1B18] ring-2 ring-[#FDBE2D] bg-[#FAF8F3]'
+                      : 'border-[#E4DED1] bg-white hover:border-[#1C1B18]',
                   )}
                 >
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-sm flex items-center gap-1.5 text-slate-800">
-                      <Sparkles className="w-4 h-4 text-slate-500" />
+                    <span className="font-bold text-sm flex items-center gap-1.5 text-[#1C1B18]">
+                      <Sparkles className="w-4 h-4 text-[#FDBE2D]" />
                       Free
                     </span>
                     {selectedPlanTier === 'free' && (
-                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">
+                      <span className="w-4 h-4 rounded-full bg-[#1C1B18] text-[#FAF8F3] flex items-center justify-center text-xs">
                         ✓
                       </span>
                     )}
                   </div>
-                  <span className="text-lg font-extrabold text-slate-900">Grátis</span>
-                  <span className="text-[11px] text-slate-500 mt-1">Acesso essencial</span>
+                  <span className="text-lg font-extrabold text-[#1C1B18]">Grátis</span>
+                  <span className="text-[11px] text-[#5F5A4F] mt-1">Acesso essencial</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setSelectedPlanTier('prata')}
                   className={cn(
-                    'p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between relative',
+                    'p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between relative',
                     selectedPlanTier === 'prata'
-                      ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50/40'
-                      : 'border-slate-200 bg-white hover:border-slate-300',
+                      ? 'border-[#173F33] ring-2 ring-[#173F33]/20 bg-[#FAF8F3]'
+                      : 'border-[#E4DED1] bg-white hover:border-[#1C1B18]',
                   )}
                 >
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-sm flex items-center gap-1.5 text-blue-700">
-                      <Award className="w-4 h-4 text-blue-500" />
+                    <span className="font-bold text-sm flex items-center gap-1.5 text-[#173F33]">
+                      <Award className="w-4 h-4 text-[#173F33]" />
                       Prata
                     </span>
                     {selectedPlanTier === 'prata' && (
-                      <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">
+                      <span className="w-4 h-4 rounded-full bg-[#173F33] text-[#F4F1E8] flex items-center justify-center text-xs">
                         ✓
                       </span>
                     )}
                   </div>
-                  <span className="text-lg font-extrabold text-blue-700">
+                  <span className="text-lg font-extrabold text-[#173F33]">
                     {prataPlan ? formatPrice(prataPlan.price) : 'R$ 49,90'}
-                    <span className="text-xs font-normal text-slate-500">/mês</span>
+                    <span className="text-xs font-normal text-[#5F5A4F]">/mês</span>
                   </span>
-                  <span className="text-[11px] text-slate-500 mt-1">Todos os cursos + ao vivo</span>
+                  <span className="text-[11px] text-[#5F5A4F] mt-1">Todos os cursos + ao vivo</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setSelectedPlanTier('ouro')}
                   className={cn(
-                    'p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between relative',
+                    'p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between relative',
                     selectedPlanTier === 'ouro'
-                      ? 'border-amber-500 ring-2 ring-amber-200 bg-amber-50/40'
-                      : 'border-slate-200 bg-white hover:border-slate-300',
+                      ? 'border-[#1C1B18] ring-2 ring-[#FDBE2D] bg-[#FAF8F3]'
+                      : 'border-[#E4DED1] bg-white hover:border-[#1C1B18]',
                   )}
                 >
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-sm flex items-center gap-1.5 text-amber-700">
-                      <Crown className="w-4 h-4 text-amber-500" />
+                    <span className="font-bold text-sm flex items-center gap-1.5 text-[#1C1B18]">
+                      <Crown className="w-4 h-4 text-[#FDBE2D]" />
                       Ouro
                     </span>
                     {selectedPlanTier === 'ouro' && (
-                      <span className="w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs">
+                      <span className="w-4 h-4 rounded-full bg-[#1C1B18] text-[#FDBE2D] flex items-center justify-center text-xs">
                         ✓
                       </span>
                     )}
                   </div>
-                  <span className="text-lg font-extrabold text-amber-700">
+                  <span className="text-lg font-extrabold text-[#1C1B18]">
                     {ouroPlan ? formatPrice(ouroPlan.price) : 'R$ 89,90'}
-                    <span className="text-xs font-normal text-slate-500">/mês</span>
+                    <span className="text-xs font-normal text-[#5F5A4F]">/mês</span>
                   </span>
-                  <span className="text-[11px] text-slate-500 mt-1">Completo + Revista física</span>
+                  <span className="text-[11px] text-[#5F5A4F] mt-1">Completo + Revista física</span>
                 </button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">{t('auth.register.fullName')}</Label>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="name"
+                  className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]"
+                >
+                  {t('auth.register.fullName')}
+                </Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="h-11 bg-white border-slate-200"
+                  className="h-11 bg-[#FAF8F3] border-[#E4DED1] rounded-xl text-[#1C1B18] focus:border-[#1C1B18]"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('auth.register.email')}</Label>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="email"
+                  className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]"
+                >
+                  {t('auth.register.email')}
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11 bg-white border-slate-200"
+                  className="h-11 bg-[#FAF8F3] border-[#E4DED1] rounded-xl text-[#1C1B18] focus:border-[#1C1B18]"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">{t('auth.register.phone')}</Label>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="phone"
+                  className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]"
+                >
+                  {t('auth.register.phone')}
+                </Label>
                 <Input
                   id="phone"
                   value={phone}
                   onChange={(e) => setPhone(formatPhone(e.target.value))}
                   placeholder={t('auth.register.phonePlaceholder')}
                   required
-                  className="h-11 bg-white border-slate-200"
+                  className="h-11 bg-[#FAF8F3] border-[#E4DED1] rounded-xl text-[#1C1B18] focus:border-[#1C1B18]"
                 />
               </div>
               <div className="space-y-0">
@@ -318,8 +332,10 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label>{t('auth.register.professionalProfile')}</Label>
-              <p className="text-xs text-slate-400">{t('auth.register.selectOneOrMore')}</p>
+              <Label className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]">
+                {t('auth.register.professionalProfile')}
+              </Label>
+              <p className="text-xs text-[#7F7869]">{t('auth.register.selectOneOrMore')}</p>
               <div className="flex flex-wrap gap-2">
                 {availableTags.map((tag) => (
                   <button
@@ -327,69 +343,79 @@ export default function Register() {
                     type="button"
                     onClick={() => toggleTag(tag)}
                     className={cn(
-                      'px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5',
+                      'px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-all flex items-center gap-1.5',
                       selectedTags.includes(tag)
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50',
+                        ? 'bg-[#1C1B18] text-[#FAF8F3] border-[#1C1B18]'
+                        : 'bg-[#FAF8F3] text-[#1C1B18] border-[#E4DED1] hover:border-[#1C1B18]',
                     )}
                   >
-                    {selectedTags.includes(tag) && <Check className="w-3.5 h-3.5" />}
+                    {selectedTags.includes(tag) && <Check className="w-3.5 h-3.5 text-[#FDBE2D]" />}
                     {tag}
                   </button>
                 ))}
               </div>
-              {tagsError && (
-                <p className="text-sm font-medium text-destructive mt-1">{tagsError}</p>
-              )}
+              {tagsError && <p className="text-xs font-medium text-[#B4472E] mt-1">{tagsError}</p>}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">{t('auth.register.password')}</Label>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="password"
+                  className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]"
+                >
+                  {t('auth.register.password')}
+                </Label>
                 <Input
                   id="password"
                   type="password"
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}
                   required
-                  className="h-11 bg-white border-slate-200"
+                  className="h-11 bg-[#FAF8F3] border-[#E4DED1] rounded-xl text-[#1C1B18] focus:border-[#1C1B18]"
                 />
                 {pass && <PasswordStrengthChecker password={pass} />}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="passwordConfirm">{t('auth.register.confirmPassword')}</Label>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="passwordConfirm"
+                  className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]"
+                >
+                  {t('auth.register.confirmPassword')}
+                </Label>
                 <Input
                   id="passwordConfirm"
                   type="password"
                   value={passConfirm}
                   onChange={(e) => setPassConfirm(e.target.value)}
                   required
-                  className="h-11 bg-white border-slate-200"
+                  className="h-11 bg-[#FAF8F3] border-[#E4DED1] rounded-xl text-[#1C1B18] focus:border-[#1C1B18]"
                 />
                 {passError && (
-                  <p className="text-sm font-medium text-destructive mt-1">{passError}</p>
+                  <p className="text-xs font-medium text-[#B4472E] mt-1">{passError}</p>
                 )}
               </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 text-base font-bold mt-2"
+              className="w-full h-12 rounded-full text-base font-bold mt-2 bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] shadow-none flex items-center justify-center gap-2"
               disabled={loading}
             >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? t('auth.register.submitting') : t('auth.register.submit')}
             </Button>
-            <div className="text-center">
-              <p className="text-sm text-slate-500">
+
+            <div className="text-center pt-2 border-t border-[#E4DED1]">
+              <p className="text-sm text-[#5F5A4F]">
                 {t('auth.register.hasAccount')}{' '}
-                <Link to="/login" className="text-primary font-bold hover:underline">
+                <Link to="/login" className="text-[#1C1B18] font-bold hover:underline">
                   {t('auth.register.login')}
                 </Link>
               </p>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <SubscriptionCheckoutModal
         isOpen={checkoutModalOpen}

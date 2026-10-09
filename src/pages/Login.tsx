@@ -5,11 +5,10 @@ import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { SquareLogo } from '@/components/ui/Logos'
 import { toast } from '@/hooks/use-toast'
-import { getErrorMessage } from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
+import { Loader2 } from 'lucide-react'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -53,67 +52,86 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="space-y-4 text-center items-center pb-8">
-          <SquareLogo variant="yellow" className="w-16 h-16 mb-2" />
+    <div className="min-h-[calc(100vh-80px)] bg-[#FAF8F3] flex items-center justify-center p-4 sm:p-6">
+      {/* Formulário em cartão branco centralizado, raio 28px */}
+      <div className="w-full max-w-md bg-white rounded-[28px] border border-[#E4DED1] shadow-[0_16px_36px_rgba(28,27,24,0.06)] p-8 sm:p-10">
+        <div className="space-y-3 text-center flex flex-col items-center pb-6">
+          <SquareLogo variant="yellow" className="w-16 h-16 mb-1" />
           <div>
-            <CardTitle className="font-serif text-3xl text-secondary">
+            <h1 className="font-serif text-3xl font-semibold text-[#1C1B18]">
               {t('auth.login.title')}
-            </CardTitle>
-            <CardDescription className="text-base mt-2">{t('auth.login.subtitle')}</CardDescription>
+            </h1>
+            <p className="text-sm text-[#5F5A4F] mt-1.5">{t('auth.login.subtitle')}</p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('auth.login.email')}</Label>
-              <Input
-                id="email"
-                name="user-identifier"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="off"
-                required
-                className="h-12 bg-slate-50"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('auth.login.password')}</Label>
-              <Input
-                id="password"
-                name="access-key"
-                type="password"
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                autoComplete="off"
-                required
-                className="h-12 bg-slate-50"
-              />
-            </div>
-            <Button type="submit" className="w-full h-12 text-lg font-bold" disabled={loading}>
-              {loading ? t('auth.login.submitting') : t('auth.login.submit')}
-            </Button>
-            <div className="text-center">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-primary font-medium hover:underline"
-              >
-                {t('auth.login.forgotPassword')}
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-5" autoComplete="off">
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="email"
+              className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]"
+            >
+              {t('auth.login.email')}
+            </Label>
+            <Input
+              id="email"
+              name="user-identifier"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="off"
+              required
+              className="h-12 bg-[#FAF8F3] border-[#E4DED1] rounded-xl text-[#1C1B18] focus:border-[#1C1B18]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="password"
+              className="text-xs font-bold uppercase tracking-wider text-[#1C1B18]"
+            >
+              {t('auth.login.password')}
+            </Label>
+            <Input
+              id="password"
+              name="access-key"
+              type="password"
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
+              autoComplete="off"
+              required
+              className="h-12 bg-[#FAF8F3] border-[#E4DED1] rounded-xl text-[#1C1B18] focus:border-[#1C1B18]"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full h-12 rounded-full text-base font-bold bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] shadow-none flex items-center justify-center gap-2"
+            disabled={loading}
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {loading ? t('auth.login.submitting') : t('auth.login.submit')}
+          </Button>
+
+          <div className="text-center pt-1">
+            <Link
+              to="/forgot-password"
+              className="text-xs text-[#7F7869] font-medium hover:text-[#1C1B18] transition-colors"
+            >
+              {t('auth.login.forgotPassword')}
+            </Link>
+          </div>
+
+          <div className="text-center pt-3 border-t border-[#E4DED1]">
+            <p className="text-sm text-[#5F5A4F]">
+              {t('auth.login.noAccount')}{' '}
+              <Link to="/register" className="text-[#1C1B18] font-bold hover:underline">
+                {t('auth.login.createNow')}
               </Link>
-            </div>
-            <div className="text-center mt-6">
-              <p className="text-sm text-slate-500">
-                {t('auth.login.noAccount')}{' '}
-                <Link to="/register" className="text-primary font-bold hover:underline">
-                  {t('auth.login.createNow')}
-                </Link>
-              </p>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

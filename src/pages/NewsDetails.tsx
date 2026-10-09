@@ -4,7 +4,7 @@ import { getNewsById } from '@/services/news'
 import { News } from '@/types'
 import pb from '@/lib/pocketbase/client'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, Share2, Instagram, Linkedin } from 'lucide-react'
+import { ChevronLeft, Instagram, Linkedin } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
   Carousel,
@@ -17,6 +17,7 @@ import { setMetaTags, stripHtml } from '@/lib/utils'
 import { PUBLIC_URL, getSharePreviewUrl, getOgPreviewUrl } from '@/lib/constants'
 import { BannerDisplay } from '@/components/BannerDisplay'
 
+// NÃO alterar a lógica de injeção das tags Open Graph
 const injectOGTags = (title: string, desc: string, image: string, url: string) => {
   document.title = title
   const updateMeta = (property: string, content: string) => {
@@ -62,7 +63,7 @@ export default function NewsDetails() {
 
   const shareUrl = getSharePreviewUrl('news', id || '')
   const actualUrl = `${PUBLIC_URL}/noticias/${id}`
-  const ogPreviewUrl = getOgPreviewUrl(`/noticias/${id}`)
+  const _ogPreviewUrl = getOgPreviewUrl(`/noticias/${id}`)
 
   useEffect(() => {
     if (news) {
@@ -81,78 +82,98 @@ export default function NewsDetails() {
   }, [news, ogImageUrl, actualUrl])
 
   if (!news)
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>
+    return (
+      <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[#1C1B18]/20 border-t-[#FDBE2D] rounded-full animate-spin" />
+      </div>
+    )
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <div className="h-96 w-full relative">
-        <img src={coverUrl} alt={news.title} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute inset-0 flex items-end">
-          <div className="container px-4 max-w-4xl mx-auto pb-12">
-            <Button
-              variant="ghost"
-              className="text-white hover:text-white/80 hover:bg-white/10 mb-6 pl-0"
-              asChild
-            >
-              <Link to="/noticias">
-                <ChevronLeft className="w-4 h-4 mr-2" /> Voltar para Notícias
-              </Link>
-            </Button>
-            <div className="flex flex-wrap gap-3 items-center mb-4">
-              {news.category && (
-                <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  {news.category}
-                </span>
-              )}
-              <p className="text-accent font-bold">
-                {new Date(news.created).toLocaleDateString('pt-BR')}
-              </p>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-white leading-tight">
-              {news.title}
-            </h1>
+    <div className="min-h-screen bg-[#FAF8F3] text-[#1C1B18] pb-24">
+      {/* Botão de retorno e cabeçalho editorial com largura max 720px */}
+      <div className="border-b border-[#E4DED1] bg-white">
+        <div className="max-w-[720px] mx-auto px-6 pt-10 pb-12">
+          <Button
+            variant="ghost"
+            className="text-[#7F7869] hover:text-[#1C1B18] hover:bg-[#FAF8F3] -ml-3 mb-6 font-medium rounded-full"
+            asChild
+          >
+            <Link to="/noticias">
+              <ChevronLeft className="w-4 h-4 mr-1.5" /> Voltar para Notícias
+            </Link>
+          </Button>
+
+          <div className="flex flex-wrap gap-3 items-center mb-5">
+            {news.category && (
+              <span className="bg-[#173F33] text-[#F4F1E8] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                {news.category}
+              </span>
+            )}
+            <span className="text-xs sm:text-sm font-mono text-[#7F7869]">
+              {new Date(news.created).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </span>
           </div>
+
+          <h1 className="text-3xl sm:text-4xl md:text-[44px] font-serif font-semibold text-[#1C1B18] leading-[1.15] tracking-tight">
+            {news.title}
+          </h1>
         </div>
       </div>
 
-      <main className="container px-4 py-12 max-w-4xl mx-auto">
+      {/* Imagem de Capa */}
+      {coverUrl && (
+        <div className="max-w-[1000px] mx-auto px-6 pt-8 pb-4">
+          <div className="aspect-[16/9] md:aspect-[21/10] rounded-[28px] overflow-hidden border border-[#E4DED1] bg-white shadow-[0_8px_24px_rgba(28,27,24,0.04)]">
+            <img src={coverUrl} alt={news.title} className="w-full h-full object-cover" />
+          </div>
+        </div>
+      )}
+
+      {/* Conteúdo com largura de leitura de no máximo 720px, corpo em 18px com entrelinha 1.7 */}
+      <main className="max-w-[720px] mx-auto px-6 py-10">
         <div
-          className="prose max-w-none text-slate-700 leading-relaxed lg:prose-lg mb-16"
+          className="text-[#1C1B18] text-[18px] leading-[1.7] space-y-6 [&>p]:leading-[1.7] [&>p]:mb-6 [&>h2]:font-serif [&>h2]:text-2xl [&>h2]:font-semibold [&>h2]:mt-8 [&>h2]:mb-4 [&>h3]:font-serif [&>h3]:text-xl [&>h3]:font-semibold [&>h3]:mt-6 [&>h3]:mb-3 [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:space-y-2 [&>ol]:list-decimal [&>ol]:pl-6 [&>ol]:space-y-2 [&>blockquote]:border-l-4 [&>blockquote]:border-[#FDBE2D] [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-[#5F5A4F]"
           dangerouslySetInnerHTML={{ __html: news.content }}
         />
 
-        <BannerDisplay location="Lateral dos Artigos" className="mb-12 max-w-sm mx-auto" />
+        <BannerDisplay location="Lateral dos Artigos" className="my-10 max-w-sm mx-auto" />
 
         {galleryImages.length > 0 && (
-          <div className="space-y-6 mt-12">
-            <h3 className="text-2xl font-serif font-bold text-secondary border-b pb-4">
-              Galeria de Fotos
-            </h3>
-            <Carousel className="w-full max-w-4xl mx-auto">
+          <div className="space-y-6 my-12 border-t border-[#E4DED1] pt-8">
+            <span className="label-overline">REGISTROS VISUAIS</span>
+            <h3 className="text-2xl font-serif font-semibold text-[#1C1B18]">Galeria de Fotos</h3>
+            <Carousel className="w-full">
               <CarouselContent>
                 {galleryImages.map((img, i) => (
                   <CarouselItem key={i}>
-                    <div className="rounded-xl overflow-hidden bg-slate-900/5 flex items-center justify-center p-2 md:p-4 min-h-[400px] md:min-h-[600px]">
+                    <div className="rounded-[28px] overflow-hidden bg-white border border-[#E4DED1] flex items-center justify-center p-3 max-h-[500px]">
                       <img
                         src={pb.files.getUrl(news, img)}
                         alt={`Galeria ${i + 1}`}
-                        className="w-auto h-auto max-w-full max-h-[70vh] object-contain rounded-lg shadow-sm"
+                        className="w-auto h-auto max-w-full max-h-[460px] object-contain rounded-2xl"
                       />
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-4 bg-black/40 border-0 text-white hover:bg-black/60 hover:text-white" />
-              <CarouselNext className="right-4 bg-black/40 border-0 text-white hover:bg-black/60 hover:text-white" />
+              <CarouselPrevious className="left-4 bg-white/90 border-[#E4DED1] text-[#1C1B18] hover:bg-white" />
+              <CarouselNext className="right-4 bg-white/90 border-[#E4DED1] text-[#1C1B18] hover:bg-white" />
             </Carousel>
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-4 mt-16 pt-8 border-t">
-          <div className="w-full md:w-auto text-lg font-bold font-serif md:mr-4">Compartilhe:</div>
+        {/* Compartilhamento */}
+        <div className="flex flex-wrap items-center gap-3 pt-8 mt-12 border-t border-[#E4DED1]">
+          <span className="text-sm font-bold uppercase tracking-wider text-[#1C1B18] mr-2">
+            Compartilhar:
+          </span>
           <Button
             variant="outline"
+            className="rounded-full border-[#E4DED1] text-[#1C1B18] hover:bg-white hover:text-[#25D366] transition-colors"
             onClick={() =>
               window.open(
                 `https://wa.me/?text=${encodeURIComponent(news.title + ' ' + shareUrl)}`,
@@ -162,8 +183,8 @@ export default function NewsDetails() {
           >
             <svg
               viewBox="0 0 24 24"
-              width="24"
-              height="24"
+              width="18"
+              height="18"
               stroke="currentColor"
               strokeWidth="2"
               fill="none"
@@ -171,12 +192,13 @@ export default function NewsDetails() {
               strokeLinejoin="round"
               className="mr-2 w-4 h-4"
             >
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
             </svg>
             WhatsApp
           </Button>
           <Button
             variant="outline"
+            className="rounded-full border-[#E4DED1] text-[#1C1B18] hover:bg-white transition-colors"
             onClick={() =>
               window.open(
                 `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
@@ -184,18 +206,22 @@ export default function NewsDetails() {
               )
             }
           >
-            <Linkedin className="mr-2 w-4 h-4" />
+            <Linkedin className="mr-2 w-4 h-4 text-[#0A66C2]" />
             LinkedIn
           </Button>
           <Button
             variant="outline"
+            className="rounded-full border-[#E4DED1] text-[#1C1B18] hover:bg-white transition-colors"
             onClick={() => {
               navigator.clipboard.writeText(shareUrl)
-              toast({ title: 'Link copiado!', description: 'Cole no Instagram para compartilhar.' })
+              toast({
+                title: 'Link copiado!',
+                description: 'Cole no Instagram ou redes para compartilhar.',
+              })
             }}
           >
-            <Instagram className="mr-2 w-4 h-4" />
-            Instagram
+            <Instagram className="mr-2 w-4 h-4 text-[#E4405F]" />
+            Copiar Link
           </Button>
         </div>
 

@@ -158,9 +158,12 @@ export default function Index() {
         <div className="max-w-[1200px] mx-auto px-6">
           {/* Selo pílula branco com ponto amarelo */}
           <div className="mb-6 animate-hero-in">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-[#1C1B18] text-xs sm:text-sm font-semibold border border-[#E4DED1] shadow-sm">
+            <span
+              className="inline-flex items-center gap-2 px-4 py-1.5 bg-white text-[#1C1B18] text-xs sm:text-sm font-semibold border border-[#E4DED1] shadow-sm max-w-full"
+              style={{ borderRadius: '20px' }}
+            >
               <span className="w-2 h-2 rounded-full bg-[#FDBE2D] shrink-0" />
-              #SejaEducaçãoSST
+              <span>Profissional de Segurança e Saúde no Trabalho</span>
             </span>
           </div>
 

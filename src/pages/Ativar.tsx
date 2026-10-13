@@ -37,8 +37,6 @@ export default function Ativar() {
           role?: string
           plan_tier?: string
           contract_end_date?: string
-          email_verificado?: boolean
-          verified?: boolean
         } | null
 
         const isPaidTier = currentUser?.plan_tier === 'ouro' || currentUser?.plan_tier === 'prata'
@@ -70,8 +68,6 @@ export default function Ativar() {
       role?: string
       plan_tier?: string
       contract_end_date?: string
-      email_verificado?: boolean
-      verified?: boolean
     } | null
 
     const isPaidTier = currentUser?.plan_tier === 'ouro' || currentUser?.plan_tier === 'prata'

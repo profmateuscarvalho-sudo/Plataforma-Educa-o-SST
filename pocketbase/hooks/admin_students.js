@@ -7,13 +7,7 @@ routerAdd(
     }
 
     try {
-      var records = $app.findRecordsByFilter(
-        'users',
-        "role != 'admin'",
-        '-created',
-        5000,
-        0,
-      )
+      var records = $app.findRecordsByFilter('users', "role != 'admin'", '-created', 5000, 0)
 
       var students = []
       for (var i = 0; i < records.length; i++) {
@@ -28,7 +22,9 @@ routerAdd(
           plan_tier: r.getString('plan_tier'),
           contract_end_date: r.getString('contract_end_date'),
           professional_profile: r.getString('professional_profile'),
-          professional_tags: r.getStringSlice ? r.getStringSlice('professional_tags') : (r.get('professional_tags') || []),
+          professional_tags: r.getStringSlice
+            ? r.getStringSlice('professional_tags')
+            : r.get('professional_tags') || [],
           city: r.getString('city'),
           state: r.getString('state'),
           email_verificado: r.getBool('email_verificado'),

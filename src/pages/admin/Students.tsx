@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table'
 import { getStudents, resendActivationEmail, deleteStudent } from '@/services/users'
 import { User } from '@/types'
+import { formatCivilOrLocalDate, formatCreationDate, isContractActive } from '@/lib/date-utils'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Search, Users, Edit, Mail, Trash2, Loader2 } from 'lucide-react'
@@ -141,7 +142,7 @@ export default function AdminStudents() {
               <TableHeader>
                 <TableRow className="border-slate-200">
                   <TableHead className="text-slate-600">Nome</TableHead>
-                  <TableHead className="text-slate-600">E-mail</TableHead>
+                  <TableHead className="text-slate-600 whitespace-nowrap">E-mail</TableHead>
                   <TableHead className="text-slate-600">Telefone</TableHead>
                   <TableHead className="text-slate-600">Perfis Profissionais</TableHead>
                   <TableHead className="text-slate-600">Cadastro</TableHead>
@@ -153,14 +154,13 @@ export default function AdminStudents() {
               </TableHeader>
               <TableBody>
                 {filtered.map((s) => {
-                  const isActive =
-                    s.contract_end_date && new Date(s.contract_end_date) >= new Date()
+                  const isActive = isContractActive(s.contract_end_date)
                   return (
                     <TableRow key={s.id} className="border-slate-100">
                       <TableCell className="font-medium text-slate-800">
                         {s.name || 'Sem nome'}
                       </TableCell>
-                      <TableCell className="text-slate-600">{s.email}</TableCell>
+                      <TableCell className="text-slate-600">{s.email || '-'}</TableCell>
                       <TableCell className="text-slate-600">{s.phone || '-'}</TableCell>
                       <TableCell>
                         {s.professional_tags?.length ? (
@@ -184,12 +184,10 @@ export default function AdminStudents() {
                         )}
                       </TableCell>
                       <TableCell className="text-slate-500 text-sm">
-                        {new Date(s.created).toLocaleDateString('pt-BR')}
+                        {formatCreationDate(s.created)}
                       </TableCell>
                       <TableCell className="text-slate-500 text-sm">
-                        {s.contract_end_date
-                          ? new Date(s.contract_end_date).toLocaleDateString('pt-BR')
-                          : '-'}
+                        {formatCivilOrLocalDate(s.contract_end_date)}
                       </TableCell>
                       <TableCell>{planBadge(s.plan_tier)}</TableCell>
                       <TableCell>

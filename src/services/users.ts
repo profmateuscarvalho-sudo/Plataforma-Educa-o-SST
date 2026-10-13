@@ -7,7 +7,7 @@ export const getStudents = async () => {
       method: 'GET',
     })
   } catch (err) {
-    // Fallback caso ocorra algum erro na rota dedicada
+    console.warn('Fallback para SDK users em getStudents:', err)
     return await pb.collection('users').getFullList<User>({
       filter: "role != 'admin'",
       sort: '-created',

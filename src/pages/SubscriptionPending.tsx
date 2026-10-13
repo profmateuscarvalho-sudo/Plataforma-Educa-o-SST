@@ -40,8 +40,6 @@ export default function SubscriptionPending() {
       setStatus(s)
 
       const currentUser = pb.authStore.record as {
-        email_verificado?: boolean
-        verified?: boolean
         role?: string
         plan_tier?: string
         contract_end_date?: string
@@ -236,8 +234,6 @@ export default function SubscriptionPending() {
                 setChecking(true)
                 await fetchStatus()
                 const currentUser = pb.authStore.record as {
-                  email_verificado?: boolean
-                  verified?: boolean
                   role?: string
                   plan_tier?: string
                   contract_end_date?: string

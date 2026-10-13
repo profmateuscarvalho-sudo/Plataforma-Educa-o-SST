@@ -79,7 +79,7 @@ export default function StudentLayout() {
           </button>
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 pb-28 sm:pb-32">
         <Outlet />
       </main>
       <WhatsAppFloat />

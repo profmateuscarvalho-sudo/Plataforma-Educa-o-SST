@@ -204,7 +204,7 @@ export default function StudentDashboard() {
     item.thumbnail ? pb.files.getUrl(item, item.thumbnail) : undefined
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-background text-foreground">
+    <div className="min-h-[calc(100vh-64px)] bg-background text-foreground pb-28 sm:pb-32">
       {/* Cabeçalho de boas-vindas: fundo --background, título em Playfair, linha em --muted-foreground, selo pílula amarela com texto tinta */}
       <div className="bg-background border-b border-border py-8 md:py-10">
         <div className="container px-4 max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">

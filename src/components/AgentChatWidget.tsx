@@ -24,6 +24,8 @@ export function AgentChatWidget() {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [usage, setUsage] = useState({ used: 0, limit: 0 })
   const [error, setError] = useState<string | null>(null)
+  const [showTooltip, setShowTooltip] = useState(false)
+  const tooltipRef = useRef<HTMLDivElement>(null)
   const endRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -54,6 +56,36 @@ export function AgentChatWidget() {
       loadHistory()
     }
   }, [user, refreshUsage, loadHistory])
+
+  // Balão de introdução: aparece apenas UMA vez por aluno, fecha em 5s ou ao tocar fora
+  useEffect(() => {
+    if (!user || user.role === 'admin') return
+    const storageKey = `sst_agent_intro_${user.id}`
+    const alreadySeen = localStorage.getItem(storageKey)
+    if (!alreadySeen) {
+      setShowTooltip(true)
+      localStorage.setItem(storageKey, 'true')
+    }
+  }, [user?.id, user?.role])
+
+  useEffect(() => {
+    if (!showTooltip) return
+    const timer = setTimeout(() => {
+      setShowTooltip(false)
+    }, 5000)
+
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+        setShowTooltip(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('pointerdown', handlePointerDown)
+    }
+  }, [showTooltip])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -124,24 +156,32 @@ export function AgentChatWidget() {
 
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 animate-fade-in">
-        <div className="bg-card text-card-foreground px-5 py-3.5 rounded-[22px] shadow-[0_18px_40px_rgba(28,27,24,0.12)] border border-border max-w-[280px]">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-primary shrink-0" />
-            <span className="font-serif font-bold text-sm text-foreground">Agente de IA</span>
+      <div className="fixed bottom-21 right-6 z-40 flex flex-col items-end gap-2 pointer-events-none">
+        {showTooltip && (
+          <div
+            ref={tooltipRef}
+            className="pointer-events-auto bg-card text-card-foreground p-3.5 rounded-2xl shadow-[0_18px_40px_rgba(28,27,24,0.14)] border border-border max-w-[260px] animate-fade-in mb-1"
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span className="font-serif font-bold text-xs text-foreground">Agente de IA</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              Tire suas dúvidas sobre NRs, EPIs, ergonomia e muito mais!
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Tire suas dúvidas sobre NRs, EPIs, ergonomia e muito mais!
-          </p>
-        </div>
+        )}
         <button
           type="button"
-          onClick={() => setIsOpen(true)}
-          className="group relative w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-primary hover:bg-primary/90 shadow-[0_12px_32px_rgba(253,190,45,0.4)] flex items-center justify-center transition-all duration-300 hover:scale-105 border-2 border-background cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          onClick={() => {
+            setShowTooltip(false)
+            setIsOpen(true)
+          }}
+          className="pointer-events-auto group relative w-12 h-12 rounded-full bg-primary hover:bg-primary/90 shadow-[0_10px_24px_rgba(253,190,45,0.35)] flex items-center justify-center transition-all duration-300 hover:scale-105 border-2 border-background cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label="Abrir Agente IA"
         >
-          <Bot className="w-8 h-8 text-primary-foreground transition-transform duration-300 group-hover:scale-110" />
-          <span className="absolute top-0 right-0 w-4 h-4 bg-success rounded-full border-2 border-background animate-pulse" />
+          <Bot className="w-6 h-6 text-foreground transition-transform duration-300 group-hover:scale-110" />
+          <span className="absolute top-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-background animate-pulse" />
         </button>
       </div>
     )

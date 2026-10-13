@@ -2,10 +2,17 @@ import pb from '@/lib/pocketbase/client'
 import { User } from '@/types'
 
 export const getStudents = async () => {
-  return await pb.collection('users').getFullList<User>({
-    filter: "role != 'admin'",
-    sort: '-created',
-  })
+  try {
+    return await pb.send<User[]>('/backend/v1/admin/students', {
+      method: 'GET',
+    })
+  } catch (err) {
+    // Fallback caso ocorra algum erro na rota dedicada
+    return await pb.collection('users').getFullList<User>({
+      filter: "role != 'admin'",
+      sort: '-created',
+    })
+  }
 }
 
 export const getAdmins = async () => {

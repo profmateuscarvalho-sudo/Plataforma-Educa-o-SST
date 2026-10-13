@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { getUserPayments } from '@/services/payments'
 import { getUserSubscriptions, type Subscription } from '@/services/subscriptions'
 import { Payment } from '@/types'
+import { isContractActive } from '@/lib/date-utils'
 
 export type AccessStatus = 'free' | 'owned' | 'subscriber' | 'locked'
 export type PlanTier = 'none' | 'free' | 'prata' | 'ouro'
@@ -47,10 +48,12 @@ export function useStudentAccess() {
     if (user?.role === 'admin') return true
     // Assinatura ativa no banco dá acesso
     if (subscriptions.some((s) => s.status === 'active')) return true
-    // Usuários com plano pago (prata ou ouro)
+    // Usuários com plano pago (prata ou ouro) com contrato não vencido ou sem contrato restrito
+    if (user?.contract_end_date) {
+      return isContractActive(user.contract_end_date)
+    }
+    // Usuários com plano pago ou free sem contract_end_date definido
     if (user?.plan_tier === 'prata' || user?.plan_tier === 'ouro') return true
-    // Usuários com contrato válido
-    if (user?.contract_end_date && new Date(user.contract_end_date) >= new Date()) return true
     // Aluno com plano free tem acesso imediato pelo simples fato de estar autenticado (sem exigir confirmação de e-mail)
     if (user?.plan_tier === 'free' || !user?.plan_tier) return true
     // Pagamentos aprovados anteriores

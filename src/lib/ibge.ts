@@ -1,3 +1,5 @@
+import { getLocalStates, getLocalCitiesByState } from '@/data/brazil-locations'
+
 export interface IBGEState {
   id: number
   sigla: string
@@ -9,16 +11,12 @@ export interface IBGECity {
   nome: string
 }
 
-const BASE_URL = 'https://servicodados.ibge.gov.br/api/v1/localidades'
-
 export async function getStates(): Promise<IBGEState[]> {
-  const res = await fetch(`${BASE_URL}/estados?orderBy=nome`)
-  if (!res.ok) throw new Error('Failed to fetch states')
-  return res.json()
+  // Retorna do arquivo estático local do projeto para não depender da API externa
+  return Promise.resolve(getLocalStates())
 }
 
 export async function getCitiesByState(uf: string): Promise<IBGECity[]> {
-  const res = await fetch(`${BASE_URL}/estados/${uf}/municipios?orderBy=nome`)
-  if (!res.ok) throw new Error('Failed to fetch cities')
-  return res.json()
+  // Retorna do arquivo estático local do projeto para não depender da API externa
+  return Promise.resolve(getLocalCitiesByState(uf))
 }

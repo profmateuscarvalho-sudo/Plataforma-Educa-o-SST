@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/use-auth'
@@ -16,6 +16,47 @@ import { useSubscriptionPlans } from '@/hooks/use-subscription-plans'
 import { SubscriptionPlan } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
+import { RegisterErrorBoundary } from '@/components/RegisterErrorBoundary'
+
+const REGISTER_DRAFT_KEY = 'educacaosst_register_draft'
+
+interface RegisterDraftData {
+  name?: string
+  email?: string
+  phone?: string
+  city?: string
+  state?: string
+  selectedTags?: string[]
+  selectedPlanTier?: 'free' | 'prata' | 'ouro'
+}
+
+function loadRegisterDraft(): RegisterDraftData {
+  try {
+    const raw = sessionStorage.getItem(REGISTER_DRAFT_KEY)
+    if (raw) {
+      return JSON.parse(raw) as RegisterDraftData
+    }
+  } catch (err) {
+    console.warn('Erro ao carregar rascunho de cadastro:', err)
+  }
+  return {}
+}
+
+function saveRegisterDraft(data: RegisterDraftData) {
+  try {
+    sessionStorage.setItem(REGISTER_DRAFT_KEY, JSON.stringify(data))
+  } catch (err) {
+    console.warn('Erro ao salvar rascunho de cadastro:', err)
+  }
+}
+
+function clearRegisterDraft() {
+  try {
+    sessionStorage.removeItem(REGISTER_DRAFT_KEY)
+  } catch (err) {
+    console.warn('Erro ao limpar rascunho de cadastro:', err)
+  }
+}
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -24,7 +65,7 @@ const formatPhone = (value: string) => {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
 }
 
-export default function Register() {
+function RegisterFormContent() {
   const { signUp } = useAuth()
   const navigate = useNavigate()
   const { t } = useTranslation()
@@ -37,21 +78,40 @@ export default function Register() {
     error: plansError,
     refetch: refetchPlans,
   } = useSubscriptionPlans()
-  const [selectedPlanTier, setSelectedPlanTier] = useState<'free' | 'prata' | 'ouro'>('free')
+
+  // Carrega rascunho salvo do sessionStorage (exceto senhas)
+  const draft = useMemo(() => loadRegisterDraft(), [])
+
+  const [selectedPlanTier, setSelectedPlanTier] = useState<'free' | 'prata' | 'ouro'>(
+    draft.selectedPlanTier || 'free',
+  )
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false)
   const [checkoutPlan, setCheckoutPlan] = useState<SubscriptionPlan | null>(null)
 
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [city, setCity] = useState('')
-  const [state, setState] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [name, setName] = useState(draft.name || '')
+  const [email, setEmail] = useState(draft.email || '')
+  const [phone, setPhone] = useState(draft.phone || '')
+  const [city, setCity] = useState(draft.city || '')
+  const [state, setState] = useState(draft.state || '')
+  const [selectedTags, setSelectedTags] = useState<string[]>(draft.selectedTags || [])
   const [pass, setPass] = useState('')
   const [passConfirm, setPassConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [passError, setPassError] = useState('')
   const [tagsError, setTagsError] = useState('')
+
+  // Persiste dados não-sensíveis no sessionStorage à medida que o usuário preenche
+  useEffect(() => {
+    saveRegisterDraft({
+      name,
+      email,
+      phone,
+      city,
+      state,
+      selectedTags,
+      selectedPlanTier,
+    })
+  }, [name, email, phone, city, state, selectedTags, selectedPlanTier])
 
   useEffect(() => {
     if (planId && plans.length > 0) {
@@ -132,6 +192,9 @@ export default function Register() {
         variant: 'destructive',
       })
     } else {
+      // Limpa dados temporários salvos agora que o cadastro foi concluído com sucesso
+      clearRegisterDraft()
+
       toast({
         title: t('auth.register.successTitle'),
         description: t('auth.register.successDesc'),
@@ -465,5 +528,13 @@ export default function Register() {
         plan={checkoutPlan}
       />
     </div>
+  )
+}
+
+export default function Register() {
+  return (
+    <RegisterErrorBoundary>
+      <RegisterFormContent />
+    </RegisterErrorBoundary>
   )
 }

@@ -5,6 +5,7 @@ import { BottomNav } from '@/components/app/BottomNav'
 import { AIFloatingButton } from '@/components/app/AIFloatingButton'
 import { InstallPrompt } from '@/components/app/InstallPrompt'
 import { subscribePush } from '@/services/appService'
+import { registerAppServiceWorker, isPreviewOrEditorEnvironment } from '@/lib/pwa'
 
 /**
  * Root layout for the /app mobile route. Guards auth (redirecting to /login
@@ -24,13 +25,9 @@ export default function AppLayout() {
     }
   }, [user, loading, navigate])
 
-  // Register the service worker for offline reading (PWA).
+  // Service Worker é registrado de forma centralizada e segura (ignora preview/editor)
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {
-        /* offline not available — ignore */
-      })
-    }
+    registerAppServiceWorker()
   }, [])
 
   // Subscribe the browser to push notifications (best-effort, silent fail).
@@ -39,6 +36,7 @@ export default function AppLayout() {
     ;(async () => {
       if (!user) return
       try {
+        if (isPreviewOrEditorEnvironment()) return
         const reg = await navigator.serviceWorker?.ready
         if (!reg) return
         if (Notification.permission === 'default') {

@@ -5,7 +5,11 @@ import './main.css'
 import './app.css'
 import './i18n'
 
+import { registerAppServiceWorker } from './lib/pwa'
+
 // PWA manifest / theme-color / apple-touch-icon are declared in index.html.
+// Registra o Service Worker (com checagem de preview/iframe e controle de atualização).
+registerAppServiceWorker()
 
 // @skip-protected: Do not remove. Required for React rendering.
 createRoot(document.getElementById('root')!).render(<App />)

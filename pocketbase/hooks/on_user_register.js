@@ -17,6 +17,35 @@ onRecordCreateRequest((e) => {
     e.record.set('subscription_billing', 'none')
   }
 
+  // Todo cadastro novo nasce ATIVO com validade de +1 ano no fuso America/Sao_Paulo (UTC-3)
+  // Cálculo pelas partes civis de São Paulo sem setFullYear em UTC
+  var now = new Date()
+  var utc = now.getTime() + now.getTimezoneOffset() * 60000
+  var spDate = new Date(utc - 3 * 3600000)
+  var spYear = spDate.getUTCFullYear() + 1
+  var spMonth = spDate.getUTCMonth() + 1
+  var spDay = spDate.getUTCDate()
+  // Ajuste bissexto para 29 de fevereiro caso ocorra
+  if (
+    spMonth === 2 &&
+    spDay === 29 &&
+    (spYear % 4 !== 0 || (spYear % 100 === 0 && spYear % 400 !== 0))
+  ) {
+    spDay = 28
+  }
+  var contractEndDate =
+    spYear +
+    '-' +
+    (spMonth < 10 ? '0' + spMonth : '' + spMonth) +
+    '-' +
+    (spDay < 10 ? '0' + spDay : '' + spDay)
+
+  if (!e.record.getString('contract_end_date')) {
+    e.record.set('contract_end_date', contractEndDate)
+  }
+  e.record.set('email_verificado', true)
+  e.record.setVerified(true)
+
   e.next()
 
   var userId = e.record.id

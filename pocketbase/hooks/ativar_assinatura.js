@@ -170,12 +170,22 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       }
       user.set('plan_tier', tier)
 
-      var baseDate = new Date()
-      baseDate.setFullYear(baseDate.getFullYear() + 1)
-      var fMonth = baseDate.getMonth() + 1
-      var fDay = baseDate.getDate()
+      // Fuso America/Sao_Paulo (UTC-3) por partes civis
+      var nowFree = new Date()
+      var utcFree = nowFree.getTime() + nowFree.getTimezoneOffset() * 60000
+      var spFree = new Date(utcFree - 3 * 3600000)
+      var fYear = spFree.getUTCFullYear() + 1
+      var fMonth = spFree.getUTCMonth() + 1
+      var fDay = spFree.getUTCDate()
+      if (
+        fMonth === 2 &&
+        fDay === 29 &&
+        (fYear % 4 !== 0 || (fYear % 100 === 0 && fYear % 400 !== 0))
+      ) {
+        fDay = 28
+      }
       var fDateStr =
-        baseDate.getFullYear() +
+        fYear +
         '-' +
         (fMonth < 10 ? '0' + fMonth : '' + fMonth) +
         '-' +
@@ -333,30 +343,58 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
         user.set('plan_tier', paidTier)
         user.set('subscription_billing', billingCycle)
 
-        // Calcula contract_end_date
-        var paidBaseDate = new Date()
-        var currentEnd = user.getString('contract_end_date')
-        if (currentEnd) {
-          var existing = new Date(currentEnd)
-          if (existing > paidBaseDate) {
-            paidBaseDate = existing
+        // Calcula contract_end_date no fuso America/Sao_Paulo (UTC-3)
+        var nowPaid = new Date()
+        var utcPaid = nowPaid.getTime() + nowPaid.getTimezoneOffset() * 60000
+        var spPaid = new Date(utcPaid - 3 * 3600000)
+
+        var curEndStr = user.getString('contract_end_date')
+        var baseYear = spPaid.getUTCFullYear()
+        var baseMonth = spPaid.getUTCMonth() + 1
+        var baseDay = spPaid.getUTCDate()
+
+        if (curEndStr && /^\d{4}-\d{2}-\d{2}/.test(curEndStr)) {
+          var parts = curEndStr.substring(0, 10).split('-')
+          var cY = parseInt(parts[0], 10)
+          var cM = parseInt(parts[1], 10)
+          var cD = parseInt(parts[2], 10)
+          if (
+            cY > baseYear ||
+            (cY === baseYear && cM > baseMonth) ||
+            (cY === baseYear && cM === baseMonth && cD > baseDay)
+          ) {
+            baseYear = cY
+            baseMonth = cM
+            baseDay = cD
           }
         }
 
+        var targetYear = baseYear
+        var targetMonth = baseMonth
+        var targetDay = baseDay
+
         if (billingCycle === 'yearly') {
-          paidBaseDate.setFullYear(paidBaseDate.getFullYear() + 1)
+          targetYear += 1
         } else {
-          paidBaseDate.setMonth(paidBaseDate.getMonth() + 1)
+          targetMonth += 1
+          if (targetMonth > 12) {
+            targetYear += 1
+            targetMonth = 1
+          }
         }
 
-        var pMonth = paidBaseDate.getMonth() + 1
-        var pDay = paidBaseDate.getDate()
+        // Ajusta limites de dias do mês
+        var daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate()
+        if (targetDay > daysInTargetMonth) {
+          targetDay = daysInTargetMonth
+        }
+
         var pDateStr =
-          paidBaseDate.getFullYear() +
+          targetYear +
           '-' +
-          (pMonth < 10 ? '0' + pMonth : '' + pMonth) +
+          (targetMonth < 10 ? '0' + targetMonth : '' + targetMonth) +
           '-' +
-          (pDay < 10 ? '0' + pDay : '' + pDay)
+          (targetDay < 10 ? '0' + targetDay : '' + targetDay)
 
         user.set('contract_end_date', pDateStr)
         $app.save(user)

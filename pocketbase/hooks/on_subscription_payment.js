@@ -105,29 +105,57 @@ onRecordAfterUpdateSuccess((e) => {
   var apiKey = $secrets.get('BREVO_API_KEY')
 
   try {
-    var baseDate = new Date()
+    // Cálculo da validade no fuso America/Sao_Paulo (UTC-3) por partes civis
+    var nowSub = new Date()
+    var utcSub = nowSub.getTime() + nowSub.getTimezoneOffset() * 60000
+    var spSub = new Date(utcSub - 3 * 3600000)
+
     var currentEnd = user.getString('contract_end_date')
-    if (currentEnd) {
-      var existing = new Date(currentEnd)
-      if (existing > baseDate) {
-        baseDate = existing
+    var baseYear = spSub.getUTCFullYear()
+    var baseMonth = spSub.getUTCMonth() + 1
+    var baseDay = spSub.getUTCDate()
+
+    if (currentEnd && /^\d{4}-\d{2}-\d{2}/.test(currentEnd)) {
+      var cParts = currentEnd.substring(0, 10).split('-')
+      var cY = parseInt(cParts[0], 10)
+      var cM = parseInt(cParts[1], 10)
+      var cD = parseInt(cParts[2], 10)
+      if (
+        cY > baseYear ||
+        (cY === baseYear && cM > baseMonth) ||
+        (cY === baseYear && cM === baseMonth && cD > baseDay)
+      ) {
+        baseYear = cY
+        baseMonth = cM
+        baseDay = cD
       }
     }
 
+    var targetYear = baseYear
+    var targetMonth = baseMonth
+    var targetDay = baseDay
+
     if (billingCycle === 'yearly') {
-      baseDate.setFullYear(baseDate.getFullYear() + 1)
+      targetYear += 1
     } else {
-      baseDate.setMonth(baseDate.getMonth() + 1)
+      targetMonth += 1
+      if (targetMonth > 12) {
+        targetYear += 1
+        targetMonth = 1
+      }
     }
 
-    var month = baseDate.getMonth() + 1
-    var day = baseDate.getDate()
+    var daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate()
+    if (targetDay > daysInTargetMonth) {
+      targetDay = daysInTargetMonth
+    }
+
     var dateStr =
-      baseDate.getFullYear() +
+      targetYear +
       '-' +
-      (month < 10 ? '0' + month : '' + month) +
+      (targetMonth < 10 ? '0' + targetMonth : '' + targetMonth) +
       '-' +
-      (day < 10 ? '0' + day : '' + day)
+      (targetDay < 10 ? '0' + targetDay : '' + targetDay)
 
     user.set('contract_end_date', dateStr)
     user.set('plan_tier', tier)

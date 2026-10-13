@@ -239,29 +239,56 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         if (tier !== 'free') {
           // Idempotência: só altera contract_end_date se ainda não estiver pago
           if (!alreadyPaid) {
-            var baseDate = new Date()
+            var nowIpag = new Date()
+            var utcIpag = nowIpag.getTime() + nowIpag.getTimezoneOffset() * 60000
+            var spIpag = new Date(utcIpag - 3 * 3600000)
+
             var currentEnd = user.getString('contract_end_date')
-            if (currentEnd) {
-              var existing = new Date(currentEnd)
-              if (existing > baseDate) {
-                baseDate = existing
+            var baseYear = spIpag.getUTCFullYear()
+            var baseMonth = spIpag.getUTCMonth() + 1
+            var baseDay = spIpag.getUTCDate()
+
+            if (currentEnd && /^\d{4}-\d{2}-\d{2}/.test(currentEnd)) {
+              var cParts = currentEnd.substring(0, 10).split('-')
+              var cY = parseInt(cParts[0], 10)
+              var cM = parseInt(cParts[1], 10)
+              var cD = parseInt(cParts[2], 10)
+              if (
+                cY > baseYear ||
+                (cY === baseYear && cM > baseMonth) ||
+                (cY === baseYear && cM === baseMonth && cD > baseDay)
+              ) {
+                baseYear = cY
+                baseMonth = cM
+                baseDay = cD
               }
             }
 
+            var targetYear = baseYear
+            var targetMonth = baseMonth
+            var targetDay = baseDay
+
             if (billingCycle === 'yearly') {
-              baseDate.setFullYear(baseDate.getFullYear() + 1)
+              targetYear += 1
             } else {
-              baseDate.setMonth(baseDate.getMonth() + 1)
+              targetMonth += 1
+              if (targetMonth > 12) {
+                targetYear += 1
+                targetMonth = 1
+              }
             }
 
-            var month = baseDate.getMonth() + 1
-            var day = baseDate.getDate()
+            var daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate()
+            if (targetDay > daysInTargetMonth) {
+              targetDay = daysInTargetMonth
+            }
+
             var dateStr =
-              baseDate.getFullYear() +
+              targetYear +
               '-' +
-              (month < 10 ? '0' + month : '' + month) +
+              (targetMonth < 10 ? '0' + targetMonth : '' + targetMonth) +
               '-' +
-              (day < 10 ? '0' + day : '' + day)
+              (targetDay < 10 ? '0' + targetDay : '' + targetDay)
 
             user.set('contract_end_date', dateStr)
           }
@@ -807,31 +834,58 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
         if (tier !== 'free') {
           // Idempotência: só altera contract_end_date se ainda não estiver pago
           if (!alreadyPaid) {
-            var baseDate = new Date()
-            var currentEnd = user.getString('contract_end_date')
-            if (currentEnd) {
-              var existing = new Date(currentEnd)
-              if (existing > baseDate) {
-                baseDate = existing
+            var nowIpag2 = new Date()
+            var utcIpag2 = nowIpag2.getTime() + nowIpag2.getTimezoneOffset() * 60000
+            var spIpag2 = new Date(utcIpag2 - 3 * 3600000)
+
+            var currentEnd2 = user.getString('contract_end_date')
+            var baseYear2 = spIpag2.getUTCFullYear()
+            var baseMonth2 = spIpag2.getUTCMonth() + 1
+            var baseDay2 = spIpag2.getUTCDate()
+
+            if (currentEnd2 && /^\d{4}-\d{2}-\d{2}/.test(currentEnd2)) {
+              var cParts2 = currentEnd2.substring(0, 10).split('-')
+              var cY2 = parseInt(cParts2[0], 10)
+              var cM2 = parseInt(cParts2[1], 10)
+              var cD2 = parseInt(cParts2[2], 10)
+              if (
+                cY2 > baseYear2 ||
+                (cY2 === baseYear2 && cM2 > baseMonth2) ||
+                (cY2 === baseYear2 && cM2 === baseMonth2 && cD2 > baseDay2)
+              ) {
+                baseYear2 = cY2
+                baseMonth2 = cM2
+                baseDay2 = cD2
               }
             }
 
+            var targetYear2 = baseYear2
+            var targetMonth2 = baseMonth2
+            var targetDay2 = baseDay2
+
             if (billingCycle === 'yearly') {
-              baseDate.setFullYear(baseDate.getFullYear() + 1)
+              targetYear2 += 1
             } else {
-              baseDate.setMonth(baseDate.getMonth() + 1)
+              targetMonth2 += 1
+              if (targetMonth2 > 12) {
+                targetYear2 += 1
+                targetMonth2 = 1
+              }
             }
 
-            var month = baseDate.getMonth() + 1
-            var day = baseDate.getDate()
-            var dateStr =
-              baseDate.getFullYear() +
-              '-' +
-              (month < 10 ? '0' + month : '' + month) +
-              '-' +
-              (day < 10 ? '0' + day : '' + day)
+            var daysInTargetMonth2 = new Date(Date.UTC(targetYear2, targetMonth2, 0)).getUTCDate()
+            if (targetDay2 > daysInTargetMonth2) {
+              targetDay2 = daysInTargetMonth2
+            }
 
-            user.set('contract_end_date', dateStr)
+            var dateStr2 =
+              targetYear2 +
+              '-' +
+              (targetMonth2 < 10 ? '0' + targetMonth2 : '' + targetMonth2) +
+              '-' +
+              (targetDay2 < 10 ? '0' + targetDay2 : '' + targetDay2)
+
+            user.set('contract_end_date', dateStr2)
           }
 
           user.set('plan_tier', tier)

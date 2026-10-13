@@ -158,29 +158,59 @@ routerAdd(
                   userRecord.set('subscription_billing', billingCycle)
                   userRecord.set('email_verificado', true)
 
-                  var bDate = new Date()
+                  // Cálculo no fuso America/Sao_Paulo (UTC-3) por partes civis
+                  var nowPending = new Date()
+                  var utcPending = nowPending.getTime() + nowPending.getTimezoneOffset() * 60000
+                  var spPending = new Date(utcPending - 3 * 3600000)
+
                   var currentEndDateStr = userRecord.getString('contract_end_date')
-                  if (currentEndDateStr) {
-                    var existingDate = new Date(currentEndDateStr)
-                    if (existingDate > bDate) {
-                      bDate = existingDate
+                  var baseYear = spPending.getUTCFullYear()
+                  var baseMonth = spPending.getUTCMonth() + 1
+                  var baseDay = spPending.getUTCDate()
+
+                  if (currentEndDateStr && /^\d{4}-\d{2}-\d{2}/.test(currentEndDateStr)) {
+                    var cParts = currentEndDateStr.substring(0, 10).split('-')
+                    var cY = parseInt(cParts[0], 10)
+                    var cM = parseInt(cParts[1], 10)
+                    var cD = parseInt(cParts[2], 10)
+                    if (
+                      cY > baseYear ||
+                      (cY === baseYear && cM > baseMonth) ||
+                      (cY === baseYear && cM === baseMonth && cD > baseDay)
+                    ) {
+                      baseYear = cY
+                      baseMonth = cM
+                      baseDay = cD
                     }
                   }
 
+                  var targetYear = baseYear
+                  var targetMonth = baseMonth
+                  var targetDay = baseDay
+
                   if (billingCycle === 'yearly') {
-                    bDate.setFullYear(bDate.getFullYear() + 1)
+                    targetYear += 1
                   } else {
-                    bDate.setMonth(bDate.getMonth() + 1)
+                    targetMonth += 1
+                    if (targetMonth > 12) {
+                      targetYear += 1
+                      targetMonth = 1
+                    }
                   }
 
-                  var bMonth = bDate.getMonth() + 1
-                  var bDay = bDate.getDate()
+                  var daysInTargetMonth = new Date(
+                    Date.UTC(targetYear, targetMonth, 0),
+                  ).getUTCDate()
+                  if (targetDay > daysInTargetMonth) {
+                    targetDay = daysInTargetMonth
+                  }
+
                   var bDateStr =
-                    bDate.getFullYear() +
+                    targetYear +
                     '-' +
-                    (bMonth < 10 ? '0' + bMonth : '' + bMonth) +
+                    (targetMonth < 10 ? '0' + targetMonth : '' + targetMonth) +
                     '-' +
-                    (bDay < 10 ? '0' + bDay : '' + bDay)
+                    (targetDay < 10 ? '0' + targetDay : '' + targetDay)
 
                   userRecord.set('contract_end_date', bDateStr)
                   $app.save(userRecord)

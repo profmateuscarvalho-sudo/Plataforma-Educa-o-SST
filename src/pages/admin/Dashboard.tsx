@@ -9,20 +9,26 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ leads: 0, courses: 0, students: 0, activeSubscribers: 0 })
 
   useEffect(() => {
-    Promise.all([getLeads(), getCourses(), getStudents()]).then(
-      ([leadsRes, coursesRes, studentsRes]) => {
-        const now = new Date()
-        const active = studentsRes.filter(
-          (s) => s.contract_end_date && new Date(s.contract_end_date) > now,
-        ).length
-        setStats({
-          leads: leadsRes.length,
-          courses: coursesRes.length,
-          students: studentsRes.length,
-          activeSubscribers: active,
-        })
-      },
-    )
+    let cancelled = false
+    Promise.allSettled([getLeads(), getCourses(), getStudents()]).then((results) => {
+      if (cancelled) return
+      const [leadsRes, coursesRes, studentsRes] = results.map((r) =>
+        r.status === 'fulfilled' ? r.value : [],
+      )
+      const now = new Date()
+      const active = studentsRes.filter(
+        (s) => s.contract_end_date && new Date(s.contract_end_date) > now,
+      ).length
+      setStats({
+        leads: leadsRes.length,
+        courses: coursesRes.length,
+        students: studentsRes.length,
+        activeSubscribers: active,
+      })
+    })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   return (

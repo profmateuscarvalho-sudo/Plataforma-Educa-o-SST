@@ -84,6 +84,8 @@ import AdminBanners from './pages/admin/Banners'
 import AdminKnowledgeBase from './pages/admin/KnowledgeBase'
 import AdminComercial from './pages/admin/Comercial'
 import AdminComercialClientes from './pages/admin/ComercialClientes'
+import DiaDoTst from './pages/DiaDoTst'
+import AdminDiaTst from './pages/admin/DiaTst'
 import Convite from './pages/Convite'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import { FEATURE_FLAGS } from '@/lib/constants'
@@ -127,6 +129,7 @@ const App = () => (
               <Route path="/documentarios/:id" element={<DocumentaryPitch />} />
               <Route path="/convite" element={<Convite />} />
               <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
+              <Route path="/dia-do-tst" element={<DiaDoTst />} />
             </Route>
 
             <Route path="/plataforma/documentarios/:id" element={<DocumentaryViewer />} />
@@ -183,6 +186,7 @@ const App = () => (
               />
               <Route path="/admin/noticias" element={<AdminNews />} />
               <Route path="/admin/leads" element={<AdminLeads />} />
+              <Route path="/admin/dia-tst" element={<AdminDiaTst />} />
               <Route path="/admin/leads/import" element={<AdminLeadImport />} />
               <Route path="/admin/pagamentos" element={<AdminPayments />} />
               <Route path="/admin/lives" element={<AdminLives />} />

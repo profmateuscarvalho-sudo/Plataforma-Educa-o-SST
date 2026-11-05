@@ -76,6 +76,13 @@ export default {
           DEFAULT: 'hsl(var(--danger))',
           foreground: '#FFFFFF',
         },
+        /* Campanha Dia do TST — verde-escuro e laranja da marca */
+        laranja: {
+          DEFAULT: '#F97316',
+          escuro: '#C2410C',
+        },
+        'verde-escuro': '#173F33',
+        ink: '#1C1B18',
       },
       borderRadius: {
         lg: 'var(--radius)',

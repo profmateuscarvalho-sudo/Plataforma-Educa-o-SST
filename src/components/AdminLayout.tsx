@@ -25,6 +25,7 @@ import {
   ChevronDown,
   BarChart3,
   Handshake,
+  Award,
 } from 'lucide-react'
 
 type MenuItem = {
@@ -66,6 +67,10 @@ const sections: MenuSection[] = [
       { label: 'Pagamentos', icon: BookOpen, path: '/admin/pagamentos' },
       { label: 'Leads', icon: Users, path: '/admin/leads' },
     ],
+  },
+  {
+    title: 'Campanhas',
+    items: [{ label: 'Campanha Dia do TST', icon: Award, path: '/admin/dia-tst' }],
   },
   {
     title: 'Comercial',

@@ -37,8 +37,7 @@ routerAdd('GET', '/backend/v1/og-preview', (e) => {
       if (plainText.length > 155) description += '...'
       const imgField = record.getString('image')
       if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + imgField
       } else {
         const galleryField = record.get('images')
         let firstImage = ''
@@ -53,8 +52,7 @@ routerAdd('GET', '/backend/v1/og-preview', (e) => {
           }
         }
         if (firstImage) {
-          image =
-            pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + firstImage
+          image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + firstImage
         } else {
           image = 'https://img.usecurling.com/p/1200/630?q=industry%20safety&color=gray'
         }
@@ -67,8 +65,7 @@ routerAdd('GET', '/backend/v1/og-preview', (e) => {
       description = record.getString('description') || 'Curso de Seguranca e Saude no Trabalho.'
       const imgField = record.getString('thumbnail')
       if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + imgField
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=education%20course&color=green'
       }
@@ -82,8 +79,7 @@ routerAdd('GET', '/backend/v1/og-preview', (e) => {
         description = record.getString('summary') || 'Edicao da Revista SST.'
         const imgField = record.getString('thumbnail')
         if (imgField) {
-          image =
-            pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+          image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + imgField
         } else {
           image = 'https://img.usecurling.com/p/1200/630?q=magazine%20cover&color=blue'
         }
@@ -125,8 +121,7 @@ routerAdd('GET', '/backend/v1/og-preview', (e) => {
       if (plainText.length > 155) description += '...'
       const imgField = record.getString('banner')
       if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + imgField
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=exam%20study&color=blue'
       }
@@ -138,8 +133,7 @@ routerAdd('GET', '/backend/v1/og-preview', (e) => {
       description = record.getString('description') || 'Documentario em SST.'
       const photos = record.get('presentation_photos')
       if (Array.isArray(photos) && photos.length > 0) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + photos[0]
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + photos[0]
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=documentary%20film&color=gray'
       }
@@ -149,6 +143,13 @@ routerAdd('GET', '/backend/v1/og-preview', (e) => {
       title = 'Mentorias SST | Educacao SST'
       description = 'Mentorias especializadas em Seguranca e Saude no Trabalho.'
       redirectUrl = siteUrl + '/mentorias'
+      ogType = 'website'
+    } else if (parts[0] === 'dia-do-tst') {
+      title = 'Sou Educação SST — Dia do TST'
+      description =
+        'Conte por que você escolheu ser TST, monte sua capa e concorra a livros e EPIs.'
+      image = 'https://img.usecurling.com/p/1200/630?q=safety%20helmet%20worker&color=green'
+      redirectUrl = siteUrl + '/dia-do-tst'
       ogType = 'website'
     }
   } catch (err) {

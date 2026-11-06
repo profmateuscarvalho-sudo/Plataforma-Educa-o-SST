@@ -40,6 +40,7 @@ export default function Index() {
   const [latestSimuladoTitle, setLatestSimuladoTitle] = useState<string | null>(null)
   const [nextLive, setNextLive] = useState<LiveSession | null>(null)
   const [nextLiveTitle, setNextLiveTitle] = useState<string | null>(null)
+  const [studentCount, setStudentCount] = useState<number | null>(null)
 
   // Redireciona estudante logado para a plataforma
   useEffect(() => {
@@ -98,6 +99,16 @@ export default function Index() {
         }
       })
       .catch(() => {})
+
+    // 6. Alunos ativos (social proof com dado real da coleção users)
+    pb.collection('users')
+      .getList(1, 1, { filter: "role = 'student'" })
+      .then((res) => {
+        if (res.totalItems > 0) {
+          setStudentCount(res.totalItems)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   // Extrai número da revista mais recente (ex: "Revista nº32" -> "32")
@@ -148,34 +159,65 @@ export default function Index() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FAF8F3] text-[#1C1B18] overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
       <BannerDisplay location="Home - Topo" className="px-6 pt-4 max-w-[1200px] mx-auto w-full" />
 
       {/* =========================================================================
-          SEÇÃO 1: TOPO (fundo --background #FAF8F3)
+          SEÇÃO 1: TOPO / PRIMEIRA DOBRA (fundo --background #FAF8F3)
           ========================================================================= */}
-      <section className="pt-10 sm:pt-14 pb-[72px] lg:pb-[112px] relative overflow-hidden">
-        <div className="max-w-[1200px] mx-auto px-6">
-          {/* Selo pílula branco com ponto amarelo */}
-          <div className="mb-6 animate-hero-in">
+      <section className="pt-8 sm:pt-12 lg:pt-14 pb-[72px] lg:pb-[104px] relative overflow-hidden bg-background">
+        {/* Fundo editorial sutil e profissional: micro-grid discreto e acento de luz suave em tinta/amarelo */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 select-none overflow-hidden"
+        >
+          {/* Grade quadriculada sutil com máscara radial suave para suavizar as bordas */}
+          <div
+            className="absolute inset-0 opacity-[0.45] dark:opacity-[0.25]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, currentColor 0.75px, transparent 0.75px)',
+              backgroundSize: '24px 24px',
+              maskImage: 'radial-gradient(ellipse 85% 65% at 50% 20%, black 20%, transparent 80%)',
+              WebkitMaskImage:
+                'radial-gradient(ellipse 85% 65% at 50% 20%, black 20%, transparent 80%)',
+              color: 'hsl(var(--foreground) / 0.12)',
+            }}
+          />
+
+          {/* Glow suave no topo direito (dourado/amarelo característico da marca) */}
+          <div
+            className="absolute -top-24 -right-24 w-[360px] sm:w-[520px] h-[360px] sm:h-[520px] rounded-full blur-3xl opacity-35 dark:opacity-20"
+            style={{
+              background:
+                'radial-gradient(circle, #FDBE2D 0%, rgba(253, 190, 45, 0.2) 45%, transparent 70%)',
+            }}
+          />
+
+          {/* Linha fina decorativa horizontal sutil no topo do hero */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[1px] bg-gradient-to-r from-transparent via-border to-transparent" />
+        </div>
+
+        <div className="max-w-[1200px] mx-auto px-6 relative z-10">
+          {/* Selo pílula branco com ponto amarelo + hashtag da campanha */}
+          <div className="mb-5 sm:mb-6 animate-hero-in">
             <span
-              className="inline-flex items-center gap-2 px-4 py-1.5 bg-white text-[#1C1B18] text-xs sm:text-sm font-semibold border border-[#E4DED1] shadow-sm max-w-full"
+              className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 bg-card text-foreground text-xs sm:text-sm font-semibold border border-border shadow-sm max-w-full hover:border-[#FDBE2D]/60 transition-colors"
               style={{ borderRadius: '20px' }}
             >
-              <span className="w-2 h-2 rounded-full bg-[#FDBE2D] shrink-0" />
-              <span>#SejaEducaçãoSST</span>
+              <span className="w-2 h-2 rounded-full bg-[#FDBE2D] shrink-0 animate-pulse" />
+              <span className="tracking-tight">#SejaEducaçãoSST</span>
             </span>
           </div>
 
-          {/* Título enorme (h1) */}
-          <h1 className="title-h1-home text-[#1C1B18] text-foreground mb-12 sm:mb-16">
-            <span className="block not-italic font-extrabold text-[#1C1B18] text-foreground">
+          {/* Título de impacto (h1) em Playfair Display 800 */}
+          <h1 className="title-h1-home text-foreground mb-10 sm:mb-14 lg:mb-16 max-w-4xl">
+            <span className="block not-italic font-extrabold text-foreground">
               O ecossistema de aprendizagem
             </span>
-            <span className="block italic font-extrabold text-[#1C1B18] text-foreground mt-1">
+            <span className="block italic font-extrabold text-foreground mt-1 sm:mt-1.5">
               para o{' '}
               <span
-                className="inline-block relative"
+                className="inline-block relative pb-0.5 sm:pb-1"
                 style={{
                   boxShadow: 'inset 0 -0.24em 0 #FDBE2D',
                 }}
@@ -185,132 +227,200 @@ export default function Index() {
             </span>
           </h1>
 
-          {/* Duas colunas (empilham no celular) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
-            {/* Coluna esquerda */}
-            <div className="lg:col-span-5 flex flex-col justify-between space-y-8 pt-2">
-              <p className="text-lg sm:text-[20px] text-[#5F5A4F] leading-relaxed font-normal">
-                O Hub de estudos reúne, em um só lugar, revista, cursos, aulas ao vivo, simulados,
-                documentários e caderno de estudos digital: um itinerário de Segurança e Saúde no
-                Trabalho que parte da sua realidade de trabalho.
-              </p>
+          {/* Duas colunas com alinhamento e proporções refinadas */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-10 xl:gap-12 items-center">
+            {/* Coluna esquerda: Apresentação, CTAs pílula e Social Proof com dados reais */}
+            <div className="lg:col-span-5 flex flex-col justify-between space-y-6 sm:space-y-8">
+              {/* Parágrafo de abertura com linha de guia editorial vertical sutil */}
+              <div className="relative pl-4 sm:pl-5 border-l-2 border-[#FDBE2D]/80">
+                <p className="text-base sm:text-lg lg:text-[19px] xl:text-[20px] text-muted-foreground leading-relaxed font-normal">
+                  O Hub de estudos reúne, em um só lugar, revista, cursos, aulas ao vivo, simulados,
+                  documentários e caderno de estudos digital: um itinerário de Segurança e Saúde no
+                  Trabalho que parte da sua realidade de trabalho.
+                </p>
+              </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 pt-2">
+              {/* CTAs em destaque: Par de botões pílula profissionais */}
+              <div className="pt-1 flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4">
                 <Button
                   size="lg"
-                  className="h-12 px-8 rounded-full font-bold bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] shadow-none text-base"
+                  className="h-12 sm:h-12.5 px-8 rounded-full font-bold bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] shadow-[0_8px_20px_rgba(253,190,45,0.28)] hover:shadow-[0_12px_28px_rgba(253,190,45,0.38)] text-base transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 border border-[#e0a724]/40"
                   asChild
                 >
-                  <Link to="/planos">Começar grátis</Link>
+                  <Link to="/planos" className="inline-flex items-center justify-center gap-2">
+                    <span>Começar grátis</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
                 </Button>
-                <a
-                  href="#planos"
-                  className="editorial-link text-base font-semibold text-[#1C1B18] hover:text-[#173F33] py-2"
+
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="h-12 sm:h-12.5 px-7 rounded-full font-semibold bg-card/80 hover:bg-card text-foreground border-border hover:border-foreground/30 shadow-sm text-base transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
+                  asChild
                 >
-                  Conhecer os planos &rarr;
-                </a>
+                  <a href="#planos" className="inline-flex items-center justify-center gap-1.5">
+                    <span>Conhecer os planos</span>
+                    <span aria-hidden="true">&rarr;</span>
+                  </a>
+                </Button>
               </div>
-            </div>
 
-            {/* Coluna direita: Prévia do Hub de estudos */}
-            <div className="lg:col-span-7 flex flex-col items-center lg:items-end w-full">
-              <Link
-                to="/planos"
-                className="group block w-full max-w-[560px] text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                aria-label="Conhecer o Hub de estudos nos planos"
-              >
-                <div className="w-full bg-card text-foreground brand-corner border border-border shadow-[0_18px_45px_rgba(28,27,24,0.08)] p-5 sm:p-7 relative transition-shadow duration-300 group-hover:shadow-[0_24px_55px_rgba(28,27,24,0.12)]">
-                  {/* Cabeçalho do Hub */}
-                  <div className="pb-4 sm:pb-5 border-b border-border/70 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                    <div>
-                      <span className="label-overline text-[10px] sm:text-[11px] text-muted-foreground block mb-1">
-                        HUB DE ESTUDOS
+              {/* Social Proof discreto com dados REAIS das coleções (omitido se não houver dados) */}
+              {(magazines.length > 0 || (studentCount !== null && studentCount > 0)) && (
+                <div className="pt-2 sm:pt-4 border-t border-border/70 flex items-center gap-6 sm:gap-8 flex-wrap">
+                  {magazines.length > 0 && (
+                    <div className="flex flex-col">
+                      <span className="font-serif font-extrabold text-xl sm:text-2xl text-foreground tracking-tight leading-none">
+                        {magazines.length}
+                        <span className="text-[#FDBE2D] ml-0.5">+</span>
                       </span>
-                      <h2 className="font-serif text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-snug">
-                        Bom dia. Sua área de estudos.
-                      </h2>
-                    </div>
-                    {/* Selo pílula amarela "Plano Free" */}
-                    <div className="self-start shrink-0">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary text-primary-foreground shadow-sm">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        Plano Free
+                      <span className="text-xs text-muted-foreground mt-1 font-medium">
+                        edições da revista
                       </span>
-                    </div>
-                  </div>
-
-                  {/* Grade com seis módulos (3 colunas iguais, 2 colunas abaixo de 480px, gap 10px) */}
-                  <div className="pt-5 sm:pt-6">
-                    <div
-                      className="w-full grid gap-[10px] [grid-template-columns:repeat(2,minmax(0,1fr))] min-[480px]:[grid-template-columns:repeat(3,minmax(0,1fr))]"
-                      style={{
-                        gap: '10px',
-                      }}
-                    >
-                      {hubModules.map((m) => (
-                        <div key={m.title} className="w-full flex" tabIndex={-1} aria-hidden="true">
-                          <CategoryCard
-                            title={m.title}
-                            icon={m.icon}
-                            compact
-                            className="w-full min-h-[92px] h-full pointer-events-none bg-background/60 hover:translate-y-0 hover:shadow-none flex flex-col justify-between items-start text-left"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Bloco "AVISOS" com itens dinâmicos */}
-                  {(nextLive || featuredMag) && (
-                    <div className="mt-5 sm:mt-6 pt-4 border-t border-border/70">
-                      <div className="flex items-center gap-1.5 mb-2.5">
-                        <BellRing className="w-3.5 h-3.5 text-primary" />
-                        <span className="label-overline text-[10px] text-muted-foreground">
-                          AVISOS
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        {nextLive && (
-                          <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/60 text-xs">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="w-2 h-2 rounded-full bg-danger shrink-0 animate-pulse" />
-                              <span className="font-semibold text-foreground truncate">
-                                {nextLive.status === 'live' ? 'Ao vivo agora:' : 'Próxima aula:'}{' '}
-                                {nextLive.title}
-                              </span>
-                            </div>
-                            <span className="text-[11px] font-mono text-muted-foreground shrink-0">
-                              {nextLive.status === 'live'
-                                ? 'Agora'
-                                : formatLiveDateTime(nextLive.scheduled_at)}
-                            </span>
-                          </div>
-                        )}
-                        {featuredMag && (
-                          <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/60 text-xs">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                              <span className="font-semibold text-foreground truncate">
-                                Revista mais recente: {featuredMag.title}
-                              </span>
-                            </div>
-                            <span className="text-[11px] text-muted-foreground shrink-0 flex items-center font-semibold">
-                              Ler <ChevronRight className="w-3 h-3 ml-0.5" />
-                            </span>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   )}
-                </div>
-              </Link>
 
-              {/* Link de texto abaixo do cartão, alinhado à direita */}
-              <div className="w-full max-w-[560px] flex justify-end mt-3 pr-1">
+                  {studentCount !== null && studentCount > 0 && (
+                    <div className="flex flex-col">
+                      <span className="font-serif font-extrabold text-xl sm:text-2xl text-foreground tracking-tight leading-none">
+                        {studentCount}
+                        <span className="text-[#FDBE2D] ml-0.5">+</span>
+                      </span>
+                      <span className="text-xs text-muted-foreground mt-1 font-medium">
+                        profissionais no ecossistema
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col">
+                    <span className="font-serif font-extrabold text-xl sm:text-2xl text-foreground tracking-tight leading-none">
+                      6
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1 font-medium">
+                      módulos integrados
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Coluna direita: Prévia do Hub de estudos protagonista com profundidade */}
+            <div className="lg:col-span-7 flex flex-col items-center lg:items-end w-full">
+              {/* Wrapper relativo com camada decorativa atrás dando profundidade sutil de marca */}
+              <div className="relative w-full max-w-[580px]">
+                {/* Camada traseira de profundidade: leve moldura inclinada em tinta/dourado */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -inset-2.5 sm:-inset-3 bg-gradient-to-br from-[#FDBE2D]/25 via-border/50 to-transparent brand-corner -rotate-1 opacity-70 dark:opacity-40 transition-transform duration-500"
+                />
+
+                <Link
+                  to="/planos"
+                  className="group relative block w-full text-left transition-all duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-label="Conhecer o Hub de estudos nos planos"
+                >
+                  <div className="w-full bg-card text-foreground brand-corner border border-border shadow-[0_20px_50px_rgba(28,27,24,0.09)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.45)] p-5 sm:p-7 relative transition-all duration-300 group-hover:shadow-[0_28px_65px_rgba(28,27,24,0.14)] dark:group-hover:shadow-[0_28px_65px_rgba(0,0,0,0.6)] group-hover:border-[#FDBE2D]/50">
+                    {/* Cabeçalho do Hub */}
+                    <div className="pb-4 sm:pb-5 border-b border-border/70 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FDBE2D]" />
+                          <span className="label-overline text-[10px] sm:text-[11px] text-muted-foreground">
+                            HUB DE ESTUDOS
+                          </span>
+                        </div>
+                        <h2 className="font-serif text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-snug">
+                          Bom dia. Sua área de estudos.
+                        </h2>
+                      </div>
+                      {/* Selo pílula amarela "Plano Free" */}
+                      <div className="self-start shrink-0">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#FDBE2D] text-[#1C1B18] shadow-sm">
+                          <Sparkles className="w-3.5 h-3.5 fill-[#1C1B18]/20" />
+                          Plano Free
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Grade com seis módulos (3 colunas iguais, 2 colunas abaixo de 480px, gap 10px) */}
+                    <div className="pt-5 sm:pt-6">
+                      <div
+                        className="w-full grid gap-[10px] [grid-template-columns:repeat(2,minmax(0,1fr))] min-[480px]:[grid-template-columns:repeat(3,minmax(0,1fr))]"
+                        style={{
+                          gap: '10px',
+                        }}
+                      >
+                        {hubModules.map((m) => (
+                          <div
+                            key={m.title}
+                            className="w-full flex"
+                            tabIndex={-1}
+                            aria-hidden="true"
+                          >
+                            <CategoryCard
+                              title={m.title}
+                              icon={m.icon}
+                              compact
+                              className="w-full min-h-[92px] h-full pointer-events-none bg-background/70 hover:translate-y-0 hover:shadow-none flex flex-col justify-between items-start text-left border-border/80 transition-colors group-hover:bg-background/90"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Bloco "AVISOS" com itens dinâmicos (oculto se não houver dado) */}
+                    {(nextLive || featuredMag) && (
+                      <div className="mt-5 sm:mt-6 pt-4 border-t border-border/70">
+                        <div className="flex items-center gap-1.5 mb-2.5">
+                          <BellRing className="w-3.5 h-3.5 text-[#FDBE2D]" />
+                          <span className="label-overline text-[10px] text-muted-foreground font-bold">
+                            AVISOS
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          {nextLive && (
+                            <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/60 text-xs hover:bg-muted/80 transition-colors">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-2 h-2 rounded-full bg-danger shrink-0 animate-pulse" />
+                                <span className="font-semibold text-foreground truncate">
+                                  {nextLive.status === 'live' ? 'Ao vivo agora:' : 'Próxima aula:'}{' '}
+                                  {nextLive.title}
+                                </span>
+                              </div>
+                              <span className="text-[11px] font-mono text-muted-foreground shrink-0">
+                                {nextLive.status === 'live'
+                                  ? 'Agora'
+                                  : formatLiveDateTime(nextLive.scheduled_at)}
+                              </span>
+                            </div>
+                          )}
+                          {featuredMag && (
+                            <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/60 text-xs hover:bg-muted/80 transition-colors">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-2 h-2 rounded-full bg-[#FDBE2D] shrink-0" />
+                                <span className="font-semibold text-foreground truncate">
+                                  Revista mais recente: {featuredMag.title}
+                                </span>
+                              </div>
+                              <span className="text-[11px] text-muted-foreground shrink-0 flex items-center font-semibold">
+                                Ler <ChevronRight className="w-3 h-3 ml-0.5" />
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              </div>
+
+              {/* Link de texto abaixo do cartão, alinhado à direita rolando até "A plataforma" */}
+              <div className="w-full max-w-[580px] flex justify-end mt-3.5 pr-1">
                 <a
                   href="#plataforma"
                   onClick={scrollToPlataforma}
-                  className="editorial-link text-sm sm:text-base font-semibold text-[#1C1B18] hover:text-[#173F33]"
+                  className="editorial-link text-sm sm:text-base font-semibold text-foreground hover:text-[#173F33] dark:hover:text-[#FDBE2D] transition-colors"
                 >
                   Ver o que tem no Hub &rarr;
                 </a>

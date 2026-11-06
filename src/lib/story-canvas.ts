@@ -146,15 +146,10 @@ export async function gerarStoryImagem(
 
   // ---- Fundo: foto em modo cover ------------------------------------------
   const escalaCover = Math.max(1080 / fw, 1920 / fh)
-  const dwBase = fw * escalaCover
-  const dhBase = fh * escalaCover
-  // O enquadramento da prévia (zoom + arraste) é replicado aqui:
-  // expande a área desenhada em torno do centro e desloca conforme o arraste.
-  const escala = escalaCover * zoom
-  const dw = fw * escala
-  const dh = fh * escala
-  const dx = (1080 - dw) / 2 + offsetX * 1080
-  const dy = (1920 - dh) / 2 + offsetY * 1920
+  const dw = fw * escalaCover
+  const dh = fh * escalaCover
+  const dx = (1080 - dw) / 2
+  const dy = (1920 - dh) / 2
   ctx.drawImage(fonte, dx, dy, dw, dh)
 
   // ---- Degradê escuro esverdeado no topo (0 → 620px) e base (últimos 900px)

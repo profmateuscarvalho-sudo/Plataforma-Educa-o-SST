@@ -25,6 +25,7 @@ import { CategoryCard } from '@/components/student/CategoryCard'
 import { PlatformExplorer } from '@/components/PlatformExplorer'
 import { HomePlansSection } from '@/components/HomePlansSection'
 import { BannerDisplay } from '@/components/BannerDisplay'
+import { HubModulesMarquee } from '@/components/HubModulesMarquee'
 
 export default function Index() {
   const { user, loading: authLoading } = useAuth()
@@ -40,7 +41,6 @@ export default function Index() {
   const [latestSimuladoTitle, setLatestSimuladoTitle] = useState<string | null>(null)
   const [nextLive, setNextLive] = useState<LiveSession | null>(null)
   const [nextLiveTitle, setNextLiveTitle] = useState<string | null>(null)
-  const [studentCount, setStudentCount] = useState<number | null>(null)
 
   // Redireciona estudante logado para a plataforma
   useEffect(() => {
@@ -96,16 +96,6 @@ export default function Index() {
         if (upcoming) {
           setNextLive(upcoming)
           setNextLiveTitle(upcoming.title)
-        }
-      })
-      .catch(() => {})
-
-    // 6. Alunos ativos (social proof com dado real da coleção users)
-    pb.collection('users')
-      .getList(1, 1, { filter: "role = 'student'" })
-      .then((res) => {
-        if (res.totalItems > 0) {
-          setStudentCount(res.totalItems)
         }
       })
       .catch(() => {})
@@ -264,43 +254,16 @@ export default function Index() {
                 </Button>
               </div>
 
-              {/* Social Proof discreto com dados REAIS das coleções (omitido se não houver dados) */}
-              {(magazines.length > 0 || (studentCount !== null && studentCount > 0)) && (
-                <div className="pt-2 sm:pt-4 border-t border-border/70 flex items-center gap-6 sm:gap-8 flex-wrap">
-                  {magazines.length > 0 && (
-                    <div className="flex flex-col">
-                      <span className="font-serif font-extrabold text-xl sm:text-2xl text-foreground tracking-tight leading-none">
-                        {magazines.length}
-                        <span className="text-[#FDBE2D] ml-0.5">+</span>
-                      </span>
-                      <span className="text-xs text-muted-foreground mt-1 font-medium">
-                        edições da revista
-                      </span>
-                    </div>
-                  )}
-
-                  {studentCount !== null && studentCount > 0 && (
-                    <div className="flex flex-col">
-                      <span className="font-serif font-extrabold text-xl sm:text-2xl text-foreground tracking-tight leading-none">
-                        {studentCount}
-                        <span className="text-[#FDBE2D] ml-0.5">+</span>
-                      </span>
-                      <span className="text-xs text-muted-foreground mt-1 font-medium">
-                        profissionais no ecossistema
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex flex-col">
-                    <span className="font-serif font-extrabold text-xl sm:text-2xl text-foreground tracking-tight leading-none">
-                      6
-                    </span>
-                    <span className="text-xs text-muted-foreground mt-1 font-medium">
-                      módulos integrados
-                    </span>
-                  </div>
+              {/* Faixa-carrossel contínua (marquee) discreta com os 6 módulos do Hub */}
+              <div className="pt-2 sm:pt-3 border-t border-border/70 overflow-hidden">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FDBE2D]" />
+                  <span className="label-overline text-[10px] sm:text-[11px] text-muted-foreground tracking-wider">
+                    MÓDULOS INTEGRADOS NO HUB
+                  </span>
                 </div>
-              )}
+                <HubModulesMarquee />
+              </div>
             </div>
 
             {/* Coluna direita: Prévia do Hub de estudos protagonista com profundidade */}

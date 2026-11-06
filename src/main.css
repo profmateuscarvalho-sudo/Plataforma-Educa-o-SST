@@ -284,6 +284,25 @@
     animation: mag-float-slow 8s ease-in-out infinite;
   }
 
+  /* Marquee contínuo e suave (loop sem pulo) */
+  @keyframes hub-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .animate-hub-marquee {
+    display: flex;
+    width: max-content;
+    animation: hub-marquee 24s linear infinite;
+    will-change: transform;
+  }
+  .group-marquee:hover .animate-hub-marquee {
+    animation-play-state: paused;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-hero-in,
     .animate-panel-fade,
@@ -291,6 +310,7 @@
     .animate-fade-in,
     .animate-dashboard-float,
     .animate-mag-float,
+    .animate-hub-marquee,
     .dashboard-shine {
       animation: none !important;
       opacity: 1 !important;

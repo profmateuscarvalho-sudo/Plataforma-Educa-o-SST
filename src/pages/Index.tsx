@@ -211,18 +211,16 @@ export default function Index() {
 
           {/* Título de impacto (h1) em Playfair Display 800 */}
           <h1 className="title-h1-home text-foreground mb-10 sm:mb-14 lg:mb-16 max-w-4xl">
-            <span className="block not-italic font-extrabold text-foreground">
-              O ecossistema de aprendizagem
-            </span>
+            <span className="block not-italic font-extrabold text-foreground">Seja bem-vindo</span>
             <span className="block italic font-extrabold text-foreground mt-1 sm:mt-1.5">
-              para o{' '}
+              à{' '}
               <span
                 className="inline-block relative pb-0.5 sm:pb-1"
                 style={{
                   boxShadow: 'inset 0 -0.24em 0 #FDBE2D',
                 }}
               >
-                profissional de SST.
+                Educação SST.
               </span>
             </span>
           </h1>

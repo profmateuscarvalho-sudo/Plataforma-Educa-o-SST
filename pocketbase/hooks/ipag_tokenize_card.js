@@ -38,15 +38,9 @@ routerAdd(
       throw new BadRequestError('Ano de validade inválido.')
     }
 
-    // Credenciais server-side — com fallback inline (set_env recém-criado pode
-    // não propagar imediatamente para pb_hooks). NUNCA logar apiId/apiKey.
-    var apiId =
-      $secrets.get('IPAG_API_ID') ||
-      $os.getenv('IPAG_API_ID') ||
-      (function () {
-        // preenchido inline para não depender da propagação de secrets
-        return 'profmateus@educacaosst.com.br'
-      })()
+    // Credenciais server-side via secrets (NUNCA com valor inline no código).
+    // NUNCA logar apiId/apiKey.
+    var apiId = $secrets.get('IPAG_API_ID') || $os.getenv('IPAG_API_ID') || ''
     var apiKey = $secrets.get('IPAG_API_KEY') || $os.getenv('IPAG_API_KEY') || ''
     if (!apiId || !apiKey) {
       console.error('[tokenize-card] credenciais iPag ausentes (IPAG_API_ID/IPAG_API_KEY)')

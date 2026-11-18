@@ -24,14 +24,9 @@ routerAdd(
       throw new BadRequestError('amount is required and must be greater than 0')
     }
 
-    // Credenciais com fallback inline (set_env recém-criado pode não propagar
-    // imediatamente para pb_hooks no ar). NUNCA logar apiId/apiKey.
-    var apiId =
-      $secrets.get('IPAG_API_ID') ||
-      $os.getenv('IPAG_API_ID') ||
-      (function () {
-        return 'profmateus@educacaosst.com.br'
-      })()
+    // Credenciais server-side via secrets (NUNCA com valor inline no código).
+    // NUNCA logar apiId/apiKey.
+    var apiId = $secrets.get('IPAG_API_ID') || $os.getenv('IPAG_API_ID') || ''
     var apiKey = $secrets.get('IPAG_API_KEY') || $os.getenv('IPAG_API_KEY') || ''
     if (!apiId || !apiKey) {
       console.error('[ipag-pay] credenciais iPag ausentes (IPAG_API_ID/IPAG_API_KEY)')

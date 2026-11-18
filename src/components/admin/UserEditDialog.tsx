@@ -22,6 +22,7 @@ import { getErrorMessage } from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
 import { User } from '@/types'
 import { getProfessionalTagOptions } from '@/services/professional-tag-options'
+import { applyUserPlan } from '@/services/users'
 import { Loader2, Save } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -100,6 +101,8 @@ export function UserEditDialog({ user, open, setOpen, onSuccess }: UserEditDialo
     setSaving(true)
     try {
       const isPaid = planTier === 'prata' || planTier === 'ouro'
+
+      // Perfil, contato e contrato: atualização direta do usuário.
       await pb.collection('users').update(user.id, {
         name,
         email,
@@ -107,31 +110,13 @@ export function UserEditDialog({ user, open, setOpen, onSuccess }: UserEditDialo
         professional_profile: profile || undefined,
         city,
         state,
-        plan_tier: planTier,
-        subscription_billing: billing,
         contract_end_date: contractEnd || undefined,
         professional_tags: tags,
-        ...(isPaid ? { email_verificado: true } : {}),
       })
 
-      // Se for plano pago ou upgrade, assegurar que a assinatura fique active
-      if (isPaid) {
-        try {
-          const subs = await pb.collection('subscriptions').getFullList({
-            filter: `user = '${user.id}'`,
-            sort: '-created',
-          })
-          if (subs.length > 0) {
-            for (const sub of subs) {
-              if (sub.status !== 'active') {
-                await pb.collection('subscriptions').update(sub.id, { status: 'active' })
-              }
-            }
-          }
-        } catch {
-          /* ignore non-blocking error */
-        }
-      }
+      // Plano: passa pelo fluxo central que grava o tier E garante a assinatura
+      // ativa apontando para o plano escolhido (não para o primeiro da lista).
+      await applyUserPlan(user.id, planTier, billing)
 
       toast({ title: 'Aluno atualizado com sucesso' })
       setOpen(false)

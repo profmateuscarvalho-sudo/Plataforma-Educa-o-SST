@@ -1,4 +1,5 @@
-import { tierFromSubscriptions, type Subscription } from '@/hooks/use-student-access'
+import { tierFromSubscriptions } from '@/hooks/use-student-access'
+import type { Subscription } from '@/services/subscriptions'
 
 const tierRank: Record<string, number> = { free: 1, prata: 2, ouro: 3 }
 

@@ -6,6 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { useSubscriptionPlans } from '@/hooks/use-subscription-plans'
+import { useStudentAccess } from '@/hooks/use-student-access'
+import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
 import { SubscriptionPlan } from '@/types'
 import { cadastrarListaEspera } from '@/services/lista_espera'
 
@@ -38,10 +40,18 @@ const fmt = (v: number) =>
 export function HomePlansSection() {
   const { plans, loading, error, refetch } = useSubscriptionPlans()
   const { user } = useAuth()
+  const access = useStudentAccess()
   const navigate = useNavigate()
+
+  // Tier efetivo: o maior entre users.plan_tier e o plano da assinatura ativa
+  // (expand 'plan'), resolvido pelo hook central useStudentAccess.
+  const effectiveTier = access.activeTier === 'none' ? 'free' : access.activeTier
 
   // Modal lista de espera
   const [waitlistPlan, setWaitlistPlan] = useState<string | null>(null)
+  // Checkout de plano pago liberado (ex.: aluno Free assinando o Prata)
+  const [checkoutPlan, setCheckoutPlan] = useState<SubscriptionPlan | null>(null)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [waitlistName, setWaitlistName] = useState('')
   const [waitlistEmail, setWaitlistEmail] = useState('')
   const [waitlistLoading, setWaitlistLoading] = useState(false)
@@ -68,6 +78,12 @@ export function HomePlansSection() {
       const displayName = cleanPlanDisplayName(dbPlan.name)
       const features = parseFeatures(dbPlan.features)
       const isOuro = displayName.toLowerCase() === 'ouro'
+      // Plano pago liberado = existe no banco com preço e sem "Em breve"
+      const isAvailablePaid = !isFree && !isComingSoon && (dbPlan.price || 0) > 0
+      // Plano em que o aluno já está (tier efetivo >= tier do cartão)
+      const tierRank: Record<string, number> = { free: 1, prata: 2, ouro: 3 }
+      const cardTier = displayName.toLowerCase()
+      const isCurrentPlan = isAvailablePaid && tierRank[effectiveTier] >= (tierRank[cardTier] || 99)
 
       return {
         id: dbPlan.id,
@@ -77,6 +93,8 @@ export function HomePlansSection() {
         yearlyPrice: dbPlan.price_yearly,
         isComingSoon,
         isAvailable: isFree,
+        isAvailablePaid,
+        isCurrentPlan,
         shippingNotice: isOuro,
         exclusiveFeatures: features,
         dbPlan,
@@ -201,6 +219,14 @@ export function HomePlansSection() {
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#FDBE2D] text-[#1C1B18] shadow-sm">
                           Disponível agora
                         </span>
+                      ) : plan.isCurrentPlan ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#1F6B4A] text-white shadow-sm">
+                          Seu plano atual
+                        </span>
+                      ) : plan.isAvailablePaid ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#FDBE2D] text-[#1C1B18] shadow-sm">
+                          Disponível agora
+                        </span>
                       ) : (
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white text-[#7F7869] border border-[#E4DED1]">
                           Em breve
@@ -268,6 +294,30 @@ export function HomePlansSection() {
                       >
                         Começar grátis
                       </Button>
+                    ) : plan.isCurrentPlan ? (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full h-12 rounded-full font-bold border-[#1F6B4A] text-[#1F6B4A] cursor-default hover:bg-[#E3F1E9]/40"
+                        onClick={() => navigate('/plataforma')}
+                      >
+                        Acessar plataforma
+                      </Button>
+                    ) : plan.isAvailablePaid ? (
+                      <Button
+                        size="lg"
+                        className="w-full h-12 rounded-full font-bold bg-[#1C1B18] hover:bg-[#1C1B18]/90 text-[#FAF8F3] shadow-none"
+                        onClick={() => {
+                          if (!user) {
+                            navigate('/register')
+                            return
+                          }
+                          setCheckoutPlan(plan.dbPlan)
+                          setCheckoutOpen(true)
+                        }}
+                      >
+                        {effectiveTier !== 'free' ? 'Fazer upgrade' : 'Assinar agora'}
+                      </Button>
                     ) : (
                       <Button
                         size="lg"
@@ -285,6 +335,13 @@ export function HomePlansSection() {
           </div>
         )}
       </div>
+
+      {/* Checkout de plano pago liberado (aluno autenticado) */}
+      <SubscriptionCheckoutModal
+        isOpen={checkoutOpen}
+        setIsOpen={setCheckoutOpen}
+        plan={checkoutPlan}
+      />
 
       {/* Modal simples de Lista de Espera */}
       {waitlistPlan && (

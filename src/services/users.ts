@@ -32,12 +32,20 @@ export const getAdmins = async () => {
 const findPlanIdForTier = async (tier: string, billing: string): Promise<string | null> => {
   const plans = await getSubscriptionPlans()
   const tierLower = tier.toLowerCase()
-  const billingLower = billing.toLowerCase()
+  // Os planos no banco usam nomes em português ("Prata Mensal"), enquanto o
+  // ciclo de cobrança vem em inglês ('monthly'/'yearly') — mapeia os dois lados.
+  const billingTokens =
+    billing === 'yearly'
+      ? ['yearly', 'anual']
+      : billing === 'monthly'
+        ? ['monthly', 'mensal']
+        : [billing.toLowerCase()]
   const candidates = plans.filter((p: SubscriptionPlan) => p.name.toLowerCase().includes(tierLower))
   if (candidates.length === 0) return null
-  const byBilling = candidates.find((p: SubscriptionPlan) =>
-    p.name.toLowerCase().includes(billingLower),
-  )
+  const byBilling = candidates.find((p: SubscriptionPlan) => {
+    const name = p.name.toLowerCase()
+    return billingTokens.some((t) => name.includes(t))
+  })
   if (byBilling) return byBilling.id
   const nonAnnual = candidates.find(
     (p: SubscriptionPlan) => !p.name.toLowerCase().includes('anual'),
@@ -98,10 +106,11 @@ export const applyUserPlan = async (
             plan: targetPlanId,
           })
         }
-        // Desativa as demais para não deixar duas ativas.
+        // Desativa as demais para não deixar duas ativas. O select do campo
+        // status só aceita 'pending'/'active' — grava 'inactive' daria 400.
         for (const sub of subs) {
           if (sub.id !== activeSub.id && sub.status === 'active') {
-            await pb.collection('subscriptions').update(sub.id, { status: 'inactive' })
+            await pb.collection('subscriptions').update(sub.id, { status: 'pending' })
           }
         }
       } else {

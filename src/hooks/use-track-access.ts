@@ -18,7 +18,7 @@ export function useTrackAccess(area: AccessArea, deps: unknown[] = []) {
     recorded.current = true
     trackAccess(area, 'page_view')
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, area, ...deps])
+  }, [user?.id, area, ...deps])
 
   // Permite re-armar o flag quando a área muda
   useEffect(() => {

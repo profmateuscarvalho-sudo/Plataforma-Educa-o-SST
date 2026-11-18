@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { BarChart3, Users, Activity, TrendingUp, Crown, Loader2 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { getAccessEvents, AccessEvent } from '@/services/access_events'
+import { getAdminStudents } from '@/lib/admin-students'
 import { User } from '@/types'
 
 type StudentRow = {
@@ -59,6 +60,7 @@ const prettyArea = (area: string) => AREA_LABELS[area] || area
 
 export default function AdminAccessDashboard() {
   const [events, setEvents] = useState<AccessEvent[]>([])
+  const [emails, setEmails] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -79,6 +81,28 @@ export default function AdminAccessDashboard() {
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // E-mails só vêm do endpoint admin (emailVisibility=false esconde o e-mail
+  // na coleção users). Servido pelo host do PocketBase; se falhar, o painel
+  // segue funcionando sem e-mail (sem 404 no console).
+  useEffect(() => {
+    let cancelled = false
+    getAdminStudents()
+      .then((rows) => {
+        if (cancelled) return
+        const map: Record<string, string> = {}
+        for (const s of rows) {
+          map[s.id] = s.email || ''
+        }
+        setEmails(map)
+      })
+      .catch(() => {
+        // silencioso: o painel de acessos não depende dos e-mails
       })
     return () => {
       cancelled = true
@@ -231,58 +255,63 @@ export default function AdminAccessDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {studentRows.map((row, idx) => (
-                      <TableRow key={row.user.id} className="border-slate-100">
-                        <TableCell className="text-center">
-                          {idx === 0 ? (
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-600">
-                              <Crown className="w-4 h-4" />
-                            </span>
-                          ) : (
-                            <span className="text-sm font-semibold text-slate-400">{idx + 1}</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="w-9 h-9">
-                              {row.user.avatar ? (
-                                <AvatarImage
-                                  src={pb.files.getUrl(row.user, row.user.avatar)}
-                                  alt={row.user.name}
-                                />
-                              ) : null}
-                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                                {row.user.name?.charAt(0).toUpperCase() || '?'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <p className="font-medium text-slate-800 truncate">
-                                {row.user.name || 'Sem nome'}
-                              </p>
-                              <p className="text-xs text-slate-400 truncate">{row.user.email}</p>
+                    {studentRows.map((row, idx) => {
+                      const studentEmail = emails[row.user.id] || (row.user as any).email || ''
+                      return (
+                        <TableRow key={row.user.id} className="border-slate-100">
+                          <TableCell className="text-center">
+                            {idx === 0 ? (
+                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-600">
+                                <Crown className="w-4 h-4" />
+                              </span>
+                            ) : (
+                              <span className="text-sm font-semibold text-slate-400">
+                                {idx + 1}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-9 h-9">
+                                {row.user.avatar ? (
+                                  <AvatarImage
+                                    src={pb.files.getUrl(row.user, row.user.avatar)}
+                                    alt={row.user.name}
+                                  />
+                                ) : null}
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                                  {row.user.name?.charAt(0).toUpperCase() || '?'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0">
+                                <p className="font-medium text-slate-800 truncate">
+                                  {row.user.name || 'Sem nome'}
+                                </p>
+                                <p className="text-xs text-slate-400 truncate">{studentEmail}</p>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="inline-flex items-center justify-center min-w-[2.5rem] px-2.5 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold">
-                            {row.total}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center text-slate-600 text-sm">
-                          {row.logins}
-                        </TableCell>
-                        <TableCell className="text-slate-500 text-sm">
-                          {row.lastAccess
-                            ? row.lastAccess.toLocaleDateString('pt-BR', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
-                            : '-'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="inline-flex items-center justify-center min-w-[2.5rem] px-2.5 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold">
+                              {row.total}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center text-slate-600 text-sm">
+                            {row.logins}
+                          </TableCell>
+                          <TableCell className="text-slate-500 text-sm">
+                            {row.lastAccess
+                              ? row.lastAccess.toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : '-'}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </div>

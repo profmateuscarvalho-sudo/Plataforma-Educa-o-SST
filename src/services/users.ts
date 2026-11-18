@@ -2,16 +2,18 @@ import pb from '@/lib/pocketbase/client'
 import { User } from '@/types'
 
 export const getStudents = async () => {
+  // O endpoint custom /backend/v1/admin/students não existe mais no backend —
+  // requisições a ele caíam no host estático e davam 404 "File not found".
+  // A coleção users expõe e-mail para admins (regra de lista), então lemos
+  // diretamente por ela; se algo falhar, repete sem filtro de role.
   try {
-    return await pb.send<User[]>('/backend/v1/admin/students', {
-      method: 'GET',
-    })
-  } catch (err) {
-    console.warn('Fallback para SDK users em getStudents:', err)
     return await pb.collection('users').getFullList<User>({
       filter: "role != 'admin'",
       sort: '-created',
     })
+  } catch (err) {
+    console.warn('Fallback sem filtro de role em getStudents:', err)
+    return await pb.collection('users').getFullList<User>({ sort: '-created' })
   }
 }
 

@@ -26,7 +26,10 @@ export type AccessArea =
 
 /**
  * Registra um evento de acesso (login ou visita a uma área) para o usuário
- * autenticado atual. Falha silenciosamente para não impactar a UX.
+ * autenticado atual. Não faz nada (e não loga erro) quando não há sessão
+ * válida — isso evita os 400 "Failed to create record" dos usuários
+ * deslogados. Falhas reais de rede/validação também são ignoradas: o
+ * tracking nunca pode impactar a UX nem poluir os logs do backend.
  */
 export async function trackAccess(
   area: AccessArea,
@@ -35,15 +38,26 @@ export async function trackAccess(
 ) {
   try {
     const { default: pb } = await import('@/lib/pocketbase/client')
-    if (!pb.authStore.record) return
+    const user = pb.authStore.record
+    if (!user || !user.id) return
+    // Requer sessão realmente válida (authStore pode estar "carregado" com
+    // um token expirado/inválido após logout ou revalidação falha).
+    const authValid = await pb
+      .collection('users')
+      .authRefresh()
+      .then(
+        () => true,
+        () => false,
+      )
+    if (!authValid) return
     await pb.collection('access_events').create<AccessEvent>({
-      user: pb.authStore.record.id,
+      user: user.id,
       area,
       event_type: eventType,
       meta: meta ?? {},
     })
   } catch (e) {
-    // no-op: tracking must never break the UX
+    // no-op: tracking must never break the UX nor pollute backend logs
   }
 }
 

@@ -1,3 +1,7 @@
+// Lista alunos para o painel de acessos/admin, com e-mail visível só para
+// admins. Criado originalmente na v0.0.313; recriado aqui porque requisições
+// a /backend/v1/admin/students estavam caindo no host estático e devolvendo
+// 404 "File not found".
 routerAdd(
   'GET',
   '/backend/v1/admin/students',
@@ -22,9 +26,7 @@ routerAdd(
           plan_tier: r.getString('plan_tier'),
           contract_end_date: r.getString('contract_end_date'),
           professional_profile: r.getString('professional_profile'),
-          professional_tags: r.getStringSlice
-            ? r.getStringSlice('professional_tags')
-            : r.get('professional_tags') || [],
+          professional_tags: r.get('professional_tags') || [],
           city: r.getString('city'),
           state: r.getString('state'),
           email_verificado: r.getBool('email_verificado'),

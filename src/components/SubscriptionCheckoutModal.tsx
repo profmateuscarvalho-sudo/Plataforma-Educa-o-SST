@@ -34,7 +34,7 @@ import { createSubscription } from '@/services/subscriptions'
 import { createPayment, type CreatePaymentPayload } from '@/services/payments'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
-import { loadIpagScript, tokenizeCard } from '@/lib/ipag'
+import { tokenizeCard, type TokenizeCardResult } from '@/lib/ipag'
 import { formatCpf, sanitizeCpf, validateCpf } from '@/lib/cpf'
 
 export function SubscriptionCheckoutModal({
@@ -72,10 +72,6 @@ export function SubscriptionCheckoutModal({
       setBillingCycle(plan.interval === 'yearly' ? 'yearly' : 'monthly')
       setPaymentMethod('pix')
       setInstallments(1)
-      // Pre-load the iPag tokenizer script so it is ready when the user submits
-      loadIpagScript().catch(() => {
-        // Silent background preload fail — will retry on submit
-      })
     }
   }, [isOpen, plan])
 
@@ -169,6 +165,7 @@ export function SubscriptionCheckoutModal({
       detectedBrand = 'elo'
     } else if (cleanNumber.startsWith('5') || cleanNumber.startsWith('2')) {
       detectedBrand = 'mastercard'
+>>>>>>>
     } else if (cleanNumber.startsWith('3')) {
       detectedBrand = 'amex'
     } else {

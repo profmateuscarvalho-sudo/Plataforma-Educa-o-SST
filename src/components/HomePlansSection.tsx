@@ -309,7 +309,7 @@ export function HomePlansSection() {
                         className="w-full h-12 rounded-full font-bold bg-[#1C1B18] hover:bg-[#1C1B18]/90 text-[#FAF8F3] shadow-none"
                         onClick={() => {
                           if (!user) {
-                            navigate('/register')
+                            navigate(`/register?planId=${plan.dbPlan.id}`)
                             return
                           }
                           setCheckoutPlan(plan.dbPlan)

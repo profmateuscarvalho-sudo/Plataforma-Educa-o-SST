@@ -55,8 +55,11 @@ onRecordCreateRequest((e) => {
     if (!e.record.getString('contract_end_date')) {
       e.record.set('contract_end_date', contractEndDate)
     }
-    e.record.set('email_verificado', true)
-    e.record.setVerified(true)
+    // ATENÇÃO: NÃO mexer no campo 'verified' aqui. Qualquer mutação antes de
+    // e.next() entra na validação da requisição pública e a coleção users
+    // recusa visitante anônimo definindo esse campo, o que devolve 400
+    // "validation_values_mismatch" ("Values don't match.") para TODO cadastro.
+    // A marcação como verificado acontece APÓS a criação, no bloco abaixo.
   } catch (preErr) {
     // Se algo aqui falhar, o cadastro ainda deve seguir com os valores do body
     $app
@@ -67,6 +70,27 @@ onRecordCreateRequest((e) => {
   e.next()
 
   // --- Efeitos colaterais APÓS a criação: nunca propagam erro --------------
+  // Marcar o aluno como verificado APÓS a criação, com privilégio de admin
+  // (saveNoValidate ignora as regras de acesso da requisição pública).
+  try {
+    var createdUser = e.record
+    try {
+      createdUser = $app.findRecordById('users', e.record.id)
+    } catch (_) {}
+    createdUser.set('email_verificado', true)
+    createdUser.setVerified(true)
+    $app.saveNoValidate(createdUser)
+    $app.logger().info('on_user_register: user marked as verified', 'userId', createdUser.id)
+  } catch (verifyErr) {
+    $app
+      .logger()
+      .error(
+        'on_user_register: failed to mark user verified (non-fatal)',
+        'error',
+        verifyErr.message,
+      )
+  }
+
   try {
     var userId = e.record.id
     if (!userId) {

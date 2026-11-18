@@ -28,7 +28,21 @@ export function useRegisterError() {
   const buildRegisterErrorMessage = (error: any): string => {
     if (!error) return t('auth.register.errorDesc')
 
+    // Log completo do erro para diagnóstico (o console é a única fonte da
+    // causa real quando o PocketBase devolve 400 com detalhes por campo)
+    if (error.response) {
+      console.error('[register] error.response completo:', error.status, error.response)
+    } else {
+      console.error('[register] erro sem response:', error)
+    }
+
     const detail = getRegisterErrorDetail(error)
+
+    // O PocketBase recusou o campo verified (ex.: "Values don't match." —
+    // validation_values_mismatch): mensagem própria, nunca a de e-mail duplicado
+    if (detail && detail.field === 'verified') {
+      return t('auth.register.errorVerified')
+    }
 
     // Duplicidade REAL: o PocketBase responde 400 com validation_error no campo email
     if (detail && detail.field === 'email') {

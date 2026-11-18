@@ -160,6 +160,7 @@
       "errorEmailInUse": "Este e-mail já está cadastrado. Faça login ou recupere sua senha.",
       "errorRequiredField": "Preencha todos os campos obrigatórios.",
       "errorNetwork": "Serviço temporariamente indisponível. Verifique sua conexão e tente novamente.",
+      "errorVerified": "Não foi possível concluir o cadastro (falha na validação da conta). Tente novamente; se persistir, entre em contato com o suporte.",
       "successTitle": "Cadastro realizado com sucesso!",
       "successDesc": "E-mail de ativação enviado! Verifique sua caixa de entrada e pasta de spam."
     },

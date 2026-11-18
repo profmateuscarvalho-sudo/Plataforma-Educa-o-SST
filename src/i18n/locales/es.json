@@ -160,6 +160,7 @@
       "errorEmailInUse": "Este correo electrónico ya está registrado. Inicia sesión o recupera tu contraseña.",
       "errorRequiredField": "Completa todos los campos obligatorios.",
       "errorNetwork": "Servicio temporalmente no disponible. Verifica tu conexión e inténtalo de nuevo.",
+      "errorVerified": "No fue posible completar el registro (fallo en la validación de la cuenta). Inténtalo de nuevo; si persiste, contacta al soporte.",
       "successTitle": "¡Registro realizado con éxito!",
       "successDesc": "¡Correo de activación enviado! Verifique su bandeja de entrada y carpeta de spam."
     },

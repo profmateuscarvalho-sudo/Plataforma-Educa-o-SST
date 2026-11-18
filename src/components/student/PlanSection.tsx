@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Check, Crown, Award, Sparkles } from 'lucide-react'
 import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
 import { useAuth } from '@/hooks/use-auth'
+import { useStudentAccess } from '@/hooks/use-student-access'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
 import { getPlanButtonState } from '@/lib/plan-utils'
@@ -22,6 +23,7 @@ export function PlanSection({
   const [selected, setSelected] = useState<SubscriptionPlan | null>(null)
   const [open, setOpen] = useState(false)
   const { user } = useAuth()
+  const access = useStudentAccess()
 
   const freePlan = plans.find((p) => p.name.toLowerCase().includes('free'))
   const prataPlan = plans.find(
@@ -117,7 +119,11 @@ export function PlanSection({
                   ))}
                 </ul>
                 {(() => {
-                  const btn = getPlanButtonState(t.name, user, t.plan?.is_coming_soon)
+                  const btn = getPlanButtonState(
+                    t.name,
+                    { ...user, subscriptions: access.subscriptions },
+                    t.plan?.is_coming_soon,
+                  )
                   return (
                     <Button
                       className="w-full"

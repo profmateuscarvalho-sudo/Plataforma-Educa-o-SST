@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Check, Sparkles, Award, Crown, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
+import { useStudentAccess } from '@/hooks/use-student-access'
 import { useSubscriptionPlans } from '@/hooks/use-subscription-plans'
 import { getPlanButtonState } from '@/lib/plan-utils'
 import { SubscriptionPlan } from '@/types'
@@ -39,6 +40,8 @@ const fmt = (v: number) =>
 export function PricingSection() {
   const { plans, loading, error, refetch } = useSubscriptionPlans()
   const { user } = useAuth()
+  const access = useStudentAccess()
+  const userWithSubs = user ? { ...user, subscriptions: access.subscriptions } : user
 
   const orderedTiers = ['Free', 'Prata', 'Ouro']
   const displayPlans = plans
@@ -204,7 +207,7 @@ export function PricingSection() {
                     </ul>
 
                     {(() => {
-                      const btn = getPlanButtonState(plan.name, user, plan.isComingSoon)
+                      const btn = getPlanButtonState(plan.name, userWithSubs, plan.isComingSoon)
                       if (btn.disabled) {
                         return (
                           <Button

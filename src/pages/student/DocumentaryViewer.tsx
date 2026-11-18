@@ -3,6 +3,7 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { getDocProject } from '@/services/doc_projects'
 import { DocProject } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
+import { useStudentAccess } from '@/hooks/use-student-access'
 import { ArrowLeft, Play, Film, Lock } from 'lucide-react'
 import { BackToHub } from '@/components/student/BackToHub'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ export default function DocumentaryViewer() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user, loading } = useAuth()
+  const access = useStudentAccess()
   const [project, setProject] = useState<DocProject | null>(null)
   const [fetching, setFetching] = useState(true)
   const [mode, setMode] = useState<'details' | 'player'>('details')
@@ -56,11 +58,14 @@ export default function DocumentaryViewer() {
       </div>
     )
 
+  // Acesso pago: tier efetivo (users.plan_tier ou assinatura ativa) !== 'free'
   const hasAccess =
     project.is_free ||
     user.role === 'admin' ||
-    (user.plan_tier && user.plan_tier !== 'free') ||
-    (!!user.contract_end_date && new Date(user.contract_end_date) >= new Date())
+    access.activeTier === 'prata' ||
+    access.activeTier === 'ouro' ||
+    !user.contract_end_date ||
+    new Date(user.contract_end_date) >= new Date()
 
   if (!hasAccess) {
     return <Navigate to="/planos" replace />

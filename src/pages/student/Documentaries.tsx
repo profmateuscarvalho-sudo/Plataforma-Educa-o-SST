@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Play, Info, Lock } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
+import { useStudentAccess } from '@/hooks/use-student-access'
 import { useTrackAccess } from '@/hooks/use-track-access'
 import {
   Carousel,
@@ -20,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 export default function StudentDocumentaries() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const access = useStudentAccess()
   const [projects, setProjects] = useState<DocProject[]>([])
   const [coverIndex, setCoverIndex] = useState(0)
 
@@ -52,8 +54,9 @@ export default function StudentDocumentaries() {
     return () => clearInterval(interval)
   }, [projects])
 
-  const userTier = user?.role === 'admin' ? 'ouro' : user?.plan_tier || 'free'
-  const hasPaidAccess = userTier !== 'free' || user?.role === 'admin'
+  // Acesso pago: tier efetivo (users.plan_tier ou assinatura ativa) !== 'free'
+  const hasPaidAccess =
+    user?.role === 'admin' || access.activeTier === 'prata' || access.activeTier === 'ouro'
   const canWatch = (p: DocProject) => p.is_free || hasPaidAccess
 
   const featured = projects[coverIndex] || projects[0]

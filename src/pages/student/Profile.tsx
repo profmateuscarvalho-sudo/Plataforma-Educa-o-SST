@@ -13,6 +13,7 @@ import { getUserPayments } from '@/services/payments'
 import { getSubscriptionPlans } from '@/services/subscription-plans'
 import { Payment, SubscriptionPlan } from '@/types'
 import { useToast } from '@/hooks/use-toast'
+import { useStudentAccess } from '@/hooks/use-student-access'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -30,6 +31,7 @@ export default function StudentProfile() {
   const { user, updateProfile } = useAuth()
   const { toast } = useToast()
   const { tags: availableTags } = useProfessionalTags()
+  const access = useStudentAccess()
 
   const [name, setName] = useState(user?.name || '')
   const [email, setEmail] = useState(user?.email || '')
@@ -101,8 +103,9 @@ export default function StudentProfile() {
     }
   }
 
-  const hasActiveSub = user?.contract_end_date && new Date(user.contract_end_date) >= new Date()
-  const userTier = user?.role === 'admin' ? 'ouro' : user?.plan_tier || 'free'
+  // Tier efetivo: o maior entre users.plan_tier e o plano da assinatura ativa
+  const userTier = access.activeTier === 'none' ? 'free' : access.activeTier
+  const hasActiveSub = access.subscriptions.some((s) => s.status === 'active')
   const canUpgrade = userTier !== 'ouro'
 
   return (
@@ -292,8 +295,10 @@ export default function StudentProfile() {
                   <p className="font-semibold text-foreground text-sm">Status da Assinatura</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {hasActiveSub
-                      ? `Ativa até ${format(new Date(user!.contract_end_date!), 'dd/MM/yyyy', { locale: ptBR })}`
-                      : 'Sem assinatura ativa'}
+                      ? `Ativa (plano ${userTier === 'ouro' ? 'Ouro' : 'Prata'})`
+                      : user!.contract_end_date
+                        ? `Ativa até ${format(new Date(user!.contract_end_date!), 'dd/MM/yyyy', { locale: ptBR })}`
+                        : 'Sem assinatura ativa'}
                   </p>
                 </div>
               </div>
@@ -305,7 +310,7 @@ export default function StudentProfile() {
                     : 'bg-muted text-muted-foreground border-border',
                 )}
               >
-                {hasActiveSub ? 'Ativo' : 'Inativo'}
+                {hasActiveSub ? 'Ativo' : userTier === 'free' ? 'Free' : 'Inativo'}
               </Badge>
             </div>
 

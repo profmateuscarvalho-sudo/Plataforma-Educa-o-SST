@@ -6,6 +6,7 @@ export interface Subscription extends RecordModel {
   status: 'pending' | 'active'
   token: string
   plan: string
+  expand?: { plan?: { id: string; name: string; price: number } }
 }
 
 export interface ActivateSubscriptionResponse {

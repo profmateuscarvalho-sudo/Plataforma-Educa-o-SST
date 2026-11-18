@@ -114,9 +114,12 @@ export default function StudentDashboard() {
     )
   }
 
-  const userTier = user.role === 'admin' ? 'ouro' : user.plan_tier || 'free'
+  // Tier efetivo: o maior entre users.plan_tier e o plano da assinatura ativa
+  // (access.activeTier já resolve admin como 'ouro'; 'none' cai para free)
+  const userTier = access.activeTier === 'none' ? 'free' : access.activeTier
   const tier = tierConfig[userTier] || tierConfig.free
-  const isActive = user.contract_end_date && new Date(user.contract_end_date) >= new Date()
+  const contractExpired = !!user.contract_end_date && new Date(user.contract_end_date) < new Date()
+  const isActive = user.role === 'admin' || !contractExpired
 
   const getGreeting = () => {
     const h = new Date().getHours()

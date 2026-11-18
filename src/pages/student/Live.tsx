@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/hooks/use-auth'
+import { useStudentAccess } from '@/hooks/use-student-access'
 import { getLiveSession, getLiveMessages, sendLiveMessage } from '@/services/live'
 import { LiveSession, LiveMessage } from '@/types'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -12,6 +13,7 @@ import { ChevronLeft, Send, Lock } from 'lucide-react'
 export default function StudentLive() {
   const { id } = useParams()
   const { user } = useAuth()
+  const access = useStudentAccess()
   const [session, setSession] = useState<LiveSession | null>(null)
   const [messages, setMessages] = useState<LiveMessage[]>([])
   const [content, setContent] = useState('')
@@ -97,7 +99,7 @@ export default function StudentLive() {
                 Transmissão inicia em {new Date(session.scheduled_at).toLocaleString()}
               </div>
             ) : session.status === 'finished' &&
-              user?.plan_tier === 'free' &&
+              (access.activeTier === 'free' || access.activeTier === 'none') &&
               user?.role !== 'admin' ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-card text-center p-8 gap-3">
                 <Lock className="w-12 h-12 text-primary" />

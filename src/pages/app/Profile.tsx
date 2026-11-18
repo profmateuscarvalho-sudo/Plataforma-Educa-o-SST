@@ -9,11 +9,13 @@ import {
   BadgeCheck,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { useStudentAccess } from '@/hooks/use-student-access'
 import { getPerfilStats, getLembrete, setLembrete, type PerfilStats } from '@/services/appService'
 import { toast } from '@/hooks/use-toast'
 
 export default function Profile() {
   const { user } = useAuth()
+  const access = useStudentAccess()
   const [stats, setStats] = useState<PerfilStats | null>(null)
   const [lembrete, setLembreteState] = useState<{ ativo: boolean; hora: string }>({
     ativo: true,
@@ -30,9 +32,9 @@ export default function Profile() {
     getLembrete(user.id)
       .then(setLembreteState)
       .catch(() => {})
-    const tier = user.plan_tier || 'free'
+    const tier = access.activeTier === 'none' ? 'free' : access.activeTier
     setPlanLabel(tier === 'ouro' ? 'Ouro' : tier === 'prata' ? 'Prata' : 'Gratuito')
-  }, [user])
+  }, [user, access.activeTier])
 
   const toggleLembrete = async (ativo: boolean) => {
     if (!user) return

@@ -156,7 +156,10 @@
       "errorPasswordUpper": "A senha deve conter pelo menos uma letra maiúscula.",
       "errorPasswordNumber": "A senha deve conter pelo menos um número.",
       "errorTitle": "Erro no cadastro",
-      "errorDesc": "Verifique os dados ou se o e-mail já está em uso.",
+      "errorDesc": "Verifique os dados informados e tente novamente. Se o problema persistir, entre em contato com o suporte.",
+      "errorEmailInUse": "Este e-mail já está cadastrado. Faça login ou recupere sua senha.",
+      "errorRequiredField": "Preencha todos os campos obrigatórios.",
+      "errorNetwork": "Serviço temporariamente indisponível. Verifique sua conexão e tente novamente.",
       "successTitle": "Cadastro realizado com sucesso!",
       "successDesc": "E-mail de ativação enviado! Verifique sua caixa de entrada e pasta de spam."
     },

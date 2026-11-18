@@ -17,6 +17,7 @@ import { SubscriptionPlan } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
 import { RegisterErrorBoundary } from '@/components/RegisterErrorBoundary'
+import { useRegisterError } from '@/hooks/use-register-error'
 
 const REGISTER_DRAFT_KEY = 'educacaosst_register_draft'
 
@@ -67,6 +68,7 @@ const formatPhone = (value: string) => {
 
 function RegisterFormContent() {
   const { signUp } = useAuth()
+  const { buildRegisterErrorMessage } = useRegisterError()
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
@@ -186,9 +188,10 @@ function RegisterFormContent() {
     setLoading(false)
 
     if (error) {
+      console.error('[register] create failed with error:', error)
       toast({
         title: t('auth.register.errorTitle'),
-        description: t('auth.register.errorDesc'),
+        description: buildRegisterErrorMessage(error),
         variant: 'destructive',
       })
     } else {

@@ -156,7 +156,10 @@
       "errorPasswordUpper": "La contraseña debe contener al menos una letra mayúscula.",
       "errorPasswordNumber": "La contraseña debe contener al menos un número.",
       "errorTitle": "Error en el registro",
-      "errorDesc": "Verifique los datos o si el correo electrónico ya está en uso.",
+      "errorDesc": "Verifica los datos informados e inténtalo de nuevo. Si el problema persiste, contacta al soporte.",
+      "errorEmailInUse": "Este correo electrónico ya está registrado. Inicia sesión o recupera tu contraseña.",
+      "errorRequiredField": "Completa todos los campos obligatorios.",
+      "errorNetwork": "Servicio temporalmente no disponible. Verifica tu conexión e inténtalo de nuevo.",
       "successTitle": "¡Registro realizado con éxito!",
       "successDesc": "¡Correo de activación enviado! Verifique su bandeja de entrada y carpeta de spam."
     },

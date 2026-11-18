@@ -82,9 +82,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       planId?: string,
     ) => {
       try {
+        const normalizedEmail = (email || '').trim().toLowerCase()
         await pb.collection('users').create({
-          name,
-          email,
+          name: (name || '').trim(),
+          email: normalizedEmail,
           password: pass,
           passwordConfirm: pass,
           role: 'student',
@@ -94,7 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           state,
           plan_id: planId,
         })
-        await pb.collection('users').authWithPassword(email, pass)
+        await pb.collection('users').authWithPassword(normalizedEmail, pass)
         return { error: null }
       } catch (error) {
         return { error }

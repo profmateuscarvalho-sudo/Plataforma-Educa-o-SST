@@ -9,7 +9,7 @@ routerAdd('POST', '/backend/v1/ipag/public-config', (e) => {
   var publicId =
     $secrets.get('IPAG_PUBLIC_ID') ||
     $os.getenv('IPAG_PUBLIC_ID') ||
-    '52FE-46EB973B-093285B8-D0D4FE52-D555'
+    '3B3D-12E1C68A-4F56C3CB-A17D62C7-2B38'
   if (publicId.length !== 36) {
     console.warn(
       '[ipag_public_config] IPAG_PUBLIC_ID com tamanho inesperado: ' +
@@ -37,7 +37,7 @@ routerAdd('GET', '/backend/v1/ipag/public-config', (e) => {
   var publicId =
     $secrets.get('IPAG_PUBLIC_ID') ||
     $os.getenv('IPAG_PUBLIC_ID') ||
-    '52FE-46EB973B-093285B8-D0D4FE52-D555'
+    '3B3D-12E1C68A-4F56C3CB-A17D62C7-2B38'
   if (publicId.length !== 36) {
     console.warn(
       '[ipag_public_config] IPAG_PUBLIC_ID com tamanho inesperado: ' +

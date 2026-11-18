@@ -21,6 +21,27 @@ const tierLevel = (tier: string): number => {
   }
 }
 
+// Deriva o tier a partir do plano da assinatura ativa (expand 'plan').
+// Corrige a divergência em que o painel/grupo ativa a assinatura (status 'active'
+// apontando para um plano pago em subscription_plans) mas users.plan_tier continua
+// 'free' — o site lia o tier só do usuário e exibia Free mesmo com assinatura paga.
+export function tierFromSubscriptions(subs: Subscription[]): PlanTier | null {
+  let best: PlanTier | null = null
+  for (const s of subs) {
+    if (s.status !== 'active') continue
+    const plan: any = (s as any).expand?.plan
+    if (!plan) continue
+    const name = String(plan.name || '').toLowerCase()
+    const price = Number(plan.price || 0)
+    let tier: PlanTier | null = null
+    if (name.includes('ouro')) tier = 'ouro'
+    else if (name.includes('prata')) tier = 'prata'
+    else if (price > 0) tier = 'prata'
+    if (tier && (!best || tierLevel(tier) > tierLevel(best))) best = tier
+  }
+  return best
+}
+
 export function useStudentAccess() {
   const { user } = useAuth()
   const userId = user?.id
@@ -64,8 +85,11 @@ export function useStudentAccess() {
   const activeTier = useMemo<PlanTier>(() => {
     if (user?.role === 'admin') return 'ouro'
     if (!hasSubscriptionAccess) return 'none'
-    return (user?.plan_tier as PlanTier) || 'free'
-  }, [user, hasSubscriptionAccess])
+    const fromUser = (user?.plan_tier as PlanTier) || 'free'
+    const fromSubs = tierFromSubscriptions(subscriptions)
+    if (fromSubs && tierLevel(fromSubs) > tierLevel(fromUser)) return fromSubs
+    return fromUser
+  }, [user, hasSubscriptionAccess, subscriptions])
 
   const hasActiveSubscription = useCallback(
     (): boolean => hasSubscriptionAccess,

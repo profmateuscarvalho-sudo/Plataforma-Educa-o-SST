@@ -34,7 +34,8 @@ import { createSubscription } from '@/services/subscriptions'
 import { createPayment, type CreatePaymentPayload } from '@/services/payments'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
-import { tokenizeCard, type TokenizeCardResult } from '@/lib/ipag'
+import { tokenizeCardDetailed } from '@/lib/ipag'
+import { detectCardBrand } from '@/lib/card-brand'
 import { formatCpf, sanitizeCpf, validateCpf } from '@/lib/cpf'
 
 export function SubscriptionCheckoutModal({
@@ -98,7 +99,7 @@ export function SubscriptionCheckoutModal({
             if (isSubscribed) setIsOpen(false)
           }, 3000)
         }
-      } catch (err) {
+      } catch {
         // Ignora erros transitórios no polling
       }
     }, 3000)
@@ -121,62 +122,6 @@ export function SubscriptionCheckoutModal({
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
-
-  const detectCardBrand = (number: string): string => {
-    const cleanNumber = number.replace(/\D/g, '')
-
-    // Faixas Elo co-branded iniciando em 4 apenas com BIN completo de 6 dígitos confirmado pelo script oficial iPag
-    const elo4Prefixes = [
-      '401178',
-      '401179',
-      '431274',
-      '438935',
-      '451416',
-      '457393',
-      '457631',
-      '457632',
-    ]
-
-    // Faixas Elo iniciando em 5 ou 6
-    const eloOtherPrefixes = [
-      '504175',
-      '5067',
-      '509',
-      '627780',
-      '636297',
-      '636368',
-      '636369',
-      '650',
-      '6516',
-      '6550',
-    ]
-
-    let detectedBrand = 'visa'
-
-    if (elo4Prefixes.some((prefix) => cleanNumber.startsWith(prefix))) {
-      detectedBrand = 'elo'
-    } else if (cleanNumber.startsWith('4')) {
-      // Qualquer número iniciado com 4 sem BIN Elo de 6 dígitos confirmado é VISA
-      detectedBrand = 'visa'
-    } else if (eloOtherPrefixes.some((prefix) => cleanNumber.startsWith(prefix))) {
-      detectedBrand = 'elo'
-    } else if (cleanNumber.startsWith('6')) {
-      // Cartões com 6 costumam ser Elo/Discover/Hipercard
-      detectedBrand = 'elo'
-    } else if (cleanNumber.startsWith('5') || cleanNumber.startsWith('2')) {
-      detectedBrand = 'mastercard'
->>>>>>>
-    } else if (cleanNumber.startsWith('3')) {
-      detectedBrand = 'amex'
-    } else {
-      detectedBrand = 'visa'
-    }
-
-    // TODO: remover debug
-    console.log('[DEBUG Bandeira iPag]', { input: number, cleanNumber, detectedBrand })
-
-    return detectedBrand
-  }
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCpf(e.target.value)
@@ -244,33 +189,36 @@ export function SubscriptionCheckoutModal({
     if (paymentMethod === 'card') {
       setStep('tokenizing')
 
-      const cardNumber = (formData.get('card_number') as string) || ''
+      const cardNumber = ((formData.get('card_number') as string) || '').replace(/\D/g, '')
       const expiry = (formData.get('expiry') as string) || ''
       const [rawMonth, rawYear] = expiry.split('/')
       const holder = (formData.get('card_name') as string) || ''
       const cvv = (formData.get('cvv') as string) || ''
       const method = detectCardBrand(cardNumber)
 
-      let token: string | null = null
+      // Tokenização 100% server-side: os dados brutos do cartão vão apenas
+      // para POST /backend/v1/ipag/tokenize-card (que chama o iPag) e não são
+      // gravados em banco nem em log — apenas os 4 últimos dígitos voltam.
+      let tokenResult: { token: string; brand?: string; last4?: string } | null = null
       try {
-        token = await tokenizeCard({
+        tokenResult = await tokenizeCardDetailed({
           holder,
           number: cardNumber,
           expiryMonth: rawMonth || '',
           expiryYear: rawYear || '',
           cvv,
         })
-        // Log de debug do createToken com sucesso
-        console.log('[DEBUG createToken iPag]', { success: true, token, method })
-        if (!token) {
-          throw new Error('Sem token retornado')
+        if (!tokenResult.token) {
+          throw new Error(
+            'Não foi possível validar o cartão. Verifique os dados e tente novamente.',
+          )
         }
       } catch (tokErr: any) {
-        // Log de debug do erro retornado pelo iPag no createToken
-        console.error('[DEBUG createToken iPag]', {
-          success: false,
-          error: tokErr?.message || tokErr,
-          method,
+        // Log apenas de metadados não sensíveis (bandeira/últimos 4 dígitos)
+        console.error('[checkout] falha de tokenização', {
+          brand: method,
+          last4: cardNumber.slice(-4),
+          message: tokErr?.message || String(tokErr),
         })
         setStep('idle')
         toast({
@@ -284,7 +232,7 @@ export function SubscriptionCheckoutModal({
       }
 
       payload.card = {
-        token,
+        token: tokenResult.token,
         method,
         installments: billingCycle === 'yearly' ? installments : 1,
       }
@@ -312,7 +260,6 @@ export function SubscriptionCheckoutModal({
             description: 'Escaneie para pagar com Pix.',
           })
         } else {
-          setStep('idle')
           throw new Error('Falha ao gerar QR Code Pix.')
         }
       } else {
@@ -322,9 +269,7 @@ export function SubscriptionCheckoutModal({
           await refreshUser()
           setTimeout(() => setIsOpen(false), 3000)
         } else {
-          // Pagamento recusado pelo gateway/banco: volta imediatamente para idle,
-          // mantém os dados digitados e avisa o usuário para tentar outro cartão
-          setStep('idle')
+          // Pagamento recusado pelo gateway/banco emissor
           toast({
             title: 'Pagamento recusado',
             description: 'Pagamento recusado, tente outro cartão.',
@@ -334,13 +279,13 @@ export function SubscriptionCheckoutModal({
         }
       }
     } catch (err: any) {
-      setStep('idle')
       toast({
-        title: 'Erro ao processar pagamento',
-        description: err?.message || 'Pagamento recusado, tente outro cartão.',
+        title: 'Erro do servidor',
+        description:
+          err?.message ||
+          'Erro do servidor ao processar o pagamento. Tente novamente em instantes.',
         variant: 'destructive',
       })
-      return
     } finally {
       setStep('idle')
     }
@@ -518,6 +463,7 @@ export function SubscriptionCheckoutModal({
                         required
                         placeholder="JOAO M SILVA"
                         className="h-10"
+                        autoComplete="cc-name"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -528,6 +474,7 @@ export function SubscriptionCheckoutModal({
                         placeholder="0000 0000 0000 0000"
                         maxLength={19}
                         className="h-10"
+                        autoComplete="cc-number"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -539,6 +486,7 @@ export function SubscriptionCheckoutModal({
                           placeholder="12/29"
                           maxLength={5}
                           className="h-10"
+                          autoComplete="cc-exp"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -550,6 +498,7 @@ export function SubscriptionCheckoutModal({
                           maxLength={4}
                           type="password"
                           className="h-10"
+                          autoComplete="cc-csc"
                         />
                       </div>
                     </div>
@@ -585,7 +534,7 @@ export function SubscriptionCheckoutModal({
                   {step === 'tokenizing' ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                      Conectando com segurança...
+                      Validando cartão...
                     </>
                   ) : step === 'paying' ? (
                     <>

@@ -9,11 +9,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CreditCard, Loader2, CheckCircle2 } from 'lucide-react'
+import { CreditCard, Loader2, CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { AvailableSlot } from '@/types'
-import { loadIpagScript } from '@/lib/ipag'
+import { tokenizeCardDetailed } from '@/lib/ipag'
+import { detectCardBrand } from '@/lib/card-brand'
 
 interface CheckoutModalProps {
   open?: boolean
@@ -76,7 +77,6 @@ export function CheckoutModal({
     if (isModalOpen) {
       setIsSuccess(false)
       setIsLoading(false)
-      loadIpagScript().catch(() => {})
     }
   }, [isModalOpen])
 
@@ -84,13 +84,50 @@ export function CheckoutModal({
     e.preventDefault()
     setIsLoading(true)
     const formData = new FormData(e.currentTarget)
+    const holder = String(formData.get('card_name') || '')
+    const cardNumber = String(formData.get('card_number') || '').replace(/\D/g, '')
+    const expiry = String(formData.get('expiry') || '')
+    const cvv = String(formData.get('cvv') || '')
+    const [expiryMonth, expiryYear] = expiry.split('/')
+
+    // Tokenização 100% server-side via /backend/v1/ipag/tokenize-card.
+    // Os dados brutos do cartão vão apenas ao endpoint de tokenização e não
+    // são gravados em banco nem em log — apenas os 4 últimos dígitos voltam.
+    let token = ''
+    try {
+      const result = await tokenizeCardDetailed({
+        holder,
+        number: cardNumber,
+        expiryMonth: expiryMonth || '',
+        expiryYear: expiryYear || '',
+        cvv,
+      })
+      token = result.token
+      if (!token) {
+        throw new Error('Não foi possível validar o cartão. Verifique os dados e tente novamente.')
+      }
+    } catch (tokErr: any) {
+      console.error('[checkout] falha de tokenização', {
+        brand: detectCardBrand(cardNumber),
+        last4: cardNumber.slice(-4),
+        message: tokErr?.message || String(tokErr),
+      })
+      setIsLoading(false)
+      toast({
+        title: 'Erro ao validar cartão',
+        description:
+          tokErr?.message ||
+          'Não foi possível validar o cartão. Verifique os dados e tente novamente.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     const payload: Record<string, any> = {
       amount: finalPrice,
       item: displayTitle,
-      card_name: formData.get('card_name'),
-      card_number: formData.get('card_number'),
-      expiry: formData.get('expiry'),
-      cvv: formData.get('cvv'),
+      card_token: token,
+      card_method: detectCardBrand(cardNumber),
       product_type: mentorshipId ? 'mentorship' : 'course',
     }
     if (mentorshipId) payload.mentorship_id = mentorshipId
@@ -107,12 +144,19 @@ export function CheckoutModal({
         toast({ title: 'Pagamento processado com sucesso!' })
         setTimeout(() => handleOpenChange(false), 3000)
       } else {
-        throw new Error('Falha no processamento.')
+        // Pagamento recusado pelo gateway/banco emissor
+        toast({
+          title: 'Pagamento recusado',
+          description: 'Pagamento recusado, tente outro cartão.',
+          variant: 'destructive',
+        })
       }
     } catch (err: any) {
       toast({
-        title: 'Erro ao processar pagamento',
-        description: err?.message || 'Verifique os dados do cartao e tente novamente.',
+        title: 'Erro do servidor',
+        description:
+          err?.message ||
+          'Erro do servidor ao processar o pagamento. Tente novamente em instantes.',
         variant: 'destructive',
       })
     } finally {
@@ -206,12 +250,19 @@ export function CheckoutModal({
                     required
                     placeholder="0000 0000 0000 0000"
                     maxLength={19}
+                    autoComplete="cc-number"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Validade (MM/AA)</Label>
-                    <Input name="expiry" required placeholder="12/29" maxLength={5} />
+                    <Input
+                      name="expiry"
+                      required
+                      placeholder="12/29"
+                      maxLength={5}
+                      autoComplete="cc-exp"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>CVV</Label>
@@ -231,7 +282,8 @@ export function CheckoutModal({
                   Pagar de Forma Segura
                 </Button>
                 <p className="text-xs text-center text-slate-400 mt-4">
-                  Processamento seguro via iPag Gateway
+                  <ShieldCheck className="inline w-3 h-3 mr-1" />
+                  Tokenização segura via iPag — seus dados de cartão não são armazenados
                 </p>
               </form>
             </div>

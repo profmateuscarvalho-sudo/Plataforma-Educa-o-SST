@@ -31,7 +31,7 @@ import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { ShieldAlert } from 'lucide-react'
 import { BACKEND_URL } from '@/lib/constants'
-import { tokenizeCard, IPAG_API_ID, IS_IPAG_SANDBOX, resolveIpagPublicId } from '@/lib/ipag'
+import { tokenizeCard } from '@/lib/ipag'
 import { formatCpf, sanitizeCpf, validateCpf } from '@/lib/cpf'
 
 const CARD_BRANDS = [
@@ -68,7 +68,6 @@ export default function AdminTestes() {
   const [cardExpiryYear, setCardExpiryYear] = useState('')
   const [cardCvv, setCardCvv] = useState('')
   const [cardBrand, setCardBrand] = useState('')
-  const [useTokenization, setUseTokenization] = useState(true)
   const [, setGeneratedToken] = useState<string | null>(null)
   const { user } = useAuth()
   const [securityLoading, setSecurityLoading] = useState(false)
@@ -76,15 +75,6 @@ export default function AdminTestes() {
   const [syncOrderId, setSyncOrderId] = useState('6ceigkbvl7pinu5')
   const [syncLoading, setSyncLoading] = useState(false)
   const [syncResult, setSyncResult] = useState<any>(null)
-  const [activeIpagId, setActiveIpagId] = useState(IPAG_API_ID)
-
-  useEffect(() => {
-    resolveIpagPublicId()
-      .then((id) => {
-        if (id) setActiveIpagId(id)
-      })
-      .catch(() => {})
-  }, [])
 
   const handleManualSync = async () => {
     if (!syncOrderId.trim()) {
@@ -194,53 +184,41 @@ export default function AdminTestes() {
       product_type: 'test',
     }
     if (paymentType === 'card') {
-      if (useTokenization) {
-        setStep('tokenizing')
-        try {
-          const token = await tokenizeCard({
-            holder: cardHolder,
-            number: cardNumber,
-            expiryMonth: cardExpiryMonth,
-            expiryYear: cardExpiryYear,
-            cvv: cardCvv,
-          })
-          if (!token) {
-            throw new Error('Sem token retornado')
-          }
-          setGeneratedToken(token)
-          payload.card = {
-            method: cardBrand,
-            token,
-          }
-        } catch (tokErr: any) {
-          setStep('idle')
-          setResult({
-            success: false,
-            status: 0,
-            data: { error: 'Falha na tokenização no navegador', details: tokErr?.message },
-          })
-          toast({
-            title: 'Erro na tokenização',
-            description:
-              tokErr?.message ||
-              'Não foi possível validar o cartão. Verifique os dados e tente novamente.',
-            variant: 'destructive',
-          })
-          return
-        }
-      } else {
-        setGeneratedToken(null)
-        payload.card = {
-          method: cardBrand,
+      // Tokenização 100% server-side via POST /backend/v1/ipag/tokenize-card.
+      // Dados brutos do cartão nunca vão no payload de pagamento.
+      setStep('tokenizing')
+      try {
+        const token = await tokenizeCard({
           holder: cardHolder,
           number: cardNumber,
-          expiry_month: cardExpiryMonth,
-          expiry_year: cardExpiryYear,
+          expiryMonth: cardExpiryMonth,
+          expiryYear: cardExpiryYear,
           cvv: cardCvv,
+        })
+        if (!token) {
+          throw new Error('Sem token retornado')
         }
+        setGeneratedToken(token)
+        payload.card = {
+          method: cardBrand,
+          token,
+        }
+      } catch (tokErr: any) {
+        setStep('idle')
+        setResult({
+          success: false,
+          status: 0,
+          data: { error: 'Falha na tokenização (server-side)', details: tokErr?.message },
+        })
+        toast({
+          title: 'Erro na tokenização',
+          description:
+            tokErr?.message ||
+            'Não foi possível validar o cartão. Verifique os dados e tente novamente.',
+          variant: 'destructive',
+        })
+        return
       }
-    } else {
-      setGeneratedToken(null)
     }
 
     setStep('paying')
@@ -371,25 +349,10 @@ export default function AdminTestes() {
                     <CreditCard className="w-4 h-4" />
                     Dados do Cartão
                   </div>
-                  <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={useTokenization}
-                      onChange={(e) => setUseTokenization(e.target.checked)}
-                      className="rounded border-slate-300"
-                    />
-                    <span>Tokenizar no cliente (iPag.js)</span>
-                  </label>
+                  <span className="text-xs text-slate-500">
+                    Tokenização segura no servidor (iPag)
+                  </span>
                 </div>
-                {useTokenization && (
-                  <div className="text-xs bg-blue-50 text-blue-700 p-2.5 rounded border border-blue-100 flex items-center gap-2">
-                    <KeyRound className="w-4 h-4 shrink-0" />
-                    <span>
-                      Ambiente: <strong>{IS_IPAG_SANDBOX ? 'Sandbox' : 'Produção'}</strong> · ID
-                      iPag: <code>{activeIpagId || '(não definido)'}</code>
-                    </span>
-                  </div>
-                )}
                 <div className="space-y-2">
                   <Label htmlFor="cardNumber">Número do Cartão</Label>
                   <Input

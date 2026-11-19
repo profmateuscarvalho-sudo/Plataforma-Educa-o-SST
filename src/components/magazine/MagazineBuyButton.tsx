@@ -50,23 +50,31 @@ export function MagazineBuyButton({
         size={variant === 'full' ? 'default' : 'sm'}
         onClick={() => onBuy(magazineId)}
         className={cn(
-          'w-full rounded-full font-bold bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] shadow-none',
+          // w-full + px simétrico: o botão ocupa 100% da largura INTERNA do card
+          // e nunca estoura; whitespace-normal permite o texto quebrar em telas
+          // estreitas (grade de 4 colunas no desktop) com o ícone sempre dentro.
+          'w-full max-w-full rounded-full font-bold bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] shadow-none px-3',
+          'whitespace-normal text-center leading-tight min-w-0',
           variant === 'full' ? 'h-11' : 'h-9 text-sm',
         )}
       >
-        {variant === 'full' ? (
-          <ShoppingCart className="w-4 h-4 mr-2" />
-        ) : (
-          <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
-        )}
-        Comprar esta edição{price > 0 ? ` — ${formatBRL(price)}` : ''}
+        <ShoppingCart className={cn('shrink-0', variant === 'full' ? 'w-4 h-4' : 'w-3.5 h-3.5')} />
+        <span className="min-w-0">
+          Comprar esta edição
+          {price > 0 && (
+            <>
+              {' — '}
+              <span className="whitespace-nowrap">{formatBRL(price)}</span>
+            </>
+          )}
+        </span>
       </Button>
       <p className="text-[11px] text-muted-foreground text-center leading-snug">
         ou{' '}
         <Link to="/planos" className="underline font-semibold hover:text-foreground">
           assine o Prata
         </Link>{' '}
-        e leia todas: 12x de R$ 14,90
+        e leia todas: 12x de <span className="whitespace-nowrap">R$ 14,90</span>
       </p>
     </div>
   )

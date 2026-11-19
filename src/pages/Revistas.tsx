@@ -292,22 +292,20 @@ export default function Revistas() {
                           <span className="font-serif font-bold text-lg">Revista Educação SST</span>
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
-                        <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FDBE2D] text-[#1C1B18] font-bold text-sm shadow-lg">
-                          <BookOpen className="w-4 h-4" />
-                          Abrir edição
-                        </span>
-                      </div>
+                      {/* Overlay "Abrir edição" só quando há acesso; bloqueada fica só a capa */}
+                      {!latestMagLocked && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
+                          <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FDBE2D] text-[#1C1B18] font-bold text-sm shadow-lg">
+                            <BookOpen className="w-4 h-4" />
+                            Abrir edição
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Número, mês e botão primário "Ler edição" à direita */}
                   <div className="md:col-span-7 space-y-6">
-                    {latestMagLocked && (
-                      <div className="flex flex-wrap items-center gap-3">
-                        <LockedBadge />
-                      </div>
-                    )}
                     <div className="space-y-2">
                       <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 text-[#FDBE2D] border border-white/15">
                         <span className="w-2 h-2 rounded-full bg-[#FDBE2D]" />
@@ -336,14 +334,11 @@ export default function Revistas() {
 
                     <div className="pt-2 flex flex-wrap items-center gap-4 sm:gap-6">
                       {latestMagLocked ? (
-                        <>
-                          <LockedCta className="h-12 px-8 rounded-full font-bold text-base" />
-                          <MagazineBuyButton
-                            magazineId={latestMag.id}
-                            onBuy={handleBuy}
-                            className="w-full max-w-xs [&>p]:text-[#F4F1E8]/70 [&>p>a]:text-[#FDBE2D]"
-                          />
-                        </>
+                        <MagazineBuyButton
+                          magazineId={latestMag.id}
+                          onBuy={handleBuy}
+                          className="w-full max-w-xs [&>p]:text-[#F4F1E8]/70 [&>p>a]:text-[#FDBE2D]"
+                        />
                       ) : (
                         <Button
                           size="lg"
@@ -445,25 +440,17 @@ export default function Revistas() {
                               <h4 className="font-serif font-semibold text-base sm:text-lg text-[#1C1B18] leading-tight line-clamp-2 group-hover:text-[#173F33] transition-colors">
                                 {mag.title}
                               </h4>
-                              {locked && (
-                                <div className="mt-2">
-                                  <LockedBadge />
-                                </div>
-                              )}
                             </div>
 
-                            {/* Ações: bloqueada → compra avulsa + CTA /planos;
+                            {/* Ações: bloqueada → compra avulsa + linha "ou assine o Prata";
                                 liberada (assinante ou comprou) → "Ler edição" */}
                             <div className="pt-3 border-t border-[#E4DED1]">
                               {locked ? (
-                                <div className="space-y-2">
-                                  <MagazineBuyButton
-                                    magazineId={mag.id}
-                                    onBuy={handleBuy}
-                                    variant="compact"
-                                  />
-                                  <LockedCta className="w-full justify-center" />
-                                </div>
+                                <MagazineBuyButton
+                                  magazineId={mag.id}
+                                  onBuy={handleBuy}
+                                  variant="compact"
+                                />
                               ) : (
                                 <div className="flex items-center justify-between text-xs font-semibold text-[#1C1B18] group-hover:text-[#173F33]">
                                   <span>Ler edição</span>

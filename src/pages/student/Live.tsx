@@ -1,222 +1,201 @@
-import { useParams, Link } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
-import { useAuth } from '@/hooks/use-auth'
-import { useStudentAccess } from '@/hooks/use-student-access'
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getLiveSession, getLiveMessages, sendLiveMessage } from '@/services/live'
 import { LiveSession, LiveMessage } from '@/types'
-import { useRealtime } from '@/hooks/use-realtime'
+import { useAuth } from '@/hooks/use-auth'
+import { useProtectedVideo } from '@/hooks/use-protected-video'
+import { LockedVideo } from '@/components/student/LockedVideo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ChevronLeft, Send, Lock } from 'lucide-react'
+import { ArrowLeft, Send, Loader2, Radio } from 'lucide-react'
 
 export default function StudentLive() {
-  const { id } = useParams()
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { user } = useAuth()
-  const access = useStudentAccess()
   const [session, setSession] = useState<LiveSession | null>(null)
   const [messages, setMessages] = useState<LiveMessage[]>([])
-  const [content, setContent] = useState('')
-  const [isQuestion, setIsQuestion] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [newMsg, setNewMsg] = useState('')
+  const [loading, setLoading] = useState(true)
 
-  const loadData = async () => {
-    if (!id) return
-    const [s, m] = await Promise.all([getLiveSession(id), getLiveMessages(id)])
-    setSession(s)
-    setMessages(m)
-  }
+  // Link do vídeo da live NUNCA vem do registro (a guarda do servidor esconde
+  // o campo de quem não tem direito): busca pela rota protegida ao abrir.
+  const protectedVideo = useProtectedVideo(session?.id || null, 'live')
 
   useEffect(() => {
-    loadData()
+    const load = async () => {
+      if (!id) return
+      try {
+        const s = await getLiveSession(id)
+        setSession(s)
+      } catch {
+        setSession(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [id])
-  useRealtime('live_messages', () => {
-    loadData()
-  })
-  useRealtime('live_sessions', () => {
-    loadData()
-  })
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (!id) return
+    const load = async () => {
+      try {
+        const msgs = await getLiveMessages(id)
+        setMessages(msgs)
+      } catch {
+        setMessages([])
+      }
+    }
+    load()
+    const interval = setInterval(load, 5000)
+    return () => clearInterval(interval)
+  }, [id])
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!content.trim() || !session || !user) return
-    await sendLiveMessage({ session: session.id, user: user.id, content, isQuestion })
-    setContent('')
-    setIsQuestion(false)
+  const handleSend = async () => {
+    if (!user || !id || !newMsg.trim()) return
+    const text = newMsg.trim()
+    setNewMsg('')
+    try {
+      const created = await sendLiveMessage({ session: id, content: text })
+      setMessages((prev) => [...prev, created])
+    } catch {
+      // mensagem duplicada localmente apenas se falhar — mantém simples
+    }
   }
 
-  if (!session) return <div className="p-8 text-white">Carregando...</div>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Carregando live...</div>
+      </div>
+    )
+  }
 
-  const iframeUrl = session.panda_video_id.startsWith('http')
-    ? session.panda_video_id
-    : `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${session.panda_video_id}`
-
-  return (
-    <div className="flex flex-col min-h-[calc(100vh-80px)] bg-background text-foreground">
-      <div className="h-16 border-b border-border flex items-center px-4 md:px-8 gap-4 bg-card shrink-0">
-        <Button
-          variant="ghost"
-          size="sm"
-          asChild
-          className="text-muted-foreground hover:text-foreground rounded-full min-h-[40px] px-3"
-        >
-          <Link to="/plataforma/live-sessions">
-            <ChevronLeft className="mr-2 w-4 h-4" /> Voltar
-          </Link>
-        </Button>
-        <div className="h-6 w-px bg-border mx-2 hidden md:block" />
-        <h1 className="font-serif font-semibold truncate text-foreground text-sm md:text-base">
-          {session.title}
-        </h1>
-        <div className="ml-auto flex items-center gap-2">
-          {session.status === 'live' && (
-            <span className="flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-[#B4472E] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#B4472E]"></span>
-            </span>
-          )}
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {session.status === 'live'
-              ? 'AO VIVO'
-              : session.status === 'finished'
-                ? 'ENCERRADA'
-                : 'AGENDADA'}
-          </span>
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Live não encontrada.</p>
+          <Button variant="outline" asChild>
+            <Link to="/plataforma/live-sessions">Voltar para lives</Link>
+          </Button>
         </div>
       </div>
-      <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-144px)]">
-        <div className="flex-1 flex flex-col p-4 md:p-8 gap-6 overflow-y-auto">
-          <div
-            className="bg-black w-full rounded-[28px] overflow-hidden relative border border-border"
-            style={{ paddingTop: '56.25%' }}
-          >
-            {session.status === 'scheduled' ? (
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
-                Transmissão inicia em {new Date(session.scheduled_at).toLocaleString()}
-              </div>
-            ) : session.status === 'finished' &&
-              (access.activeTier === 'free' || access.activeTier === 'none') &&
-              user?.role !== 'admin' ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-card text-center p-8 gap-3">
-                <Lock className="w-12 h-12 text-primary" />
-                <p className="text-foreground text-lg font-serif font-semibold">
-                  Conteúdo disponível para membros Prata e Ouro
-                </p>
-                <p className="text-muted-foreground text-sm max-w-md">
-                  Faça upgrade do seu plano para acessar as gravações das aulas ao vivo.
-                </p>
-                <Button
-                  asChild
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground mt-2 font-semibold px-8 min-h-[52px] rounded-full"
-                >
-                  <Link to="/planos">Faça um upgrade para ter acesso</Link>
-                </Button>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Top bar */}
+      <div className="sticky top-0 z-40 bg-card/90 backdrop-blur border-b border-border">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <Button variant="ghost" size="icon" asChild className="shrink-0">
+              <Link to="/plataforma/live-sessions">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+            </Button>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold truncate">{session.title}</p>
+              <p className="text-xs text-muted-foreground">
+                {session.status === 'live' ? (
+                  <span className="text-red-500 font-medium flex items-center gap-1">
+                    <Radio className="w-3 h-3" /> Ao vivo agora
+                  </span>
+                ) : (
+                  'Aula ao vivo'
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-6 grid lg:grid-cols-[1fr_360px] gap-6">
+        {/* Player / bloqueio */}
+        <div className="space-y-4">
+          <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
+            {protectedVideo.unlocked && protectedVideo.video?.url ? (
+              <iframe
+                src={protectedVideo.video.url}
+                className="w-full h-full"
+                allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+                allowFullScreen
+                title={session.title}
+              />
+            ) : protectedVideo.loading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <iframe
-                src={iframeUrl}
-                className="absolute top-0 left-0 w-full h-full border-none"
-                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-                allowFullScreen
-              />
+              <LockedVideo message="Aulas ao vivo estão disponíveis apenas para assinantes dos planos Prata e Ouro." />
             )}
           </div>
-          <div>
-            <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
-              {session.title}
-            </h2>
-            <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed text-sm">
-              {session.description}
-            </p>
-          </div>
-        </div>
-        <div className="w-full lg:w-96 shrink-0 bg-card border-l border-border flex flex-col h-full text-card-foreground">
-          <Tabs defaultValue="chat" className="flex flex-col h-full">
-            <TabsList className="w-full grid grid-cols-2 rounded-none bg-muted/50 p-1 h-14 border-b border-border">
-              <TabsTrigger
-                value="chat"
-                className="rounded-full data-[state=active]:bg-card data-[state=active]:text-foreground text-xs font-semibold"
-              >
-                Chat Geral
-              </TabsTrigger>
-              <TabsTrigger
-                value="questions"
-                className="rounded-full data-[state=active]:bg-card data-[state=active]:text-foreground text-xs font-semibold"
-              >
-                Perguntas
-              </TabsTrigger>
-            </TabsList>
-            <div className="flex-1 overflow-hidden relative">
-              <TabsContent
-                value="chat"
-                className="absolute inset-0 m-0 overflow-y-auto p-4 flex flex-col gap-4"
-              >
-                {messages.map((m) => (
-                  <div key={m.id} className="text-sm">
-                    <span className="font-serif font-semibold text-foreground mr-2">
-                      {m.expand?.user?.name || 'Aluno'}:
-                    </span>
-                    <span className="text-muted-foreground break-words">{m.content}</span>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </TabsContent>
-              <TabsContent
-                value="questions"
-                className="absolute inset-0 m-0 overflow-y-auto p-4 flex flex-col gap-4"
-              >
-                {messages
-                  .filter((m) => m.is_question)
-                  .map((m) => (
-                    <div
-                      key={m.id}
-                      className="text-sm bg-primary/10 border border-primary/20 p-4 rounded-[18px]"
-                    >
-                      <span className="font-serif font-semibold text-foreground block mb-1">
-                        {m.expand?.user?.name || 'Aluno'} perguntou:
-                      </span>
-                      <span className="text-foreground/90">{m.content}</span>
-                    </div>
-                  ))}
-                <div ref={messagesEndRef} />
-              </TabsContent>
+
+          {session.description && (
+            <div className="p-4 rounded-lg border border-border bg-card">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {session.description}
+              </p>
             </div>
-            {session.status === 'live' && (
-              <form onSubmit={handleSend} className="p-4 bg-card border-t border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="text-xs flex items-center gap-2 text-muted-foreground cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isQuestion}
-                      onChange={(e) => setIsQuestion(e.target.checked)}
-                      className="rounded border-border text-primary focus:ring-ring"
-                    />
-                    Marcar como Pergunta
-                  </label>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Digite sua mensagem..."
-                    className="rounded-full border-border bg-card text-foreground min-h-[44px] px-4"
-                  />
-                  <Button
-                    type="submit"
-                    size="icon"
-                    className="shrink-0 rounded-full w-11 h-11 bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </form>
-            )}
-          </Tabs>
+          )}
         </div>
+
+        {/* Chat */}
+        <aside className="flex flex-col rounded-xl border border-border bg-card h-[70vh] lg:h-auto">
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-sm font-semibold">Chat da live</p>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+            {messages.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-6">
+                Nenhuma mensagem ainda. Diga olá!
+              </p>
+            )}
+            {messages.map((m) => {
+              const author = m.expand?.user
+              return (
+                <div key={m.id} className="text-sm">
+                  <span className="font-semibold text-primary">
+                    {author?.name || 'Usuário'}
+                  </span>
+                  <span className="text-muted-foreground ml-2 text-xs">
+                    {new Date(m.created).toLocaleTimeString('pt-BR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                  <p className="text-foreground/90 break-words">{m.content}</p>
+                </div>
+              )
+            })}
+          </div>
+          {user ? (
+            <div className="p-3 border-t border-border flex gap-2">
+              <Input
+                value={newMsg}
+                onChange={(e) => setNewMsg(e.target.value)}
+                placeholder="Escreva uma mensagem..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
+              />
+              <Button size="icon" onClick={handleSend} disabled={!newMsg.trim()} className="shrink-0">
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="p-3 border-t border-border">
+              <Button variant="outline" className="w-full" asChild>
+                <Link to="/login">Entrar para participar do chat</Link>
+              </Button>
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   )

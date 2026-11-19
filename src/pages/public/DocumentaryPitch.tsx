@@ -4,7 +4,8 @@ import { getDocProject } from '@/services/doc_projects'
 import { DocProject } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Play, Calendar, Clock } from 'lucide-react'
+import { ArrowLeft, Play, Calendar, Clock, Loader2 } from 'lucide-react'
+import { useProtectedVideo } from '@/hooks/use-protected-video'
 import pb from '@/lib/pocketbase/client'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -14,6 +15,9 @@ export default function DocumentaryPitch() {
   const navigate = useNavigate()
   const [project, setProject] = useState<DocProject | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Link do vídeo NUNCA vem do registro: busca pela rota protegida ao abrir.
+  const pitchVideo = useProtectedVideo(project?.id || null, 'documentary')
 
   useEffect(() => {
     if (!id) return
@@ -69,14 +73,18 @@ export default function DocumentaryPitch() {
 
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
-          {project.panda_video_id ? (
+          {pitchVideo.unlocked && pitchVideo.video?.url ? (
             <iframe
-              src={`https://player-vz-${project.panda_video_id}.tv.pandavideo.com.br/embed/?v=${project.panda_video_id}`}
+              src={pitchVideo.video.url}
               className="w-full h-full"
               allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
               allowFullScreen
               title={project.title}
             />
+          ) : pitchVideo.loading ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
+            </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center relative">
               <img

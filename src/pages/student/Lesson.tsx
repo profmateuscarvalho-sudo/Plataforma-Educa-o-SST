@@ -1,412 +1,473 @@
-import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { getCourseModules, getCourseLessons, getCourseMaterials } from '@/services/curriculum'
+import { getCourse } from '@/services/courses'
+import { Module, Lesson, Material, Course } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
 import { useStudentAccess } from '@/hooks/use-student-access'
-import {
-  ChevronLeft,
-  PlayCircle,
-  FileText,
-  CheckSquare,
-  Star,
-  CheckCircle2,
-  Lock,
-} from 'lucide-react'
+import { useProtectedVideo } from '@/hooks/use-protected-video'
+import { LockedVideo } from '@/components/student/LockedVideo'
+import { useTrackAccess } from '@/hooks/use-track-access'
+import { toggleCompletion, rateLesson, getCompletions, getLessonRatings } from '@/services/student'
+import { pb } from '@/lib/pocketbase/client'
+import { cn } from '@/lib/utils'
+import { stripHtml } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { RichTextRenderer } from '@/components/RichTextEditor'
+import { formatBRL } from '@/lib/pricing'
+import { getErrorMessage } from '@/lib/form-errors'
+import { toast } from '@/hooks/use-toast'
 import {
   Accordion,
+  AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  AccordionContent,
 } from '@/components/ui/accordion'
-import { Progress } from '@/components/ui/progress'
-import { Textarea } from '@/components/ui/textarea'
-import { useEffect, useState } from 'react'
-import { getCourse } from '@/services/courses'
 import {
-  getCourseModules,
-  getCourseLessons,
-  getCourseMaterials,
-  getCourseQuizzes,
-} from '@/services/curriculum'
-import { getCompletions, toggleCompletion, getLessonRatings, rateLesson } from '@/services/student'
-import { Course, Module, Lesson, Material, Quiz, LessonCompletion, LessonRating } from '@/types'
-import { QuizPlayer } from '@/components/student/QuizPlayer'
-import pb from '@/lib/pocketbase/client'
-import { cn } from '@/lib/utils'
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Download,
+  FileText,
+  PlayCircle,
+  CheckCircle2,
+  ShoppingCart,
+  Loader2,
+} from 'lucide-react'
 
-const getPandaUrl = (val?: string) => {
-  if (!val) return ''
-  if (val.includes('<iframe') || val.includes('src="')) {
-    const m = val.match(/src="([^"]+)"/)
-    return m ? m[1] : ''
-  }
-  if (val.startsWith('http')) return val
-  return `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${val}`
-}
-
-type ActiveItem = { type: 'lesson'; data: Lesson } | { type: 'quiz'; data: Quiz }
+const LESSON_ID_RE = /aula\/([^/?]+)/
+const MODULE_ID_RE = /modulo\/([^/?]+)/
 
 export default function CourseLesson() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const { user, loading } = useAuth()
-  const { hasAccess } = useStudentAccess()
-  const [course, setCourse] = useState<Course | null>(null)
+  const { '*': wildcard } = useParams()
+  const { user } = useAuth()
+  const access = useStudentAccess()
+
   const [modules, setModules] = useState<Module[]>([])
-  const [lessons, setLessons] = useState<Lesson[]>([])
+  const [lessons, setLessons] = useState<Record<string, Lesson[]>>({})
   const [materials, setMaterials] = useState<Material[]>([])
-  const [quizzes, setQuizzes] = useState<Quiz[]>([])
-  const [activeItem, setActiveItem] = useState<ActiveItem | null>(null)
-  const [completions, setCompletions] = useState<LessonCompletion[]>([])
-  const [ratings, setRatings] = useState<LessonRating[]>([])
-  const [myRating, setMyRating] = useState(0)
-  const [myComment, setMyComment] = useState('')
+  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
+  const [course, setCourse] = useState<Course | null>(null)
+  const [completed, setCompleted] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+  const [purchaseLoading, setPurchaseLoading] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [userRating, setUserRating] = useState(0)
+  const [completionsVersion, setCompletionsVersion] = useState(0)
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
+
+  const protectedVideo = useProtectedVideo(activeVideoId, 'lesson')
+
+  useTrackAccess('Cursos')
 
   useEffect(() => {
-    if (!id || !user) return
-    Promise.all([
-      getCourse(id),
-      getCourseModules(id),
-      getCourseLessons(id),
-      getCourseMaterials(id),
-      getCourseQuizzes(id),
-      getCompletions(user.id),
-    ])
-      .then(([c, m, l, mat, q, comp]) => {
-        setCourse(c)
-        setModules(m)
-        setLessons(l)
-        setMaterials(mat)
-        setQuizzes(q)
-        setCompletions(comp)
-        if (l.length > 0) setActiveItem({ type: 'lesson', data: l[0] })
-        else if (q.length > 0) setActiveItem({ type: 'quiz', data: q[0] })
-      })
-      .catch(console.error)
-  }, [id, user])
+    // Parse da URL: /plataforma/curso/:id/aula ou /modulo/:id
+    const lessonMatch = wildcard?.match(LESSON_ID_RE)
+    const moduleMatch = wildcard?.match(MODULE_ID_RE)
+    const targetLessonId = lessonMatch?.[1]
+    const targetModuleId = moduleMatch?.[1]
 
-  useEffect(() => {
-    if (activeItem?.type === 'lesson') {
-      getLessonRatings(activeItem.data.id).then((r) => {
-        setRatings(r)
-        const mine = r.find((x) => x.user === user?.id)
-        if (mine) {
-          setMyRating(mine.rating)
-          setMyComment(mine.comment)
-        } else {
-          setMyRating(0)
-          setMyComment('')
+    const load = async () => {
+      setLoading(true)
+      try {
+        // Resolve a aula/curso a partir do wildcard antes de carregar tudo
+        let lesson: Lesson | null = null
+        if (targetLessonId) {
+          try {
+            lesson = await pb.collection('lessons').getOne(targetLessonId)
+          } catch {
+            lesson = null
+          }
         }
+
+        let courseId = ''
+        if (lesson) {
+          try {
+            const mod = await pb.collection('modules').getOne(lesson.module)
+            courseId = mod.course
+          } catch {
+            courseId = ''
+          }
+        } else if (moduleMatch?.[1]) {
+          try {
+            const mod = await pb.collection('modules').getOne(moduleMatch[1])
+            courseId = mod.course
+          } catch {
+            courseId = ''
+          }
+        }
+
+        const [mods, ls, ms] = await Promise.all([
+          courseId ? getCourseModules(courseId) : Promise.resolve([] as Module[]),
+          courseId ? getCourseLessons(courseId) : Promise.resolve([] as Lesson[]),
+          courseId ? getCourseMaterials(courseId) : Promise.resolve([] as Material[]),
+        ])
+
+        // Ordena módulos e aulas
+        const sortedMods = [...mods].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        const sortedLessons: Record<string, Lesson[]> = {}
+        for (const m of sortedMods) {
+          sortedLessons[m.id] = ls
+            .filter((l) => l.module === m.id)
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        }
+
+        setModules(sortedMods)
+        setLessons(sortedLessons)
+        setMaterials(ms)
+        if (courseId) {
+          try {
+            const c = await getCourse(courseId)
+            setCourse(c)
+          } catch {
+            setCourse(null)
+          }
+        }
+
+        // Seleciona a aula: a pedida na URL, a primeira disponível, ou a anterior
+        const allLessons = sortedMods.flatMap((m) => sortedLessons[m.id] || [])
+        const found = (lesson && allLessons.find((l) => l.id === lesson!.id)) || allLessons[0] || null
+        setCurrentLesson(found)
+        if (found) setActiveVideoId(found.id)
+      } catch {
+        setModules([])
+        setLessons({})
+        setMaterials([])
+        setCurrentLesson(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [wildcard])
+
+  // Conclusões e avaliações (por aluno)
+  useEffect(() => {
+    if (!user) return
+    let vivo = true
+    getCompletions()
+      .then((cs) => {
+        if (vivo) setCompleted(new Set(cs.map((c) => c.lesson)))
       })
+      .catch(() => {})
+    return () => {
+      vivo = false
     }
-  }, [activeItem, user])
+  }, [user, completionsVersion])
 
-  if (loading) return null
-  if (!user || (user.role !== 'student' && user.role !== 'admin')) return <Navigate to="/login" />
+  useEffect(() => {
+    if (!user || !currentLesson) return
+    let vivo = true
+    getLessonRatings(currentLesson.id)
+      .then((rs) => {
+        if (!vivo) return
+        const mine = rs.find((r) => r.user === user.id)
+        if (mine) setUserRating(mine.rating)
+        else setUserRating(0)
+        const avg =
+          rs.length > 0 ? rs.reduce((acc, r) => acc + (r.rating || 0), 0) / rs.length : 0
+        setRating(Math.round(avg))
+      })
+      .catch(() => {})
+    return () => {
+      vivo = false
+    }
+  }, [user, currentLesson])
 
-  const isSubscriptionExpired =
-    !user.contract_end_date || new Date(user.contract_end_date) < new Date()
-  if (!course)
+  const allLessons = modules.flatMap((m) => lessons[m.id] || [])
+  const idx = currentLesson ? allLessons.findIndex((l) => l.id === currentLesson.id) : -1
+  const prevLesson = idx > 0 ? allLessons[idx - 1] : null
+  const nextLesson = idx >= 0 && idx < allLessons.length - 1 ? allLessons[idx + 1] : null
+
+  const selectLesson = (l: Lesson) => {
+    setCurrentLesson(l)
+    setActiveVideoId(l.id)
+    // NÃO busca o vídeo aqui: useProtectedVideo resolve o link protegido.
+  }
+
+  const toggleComplete = async () => {
+    if (!currentLesson) return
+    try {
+      await toggleCompletion(currentLesson.id)
+      setCompleted((prev) => {
+        const next = new Set(prev)
+        if (next.has(currentLesson.id)) next.delete(currentLesson.id)
+        else next.add(currentLesson.id)
+        return next
+      })
+      setCompletionsVersion((v) => v + 1)
+    } catch (err) {
+      toast({ title: getErrorMessage(err), variant: 'destructive' })
+    }
+  }
+
+  const rateCurrentLesson = async (value: number) => {
+    if (!currentLesson || !user) return
+    const previous = userRating
+    setUserRating(value)
+    try {
+      await rateLesson(currentLesson.id, value)
+    } catch (err) {
+      setUserRating(previous)
+      toast({ title: getErrorMessage(err), variant: 'destructive' })
+    }
+  }
+
+  // Acesso liberado? (tier prata/ouro ativo OU curso gratuito OU curso comprado)
+  const canAccess = () => {
+    if (user?.role === 'admin') return true
+    if (access.activeTier === 'prata' || access.activeTier === 'ouro') return true
+    if (course?.is_free) return true
+    return false
+  }
+
+  const cursoLiberado = canAccess()
+
+  const handleBuyCourse = async () => {
+    if (!course) return
+    setPurchaseLoading(true)
+    try {
+      // Fluxo de compra avulsa do curso usa CheckoutModal no card de detalhe.
+      // Aqui redireciona para a página de detalhes, que tem o fluxo de checkout.
+      window.location.href = `/cursos/${course.id}`
+    } catch (err) {
+      toast({ title: getErrorMessage(err), variant: 'destructive' })
+    } finally {
+      setPurchaseLoading(false)
+    }
+  }
+
+
+
+  if (loading) {
     return (
-      <div className="p-8 text-muted-foreground min-h-[calc(100vh-64px)] flex items-center justify-center font-medium">
-        Carregando aula...
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Carregando aula...</div>
       </div>
     )
+  }
 
-  const courseAccess = hasAccess({
-    is_free: course.is_free,
-    courseId: course.id,
-  })
-  if (user.role === 'student' && !courseAccess) {
+  if (!course || allLessons.length === 0) {
     return (
-      <div className="flex flex-col min-h-[calc(100vh-64px)] bg-background text-foreground items-center justify-center p-8">
-        <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-          <Lock className="w-8 h-8 text-primary" />
-        </div>
-        <h2 className="text-2xl font-serif font-bold mb-2 text-foreground">Acesso Restrito</h2>
-        <p className="text-muted-foreground mb-6 text-center max-w-md text-sm">
-          Este curso é exclusivo para assinantes ou requer compra individual para ser acessado.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            onClick={() => navigate('/planos')}
-            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold min-h-[52px] px-6"
-          >
-            Ver Planos de Assinatura
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/cursos/${course.id}`)}
-            className="rounded-full border-[1.5px] border-foreground text-foreground hover:bg-muted min-h-[52px] px-6 font-semibold"
-          >
-            Comprar Curso
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/plataforma')}
-            className="rounded-full text-muted-foreground hover:text-foreground min-h-[52px] px-6"
-          >
-            Voltar ao Hub
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Nenhuma aula disponível para este curso.</p>
+          <Button variant="outline" asChild>
+            <Link to="/plataforma">Voltar ao Hub</Link>
           </Button>
         </div>
       </div>
     )
   }
-
-  const progress = lessons.length ? (completions.length / lessons.length) * 100 : 0
-  const isCurrentCompleted =
-    activeItem?.type === 'lesson' && completions.some((c) => c.lesson === activeItem.data.id)
-  const compRecord =
-    activeItem?.type === 'lesson'
-      ? completions.find((c) => c.lesson === activeItem.data.id)
-      : undefined
-
-  const handleCompleteNext = async () => {
-    if (activeItem?.type !== 'lesson') return
-    if (!isCurrentCompleted) {
-      await toggleCompletion(activeItem.data.id, user.id, false)
-      setCompletions(await getCompletions(user.id))
-    }
-    const idx = lessons.findIndex((l) => l.id === activeItem.data.id)
-    if (idx >= 0 && idx < lessons.length - 1)
-      setActiveItem({ type: 'lesson', data: lessons[idx + 1] })
-  }
-
-  const submitRating = async () => {
-    if (activeItem?.type !== 'lesson' || myRating === 0) return
-    await rateLesson({
-      user: user.id,
-      lesson: activeItem.data.id,
-      rating: myRating,
-      comment: myComment,
-    })
-    const r = await getLessonRatings(activeItem.data.id)
-    setRatings(r)
-  }
-
-  const videoId =
-    activeItem?.type === 'lesson'
-      ? activeItem.data.panda_video_id || course.panda_video_id
-      : course.panda_video_id
-  const activeTitle = activeItem?.type === 'lesson' ? activeItem.data.title : course.title
-  const activeDesc =
-    activeItem?.type === 'lesson' ? activeItem.data.description : course.description
-  const iframeUrl = getPandaUrl(videoId)
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-64px)] bg-background text-foreground">
-      {/* Top bar de navegação do player */}
-      <div className="h-16 border-b border-border flex items-center px-4 md:px-8 gap-4 bg-card shrink-0">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(user.role === 'admin' ? '/admin/cursos' : '/plataforma')}
-          className="rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
-        >
-          <ChevronLeft className="mr-1.5 w-4 h-4" /> Voltar
-        </Button>
-        <div className="h-5 w-px bg-border mx-1 hidden md:block" />
-        <h1 className="font-serif font-bold text-base md:text-lg truncate text-foreground flex-1">
-          {course.title}
-        </h1>
-        <div className="hidden md:flex items-center gap-3 w-48">
-          <Progress value={progress} className="h-2 bg-muted [&>div]:bg-primary" />
-          <span className="text-xs font-semibold text-muted-foreground">
-            {Math.round(progress)}%
-          </span>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Top bar */}
+      <div className="sticky top-0 z-40 bg-card/90 backdrop-blur border-b border-border">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <Button variant="ghost" size="icon" asChild className="shrink-0">
+              <Link to="/plataforma">
+                <ChevronLeft className="w-5 h-5" />
+              </Link>
+            </Button>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold truncate">{course?.title || 'Curso'}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {currentLesson ? stripHtml(currentLesson.title) : 'Selecione uma aula'}
+              </p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/plataforma">Hub de estudos</Link>
+          </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row max-w-[1400px] mx-auto w-full p-4 md:p-8 gap-8 items-start">
-        <div className="flex-1 w-full space-y-6">
-          {activeItem?.type === 'quiz' ? (
-            <QuizPlayer quiz={activeItem.data} />
-          ) : (
-            <>
-              {/* Moldura do vídeo com border-radius 28px */}
-              <div
-                className="bg-black w-full rounded-[28px] overflow-hidden shadow-xl relative border border-border"
-                style={{ paddingTop: '56.25%' }}
-              >
-                {iframeUrl ? (
-                  <iframe
-                    src={iframeUrl}
-                    className="absolute top-0 left-0 w-full h-full border-none"
-                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm font-medium">
-                    Vídeo não disponível
-                  </div>
-                )}
+      <div className="container mx-auto px-4 py-6 grid lg:grid-cols-[1fr_320px] gap-6">
+        {/* Conteúdo principal */}
+        <div className="space-y-4">
+          {/* Player / bloqueio */}
+          <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
+            {protectedVideo.unlocked && protectedVideo.video?.url ? (
+              <iframe
+                src={protectedVideo.video.url}
+                className="w-full h-full"
+                allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+                allowFullScreen
+                title={currentLesson?.title || 'Aula'}
+              />
+            ) : protectedVideo.loading || (activeVideoId && protectedVideo.video === null) ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
-
-              {/* Barra de ação: Concluir e próxima aula */}
-              <div className="flex justify-between items-center bg-card p-4 rounded-[28px] border border-border">
-                <Button
-                  onClick={handleCompleteNext}
-                  className={cn(
-                    'rounded-full font-bold gap-2 min-h-[52px] px-6 transition-all',
-                    isCurrentCompleted
-                      ? 'bg-muted text-success border border-success/40 hover:bg-muted/80'
-                      : 'bg-primary hover:bg-primary/90 text-primary-foreground',
-                  )}
-                >
-                  <CheckCircle2 className="w-5 h-5" />{' '}
-                  {isCurrentCompleted ? 'Concluída' : 'Concluir e Próxima Aula'}
-                </Button>
-              </div>
-
-              {/* Informações da aula e avaliações */}
-              <div className="bg-card p-6 md:p-8 rounded-[28px] border border-border text-card-foreground">
-                <h2 className="text-2xl font-serif font-bold text-foreground mb-3">
-                  {activeTitle}
-                </h2>
-                <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed text-sm">
-                  {activeDesc || 'Sem descrição cadastrada para esta aula.'}
-                </p>
-
-                <div className="mt-8 pt-8 border-t border-border">
-                  <h3 className="font-serif font-bold text-lg mb-4 text-foreground">
-                    Avalie esta aula
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => setMyRating(s)}
-                          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full p-1"
-                          aria-label={`Nota ${s}`}
-                        >
-                          <Star
-                            className={cn(
-                              'w-7 h-7 transition-colors',
-                              myRating >= s
-                                ? 'fill-primary text-primary'
-                                : 'text-muted-foreground/40',
-                            )}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    <Textarea
-                      placeholder="Deixe um comentário (opcional)..."
-                      value={myComment}
-                      onChange={(e) => setMyComment(e.target.value)}
-                      className="bg-background border-border text-foreground rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    />
-                    <Button
-                      onClick={submitRating}
-                      disabled={!myRating}
-                      className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold min-h-[52px] px-6 disabled:opacity-50"
-                    >
-                      Enviar Avaliação
-                    </Button>
-                  </div>
-
-                  {ratings.length > 0 && (
-                    <div className="mt-8 space-y-3">
-                      <h4 className="font-sans font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                        Comentários da Comunidade
-                      </h4>
-                      {ratings
-                        .filter((r) => r.comment)
-                        .map((r) => (
-                          <div
-                            key={r.id}
-                            className="bg-muted/40 p-4 rounded-2xl border border-border"
-                          >
-                            <div className="flex justify-between items-center mb-1.5">
-                              <span className="font-semibold text-xs text-foreground">
-                                {r.expand?.user?.name || 'Aluno'}
-                              </span>
-                              <span className="flex text-primary">
-                                {Array(r.rating)
-                                  .fill(0)
-                                  .map((_, i) => (
-                                    <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                                  ))}
-                              </span>
-                            </div>
-                            <p className="text-muted-foreground text-xs leading-relaxed">
-                              {r.comment}
-                            </p>
-                          </div>
-                        ))}
-                    </div>
-                  )}
+            ) : cursoLiberado && !activeVideoId ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <PlayCircle className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Selecione uma aula</p>
                 </div>
               </div>
-            </>
+            ) : (
+              <LockedVideo
+                message={
+                  cursoLiberado
+                    ? 'Vídeo desta aula não disponível. Tente novamente mais tarde.'
+                    : 'Esta aula faz parte de um curso pago. Assine o plano Prata para assistir.'
+                }
+              />
+            )}
+          </div>
+
+          {/* Título da aula + conclusão */}
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl md:text-2xl font-serif font-semibold">
+                {currentLesson ? stripHtml(currentLesson.title) : 'Aula'}
+              </h1>
+              {currentLesson?.description && (
+                <RichTextRenderer html={currentLesson.description} />
+              )}
+            </div>
+            <Button
+              variant={completed.has(currentLesson?.id || '') ? 'default' : 'outline'}
+              size="sm"
+              onClick={toggleComplete}
+              className="shrink-0"
+            >
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              {completed.has(currentLesson?.id || '') ? 'Concluída' : 'Marcar como concluída'}
+            </Button>
+          </div>
+
+          {/* Avaliação da aula */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Avalie esta aula:</span>
+            {[1, 2, 3, 4, 5].map((v) => (
+              <button key={v} onClick={() => rateCurrentLesson(v)} aria-label={`${v} estrelas`}>
+                <Star
+                  className={cn(
+                    'w-5 h-5 transition-colors',
+                    v <= (userRating || rating)
+                      ? 'fill-yellow-400 text-yellow-400'
+                      : 'text-muted-foreground',
+                  )}
+                />
+              </button>
+            ))}
+          </div>
+
+          {/* Materiais de apoio */}
+          {materials.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Materiais de apoio
+              </h2>
+              {materials.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border bg-card"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-sm truncate">{stripHtml(m.title)}</span>
+                  </div>
+                  {m.file ? (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={pb.files.getUrl(m, m.file)} target="_blank" rel="noreferrer">
+                        <Download className="w-4 h-4 mr-1" /> Baixar
+                      </a>
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Barra lateral de módulos / aulas */}
-        <div className="w-full lg:w-80 shrink-0 bg-card rounded-[28px] border border-border overflow-hidden flex flex-col text-card-foreground">
-          <div className="p-5 border-b border-border font-serif font-bold text-foreground">
-            Conteúdo do Curso
-          </div>
-          <Accordion type="single" collapsible defaultValue={modules[0]?.id} className="w-full">
-            {modules.map((mod) => (
-              <AccordionItem
-                value={mod.id}
-                key={mod.id}
-                className="border-border border-b-0 border-t first:border-t-0"
-              >
-                <AccordionTrigger className="px-5 py-4 hover:bg-muted/50 hover:no-underline text-sm font-semibold text-foreground text-left">
-                  {mod.title}
+        {/* Sidebar: módulos e aulas */}
+        <aside className="space-y-3">
+          <Progress
+            value={
+              allLessons.length > 0
+                ? Math.round((allLessons.filter((l) => completed.has(l.id)).length / allLessons.length) * 100)
+                : 0
+            }
+          />
+          <p className="text-xs text-muted-foreground text-right">
+            {allLessons.filter((l) => completed.has(l.id)).length}/{allLessons.length} aulas
+            concluídas
+          </p>
+
+          {!cursoLiberado && (
+            <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-3">
+              <p className="text-sm">
+                Este é um curso pago. Assine o plano Prata ou compre o curso avulso para acessar
+                todas as aulas.
+              </p>
+              <Button className="w-full" onClick={handleBuyCourse} disabled={purchaseLoading}>
+                {purchaseLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                )}
+                {course?.price ? `Comprar por ${formatBRL(course.price)}` : 'Ver opções de acesso'}
+              </Button>
+            </div>
+          )}
+
+          <Accordion
+            type="single"
+            collapsible
+            defaultValue={currentLesson?.module || modules[0]?.id}
+          >
+            {modules.map((m) => (
+              <AccordionItem key={m.id} value={m.id}>
+                <AccordionTrigger className="text-sm font-semibold">
+                  {stripHtml(m.title)}
                 </AccordionTrigger>
-                <AccordionContent className="pb-0">
-                  <div className="flex flex-col bg-muted/20">
-                    {lessons
-                      .filter((l) => l.module === mod.id)
-                      .map((l) => (
-                        <button
-                          key={l.id}
-                          type="button"
-                          onClick={() => setActiveItem({ type: 'lesson', data: l })}
-                          className={cn(
-                            'text-left px-6 py-3.5 text-xs sm:text-sm flex items-start gap-3 transition-colors border-l-2',
-                            activeItem?.type === 'lesson' && activeItem.data.id === l.id
-                              ? 'bg-primary/15 text-foreground border-primary font-semibold'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/40 border-transparent',
-                          )}
-                        >
-                          {completions.some((c) => c.lesson === l.id) ? (
-                            <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-success" />
-                          ) : (
-                            <PlayCircle className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
-                          )}
-                          <span className="line-clamp-2">{l.title}</span>
-                        </button>
-                      ))}
-                    {quizzes
-                      .filter((q) => q.module === mod.id)
-                      .map((q) => (
-                        <button
-                          key={q.id}
-                          type="button"
-                          onClick={() => setActiveItem({ type: 'quiz', data: q })}
-                          className={cn(
-                            'text-left px-6 py-3.5 text-xs sm:text-sm flex items-start gap-3 transition-colors border-l-2',
-                            activeItem?.type === 'quiz' && activeItem.data.id === q.id
-                              ? 'bg-primary/15 text-foreground border-primary font-semibold'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/40 border-transparent',
-                          )}
-                        >
-                          <CheckSquare className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
-                          <span className="line-clamp-2">{q.title}</span>
-                        </button>
-                      ))}
-                  </div>
+                <AccordionContent className="space-y-1">
+                  {(lessons[m.id] || []).map((l) => {
+                    const active = currentLesson?.id === l.id
+                    return (
+                      <button
+                        key={l.id}
+                        onClick={() => selectLesson(l)}
+                        className={cn(
+                          'w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors',
+                          active ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted',
+                        )}
+                      >
+                        {completed.has(l.id) ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                        ) : (
+                          <PlayCircle className="w-4 h-4 text-muted-foreground shrink-0" />
+                        )}
+                        <span className="truncate">{stripHtml(l.title)}</span>
+                      </button>
+                    )
+                  })}
+                  {(lessons[m.id] || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground px-3 py-1">Nenhuma aula.</p>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
-        </div>
+        </aside>
       </div>
+
+      {/* Navegação inferior */}
+      <div className="container mx-auto px-4 pb-10 flex items-center justify-between gap-3">
+        <Button variant="outline" disabled={!prevLesson} onClick={() => prevLesson && selectLesson(prevLesson)}>
+          <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
+        </Button>
+        <Button variant="outline" disabled={!nextLesson} onClick={() => nextLesson && selectLesson(nextLesson)}>
+          Próxima <ChevronRight className="w-4 h-4 ml-1" />
+        </Button>
+      </div>
+
     </div>
   )
 }

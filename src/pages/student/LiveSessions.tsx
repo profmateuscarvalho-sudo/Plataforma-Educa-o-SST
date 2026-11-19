@@ -3,20 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { getLiveSessions } from '@/services/live'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useTrackAccess } from '@/hooks/use-track-access'
+import { useProtectedVideo } from '@/hooks/use-protected-video'
+import { LockedVideo } from '@/components/student/LockedVideo'
 import { LiveSession } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { ArrowLeft, Radio, Calendar, User, Play, Video, Clock } from 'lucide-react'
-
-const getPandaUrl = (val?: string) => {
-  if (!val) return ''
-  if (val.includes('<iframe') || val.includes('src="')) {
-    const m = val.match(/src="([^"]+)"/)
-    return m ? m[1] : ''
-  }
-  if (val.startsWith('http')) return val
-  return `https://player-vz-c2b2b8c9-251.tv.pandavideo.com.br/embed/?v=${val}`
-}
 
 const fmtDate = (d: string) => {
   const dt = new Date(d)
@@ -31,6 +23,10 @@ export default function LiveSessions() {
   const [sessions, setSessions] = useState<LiveSession[]>([])
   const [loading, setLoading] = useState(true)
   const [playing, setPlaying] = useState<LiveSession | null>(null)
+
+  // Link do vídeo NUNCA vem do registro (a guarda do servidor esconde o campo
+  // de quem não tem direito): busca pela rota protegida ao abrir o player.
+  const protectedVideo = useProtectedVideo(playing?.id || null, 'live')
 
   useTrackAccess('Aulas ao Vivo')
 
@@ -223,17 +219,15 @@ export default function LiveSessions() {
           {playing && (
             <div className="flex flex-col">
               <div className="aspect-video bg-black">
-                {getPandaUrl(playing.panda_video_id) ? (
+                {protectedVideo.unlocked && protectedVideo.video?.url ? (
                   <iframe
-                    src={getPandaUrl(playing.panda_video_id)}
+                    src={protectedVideo.video.url}
                     className="w-full h-full border-none"
                     allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen"
                     allowFullScreen
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-                    Vídeo não disponível.
-                  </div>
+                ) : protectedVideo.loading ? null : (
+                  <LockedVideo message="Gravações estão disponíveis apenas para assinantes dos planos Prata e Ouro." />
                 )}
               </div>
               <div className="p-6 bg-card border-t border-border">

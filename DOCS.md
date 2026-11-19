@@ -130,18 +130,25 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 **subscriptions**
 | Campo | Tipo | Significado |
 |---|---|---|
-| `user` | relation → users | Dono da assinatura. |
-| `plan` | relation → subscription_plans | Plano contratado. |
-| `status` | select | `pending` / `active` / `cancelled` (o webhook promove `pending` → `active`). |
+| `user` | relation → users (required) | Dono da assinatura. |
+| `plan` | relation → subscription_plans | Plano contratado (pode ficar vazio = "órfã", ver 3.9). |
+| `status` | select (required) | `pending` / `active` (o webhook promove `pending` → `active`). |
+| `token` | text | Token da assinatura (índice único quando preenchido). |
 
 **subscription_plans**
 | Campo | Tipo | Significado |
 |---|---|---|
-| `name` | text | Nome (contém "Free", "Prata" ou "Ouro" — base do mapeamento de tier). |
-| `price` | number | Preço (0 = Free). |
-| `billing_cycle` | select | Ciclo suportado: `monthly` / `yearly`. |
+| `name` | text (required) | Nome (contém "Free", "Prata" ou "Ouro" — base do mapeamento de tier). |
+| `description` | text | Descrição exibida nas telas de planos. |
+| `price` | number | Preço base mensal equivalente (0 = Free). |
+| `interval` | select (required) | Ciclo: `monthly` / `yearly` — os planos vigentes são `yearly`. |
+| `price_yearly` | number | Preço anual. |
 | `features` | json | Lista de benefícios exibidos nas telas de planos. |
-| `active` / `order` | bool / number | Exibição no site. |
+| `is_coming_soon` | bool | Plano exibido como "em breve" (hoje: Ouro). |
+| `promo_active`, `promo_monthly_price`, `promo_ends_at`, `promo_label` | bool/number/date/text | Promoção temporária. |
+
+> **NÃO existe campo `is_active` nem `order` em `subscription_plans`** — qualquer busca de plano deve
+> ser por **tier/nome** (contém "free"/"prata"/"ouro"), nunca por "Mensal"/"Anual" (planos antigos excluídos).
 
 **payments**
 | Campo | Tipo | Significado |
@@ -149,11 +156,12 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 | `user` | relation → users | Pagador. |
 | `amount` | number | Valor. |
 | `status` | select | `pending` / `paid` / `failed`. |
-| `product_type` | select | `course` / `mentorship` / `subscription`. |
+| `product_type` | select | `course` / `mentorship` / `subscription` / `magazine`. |
 | `plan_id` | text | Id do plano (quando pagamento de assinatura; `order_id` do iPag = id do payment). |
 | `billing_cycle` | text | Ciclo enviado na cobrança. |
 | `course_id` | relation → courses | Curso comprado avulsamente (opcional; usado na liberação por compra, ver 3.8). |
 | `mentorship_id` | relation → mentorships | Mentoria comprada. |
+| `magazine_id` | text/relation → magazines | Edição da revista comprada avulsamente (ver 3.8). |
 | `selected_slots` | json | Horários escolhidos da mentoria. |
 | `ipag_id` | text | UUID da transação retornado pelo iPag. |
 
@@ -213,7 +221,7 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 - **Coleções sem uso (mantidas apenas como histórico — dados e coleção intactos, nenhuma migração de exclusão criada):**
   - **clientes**, **oportunidades**, **etapa_historico** (comercial) — módulo Comercial removido (Kanban/Clientes); os dados continuam no banco.
   - **banners** — módulo "Banners de Patrocínio" removido.
-  - **magazine_landing_page** — módulo "Anúncios Revista" removido (a página `/anuncie` agora redireciona para `/revistas`).
+  - **magazine_landing_page** — coleção de **preços da revista** (edição do mês R$ 29,90, anteriores R$ 14,90); a coleção antiga de anúncios "magazine_landing" saiu de uso (a página `/anuncie` hoje redireciona para `/revistas`).
   - **agora_debates**, **agora_votos**, **agora_apoios** — módulo "Ágora de Debates" removido (telas, rotas e menus excluídos; links antigos `/plataforma/agora` e `/app/agora` redirecionam para o hub). Os dados de debates/votos/apoios continuam no banco.
 - **agent_limits / agent_messages** — limites de uso e histórico de conversas do assistente de IA.
 - **ipag_probe** (coleções de diagnóstico das migrações 0114–0130) — sondas de teste do iPag; pendentes de remoção via painel Skip Cloud.
@@ -306,7 +314,15 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 - **Compra:** `create_payment.js` e `ipag_payment.js` aceitam `product_type = 'magazine'` com `magazine_id`, resolvendo o preço via `magazine_lib` e gravando `payments.magazine_id`; o ramo de assinatura mantém o desconto exclusivo de Pix/20% (a revista avulsa não recebe desconto).
 - **Acesso:** `access_guard.js` libera `magazines.fliphtml5_link`/`embed_code` quando existe payment `status = 'paid'` com `product_type = 'magazine'` e `magazine_id` daquela edição — por edição exata, sem tocar em tier/contrato de assinatura.
 - **E-mail:** confirmação de compra avulsa enviada via Brevo nos dois handlers do `ipag_webhook.js` (POST e GET), idempotente (`alreadyPaid`), registrada em `email_logs`.
+- **Preços públicos no frontend:** o endpoint **`GET /backend/v1/magazine-pricing`** (hook `magazine_pricing.js`) devolve os dois preços lidos de `magazine_landing_page`; o cache frontend vive em `src/lib/magazine-pricing.ts` (`fetchMagazinePricing`, `priceForEdition`, `formatBRL`). O botão de compra (visitante/Free) fica no card em `Revistas.tsx` e em `MagazineBuyButton.tsx`; visitante é levado a `/login?redirect=...` (o `Register.tsx` também honra `?redirect=` e volta à origem após criar a conta Free).
+- **"Minhas revistas":** seção no dashboard do aluno (`MyMagazinesSection`, chamada por `StudentDashboard`) lista as edições com payment `paid` (`usePurchasedMagazines`, filtro `status='paid' && magazine_id!=''`), com capa, rótulo da edição e botão **Ler** (`/plataforma/revista/:id`). Fica **oculta** quando não há compra nenhuma e também para **Prata/Ouro/admin** (que já têm acesso a tudo).
 - **Validação em runtime (2026-11-19, concluída):** hook temporário de diagnóstico (`magazine_diag.js`, rota `GET /backend/v1/magazine-diag`) confirmou: preços lidos de `magazine_landing_page` = **29,90 (edição do mês) / 14,90 (anteriores)**; edição do mês = revista publicada mais recente (Revista Nº35, id `ilrw3ja4rz9e1w5`); criados usuário e payment de teste (`paid`, `product_type = 'magazine'`, `magazine_id` da Nº35) e a MESMA condição da guarda liberou o link **somente para a edição comprada** (nenhuma das outras 9); GET anônimo em `/api/collections/magazines/records` retornou o catálogo **sem** `fliphtml5_link` e **sem** `embed_code`. O usuário/payment de teste permanecem no banco (limpeza é decisão do usuário no painel). **O hook de diagnóstico foi removido após o uso** — a rota `/backend/v1/magazine-diag` não existe mais (GET retorna 404).
+
+### 3.9 Limpeza dos planos mensais e religamento de assinaturas órfãs (migração 0139)
+
+- **Planos vigentes em `subscription_plans`: apenas Free, Prata e Ouro — todos `interval = yearly`** (os antigos "Prata Mensal", "Ouro Mensal", "Prata Anual" e "Ouro Anual" foram excluídos manualmente pelo dono). Busca de plano no código é sempre por **tier/nome** ("free"/"prata"/"ouro"), nunca por "Mensal"/"Anual" — e `subscription_plans` **não tem** campo `is_active`.
+- **Assinaturas órfãs:** ao excluir os planos antigos, as `subscriptions` que apontavam para eles ficaram com `plan` vazio. A migração **`0139_relink_orphan_subscriptions.js`** religa cada órfã ao plano ATUAL do mesmo nível, inferido do `plan_tier` do usuário (ouro/prata), priorizando as com `status = 'active'`; assinaturas `pending` também são religadas quando há nível. **Nível não inferível fica intacto** (relatado no console para decisão manual do admin). Idempotente: só toca em registros com `plan` vazio.
+- Aplicada em 2026-11-19: **nenhuma assinatura órfã restante** (`plan = ''` retorna vazio); todas as relações apontam para os planos vigentes (Free `h3mi9yt1yg78bmi`, Prata `5hsz1fa0oc4xg9c`, Ouro `cqpjy57naqxq2xy`).
 
 ---
 

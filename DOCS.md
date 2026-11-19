@@ -249,13 +249,43 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 - Quando o iPag recusa, a razão real (sanitizada — números de cartão e CVV mascarados) é repassada ao frontend; o `payment` vira `failed`.
 - Tela `/planos/pendentes` faz polling de status para pagamentos que ficam `pending`.
 
-### 3.5 Liberação de conteúdo por plano
+### 3.5 Liberação de conteúdo por plano (Bloco 3)
 
 - Cursos, aulas, mentorias, lives e documentários carregam um `plan_tier` mínimo; `useStudentAccess` calcula o nível efetivo e libera/bloqueia o conteúdo (badges `LockedBadge`, CTAs de upgrade em `PlanSection`/`PricingSection`).
 - Ouro acessa tudo; Prata acessa conteúdo free+prata; Free acessa apenas conteúdo free.
 - Simulados públicos não exigem login; os de aluno exigem assinatura conforme regra do item.
-- **Compra avulsa:** um pagamento `paid` com `product_type = course` e `course_id` dá acesso àquele curso independentemente do plano (`hasPurchased` em `src/hooks/use-student-access.ts`, filtrando `status = 'paid'` e igualdade de `course_id`). Pagamentos `pending`/`failed` nunca liberam nada.
+- **Compra avulsa:** um pagamento `paid` com `product_type = course` e `course_id` dá acesso àquele curso independentemente do plano (`hasPurchased` em `src/hooks/use-student-access.ts`, filtrando `status = 'paid'` e igualdade de `course_id`). Pagamentos `pending`/`failed` nunca liberam nada. Compra avulsa de REVISTA: reservado para o Bloco 4 (o card reserva o espaço visual, sem botão funcional).
 - **Confirmação de mentoria:** `on_mentorship_payment.js` dispara e-mail quando o pagamento vira `paid` — na criação ou na atualização para `paid` — com idempotência via `email_logs` (`email_type = 'mentorship_payment_confirmed'`); não envia duas vezes.
+
+#### 3.5.1 Guarda no servidor (`pocketbase/hooks/access_guard.js`, v0.0.350)
+
+- `onRecordEnrich` + `onRecordsListRequest` usam `record.hide(...)` — só afeta a **serialização** (o banco continua intacto); catálogo permanece público, o conteúdo sensível é esvaziado da resposta.
+- Campos escondidos: `lessons` → `panda_video_id` (o campo real de vídeo; não existe `video_url`); `materials` → `file`; `live_sessions` → `panda_video_id`; `doc_projects` → `panda_video_id` + `youtube_url`; `magazines` → `fliphtml5_link` + `embed_code`.
+- Regra de entitulamento: curso `is_free = true` libera aulas/materiais; tier efetivo **prata/ouro ATIVO** (users.plan_tier + `contract_end_date` ≥ hoje SP; vencida = Free; assinatura `active` com plano Prata/Ouro também conta); pagamento `paid` com `course_id` (compra avulsa); admin/superuser nunca é limitado.
+- Todo usuário anônimo/sem assinatura ativa = nível 1 (Free). A lógica vive 100% inline nos callbacks (limitação da JSVM: nada de funções top-level).
+
+#### 3.5.2 Matriz de acesso (Free / Prata / Ouro)
+
+| Área                            | Free                                                                        | Prata                          | Ouro                           | Protegido no servidor?                                              |
+| ------------------------------- | --------------------------------------------------------------------------- | ------------------------------ | ------------------------------ | ------------------------------------------------------------------- |
+| Hub (`/plataforma`)             | ✅                                                                          | ✅                             | ✅                             | não (requer login)                                                  |
+| Caderno (`/plataforma/caderno`) | ✅                                                                          | ✅                             | ✅                             | não (dono dos dados)                                                |
+| Cursos gratuitos                | ✅                                                                          | ✅                             | ✅                             | não (`courses.is_free`)                                             |
+| Cursos pagos (catálogo/detalhe) | 👁 catálogo + `LockedBadge` + CTA /planos                                   | ✅                             | ✅                             | **sim** (aulas sem `panda_video_id`, materiais sem `file`)          |
+| Aulas (player)                  | 🔒 vídeo limpo em curso pago (Free vê aulas de curso `is_free` ou comprado) | ✅                             | ✅                             | **sim** (`lessons.panda_video_id`)                                  |
+| Lives (agenda + sala)           | 👁 agenda; 🔒 sem vídeo                                                     | ✅                             | ✅                             | **sim** (`live_sessions.panda_video_id`)                            |
+| Revistas digitais (catálogo)    | 👁 catálogo público; 🔒 sem leitor                                          | ✅                             | ✅                             | **sim** (`magazines.fliphtml5_link`/`embed_code`)                   |
+| Documentários gratuitos         | ✅                                                                          | ✅                             | ✅                             | não (`is_free=true`)                                                |
+| Documentários pagos             | 🔒 sem `youtube_url`/`panda_video_id`                                       | ✅                             | ✅                             | **sim** (`doc_projects`)                                            |
+| Simulados                       | públicos ✅; de aluno 🔒                                                    | ✅                             | ✅                             | parcial (regra `public`/assinatura)                                 |
+| Mentorias                       | 👁 preço cheio + aviso "disponível para assinantes"                         | 💰 preço riscado + **30% off** | 💰 preço riscado + **30% off** | parcial (desconto calculado no servidor `mentorships.price × 0,70`) |
+| Compras avulsas (curso)         | ✅ compra libera aquele curso                                               | ✅                             | ✅                             | sim (payment `paid` + `course_id`)                                  |
+| Compras avulsas (revista)       | — Bloco 4                                                                   | — Bloco 4                      | — Bloco 4                      | —                                                                   |
+| Admin (`/admin`)                | ❌                                                                          | ❌                             | ❌                             | **sim** (`role = admin`)                                            |
+
+- Tela: `LockedBadge`/`LockedCta`/`LockedOverlay` (`src/components/LockedBadge.tsx`) exibem cadeado + CTA para `/planos` em cursos (`CourseCard`, `CourseDetails`, `Lesson`), revistas (`Revistas`) e lives/documentários.
+- Mentoria (`src/pages/Mentorias.tsx`): para Prata/Ouro o preço aparece riscado com o valor com 30% ao lado (`mentorshipDiscountedPrice`, `MENTORSHIP_DISCOUNT = 0.30`); para Free, aviso de que o desconto é exclusivo de assinantes.
+- Revista paga imediatamente: o catálogo é público (para conversão), mas a leitura exige Prata/Ouro ativos — a compra avulsa de edição entra no Bloco 4 (o espaço está reservado no card).
 
 ### 3.6 Campanha Dia do TST
 

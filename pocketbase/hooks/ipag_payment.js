@@ -7,6 +7,8 @@
 //
 // SEGURANÇA: este endpoint NUNCA recebe número de cartão nem CVV — apenas
 // o token gerado server-side. Nada sensível é gravado em banco ou logado.
+// Quando o iPag recusa, a razão real retornada por ele (sanitizada) é
+// repassada ao frontend.
 routerAdd(
   'POST',
   '/backend/v1/ipag/pay',
@@ -141,14 +143,59 @@ routerAdd(
     }
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
+      var rawFail = ''
+      if (res.raw) {
+        rawFail = String(res.raw)
+      } else if (res.body) {
+        try {
+          rawFail = String.fromCharCode.apply(null, new Uint8Array(res.body))
+        } catch (_) {
+          rawFail = String(res.body)
+        }
+      }
       // Nunca logar o corpo bruto (pode ecoar dados do pagador); só o status.
       console.error('[ipag-pay] iPag recusou o pagamento, status=' + res.statusCode)
+
+      // Razão real do iPag, sanitizada (sem cartão/CVV/credenciais).
+      var reason = ''
+      try {
+        var errData = JSON.parse(rawFail)
+        var errMsg = errData.message || ''
+        if (typeof errMsg === 'string' && errMsg.trim()) {
+          reason = errMsg
+        } else if (errMsg && typeof errMsg === 'object') {
+          var parts = []
+          for (var fk in errMsg) {
+            if (
+              Object.prototype.hasOwnProperty.call(errMsg, fk) &&
+              errMsg[fk] &&
+              errMsg[fk].length
+            ) {
+              for (var pj = 0; pj < errMsg[fk].length; pj++) {
+                parts.push(String(errMsg[fk][pj]))
+              }
+            }
+          }
+          reason = parts.join('; ')
+        }
+      } catch (_) {}
+      reason = String(reason || '')
+        .replace(/\d{12,}/g, function (m) {
+          return '****' + m.slice(-4)
+        })
+        .replace(/[`'\"]\s*\d{3,4}\s*[`'\"]/g, '`****`')
+        .replace(/\b\d{3,4}\b/g, '****')
+        .trim()
+      if (apiKey) {
+        reason = reason.split(apiKey).join('****')
+      }
+
       try {
         var recRefused = $app.findRecordById('payments', paymentRecordId)
         recRefused.set('status', 'failed')
         $app.save(recRefused)
       } catch (_) {}
-      throw new ApiError(402, 'Pagamento recusado, tente outro cartão.')
+      throw new ApiError(402, reason || 'Pagamento recusado, tente outro cartão.')
     }
 
     var data = res.json || {}

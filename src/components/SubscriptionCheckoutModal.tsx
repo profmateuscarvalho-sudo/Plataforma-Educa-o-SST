@@ -279,13 +279,23 @@ export function SubscriptionCheckoutModal({
         }
       }
     } catch (err: any) {
-      toast({
-        title: 'Erro do servidor',
-        description:
-          err?.message ||
-          'Erro do servidor ao processar o pagamento. Tente novamente em instantes.',
-        variant: 'destructive',
-      })
+      const refusalStatus = err?.status ?? err?.response?.status ?? err?.data?.code
+      if (refusalStatus === 402) {
+        // Razão real devolvida pelo iPag (repassada pelo hook)
+        toast({
+          title: 'Pagamento recusado',
+          description: err?.message || 'Pagamento recusado, tente outro cartão.',
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Erro do servidor',
+          description:
+            err?.message ||
+            'Erro do servidor ao processar o pagamento. Tente novamente em instantes.',
+          variant: 'destructive',
+        })
+      }
     } finally {
       setStep('idle')
     }

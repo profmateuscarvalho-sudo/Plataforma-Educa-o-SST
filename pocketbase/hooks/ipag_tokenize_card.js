@@ -3,8 +3,16 @@
 // com Basic Auth (IPAG_API_ID:IPAG_API_KEY) e devolve apenas o token e dados
 // não sensíveis (bandeira/últimos 4 dígitos).
 //
+// Payload documentado (developers.ipag.com.br/pt-br/token):
+//   { card: { holderName, number, expiryMonth(2), expiryYear(4), cvv },
+//     holder: { name } }  <- holder é OBRIGATÓRIO (sem ele o iPag devolve 406
+//     "Holder is required / Holder Invalid").
+//
 // SEGURANÇA: nunca logar número de cartão nem CVV. No máximo os 4 últimos
-// dígitos. Nenhum dado bruto do cartão é gravado em banco.
+// dígitos. Nenhum dado bruto do cartão é gravado em banco. Mensagens de erro
+// do iPag podem ecoar valores enviados (ex.: "CVV informado `0567` é
+// inválido") — sempre sanitizadas por sanitizeIpagMessage() antes de voltar
+// ao frontend ou ir para o log.
 routerAdd(
   'POST',
   '/backend/v1/ipag/tokenize-card',
@@ -17,6 +25,29 @@ routerAdd(
     var expiryYear = String(body.expiryYear || '').trim()
     var cvv = String(body.cvv || '').trim()
 
+    // ---- Sanitização de mensagens (nada de cartão/CVV/credenciais nelas) ----
+    var last4 = number.slice(-4)
+    function maskDigits(text) {
+      // Substitui sequências de 12+ dígitos (possível número de cartão)
+      return String(text).replace(/\d{12,}/g, function (m) {
+        return '****' + m.slice(-4)
+      })
+    }
+    function sanitizeIpagMessage(text) {
+      var msg = maskDigits(String(text || ''))
+      // CVV entre crases/apóstrofos/aspas (padrão das mensagens do iPag)
+      msg = msg.replace(/[`'\"]\s*\d{3,4}\s*[`'\"]/g, '`****`')
+      // Qualquer outro grupo de 3-4 dígitos isolado (possível CVV)
+      msg = msg.replace(/\b\d{3,4}\b/g, '****')
+      // Credenciais nunca podem vazar numa mensagem
+      msg = msg.split(apiKey).join('****')
+      return msg.trim()
+    }
+
+    // ---- Validação local (antes de ir ao iPag) ----
+    if (!holder) {
+      throw new BadRequestError('Nome do titular do cartão é obrigatório.')
+    }
     if (!number || !expiryMonth || !expiryYear || !cvv) {
       throw new BadRequestError('Dados do cartão incompletos.')
     }
@@ -30,12 +61,21 @@ routerAdd(
     if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
       throw new BadRequestError('Mês de validade inválido.')
     }
+    // iPag exige mês com 2 dígitos e ano com 4
+    var monthPadded = expiryMonth.length === 1 ? '0' + expiryMonth : expiryMonth
     if (expiryYear.length === 2) {
       expiryYear = '20' + expiryYear
     }
     var yearNum = parseInt(expiryYear, 10)
     if (isNaN(yearNum) || yearNum < 2020 || yearNum > 2100) {
       throw new BadRequestError('Ano de validade inválido.')
+    }
+    // Validade não pode estar no passado
+    var now = new Date()
+    var nowYear = now.getUTCFullYear()
+    var nowMonth = now.getUTCMonth() + 1
+    if (yearNum < nowYear || (yearNum === nowYear && monthNum < nowMonth)) {
+      throw new BadRequestError('Cartão vencido: verifique a validade.')
     }
 
     // Credenciais server-side via secrets (NUNCA com valor inline no código).
@@ -69,9 +109,12 @@ routerAdd(
       card: {
         holderName: holder,
         number: number,
-        expiryMonth: expiryMonth,
+        expiryMonth: monthPadded,
         expiryYear: expiryYear,
         cvv: cvv,
+      },
+      holder: {
+        name: holder,
       },
     }
 
@@ -91,10 +134,7 @@ routerAdd(
       })
     } catch (httpErr) {
       console.error(
-        '[tokenize-card] falha de conexão com iPag (card ****' +
-          number.slice(-4) +
-          '): ' +
-          httpErr.message,
+        '[tokenize-card] falha de conexão com iPag (card ****' + last4 + '): ' + httpErr.message,
       )
       throw new ApiError(502, 'Erro do servidor ao validar o cartão. Tente novamente.')
     }
@@ -110,30 +150,61 @@ routerAdd(
           rawBody = String(res.body)
         }
       }
-      // Nunca logar o corpo bruto (pode ecoar dados do cartão); log só o status.
+      // Log só o status — nunca o corpo bruto (pode ecoar dados do cartão).
       console.error('[tokenize-card] iPag recusou tokenização, status=' + res.statusCode)
-      throw new ApiError(
-        422,
-        'Não foi possível validar o cartão. Verifique os dados e tente novamente.',
-      )
+
+      // Extrai a razão real do iPag (sem dados sensíveis).
+      var reason = ''
+      try {
+        var errData = JSON.parse(rawBody)
+        var errMsg = errData.message || ''
+        if (typeof errMsg === 'string' && errMsg.trim()) {
+          // Ex.: { code: 422, message: "CVV informado `0567` é inválido..." }
+          reason = errMsg
+        } else if (errMsg && typeof errMsg === 'object') {
+          // Ex.: { code: 406, message: { "card.number": ["Card.number is required", ...] } }
+          var parts = []
+          for (var fieldKey in errMsg) {
+            var arr = errMsg[fieldKey]
+            if (Object.prototype.hasOwnProperty.call(errMsg, fieldKey) && arr && arr.length) {
+              for (var j = 0; j < arr.length; j++) {
+                parts.push(String(arr[j]))
+              }
+            }
+          }
+          reason = parts.join('; ')
+        }
+      } catch (_) {
+        // corpo não-JSON: sem razão estruturada
+      }
+      reason = sanitizeIpagMessage(reason)
+
+      if (!reason) {
+        if (res.statusCode === 401 || res.statusCode === 403) {
+          reason = 'Erro de autenticação com o gateway de pagamento. Avise o suporte da plataforma.'
+        } else {
+          reason = 'Não foi possível validar o cartão. Verifique os dados e tente novamente.'
+        }
+      }
+      throw new ApiError(422, reason)
     }
 
     var data = res.json || {}
-    // iPag pode devolver { token } ou { attributes: { token, ... } }
-    var attrs = data.attributes || data
-    var token = attrs.token || attrs.id || data.token || data.id || ''
+    // iPag pode devolver { token } ou { attributes: { card: {...} }, ... }
+    var attrs = data.attributes || {}
+    var cardAttrs = attrs.card || {}
+    var token = attrs.token || data.token || data.id || ''
     if (!token) {
       console.error('[tokenize-card] iPag não retornou token')
       throw new ApiError(502, 'Erro do servidor ao validar o cartão. Tente novamente.')
     }
 
-    var brand = attrs.brand || attrs.method || ''
-    var last4 = number.slice(-4)
+    var brand = attrs.brand || cardAttrs.brand || data.brand || ''
 
     return e.json(200, {
       token: token,
       brand: brand,
-      last4: last4,
+      last4: cardAttrs.last4 || last4,
     })
   },
   $apis.requireAuth(),

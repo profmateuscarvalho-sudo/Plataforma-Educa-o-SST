@@ -7,6 +7,9 @@
 //   { card: { holderName, number, expiryMonth(2), expiryYear(4), cvv },
 //     holder: { name } }  <- holder é OBRIGATÓRIO (sem ele o iPag devolve 406
 //     "Holder is required / Holder Invalid").
+//   card.validate = false: a validação real do cartão acontece na cobrança
+//   (POST /service/payment). Enviar true dispararia o fluxo Zero Auth na
+//   adquirente, que recusa o token com 422 quando a validação não passa.
 //
 // SEGURANÇA: nunca logar número de cartão nem CVV. No máximo os 4 últimos
 // dígitos. Nenhum dado bruto do cartão é gravado em banco. Mensagens de erro
@@ -116,6 +119,8 @@ routerAdd(
       holder: {
         name: holder,
       },
+      // Sem validação Zero Auth aqui: a cobrança valida de verdade.
+      validate: false,
     }
 
     var res

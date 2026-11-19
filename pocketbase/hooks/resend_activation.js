@@ -34,6 +34,9 @@ routerAdd(
       $security.randomString(12)
 
     var subscriptionId = ''
+    // Os planos atuais são anuais ("Free", "Prata", "Ouro") — o nível (tier) é
+    // mapeado pelo nome; a busca do plano é sempre por nível, nunca por
+    // "Mensal"/"Anual" (planos mensais foram excluídos).
     var planName = isFreePlan ? 'Free' : planTier === 'ouro' ? 'Ouro' : 'Prata'
     var resolvedPlanId = ''
 
@@ -51,16 +54,10 @@ routerAdd(
             var freePlan = $app.findFirstRecordByFilter('subscription_plans', "name ~ 'Free'")
             if (freePlan) resolvedPlanId = freePlan.id
           } else if (planTier === 'ouro') {
-            var ouroPlan = $app.findFirstRecordByFilter(
-              'subscription_plans',
-              "name ~ 'Ouro' && name ~ 'Mensal'",
-            )
+            var ouroPlan = $app.findFirstRecordByFilter('subscription_plans', "name ~ 'Ouro'")
             if (ouroPlan) resolvedPlanId = ouroPlan.id
           } else if (planTier === 'prata') {
-            var prataPlan = $app.findFirstRecordByFilter(
-              'subscription_plans',
-              "name ~ 'Prata' && name ~ 'Mensal'",
-            )
+            var prataPlan = $app.findFirstRecordByFilter('subscription_plans', "name ~ 'Prata'")
             if (prataPlan) resolvedPlanId = prataPlan.id
           }
         } catch (_) {}

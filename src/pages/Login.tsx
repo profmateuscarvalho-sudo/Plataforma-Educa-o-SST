@@ -18,6 +18,13 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [pass, setPass] = useState('')
   const [loading, setLoading] = useState(false)
+  const redirectTo = searchParams.get('redirect')
+
+  // Repassa a origem (?redirect=) para o cadastro, para que a volta pós-login
+  // seja mantida também no fluxo de criar conta.
+  const registerHref = redirectTo
+    ? `/register?redirect=${encodeURIComponent(redirectTo)}`
+    : '/register'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +44,6 @@ export default function Login() {
       })
     } else {
       toast({ title: t('auth.login.welcome') })
-      const redirectTo = searchParams.get('redirect')
       if (redirectTo) {
         navigate(redirectTo)
       } else {
@@ -125,7 +131,7 @@ export default function Login() {
           <div className="text-center pt-3 border-t border-[#E4DED1]">
             <p className="text-sm text-[#5F5A4F]">
               {t('auth.login.noAccount')}{' '}
-              <Link to="/register" className="text-[#1C1B18] font-bold hover:underline">
+              <Link to={registerHref} className="text-[#1C1B18] font-bold hover:underline">
                 {t('auth.login.createNow')}
               </Link>
             </p>

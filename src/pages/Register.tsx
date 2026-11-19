@@ -73,6 +73,9 @@ function RegisterFormContent() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const planId = searchParams.get('planId') || undefined
+  // Origem do usuário (ex.: /plataforma/revista/xyz): após concluir o cadastro,
+  // devolve para a URL de onde veio — mesmo comportamento do Login.
+  const redirectTo = searchParams.get('redirect') || undefined
   const { tags: availableTags } = useProfessionalTags()
   const {
     plans,
@@ -210,8 +213,8 @@ function RegisterFormContent() {
       } else if (effectivePlanId && selectedPlanTier !== 'free') {
         navigate(`/planos?planId=${effectivePlanId}&checkout=1`)
       } else {
-        // Fluxo Free: acesso imediato ao Dashboard
-        navigate('/plataforma')
+        // Fluxo Free: acesso imediato ao Dashboard (ou de volta à origem)
+        navigate(redirectTo || '/plataforma')
       }
     }
   }
@@ -219,7 +222,7 @@ function RegisterFormContent() {
   const handleCheckoutModalClose = (open: boolean) => {
     setCheckoutModalOpen(open)
     if (!open) {
-      navigate('/plataforma')
+      navigate(redirectTo || '/plataforma')
     }
   }
 
@@ -516,7 +519,10 @@ function RegisterFormContent() {
             <div className="text-center pt-2 border-t border-[#E4DED1]">
               <p className="text-sm text-[#5F5A4F]">
                 {t('auth.register.hasAccount')}{' '}
-                <Link to="/login" className="text-[#1C1B18] font-bold hover:underline">
+                <Link
+                  to={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'}
+                  className="text-[#1C1B18] font-bold hover:underline"
+                >
                   {t('auth.register.login')}
                 </Link>
               </p>

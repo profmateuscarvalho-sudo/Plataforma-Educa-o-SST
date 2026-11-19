@@ -33,6 +33,7 @@ import { getLiveSessions } from '@/services/live'
 import { getDocProjects } from '@/services/doc_projects'
 import { getAnnouncements } from '@/services/announcements'
 import { getFeaturedMagazine } from '@/services/magazines'
+import { MyMagazinesSection } from '@/components/student/MyMagazinesSection'
 import { BellRing, Radio, Megaphone, Crown, Award, Sparkles } from 'lucide-react'
 
 const tierConfig: Record<string, { label: string; icon: typeof Crown }> = {
@@ -105,8 +106,14 @@ export default function StudentDashboard() {
   // (access.activeTier já resolve admin como 'ouro'; 'none' cai para free)
   const userTier = access.activeTier === 'none' ? 'free' : access.activeTier
   const tier = tierConfig[userTier] || tierConfig.free
+
+  // "Minhas revistas": compradas avulsas (payments 'paid' com magazine_id).
+  // Esconde a seção inteira para Prata/Ouro (já têm todas as edições) e para
+  // quem não comprou nada. Admin também já tem acesso total.
   const contractExpired = !!user.contract_end_date && new Date(user.contract_end_date) < new Date()
   const isActive = user.role === 'admin' || !contractExpired
+  // "Minhas revistas" não aparece para Prata/Ouro (acesso total) nem admin.
+  const myMagazinesHide = user.role === 'admin' || userTier === 'prata' || userTier === 'ouro'
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -231,6 +238,8 @@ export default function StudentDashboard() {
         {view === 'hub' ? (
           <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
             <div className="space-y-10">
+              <MyMagazinesSection userId={user.id} hide={myMagazinesHide} />
+
               {visibleLives.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-5">

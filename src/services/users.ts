@@ -26,36 +26,20 @@ export const getAdmins = async () => {
   })
 }
 
-// Localiza o subscription_plan cujo nome corresponde ao tier escolhido
-// (respeitando o ciclo de cobrança quando informado), como fallback quando o
-// painel não tem um plano específico em mãos.
-const findPlanIdForTier = async (tier: string, billing: string): Promise<string | null> => {
+// Localiza o subscription_plan do nível (tier) escolhido, como fallback quando
+// o painel não tem um plano específico em mãos. Os planos atuais são os 3
+// anuais ("Free", "Prata", "Ouro") — a busca é sempre por nível; os antigos
+// "Prata Mensal"/"Ouro Mensal"/"Prata Anual"/"Ouro Anual" foram excluídos.
+const findPlanIdForTier = async (tier: string): Promise<string | null> => {
   const plans = await getSubscriptionPlans()
   const tierLower = tier.toLowerCase()
-  // Os planos no banco usam nomes em português ("Prata Mensal"), enquanto o
-  // ciclo de cobrança vem em inglês ('monthly'/'yearly') — mapeia os dois lados.
-  const billingTokens =
-    billing === 'yearly'
-      ? ['yearly', 'anual']
-      : billing === 'monthly'
-        ? ['monthly', 'mensal']
-        : [billing.toLowerCase()]
   const candidates = plans.filter((p: SubscriptionPlan) => p.name.toLowerCase().includes(tierLower))
-  if (candidates.length === 0) return null
-  const byBilling = candidates.find((p: SubscriptionPlan) => {
-    const name = p.name.toLowerCase()
-    return billingTokens.some((t) => name.includes(t))
-  })
-  if (byBilling) return byBilling.id
-  const nonAnnual = candidates.find(
-    (p: SubscriptionPlan) => !p.name.toLowerCase().includes('anual'),
-  )
-  return nonAnnual ? nonAnnual.id : candidates[0].id
+  return candidates.length > 0 ? candidates[0].id : null
 }
 
 // Garante que o aluno tenha exatamente UMA assinatura active, apontando para o
 // plano escolhido pelo admin. Corrige o caso em que a assinatura ativa existe
-// mas vinculada ao plano errado (ex.: Free em vez de Prata Mensal):
+// mas vinculada ao plano errado (ex.: Free em vez de Prata):
 // atualiza o vínculo do registro existente quando possível; caso contrário,
 // desativa as antigas e cria uma nova. Também mantém users.plan_tier em sync.
 export const applyUserPlan = async (
@@ -70,14 +54,14 @@ export const applyUserPlan = async (
   let targetPlanId = planId || null
   if (!targetPlanId && isPaid) {
     try {
-      targetPlanId = await findPlanIdForTier(planTier, billing)
+      targetPlanId = await findPlanIdForTier(planTier)
     } catch {
       targetPlanId = null
     }
   }
   if (!targetPlanId && !isPaid) {
     try {
-      targetPlanId = await findPlanIdForTier('free', billing)
+      targetPlanId = await findPlanIdForTier('free')
     } catch {
       targetPlanId = null
     }

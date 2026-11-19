@@ -300,6 +300,14 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 - Artigos entram por **link público com token** (`generateSubmissionLink` → `/artigos/submit`), validados por `validateToken` com expiração.
 - Workflow de status do artigo gerenciado em `/admin/revistas/artigos`; landing por edição configurável.
 
+### 3.8 Venda avulsa da revista (Bloco 4)
+
+- **Preço resolvido 100% no servidor** (`pocketbase/hooks/magazine_lib.js`): a edição do **mês corrente** é a revista **publicada mais recente** (maior `created`) em `magazine_landing_page`; as edições anteriores são cobradas a preço de "atrasada". O `amount` vindo do navegador nunca é confiado.
+- **Compra:** `create_payment.js` e `ipag_payment.js` aceitam `product_type = 'magazine'` com `magazine_id`, resolvendo o preço via `magazine_lib` e gravando `payments.magazine_id`; o ramo de assinatura mantém o desconto exclusivo de Pix/20% (a revista avulsa não recebe desconto).
+- **Acesso:** `access_guard.js` libera `magazines.fliphtml5_link`/`embed_code` quando existe payment `status = 'paid'` com `product_type = 'magazine'` e `magazine_id` daquela edição — por edição exata, sem tocar em tier/contrato de assinatura.
+- **E-mail:** confirmação de compra avulsa enviada via Brevo nos dois handlers do `ipag_webhook.js` (POST e GET), idempotente (`alreadyPaid`), registrada em `email_logs`.
+- **Validação em runtime (2026-11-19, concluída):** hook temporário de diagnóstico (`magazine_diag.js`, rota `GET /backend/v1/magazine-diag`) confirmou: preços lidos de `magazine_landing_page` = **29,90 (edição do mês) / 14,90 (anteriores)**; edição do mês = revista publicada mais recente (Revista Nº35, id `ilrw3ja4rz9e1w5`); criados usuário e payment de teste (`paid`, `product_type = 'magazine'`, `magazine_id` da Nº35) e a MESMA condição da guarda liberou o link **somente para a edição comprada** (nenhuma das outras 9); GET anônimo em `/api/collections/magazines/records` retornou o catálogo **sem** `fliphtml5_link` e **sem** `embed_code`. O usuário/payment de teste permanecem no banco (limpeza é decisão do usuário no painel). **O hook de diagnóstico foi removido após o uso** — a rota `/backend/v1/magazine-diag` não existe mais (GET retorna 404).
+
 ---
 
 ## 4. PERMISSÕES

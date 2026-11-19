@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { usePurchasedMagazines, isMagazinePurchased } from '@/hooks/use-purchased-magazines'
 import { useMagazineReadLink } from '@/hooks/use-magazine-read-link'
 import { MagazineBuyButton } from '@/components/magazine/MagazineBuyButton'
+import { MagazineReaderFrame } from '@/components/magazine/MagazineReaderFrame'
 import { CheckoutModal } from '@/components/CheckoutModal'
 
 // Extrai o ano da revista a partir da data de criação/atualização ou do título (ex: "2026", "2025", "2024")
@@ -513,18 +514,12 @@ export default function Revistas() {
                 />
                 <LockedCta className="h-11 px-6 rounded-full font-bold text-sm" />
               </div>
-            ) : readLink.embed_code ? (
-              <div
-                className="w-full h-full bg-white [&>iframe]:w-full [&>iframe]:h-full"
-                dangerouslySetInnerHTML={{ __html: readLink.embed_code }}
-              />
             ) : (
-              <iframe
-                src={readLink.embed_src || readLink.link}
-                className="w-full h-full border-none rounded-[28px] bg-white"
-                allowFullScreen
-                scrolling="no"
+              <MagazineReaderFrame
                 title={activeReaderMag.title}
+                embedCode={readLink.embed_code}
+                src={readLink.embed_src || readLink.link}
+                containerClassName="w-full h-full rounded-[28px] bg-white [&>iframe]:w-full [&>iframe]:h-full"
               />
             ))}
         </DialogContent>

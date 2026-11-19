@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Newspaper, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BackToHub } from '@/components/student/BackToHub'
 import { MagazineBuyButton } from '@/components/magazine/MagazineBuyButton'
+import { MagazineReaderFrame } from '@/components/magazine/MagazineReaderFrame'
 import { CheckoutModal } from '@/components/CheckoutModal'
 import { useAuth } from '@/hooks/use-auth'
 import { usePurchasedMagazines } from '@/hooks/use-purchased-magazines'
@@ -153,16 +154,12 @@ export default function MagazineReader() {
               Ver planos de assinatura
             </Button>
           </div>
-        ) : readLink?.embed_code ? (
-          <div
-            className="w-full h-full max-w-[1200px] bg-card rounded-[28px] overflow-hidden shadow-sm border border-border [&>iframe]:w-full [&>iframe]:h-[80vh]"
-            dangerouslySetInnerHTML={{ __html: readLink.embed_code }}
-          />
         ) : (
-          <iframe
-            src={readLink?.embed_src || readLink?.link}
-            className="w-full max-w-[1200px] h-[80vh] bg-card rounded-[28px] shadow-sm border border-border"
+          <MagazineReaderFrame
             title={magazine.title}
+            embedCode={readLink?.embed_code}
+            src={readLink?.embed_src || readLink?.link}
+            containerClassName="w-full h-full max-w-[1200px] rounded-[28px] shadow-sm border border-border [&>iframe]:h-[calc(80vh-56px)] [&>iframe]:w-full [&>iframe]:h-[80vh] [&>div]:h-[calc(80vh-56px)]"
           />
         )}
       </div>

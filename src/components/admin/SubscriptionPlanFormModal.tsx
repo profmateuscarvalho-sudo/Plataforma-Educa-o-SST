@@ -1,28 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Loader2, Plus, X } from 'lucide-react'
 import { createSubscriptionPlan, updateSubscriptionPlan } from '@/services/subscription-plans'
 import { SubscriptionPlan } from '@/types'
 import { useToast } from '@/hooks/use-toast'
-import { extractFieldErrors, type FieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
+import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
+import { calcularPrecosPlanos, formatBRL } from '@/lib/pricing'
 
 interface SubscriptionPlanFormModalProps {
   open: boolean
   setOpen: (v: boolean) => void
   editingPlan: SubscriptionPlan | null
   onSuccess: () => void
+}
+
+const parseInputNumber = (v: string): number | null => {
+  if (!v.trim()) return null
+  const n = parseFloat(v.replace(',', '.'))
+  return isNaN(n) ? null : n
 }
 
 export function SubscriptionPlanFormModal({
@@ -34,14 +34,18 @@ export function SubscriptionPlanFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [price, setPrice] = useState('')
-  const [priceYearly, setPriceYearly] = useState('')
-  const [interval, setInterval] = useState<'monthly' | 'yearly'>('monthly')
+  const [price, setPrice] = useState('') // valor MENSAL de referência
   const [isComingSoon, setIsComingSoon] = useState(false)
   const [features, setFeatures] = useState<string[]>([])
   const [newFeature, setNewFeature] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { toast } = useToast()
+
+  // Promoção
+  const [promoActive, setPromoActive] = useState(false)
+  const [promoMonthlyPrice, setPromoMonthlyPrice] = useState('')
+  const [promoEndsAt, setPromoEndsAt] = useState('') // yyyy-mm-dd
+  const [promoLabel, setPromoLabel] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -49,13 +53,30 @@ export function SubscriptionPlanFormModal({
       setName(editingPlan?.name || '')
       setDescription(editingPlan?.description || '')
       setPrice(editingPlan?.price != null ? String(editingPlan.price) : '')
-      setPriceYearly(editingPlan?.price_yearly != null ? String(editingPlan.price_yearly) : '')
-      setInterval(editingPlan?.interval || 'monthly')
       setIsComingSoon(editingPlan?.is_coming_soon ?? false)
       setFeatures(Array.isArray(editingPlan?.features) ? (editingPlan!.features as string[]) : [])
       setNewFeature('')
+      setPromoActive(!!editingPlan?.promo_active)
+      setPromoMonthlyPrice(
+        editingPlan?.promo_monthly_price != null ? String(editingPlan.promo_monthly_price) : '',
+      )
+      setPromoEndsAt(editingPlan?.promo_ends_at ? editingPlan.promo_ends_at.slice(0, 10) : '')
+      setPromoLabel(editingPlan?.promo_label || '')
     }
   }, [open, editingPlan])
+
+  // Prévia ao vivo — a MESMA função usada nas páginas públicas e no backend.
+  const priceNum = parseInputNumber(price) ?? 0
+  const preview = useMemo(
+    () =>
+      calcularPrecosPlanos(priceNum, {
+        active: promoActive,
+        monthlyPrice: parseInputNumber(promoMonthlyPrice) ?? 0,
+        endsAt: promoEndsAt ? `${promoEndsAt} 23:59:59` : undefined,
+        label: promoLabel,
+      }),
+    [priceNum, promoActive, promoMonthlyPrice, promoEndsAt, promoLabel],
+  )
 
   const handleAddFeature = () => {
     const trimmed = newFeature.trim()
@@ -78,13 +99,29 @@ export function SubscriptionPlanFormModal({
   const validate = () => {
     const errs: Record<string, string> = {}
     if (!name.trim()) errs.name = 'O nome é obrigatório.'
-    const numPrice = parseFloat(price)
-    if (isNaN(numPrice) || numPrice < 0)
-      errs.price = 'O preço deve ser um número maior ou igual a 0.'
-    if (priceYearly) {
-      const numYearly = parseFloat(priceYearly)
-      if (isNaN(numYearly) || numYearly < 0)
-        errs.priceYearly = 'O preço anual deve ser um número válido.'
+    const numPrice = parseInputNumber(price)
+    if (numPrice == null || numPrice < 0)
+      errs.price = 'O valor mensal deve ser um número maior ou igual a 0.'
+
+    if (promoActive) {
+      const numPromo = parseInputNumber(promoMonthlyPrice)
+      if (numPromo == null || numPromo < 0) {
+        errs.promoMonthlyPrice = 'Informe o valor mensal promocional (≥ 0).'
+      } else if (numPrice != null && numPrice > 0 && numPromo >= numPrice) {
+        errs.promoMonthlyPrice = 'O valor promocional deve ser MENOR que o valor normal.'
+      } else if (numPromo === 0 && (numPrice == null || numPrice <= 0)) {
+        errs.promoMonthlyPrice = 'O valor promocional deve ser MENOR que o valor normal.'
+      }
+      if (!promoEndsAt) {
+        errs.promoEndsAt = 'Informe a data de término da promoção.'
+      } else {
+        const end = new Date(`${promoEndsAt}T23:59:59-03:00`)
+        if (isNaN(end.getTime())) {
+          errs.promoEndsAt = 'Data inválida.'
+        } else if (end.getTime() < Date.now()) {
+          errs.promoEndsAt = 'A data de término deve ser futura.'
+        }
+      }
     }
     return errs
   }
@@ -102,14 +139,14 @@ export function SubscriptionPlanFormModal({
       const payload: Record<string, unknown> = {
         name: name.trim(),
         description: description.trim(),
-        price: parseFloat(price),
-        interval,
+        price: parseInputNumber(price) ?? 0,
+        interval: 'yearly', // a plataforma vende SOMENTE assinatura anual
         features: features,
         is_coming_soon: isComingSoon,
-      }
-
-      if (priceYearly) {
-        payload.price_yearly = parseFloat(priceYearly)
+        promo_active: promoActive,
+        promo_monthly_price: promoActive ? (parseInputNumber(promoMonthlyPrice) ?? 0) : 0,
+        promo_ends_at: promoActive && promoEndsAt ? `${promoEndsAt} 23:59:59.000Z` : '',
+        promo_label: promoActive ? promoLabel.trim() : '',
       }
 
       if (editingPlan) {
@@ -122,6 +159,7 @@ export function SubscriptionPlanFormModal({
       onSuccess()
       setOpen(false)
     } catch (err) {
+      setErrors(extractFieldErrors(err))
       toast({
         title: 'Erro ao salvar plano',
         description: getErrorMessage(err),
@@ -159,48 +197,107 @@ export function SubscriptionPlanFormModal({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label>Preço Mensal (R$) *</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="Ex: 49.90"
-              />
-              {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
+          <div>
+            <Label>Valor Mensal de Referência (R$) *</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Todos os planos são anuais: até 12x sem juros no cartão ou à vista no Pix com 20% de
+              desconto. Informe apenas o valor mensal.
+            </p>
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="Ex: 14.90"
+              className="mt-1"
+            />
+            {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
+          </div>
+
+          {/* Prévia ao vivo com a mesma função do site e do backend */}
+          <div className="rounded-lg border bg-slate-50 p-4 space-y-1.5">
+            <p className="text-sm font-semibold">Prévia (calculada pela função oficial)</p>
+            {preview.promoActive && (
+              <p className="text-sm text-muted-foreground">
+                <span className="line-through">{formatBRL(preview.withoutPromo!.installment)}</span>{' '}
+                →{' '}
+                <span className="font-semibold text-emerald-700">
+                  {formatBRL(preview.installment)}
+                </span>{' '}
+                promocionais
+              </p>
+            )}
+            <p className="text-sm">
+              Anual no cartão:{' '}
+              <span className="font-semibold">{formatBRL(preview.yearlyCardTotal)}</span> — 12x de{' '}
+              <span className="font-semibold">{formatBRL(preview.installment)}</span>
+            </p>
+            <p className="text-sm">
+              Anual no Pix (20% off):{' '}
+              <span className="font-semibold">
+                {formatBRL(preview.yearlyPixTotal).replace(/,00$/, '')}
+              </span>{' '}
+              à vista — equivale a {formatBRL(preview.monthlyPixEquivalent)}/mês
+            </p>
+            {preview.promoActive && preview.withoutPromo && (
+              <p className="text-sm text-muted-foreground">
+                Sem promoção: cartão {formatBRL(preview.withoutPromo.yearlyCardTotal)} (12x de{' '}
+                {formatBRL(preview.withoutPromo.installment)}), Pix{' '}
+                {formatBRL(preview.withoutPromo.yearlyPixTotal).replace(/,00$/, '')}
+              </p>
+            )}
+          </div>
+
+          {/* Promoção */}
+          <div className="rounded-lg border p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base font-semibold">Promoção</Label>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Desconto no valor mensal, com data de término e rótulo (ex.: "Black Friday").
+                </p>
+              </div>
+              <Switch checked={promoActive} onCheckedChange={setPromoActive} />
             </div>
-            <div>
-              <Label>Preço Anual (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={priceYearly}
-                onChange={(e) => setPriceYearly(e.target.value)}
-                placeholder="Ex: 358.80"
-              />
-              {errors.priceYearly && (
-                <p className="text-xs text-red-500 mt-1">{errors.priceYearly}</p>
-              )}
-            </div>
-            <div>
-              <Label>Intervalo *</Label>
-              <Select
-                value={interval}
-                onValueChange={(v) => setInterval(v as 'monthly' | 'yearly')}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">Mensal</SelectItem>
-                  <SelectItem value="yearly">Anual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {promoActive && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Valor mensal promocional (R$) *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={promoMonthlyPrice}
+                    onChange={(e) => setPromoMonthlyPrice(e.target.value)}
+                    placeholder="Ex: 9.90"
+                  />
+                  {errors.promoMonthlyPrice && (
+                    <p className="text-xs text-red-500 mt-1">{errors.promoMonthlyPrice}</p>
+                  )}
+                </div>
+                <div>
+                  <Label>Válida até *</Label>
+                  <Input
+                    type="date"
+                    value={promoEndsAt}
+                    onChange={(e) => setPromoEndsAt(e.target.value)}
+                  />
+                  {errors.promoEndsAt && (
+                    <p className="text-xs text-red-500 mt-1">{errors.promoEndsAt}</p>
+                  )}
+                </div>
+                <div>
+                  <Label>Rótulo</Label>
+                  <Input
+                    value={promoLabel}
+                    onChange={(e) => setPromoLabel(e.target.value)}
+                    placeholder="Ex: Black Friday"
+                    maxLength={100}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between rounded-lg border p-4">

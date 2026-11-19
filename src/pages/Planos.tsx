@@ -34,7 +34,7 @@ export default function Planos() {
       <PageHeader
         badge="Planos de Assinatura"
         title="Escolha seu plano de acesso"
-        description="Revista, cursos, aulas ao vivo e simulados reunidos em um itinerário prático. Comece grátis e avance quando fizer sentido."
+        description="Revista, cursos, aulas ao vivo e simulados reunidos em um itinerário prático. Assinatura anual: até 12x sem juros no cartão ou à vista no Pix com 20% de desconto."
       />
 
       {isExpired && (

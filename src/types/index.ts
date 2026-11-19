@@ -304,11 +304,18 @@ export interface Workplace extends RecordModel {
 export interface SubscriptionPlan extends RecordModel {
   name: string
   description: string
+  /** Valor MENSAL de referência (0 = Free). */
   price: number
+  /** @deprecated não usado desde a reestruturação anual (Bloco 1). */
   price_yearly?: number
   is_coming_soon?: boolean
   interval: 'monthly' | 'yearly'
   features: string[]
+  /** Promoção (Bloco 1): desconto no valor mensal com data de término. */
+  promo_active?: boolean
+  promo_monthly_price?: number
+  promo_ends_at?: string
+  promo_label?: string
 }
 
 export interface ItineraryStep {

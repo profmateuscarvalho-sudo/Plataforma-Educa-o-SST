@@ -16,6 +16,7 @@ import { SubscriptionPlan } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 import { useRealtime } from '@/hooks/use-realtime'
 import { SubscriptionPlanFormModal } from '@/components/admin/SubscriptionPlanFormModal'
+import { calcularPrecosDePlano, formatBRL } from '@/lib/pricing'
 
 export default function AdminSubscriptionPlans() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
@@ -53,19 +54,13 @@ export default function AdminSubscriptionPlans() {
     }
   }
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(price)
-
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-serif font-bold text-secondary">Planos de Assinatura</h2>
           <p className="text-muted-foreground mt-1">
-            Gerencie os planos comerciais da plataforma, seus preços e benefícios.
+            Assinaturas anuais: até 12x sem juros no cartão ou à vista no Pix com 20% de desconto.
           </p>
         </div>
         <Button onClick={() => handleOpenForm()}>
@@ -79,80 +74,111 @@ export default function AdminSubscriptionPlans() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Preço Mensal</TableHead>
-                <TableHead>Preço Anual</TableHead>
-                <TableHead>Intervalo</TableHead>
+                <TableHead>Valor mensal</TableHead>
+                <TableHead>Anual no cartão</TableHead>
+                <TableHead>Anual no Pix</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-center">Funcionalidades</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {plans.map((plan) => (
-                <TableRow key={plan.id}>
-                  <TableCell className="font-medium">
-                    <div>
-                      {plan.name}
-                      {plan.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{plan.description}</p>
+              {plans.map((plan) => {
+                const pricing = calcularPrecosDePlano(plan)
+                const showPromo = pricing.promoActive && !!pricing.withoutPromo
+                return (
+                  <TableRow key={plan.id}>
+                    <TableCell className="font-medium">
+                      <div>
+                        {plan.name}
+                        {plan.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{plan.description}</p>
+                        )}
+                        {showPromo && (
+                          <Badge
+                            variant="outline"
+                            className="mt-1 text-rose-600 border-rose-300 bg-rose-50"
+                          >
+                            Promoção: {plan.promo_label || 'ativa'}
+                            {plan.promo_ends_at
+                              ? ` — até ${new Date(plan.promo_ends_at).toLocaleDateString('pt-BR')}`
+                              : ''}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {showPromo ? (
+                        <div>
+                          <span className="line-through text-muted-foreground text-sm">
+                            {formatBRL(pricing.withoutPromo!.installment)}
+                          </span>{' '}
+                          <span className="font-semibold text-primary">
+                            {formatBRL(pricing.installment)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="font-semibold text-primary">
+                          {formatBRL(pricing.installment)}
+                        </span>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-semibold text-primary">
-                    {formatPrice(plan.price)}
-                  </TableCell>
-                  <TableCell className="font-medium text-slate-600">
-                    {plan.price_yearly != null ? formatPrice(plan.price_yearly) : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={plan.interval === 'yearly' ? 'default' : 'secondary'}>
-                      {plan.interval === 'monthly' ? 'Mensal' : 'Anual'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {plan.is_coming_soon ? (
-                      <Badge
-                        variant="outline"
-                        className="text-amber-600 border-amber-400 bg-amber-50"
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {formatBRL(pricing.yearlyCardTotal)}
+                      <span className="text-muted-foreground">
+                        {' '}
+                        (12x de {formatBRL(pricing.installment)})
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {formatBRL(pricing.yearlyPixTotal).replace(/,00$/, '')} à vista
+                      <span className="text-muted-foreground"> (20% off)</span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {plan.is_coming_soon ? (
+                        <Badge
+                          variant="outline"
+                          className="text-amber-600 border-amber-400 bg-amber-50"
+                        >
+                          <Clock className="w-3 h-3 mr-1" /> Em breve
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="text-emerald-600 border-emerald-400 bg-emerald-50"
+                        >
+                          Ativo
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                        <BadgeCent className="w-4 h-4" />
+                        {Array.isArray(plan.features) ? plan.features.length : 0}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Editar"
+                        onClick={() => handleOpenForm(plan)}
                       >
-                        <Clock className="w-3 h-3 mr-1" /> Em breve
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="text-emerald-600 border-emerald-400 bg-emerald-50"
+                        <Edit className="w-4 h-4 text-slate-600" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-600"
+                        title="Excluir"
+                        onClick={() => handleDelete(plan)}
                       >
-                        Ativo
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                      <BadgeCent className="w-4 h-4" />
-                      {Array.isArray(plan.features) ? plan.features.length : 0}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Editar"
-                      onClick={() => handleOpenForm(plan)}
-                    >
-                      <Edit className="w-4 h-4 text-slate-600" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-600"
-                      title="Excluir"
-                      onClick={() => handleDelete(plan)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
               {plans.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">

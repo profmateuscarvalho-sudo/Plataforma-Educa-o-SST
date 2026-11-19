@@ -10,6 +10,7 @@ import { useStudentAccess } from '@/hooks/use-student-access'
 import { SubscriptionCheckoutModal } from '@/components/SubscriptionCheckoutModal'
 import { SubscriptionPlan } from '@/types'
 import { cadastrarListaEspera } from '@/services/lista_espera'
+import { calcularPrecosDePlano, formatBRL } from '@/lib/pricing'
 
 const parseFeatures = (features: any): string[] => {
   if (!features) return []
@@ -89,8 +90,6 @@ export function HomePlansSection() {
         id: dbPlan.id,
         name: displayName,
         rawName: dbPlan.name,
-        monthlyPrice: dbPlan.price,
-        yearlyPrice: dbPlan.price_yearly,
         isComingSoon,
         isAvailable: isFree,
         isAvailablePaid,
@@ -236,22 +235,52 @@ export function HomePlansSection() {
 
                     {/* Preço */}
                     <div className="mb-6 pt-2">
-                      {plan.monthlyPrice === 0 ? (
+                      {isFree ? (
                         <div className="flex items-baseline gap-1">
                           <span className="text-4xl font-bold text-[#1C1B18]">Grátis</span>
                         </div>
                       ) : (
-                        <div className="space-y-1">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-3xl sm:text-4xl font-bold text-[#1C1B18]">
-                              {fmt(plan.monthlyPrice)}
-                            </span>
-                            <span className="text-sm text-[#7F7869]">/mês</span>
-                          </div>
-                          {plan.shippingNotice && (
-                            <p className="text-xs text-[#7F7869]">+ custos de frete</p>
-                          )}
-                        </div>
+                        (() => {
+                          const pricing = calcularPrecosDePlano(plan.dbPlan)
+                          const semPromo = pricing.withoutPromo
+                          return (
+                            <div className="space-y-1">
+                              {pricing.promoActive && semPromo && (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm text-[#7F7869] line-through">
+                                    12x de {formatBRL(semPromo.installment)}
+                                  </span>
+                                  {plan.dbPlan.promo_label && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#B4472E] text-white">
+                                      {plan.dbPlan.promo_label}
+                                    </span>
+                                  )}
+                                  {plan.dbPlan.promo_ends_at && (
+                                    <span className="text-[11px] text-[#7F7869]">
+                                      válida até{' '}
+                                      {new Date(plan.dbPlan.promo_ends_at).toLocaleDateString(
+                                        'pt-BR',
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-3xl sm:text-4xl font-bold text-[#1C1B18]">
+                                  12x de {formatBRL(pricing.installment)}
+                                </span>
+                              </div>
+                              <p className="text-sm text-[#7F7869]">assinatura anual</p>
+                              <p className="text-sm text-[#1F6B4A] font-medium">
+                                ou {formatBRL(pricing.yearlyPixTotal).replace(/,00$/, '')} à vista
+                                no Pix (20% off)
+                              </p>
+                              {plan.shippingNotice && (
+                                <p className="text-xs text-[#7F7869]">frete incluso</p>
+                              )}
+                            </div>
+                          )
+                        })()
                       )}
                     </div>
 

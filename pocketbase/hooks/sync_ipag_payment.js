@@ -20,30 +20,11 @@ routerAdd(
       return e.badRequestError('order_id é obrigatório')
     }
 
-    // Credenciais iPag: secrets primeiro, sempre com .trim() (sem espaços/quebras/aspas).
+    // Credenciais iPag: lidas dos secrets/env do runtime, sempre com .trim()
+    // (sem espaços/quebras/aspas). Sem fallback literal no código.
     // DIAGNÓSTICO: loga só 4 primeiros + 4 últimos caracteres e o tamanho — nunca a chave inteira.
     var apiId = String($secrets.get('IPAG_API_ID') || $os.getenv('IPAG_API_ID') || '').trim()
     var apiKey = String($secrets.get('IPAG_API_KEY') || $os.getenv('IPAG_API_KEY') || '').trim()
-    // Fallback inline DENTRO do callback (nunca top-level: scoping error na JSVM).
-    // Motivo: set_env recém-atualizado não propagou para pb_hooks — o runtime ainda
-    // servia a chave antiga (823C...EC38) em vez da nova de produção (4E10...939B).
-    if (!apiId) {
-      apiId = 'profmateus@educacaosst.com.br'
-    }
-    if (apiKey.substring(0, 4) !== '4E10' || apiKey.substring(apiKey.length - 4) !== '939B') {
-      console.warn(
-        '[ipag-creds] IPAG_API_KEY do runtime não confere com a chave nova (' +
-          (apiKey
-            ? apiKey.substring(0, 4) +
-              '...' +
-              apiKey.substring(apiKey.length - 4) +
-              ' len=' +
-              apiKey.length
-            : 'vazio') +
-          ') — usando fallback inline',
-      )
-      apiKey = '4E10-999FC1C2-E8C97B9F-927EE1C8-939B'
-    }
     var baseUrl = String(
       $secrets.get('IPAG_BASE_URL') || $os.getenv('IPAG_BASE_URL') || 'https://api.ipag.com.br',
     )

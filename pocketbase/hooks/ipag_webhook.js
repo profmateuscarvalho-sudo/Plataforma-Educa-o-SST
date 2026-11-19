@@ -226,6 +226,7 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         var planName = ''
         var tier = 'free'
         var planFound = false
+        var paidAmount = record.getFloat('amount') || 0
 
         if (planId) {
           try {
@@ -248,6 +249,8 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
             }
           } catch (_) {}
         }
+
+        var contractEndStr = user.getString('contract_end_date')
 
         if (tier !== 'free') {
           // Idempotência: só altera contract_end_date se ainda não estiver pago
@@ -306,6 +309,9 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
             user.set('contract_end_date', dateStr)
           }
 
+          // Reflete a data final (nova ou pré-existente) para o e-mail de confirmação
+          contractEndStr = user.getString('contract_end_date')
+
           user.set('plan_tier', tier)
           user.set('subscription_billing', billingCycle)
           user.set('email_verificado', true)
@@ -360,6 +366,8 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
               tier: tier,
               planName: planName,
               subscriptionId: subscriptionId,
+              paidAmount: paidAmount,
+              contractEnd: contractEndStr,
             }
           }
         }
@@ -410,10 +418,46 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
       var messageBody = isUpgrade
         ? 'Parabéns! Seu plano foi atualizado para o <strong>Plano ' +
           planLabel +
-          '</strong>. Aproveite todos os benefícios da sua nova assinatura na plataforma Educação SST.'
-        : 'Seu pagamento foi confirmado com sucesso! Sua assinatura do plano <strong>' +
+          '</strong>. Aproveite todos os benefícios da sua nova assinatura anual na plataforma Educação SST.'
+        : 'Seu pagamento foi confirmado com sucesso! Sua <strong>assinatura anual</strong> do plano <strong>' +
           (emailDataToSend.planName || 'Plano ' + planLabel) +
           '</strong> está ativa. Você já pode acessar todos os conteúdos exclusivos da plataforma Educação SST.'
+
+      // BLOCO 2 — resumo da assinatura anual: plano, validade (dd/mm/aaaa) e valor pago
+      var formatBRLHook = function (v) {
+        var n = Number(v) || 0
+        return 'R$ ' + n.toFixed(2).replace('.', ',')
+      }
+      var validityBR = ''
+      if (emailDataToSend.contractEnd && /^\d{4}-\d{2}-\d{2}/.test(emailDataToSend.contractEnd)) {
+        var vParts = emailDataToSend.contractEnd.substring(0, 10).split('-')
+        validityBR = vParts[2] + '/' + vParts[1] + '/' + vParts[0]
+      }
+      var summaryRows = ''
+      summaryRows +=
+        '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Plano</td>' +
+        '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">' +
+        (emailDataToSend.planName || 'Plano ' + planLabel) +
+        '</td></tr>'
+      summaryRows +=
+        '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Modalidade</td>' +
+        '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">Assinatura anual</td></tr>'
+      if (validityBR) {
+        summaryRows +=
+          '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Válido até</td>' +
+          '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">' +
+          validityBR +
+          '</td></tr>'
+      }
+      summaryRows +=
+        '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;">Valor pago</td>' +
+        '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;">' +
+        formatBRLHook(emailDataToSend.paidAmount) +
+        '</td></tr>'
+      var summaryTable =
+        '<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">' +
+        summaryRows +
+        '</table>'
 
       var htmlContent =
         '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
@@ -454,6 +498,7 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">' +
         messageBody +
         '</p>' +
+        summaryTable +
         '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">' +
         '<a href="https://www.educacaosst.com.br/plataforma" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Acessar Plataforma</a>' +
         '</td></tr></table>' +
@@ -834,6 +879,7 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
         var planName = ''
         var tier = 'free'
         var planFound = false
+        var paidAmount = record.getFloat('amount') || 0
 
         if (planId) {
           try {
@@ -856,6 +902,8 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
             }
           } catch (_) {}
         }
+
+        var contractEndStr = user.getString('contract_end_date')
 
         if (tier !== 'free') {
           // Idempotência: só altera contract_end_date se ainda não estiver pago
@@ -914,6 +962,9 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
             user.set('contract_end_date', dateStr2)
           }
 
+          // Reflete a data final (nova ou pré-existente) para o e-mail de confirmação
+          contractEndStr = user.getString('contract_end_date')
+
           user.set('plan_tier', tier)
           user.set('subscription_billing', billingCycle)
           user.set('email_verificado', true)
@@ -968,6 +1019,8 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
               tier: tier,
               planName: planName,
               subscriptionId: subscriptionId,
+              paidAmount: paidAmount,
+              contractEnd: contractEndStr,
             }
           }
         }
@@ -1017,10 +1070,46 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
       var messageBody = isUpgrade
         ? 'Parabéns! Seu plano foi atualizado para o <strong>Plano ' +
           planLabel +
-          '</strong>. Aproveite todos os benefícios da sua nova assinatura na plataforma Educação SST.'
-        : 'Seu pagamento foi confirmado com sucesso! Sua assinatura do plano <strong>' +
+          '</strong>. Aproveite todos os benefícios da sua nova assinatura anual na plataforma Educação SST.'
+        : 'Seu pagamento foi confirmado com sucesso! Sua <strong>assinatura anual</strong> do plano <strong>' +
           (emailDataToSend.planName || 'Plano ' + planLabel) +
           '</strong> está ativa. Você já pode acessar todos os conteúdos exclusivos da plataforma Educação SST.'
+
+      // BLOCO 2 — resumo da assinatura anual: plano, validade (dd/mm/aaaa) e valor pago
+      var formatBRLHook = function (v) {
+        var n = Number(v) || 0
+        return 'R$ ' + n.toFixed(2).replace('.', ',')
+      }
+      var validityBR = ''
+      if (emailDataToSend.contractEnd && /^\d{4}-\d{2}-\d{2}/.test(emailDataToSend.contractEnd)) {
+        var vParts = emailDataToSend.contractEnd.substring(0, 10).split('-')
+        validityBR = vParts[2] + '/' + vParts[1] + '/' + vParts[0]
+      }
+      var summaryRows = ''
+      summaryRows +=
+        '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Plano</td>' +
+        '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">' +
+        (emailDataToSend.planName || 'Plano ' + planLabel) +
+        '</td></tr>'
+      summaryRows +=
+        '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Modalidade</td>' +
+        '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">Assinatura anual</td></tr>'
+      if (validityBR) {
+        summaryRows +=
+          '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Válido até</td>' +
+          '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">' +
+          validityBR +
+          '</td></tr>'
+      }
+      summaryRows +=
+        '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;">Valor pago</td>' +
+        '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;">' +
+        formatBRLHook(emailDataToSend.paidAmount) +
+        '</td></tr>'
+      var summaryTable =
+        '<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">' +
+        summaryRows +
+        '</table>'
 
       var htmlContent =
         '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
@@ -1061,6 +1150,7 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
         '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">' +
         messageBody +
         '</p>' +
+        summaryTable +
         '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">' +
         '<a href="https://www.educacaosst.com.br/plataforma" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Acessar Plataforma</a>' +
         '</td></tr></table>' +

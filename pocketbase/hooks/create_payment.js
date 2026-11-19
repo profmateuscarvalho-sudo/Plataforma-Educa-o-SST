@@ -25,10 +25,70 @@ routerAdd(
       }
     }
 
+    // BLOCO 2 — assinatura SEMPRE anual:
+    // serverAmount declarado ANTES (era redeclarado depois e zerava o valor
+    // calculado da assinatura, quebrando o checkout sem amount no body).
+    var installments = 1
+    var promoApplied = false
+    var serverAmount = 0
+    if (body.product_type === 'subscription') {
+      // (e) força anual — 'monthly' continua aceito por compatibilidade do payload antigo
+      body.billing_cycle = 'yearly'
+      // valida parcelas (1-12) ANTES de qualquer cobrança
+      var inst = Number(body.installments === undefined ? 1 : body.installments)
+      if (!Number.isInteger(inst) || inst < 1 || inst > 12) {
+        throw new BadRequestError(
+          'Número de parcelas inválido. O parcelamento sem juros permite de 1 a 12 vezes.',
+        )
+      }
+      installments = inst
+
+      var planRec
+      try {
+        planRec = $app.findRecordById('subscription_plans', body.plan_id)
+      } catch (planErr) {
+        throw new NotFoundError('Plano de assinatura não encontrado.')
+      }
+      // (c) plano "Em breve" não pode ser comprado
+      if (planRec.getBool && planRec.getBool('is_coming_soon')) {
+        throw new BadRequestError(
+          'Este plano ainda não está disponível para compra (Em breve). Escolha outro plano.',
+        )
+      }
+      var planType = planRec.getString('type') || ''
+      if (planType === 'coming_soon') {
+        throw new BadRequestError(
+          'Este plano ainda não está disponível para compra (Em breve). Escolha outro plano.',
+        )
+      }
+      // (a) IGNORA body.amount — valor sempre recalculado no servidor via pricing_lib
+      // (mesma lógica do frontend: Pix = 80% do total do cartão, reais inteiros)
+      var pricing = pricingLib.calcularPrecosDePlano(planRec)
+      promoApplied = !!pricing.promoActive
+      serverAmount = body.type === 'pix' ? pricing.yearlyPixTotal : pricing.yearlyCardTotal
+      if (!(serverAmount > 0)) {
+        throw new BadRequestError('Plano sem preço válido para assinatura.')
+      }
+      console.log(
+        '[create-payment][subscription] plan=' +
+          body.plan_id +
+          ' type=' +
+          body.type +
+          ' installments=' +
+          installments +
+          ' promoApplied=' +
+          promoApplied +
+          ' serverAmount=' +
+          serverAmount +
+          ' (amount do frontend ignorado: ' +
+          JSON.stringify(body.amount || null) +
+          ')',
+      )
+    }
+
     // Preço resolvido no SERVIDOR a partir do cadastro (nunca confiar no amount
     // enviado pelo frontend) para compras avulsas de curso/mentoria.
-    // Assinatura mantém o amount enviado pelo fluxo existente.
-    var serverAmount = 0
+    // Assinatura: amount já calculado acima via pricing_lib (body.amount ignorado).
     if (body.product_type === 'course' || body.product_type === 'mentorship') {
       if (body.product_type === 'course') {
         if (!body.course_id) {
@@ -59,7 +119,7 @@ routerAdd(
           throw new BadRequestError('Mentoria sem preço válido para compra avulsa.')
         }
       }
-    } else {
+    } else if (body.product_type !== 'subscription') {
       if (!body.amount || body.amount <= 0) {
         throw new BadRequestError('amount is required and must be greater than 0')
       }
@@ -183,6 +243,12 @@ routerAdd(
         }
       }
 
+      if (body.product_type === 'subscription') {
+        // BLOCO 2 — relatório: parcelas escolhidas e se o valor usou promoção
+        paymentRecord.set('installments', installments)
+        paymentRecord.set('promo_applied', promoApplied)
+      }
+
       if (body.product_type === 'course' && body.course_id) {
         paymentRecord.set('course_id', body.course_id)
       }
@@ -211,7 +277,8 @@ routerAdd(
         type: 'card',
         method: body.card.method,
         capture: true,
-        installments: body.card.installments || 1,
+        installments:
+          body.product_type === 'subscription' ? installments : body.card.installments || 1,
         card: body.card.token
           ? {
               token: body.card.token,

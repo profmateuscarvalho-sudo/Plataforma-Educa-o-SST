@@ -1,7 +1,10 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useAuth } from '@/hooks/use-auth'
-import { getUserPayments } from '@/services/payments'
-import { getUserSubscriptions, type Subscription } from '@/services/subscriptions'
+import {
+  getStudentAccessData,
+  subscribeStudentAccess,
+  type StudentAccessData,
+} from '@/lib/student-access-store'
 import { Payment } from '@/types'
 import {
   effectiveTier,
@@ -14,6 +17,7 @@ import {
   type AccessTier,
   type PlanTier,
 } from '@/lib/plan-access'
+import type { Subscription } from '@/services/subscriptions'
 
 export type { AccessTier, PlanTier }
 
@@ -30,30 +34,47 @@ export interface CourseAccessItem {
 /**
  * Centraliza o tier efetivo do aluno e a matriz de acesso por área.
  * A lógica pura vive em src/lib/plan-access.ts (testada em plan-access.test.ts);
- * aqui ela é alimentada com user, assinaturas e pagamentos reais.
+ * aqui ela é alimentada pelo STORE COMPARTILHADO (src/lib/student-access-store.ts):
+ * os dados (payments + subscriptions) são buscados UMA vez e reutilizados por
+ * todos os componentes da página — sem N+1 por card/item de lista.
  */
 export function useStudentAccess() {
   const { user } = useAuth()
   const userId = user?.id
-  const [payments, setPayments] = useState<Payment[]>([])
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
-  const [loading, setLoading] = useState(true)
+
+  const [data, setData] = useState<StudentAccessData | null>(null)
+  const [loading, setLoading] = useState(!!userId)
 
   useEffect(() => {
     if (!userId) {
+      setData(null)
       setLoading(false)
       return
     }
+    let vivo = true
     setLoading(true)
-    Promise.all([
-      getUserPayments(userId).catch(() => []),
-      getUserSubscriptions(userId).catch(() => []),
-    ]).then(([p, subs]) => {
-      setPayments(p)
-      setSubscriptions(subs as Subscription[])
-      setLoading(false)
+    getStudentAccessData(userId)
+      .then((d) => vivo && setData(d))
+      .catch(() => vivo && setData({ payments: [], subscriptions: [] }))
+      .finally(() => vivo && setLoading(false))
+    // Invalidação externa (compra confirmada): recarrega do servidor.
+    const unsub = subscribeStudentAccess((changedUserId) => {
+      if (changedUserId !== userId) return
+      getStudentAccessData(userId)
+        .then((d) => vivo && setData(d))
+        .catch(() => {})
     })
+    return () => {
+      vivo = false
+      unsub()
+    }
   }, [userId])
+
+  const payments = useMemo<Payment[]>(() => (data?.payments ?? []) as unknown as Payment[], [data])
+  const subscriptions = useMemo<Subscription[]>(
+    () => (data?.subscriptions ?? []) as unknown as Subscription[],
+    [data],
+  )
 
   const effective = useMemo<AccessTier>(
     () =>

@@ -37,7 +37,7 @@ function buildItems(
         purchasedAt: p.purchasedAt,
       }
     })
-    .filter((x): x is PurchasedMagazineItem => x !== null)
+    .filter((x) => x !== null)
 }
 
 export function MyMagazinesSection({

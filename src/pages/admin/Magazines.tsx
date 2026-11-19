@@ -30,7 +30,9 @@ export default function AdminMagazines() {
   const [embedCode, setEmbedCode] = useState('')
   const [flipLink, setFlipLink] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [isFree, setIsFree] = useState(true)
+  // Nova revista nasce como CONTEÚDO DE ASSINANTE (is_free=false). O toggle
+  // existe para o admin marcar uma edição futura como amostra gratuita.
+  const [isFree, setIsFree] = useState(false)
   const [selectedLanguageTab, setSelectedLanguageTab] = useState<'pt-BR' | 'es'>('pt-BR')
   const [formLanguage, setFormLanguage] = useState<'pt-BR' | 'es'>('pt-BR')
 
@@ -137,13 +139,13 @@ export default function AdminMagazines() {
       setEditing(magToEdit)
       setEmbedCode(magToEdit.embed_code || '')
       setFlipLink(magToEdit.fliphtml5_link || '')
-      setIsFree(magToEdit.is_free ?? true)
+      setIsFree(!!magToEdit.is_free)
       setFormLanguage(magToEdit.language === 'es' ? 'es' : 'pt-BR')
     } else {
       setEditing(null)
       setEmbedCode('')
       setFlipLink('')
-      setIsFree(true)
+      setIsFree(false)
       // Por padrão, cria revista no idioma da aba atualmente selecionada
       setFormLanguage(selectedLanguageTab)
     }
@@ -318,7 +320,7 @@ export default function AdminMagazines() {
               </div>
               <div className="flex items-center gap-2">
                 <Switch id="mag_is_free" checked={isFree} onCheckedChange={setIsFree} />
-                <Label htmlFor="mag_is_free">Acesso Liberado</Label>
+                <Label htmlFor="mag_is_free">Edição gratuita (amostra)</Label>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Salvando...' : 'Salvar'}

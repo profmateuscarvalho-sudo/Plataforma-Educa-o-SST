@@ -115,6 +115,7 @@ export interface Payment extends RecordModel {
   product_type: string
   course_id?: string
   mentorship_id?: string
+  magazine_id?: string
   billing_cycle?: 'monthly' | 'yearly'
   installments?: number
   promo_applied?: boolean

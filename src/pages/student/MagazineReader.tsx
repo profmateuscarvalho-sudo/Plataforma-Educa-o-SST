@@ -6,8 +6,8 @@ import { BackToHub } from '@/components/student/BackToHub'
 import { MagazineBuyButton } from '@/components/magazine/MagazineBuyButton'
 import { CheckoutModal } from '@/components/CheckoutModal'
 import { useAuth } from '@/hooks/use-auth'
-import { useStudentAccess } from '@/hooks/use-student-access'
 import { usePurchasedMagazines, isMagazinePurchased } from '@/hooks/use-purchased-magazines'
+import { fetchMagazineReadLink, type MagazineReadLink } from '@/lib/magazine-read-link'
 import pb from '@/lib/pocketbase/client'
 import { getMagazines } from '@/services/magazines'
 import type { Magazine } from '@/types'
@@ -17,7 +17,6 @@ export default function MagazineReader() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
-  const { canAccessMagazine, loading: accessLoading } = useStudentAccess()
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [loading, setLoading] = useState(true)
   const [purchasedRefresh, setPurchasedRefresh] = useState(0)
@@ -40,10 +39,34 @@ export default function MagazineReader() {
   const nextMag =
     currentIndex >= 0 && currentIndex < magazines.length - 1 ? magazines[currentIndex + 1] : null
 
-  // Acesso: Prata/Ouro/admin OU compra avulsa desta edição. Enquanto o acesso
-  // carrega, trata como liberada para não piscar o estado bloqueado.
-  const hasFullAccess = !accessLoading && canAccessMagazine()
-  const unlocked = !!magazine && (hasFullAccess || isMagazinePurchased(purchased, magazine.id))
+  // O ACESSO É DECIDIDO PELO SERVIDOR: sempre busca o link pela rota protegida
+  // (GET /backend/v1/magazine-read-link), que libera para Prata/Ouro ativo,
+  // admin, compra 'paid' desta edição ou edição is_free (amostra). Os campos
+  // da listagem são escondidos pela guarda e NÃO definem o estado aqui.
+  const [readLink, setReadLink] = useState<MagazineReadLink | null>(null)
+  const [linkLoading, setLinkLoading] = useState(true)
+
+  const loadReadLink = useCallback(() => {
+    if (!id) return
+    setLinkLoading(true)
+    fetchMagazineReadLink(id)
+      .then(setReadLink)
+      .catch(() =>
+        setReadLink({ access: false, link: '', embed_code: '', embed_src: '', is_free: false }),
+      )
+      .finally(() => setLinkLoading(false))
+  }, [id])
+
+  useEffect(() => {
+    loadReadLink()
+  }, [loadReadLink])
+
+  const unlocked = !!readLink?.access
+  // Sem direito confirmado pelo servidor (compra local apenas como fallback
+  // imediato pós-pagamento, antes da revalidação da rota).
+  const showLocked =
+    !linkLoading &&
+    (!unlocked || (!readLink?.link && !readLink?.embed_code && !readLink?.embed_src))
 
   const handleBuy = useCallback(() => {
     if (!user) {
@@ -53,15 +76,15 @@ export default function MagazineReader() {
     setCheckoutOpen(true)
   }, [user, navigate, location.pathname])
 
-  // Pagamento confirmado: revalida "minhas revistas" e a própria revista
-  // (o access_guard passa a devolver o link desta edição) — sem recarregar a página.
-  // O modal permanece aberto mostrando a confirmação; o conteúdo atrás já libera.
+  // Pagamento confirmado: revalida "minhas revistas", a lista e a rota
+  // protegida (o servidor passa a liberar o link desta edição) — sem reload.
   const handlePaid = useCallback(() => {
     setPurchasedRefresh((k) => k + 1)
     refetchMagazines()
-  }, [refetchMagazines])
+    loadReadLink()
+  }, [refetchMagazines, loadReadLink])
 
-  if (loading)
+  if (loading || (linkLoading && !magazine))
     return (
       <div className="min-h-[calc(100vh-64px)] bg-background flex items-center justify-center text-muted-foreground font-medium text-sm">
         Carregando revista...
@@ -84,11 +107,6 @@ export default function MagazineReader() {
         </Button>
       </div>
     )
-
-  // Conteúdo bloqueado: sem link/embed (o access_guard esconde de quem não tem
-  // acesso) e sem direito de leitura → mostra a compra avulsa no lugar do conteúdo.
-  const noContent = !magazine.embed_code && !magazine.fliphtml5_link
-  const showLocked = !unlocked || (noContent && !hasFullAccess)
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-background flex flex-col text-foreground">
@@ -127,7 +145,11 @@ export default function MagazineReader() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-3 md:p-6 bg-muted/20">
-        {showLocked ? (
+        {linkLoading ? (
+          <div className="py-20 text-sm text-muted-foreground font-medium">
+            Carregando revista...
+          </div>
+        ) : showLocked ? (
           <div className="flex flex-col items-center justify-center text-muted-foreground gap-4 py-16 bg-card rounded-[28px] border border-border p-8 max-w-lg mx-auto w-full text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
               <Lock className="w-8 h-8 stroke-[1.75]" />
@@ -149,30 +171,14 @@ export default function MagazineReader() {
               Ver planos de assinatura
             </Button>
           </div>
-        ) : noContent ? (
-          <div className="flex flex-col items-center justify-center text-muted-foreground gap-4 py-20 bg-card rounded-[28px] border border-border p-8 max-w-lg mx-auto w-full text-center">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-              <Newspaper className="w-8 h-8 stroke-[1.75]" />
-            </div>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              Esta edição ainda não possui conteúdo publicado para leitura.
-            </p>
-            {magazine.thumbnail && (
-              <img
-                src={pb.files.getUrl(magazine, magazine.thumbnail)}
-                alt={magazine.title}
-                className="max-h-72 rounded-2xl shadow-sm border border-border object-contain"
-              />
-            )}
-          </div>
-        ) : magazine.embed_code ? (
+        ) : readLink?.embed_code ? (
           <div
             className="w-full h-full max-w-[1200px] bg-card rounded-[28px] overflow-hidden shadow-sm border border-border [&>iframe]:w-full [&>iframe]:h-[80vh]"
-            dangerouslySetInnerHTML={{ __html: magazine.embed_code }}
+            dangerouslySetInnerHTML={{ __html: readLink.embed_code }}
           />
         ) : (
           <iframe
-            src={magazine.fliphtml5_link}
+            src={readLink?.embed_src || readLink?.link}
             className="w-full max-w-[1200px] h-[80vh] bg-card rounded-[28px] shadow-sm border border-border"
             title={magazine.title}
           />

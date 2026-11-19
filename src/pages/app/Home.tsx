@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Flame,
   Check,
@@ -645,10 +645,10 @@ export default function Home() {
             >
               {revista.summary || 'Leia a nova edição completa da revista Educação SST.'}
             </p>
-            <a
-              href={revista.fliphtml5_link || '#'}
-              target="_blank"
-              rel="noreferrer"
+            {/* NUNCA o link cru da listagem: abre o leitor protegido, que busca
+                o link pela rota do servidor (magazine-read-link). */}
+            <Link
+              to={`/plataforma/revista/${revista.id}`}
               className="sst-tap inline-flex items-center gap-2"
               style={{
                 backgroundColor: 'var(--sst-amber)',
@@ -660,7 +660,7 @@ export default function Home() {
               }}
             >
               Ler agora <ArrowRight style={{ width: 15, height: 15 }} strokeWidth={2} />
-            </a>
+            </Link>
           </div>
         </section>
       )}

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
+import { fetchMagazineReadLink, type MagazineReadLink } from '@/lib/magazine-read-link'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -58,7 +59,13 @@ export default function Revistas() {
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [loading, setLoading] = useState(true)
   const [activeReaderMag, setActiveReaderMag] = useState<Magazine | null>(null)
+  // Link de leitura SEMPRE vem da rota protegida do servidor — nunca dos campos
+  // da listagem (a guarda esconde fliphtml5_link/embed_code de quem não tem
+  // direito; um assinante legítimo recebe o registro sem eles).
+  const [readLink, setReadLink] = useState<MagazineReadLink | null>(null)
+  const [readLinkLoading, setReadLinkLoading] = useState(false)
   const [checkoutMagId, setCheckoutMagId] = useState<string | null>(null)
+  const [checkoutMagIdInReader, setCheckoutMagIdInReader] = useState<string | null>(null)
   const [purchasedRefresh, setPurchasedRefresh] = useState(0)
   const { user } = useAuth()
   // Revista virou conteúdo de assinante (Prata/Ouro). O catálogo (capa, título,
@@ -181,6 +188,45 @@ export default function Revistas() {
     const fresh = magazines.find((m) => m.id === activeReaderMag.id)
     if (fresh && fresh !== activeReaderMag) setActiveReaderMag(fresh)
   }, [magazines, activeReaderMag])
+
+  // Abre o leitor: busca o link pela ROTA PROTEGIDA do servidor. 403 → estado
+  // bloqueado (cadeado + compra); 200 → iframe (link) ou embed injetado.
+  useEffect(() => {
+    if (!activeReaderMag) {
+      setReadLink(null)
+      return
+    }
+    let vivo = true
+    setReadLinkLoading(true)
+    fetchMagazineReadLink(activeReaderMag.id)
+      .then((data) => {
+        if (vivo) setReadLink(data)
+      })
+      .catch(() => {
+        if (vivo)
+          setReadLink({ access: false, link: '', embed_code: '', embed_src: '', is_free: false })
+      })
+      .finally(() => {
+        if (vivo) setReadLinkLoading(false)
+      })
+    return () => {
+      vivo = false
+    }
+  }, [activeReaderMag])
+
+  // Pagamento confirmado dentro do leitor: revalida a rota protegida (o
+  // servidor passa a liberar o link desta edição) sem fechar o Dialog.
+  const handlePaidInReader = useCallback(() => {
+    setPurchasedRefresh((k) => k + 1)
+    if (!activeReaderMag) return
+    setReadLinkLoading(true)
+    fetchMagazineReadLink(activeReaderMag.id)
+      .then((data) => setReadLink(data))
+      .catch(() =>
+        setReadLink({ access: false, link: '', embed_code: '', embed_src: '', is_free: false }),
+      )
+      .finally(() => setReadLinkLoading(false))
+  }, [activeReaderMag])
 
   const closeMagazineReader = () => {
     setActiveReaderMag(null)
@@ -475,7 +521,12 @@ export default function Revistas() {
         <DialogContent className="max-w-6xl w-[95vw] h-[88vh] p-0 overflow-hidden bg-black/10 border-none rounded-[28px]">
           <DialogTitle className="sr-only">{activeReaderMag?.title}</DialogTitle>
           {activeReaderMag &&
-            (magLocked(activeReaderMag) ? (
+            (readLinkLoading ? (
+              <div className="w-full h-full flex items-center justify-center bg-[#122e26] text-[#F4F1E8]/80 text-sm font-medium">
+                Carregando revista...
+              </div>
+            ) : !readLink?.access ||
+              (!readLink.link && !readLink.embed_code && !readLink.embed_src) ? (
               <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-[#122e26] p-8 text-center">
                 <LockedBadge />
                 <p className="text-[#F4F1E8] text-sm sm:text-base max-w-md">
@@ -484,19 +535,19 @@ export default function Revistas() {
                 </p>
                 <MagazineBuyButton
                   magazineId={activeReaderMag.id}
-                  onBuy={handleBuy}
+                  onBuy={setCheckoutMagIdInReader}
                   className="w-full max-w-xs [&>p]:text-[#F4F1E8]/70 [&>p>a]:text-[#FDBE2D]"
                 />
                 <LockedCta className="h-11 px-6 rounded-full font-bold text-sm" />
               </div>
-            ) : activeReaderMag.embed_code ? (
+            ) : readLink.embed_code ? (
               <div
                 className="w-full h-full bg-white [&>iframe]:w-full [&>iframe]:h-full"
-                dangerouslySetInnerHTML={{ __html: activeReaderMag.embed_code }}
+                dangerouslySetInnerHTML={{ __html: readLink.embed_code }}
               />
             ) : (
               <iframe
-                src={activeReaderMag.fliphtml5_link}
+                src={readLink.embed_src || readLink.link}
                 className="w-full h-full border-none rounded-[28px] bg-white"
                 allowFullScreen
                 scrolling="no"
@@ -514,6 +565,14 @@ export default function Revistas() {
         title="Revista Educação SST — edição avulsa"
         magazineId={checkoutMagId || undefined}
         onPaid={handlePaid}
+      />
+      {/* Checkout aberto de dentro do leitor (estado bloqueado na rota protegida) */}
+      <CheckoutModal
+        open={!!checkoutMagIdInReader}
+        setOpen={(v) => !v && setCheckoutMagIdInReader(null)}
+        title="Revista Educação SST — edição avulsa"
+        magazineId={checkoutMagIdInReader || undefined}
+        onPaid={handlePaidInReader}
       />
     </div>
   )

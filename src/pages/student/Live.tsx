@@ -157,9 +157,7 @@ export default function StudentLive() {
               const author = m.expand?.user
               return (
                 <div key={m.id} className="text-sm">
-                  <span className="font-semibold text-primary">
-                    {author?.name || 'Usuário'}
-                  </span>
+                  <span className="font-semibold text-primary">{author?.name || 'Usuário'}</span>
                   <span className="text-muted-foreground ml-2 text-xs">
                     {new Date(m.created).toLocaleTimeString('pt-BR', {
                       hour: '2-digit',
@@ -184,7 +182,12 @@ export default function StudentLive() {
                   }
                 }}
               />
-              <Button size="icon" onClick={handleSend} disabled={!newMsg.trim()} className="shrink-0">
+              <Button
+                size="icon"
+                onClick={handleSend}
+                disabled={!newMsg.trim()}
+                className="shrink-0"
+              >
                 <Send className="w-4 h-4" />
               </Button>
             </div>

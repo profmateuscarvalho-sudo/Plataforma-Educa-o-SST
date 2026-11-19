@@ -21,14 +21,20 @@ routerAdd('GET', '/backend/v1/video-link', (e) => {
   try {
     q = e.requestInfo().query || {}
   } catch (_) {}
-  var type = String(q.type || '').trim().toLowerCase()
+  var type = String(q.type || '')
+    .trim()
+    .toLowerCase()
   var id = String(q.id || '').trim()
 
   if (!id || ['lesson', 'live', 'documentary'].indexOf(type) === -1) {
-    return e.json(400, { access: false, error: 'Parâmetros type (lesson|live|documentary) e id são obrigatórios' })
+    return e.json(400, {
+      access: false,
+      error: 'Parâmetros type (lesson|live|documentary) e id são obrigatórios',
+    })
   }
 
-  var colecao = type === 'live' ? 'live_sessions' : type === 'documentary' ? 'doc_projects' : 'lessons'
+  var colecao =
+    type === 'live' ? 'live_sessions' : type === 'documentary' ? 'doc_projects' : 'lessons'
   var rec = null
   try {
     rec = $app.findRecordById(colecao, id)
@@ -61,7 +67,9 @@ routerAdd('GET', '/backend/v1/video-link', (e) => {
       }
     }
     if (!url && youtubeUrl) {
-      var ym = youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
+      var ym = youtubeUrl.match(
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/,
+      )
       url = ym && ym[1] ? 'https://www.youtube.com/embed/' + ym[1] : youtubeUrl
     }
     return {
@@ -138,7 +146,11 @@ routerAdd('GET', '/backend/v1/video-link', (e) => {
     try {
       var paid = $app.findRecordsByFilter(
         'payments',
-        "user = '" + uid + "' && status = 'paid' && product_type = 'course' && course_id = '" + cid + "'",
+        "user = '" +
+          uid +
+          "' && status = 'paid' && product_type = 'course' && course_id = '" +
+          cid +
+          "'",
         '-created',
         1,
         0,

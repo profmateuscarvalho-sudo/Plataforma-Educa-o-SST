@@ -272,6 +272,17 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 - Regra de entitulamento: curso `is_free = true` libera aulas/materiais; tier efetivo **prata/ouro ATIVO** (users.plan_tier + `contract_end_date` ≥ hoje SP; vencida = Free; assinatura `active` com plano Prata/Ouro também conta); pagamento `paid` com `course_id` (compra avulsa); admin/superuser nunca é limitado.
 - Todo usuário anônimo/sem assinatura ativa = nível 1 (Free). A lógica vive 100% inline nos callbacks (limitação da JSVM: nada de funções top-level).
 
+#### 3.5.1.1 Regra geral de vídeo/leitor protegido — campos nunca lidos direto do registro (v0.0.372–v0.0.374)
+
+- **REGRA:** nenhuma tela lê `panda_video_id`, `youtube_url`, `fliphtml5_link` ou `embed_code` direto do registro — sempre via hook central e rotas protegidas do servidor: **`useProtectedVideo`** (`src/hooks/use-protected-video.ts`) + **`GET /backend/v1/video-link`** (`pocketbase/hooks/video_link.js`) para vídeo, e **`useMagazineReadLink`** (`src/hooks/use-magazine-read-link.ts`) + **`GET /backend/v1/magazine-read-link`** (`pocketbase/hooks/magazine_read_link.js`) para revista. **Exceção: telas admin** (o admin é liberado pela guarda do `access_guard.js` e pode ler os campos direto — ex. `admin/Magazines.tsx`).
+- Motivo: a guarda do `access_guard.js` (v0.0.350) esconde esses campos da serialização de quem não tem direito, então a listagem chega com os campos vazios para assinantes também — quem leu o campo direto fazia o PRATA cair em "conteúdo indisponível" e, sem a rota protegida, podia liberar o FREE por engano.
+- **Rota de vídeo protegida — `GET /backend/v1/video-link`** (`pocketbase/hooks/video_link.js`):
+  - Params: `type = lesson | live | documentary` e `id` do registro (400 se faltarem ou `type` inválido; 404 se o registro não existir).
+  - Matriz de acesso (a MESMA do Bloco 3 do `access_guard.js`): `lesson` → curso liberado (`courses.is_free = true`, pagamento `paid` daquele curso, tier prata/ouro ATIVO) ou admin; `live` → tier prata/ouro ATIVO ou admin; `documentary` → `doc_projects.is_free = true` libera qualquer um, senão prata/ouro/admin.
+  - Respostas: **403** `{access: false}` sem direito; **200** `{access: true, video_id, url, youtube_url}` com direito — a `url` é o embed pronto (Panda/YouTube normalizado). **Registro sem vídeo cadastrado = 200 com `url` vazio** ("vídeo não disponível") — NÃO é caso de bloqueio de plano, não confundir com 403.
+- Frontend: `src/lib/video-link.ts` (`fetchProtectedVideoLink`, com cache local), `src/hooks/use-protected-video.ts` (única porta do link de vídeo; `unlocked` = acesso confirmado E url preenchida, `locked` = mostrar bloqueio) e `src/components/student/LockedVideo.tsx` (cadeado + CTA "Disponível no plano Prata" → `/planos`; NUNCA renderizar player vazio). Telas que usam: `student/Lesson.tsx` (aula), `student/Live.tsx` e `student/LiveSessions.tsx` (lives), `student/DocumentaryViewer.tsx` e `public/DocumentaryPitch.tsx` (documentários) e o app (`app/Home.tsx`).
+- A regra da revista já vale desde v0.0.372 (detalhes no item 3.8, "Leitor via rota protegida").
+
 #### 3.5.2 Matriz de acesso (Free / Prata / Ouro)
 
 | Área                            | Free                                                                        | Prata                          | Ouro                           | Protegido no servidor?                                              |

@@ -66,7 +66,11 @@ export default function DocumentaryViewer() {
     <div className="min-h-screen bg-zinc-950 text-zinc-50">
       <div className="sticky top-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-white/5">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Button variant="ghost" className="text-white hover:bg-white/10" onClick={() => navigate('/plataforma/documentarios')}>
+          <Button
+            variant="ghost"
+            className="text-white hover:bg-white/10"
+            onClick={() => navigate('/plataforma/documentarios')}
+          >
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar ao catálogo
           </Button>
           {project.is_free && (

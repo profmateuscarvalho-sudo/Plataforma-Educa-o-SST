@@ -7,6 +7,7 @@
 // Nenhuma tela nova deve voltar a ler o campo direto — use este hook.
 import { useCallback, useEffect, useState } from 'react'
 import {
+  clearProtectedVideoCache,
   fetchProtectedVideoLink,
   type ProtectedVideoLink,
   type ProtectedVideoType,
@@ -39,9 +40,12 @@ export function useProtectedVideo(
   const [loading, setLoading] = useState(false)
   const [active, setActive] = useState<{ id: string; type: ProtectedVideoType } | null>(null)
 
-  const load = useCallback((id: string, t?: ProtectedVideoType) => {
-    setActive({ id, type: t || type })
-  }, [type])
+  const load = useCallback(
+    (id: string, t?: ProtectedVideoType) => {
+      setActive({ id, type: t || type })
+    },
+    [type],
+  )
 
   // Busca na rota protegida sempre que o alvo muda. try/catch/finally: o
   // loading SEMPRE termina (mesmo em erro de rede).

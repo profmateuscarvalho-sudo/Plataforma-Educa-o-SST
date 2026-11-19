@@ -9,12 +9,10 @@ import { useProtectedVideo } from '@/hooks/use-protected-video'
 import { LockedVideo } from '@/components/student/LockedVideo'
 import { useTrackAccess } from '@/hooks/use-track-access'
 import { toggleCompletion, rateLesson, getCompletions, getLessonRatings } from '@/services/student'
-import { pb } from '@/lib/pocketbase/client'
-import { cn } from '@/lib/utils'
-import { stripHtml } from '@/lib/utils'
+import pb from '@/lib/pocketbase/client'
+import { cn, stripHtml } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { RichTextRenderer } from '@/components/RichTextEditor'
 import { formatBRL } from '@/lib/pricing'
 import { getErrorMessage } from '@/lib/form-errors'
 import { toast } from '@/hooks/use-toast'
@@ -127,7 +125,8 @@ export default function CourseLesson() {
 
         // Seleciona a aula: a pedida na URL, a primeira disponível, ou a anterior
         const allLessons = sortedMods.flatMap((m) => sortedLessons[m.id] || [])
-        const found = (lesson && allLessons.find((l) => l.id === lesson!.id)) || allLessons[0] || null
+        const found =
+          (lesson && allLessons.find((l) => l.id === lesson!.id)) || allLessons[0] || null
         setCurrentLesson(found)
         if (found) setActiveVideoId(found.id)
       } catch {
@@ -146,7 +145,7 @@ export default function CourseLesson() {
   useEffect(() => {
     if (!user) return
     let vivo = true
-    getCompletions()
+    getCompletions(user.id)
       .then((cs) => {
         if (vivo) setCompleted(new Set(cs.map((c) => c.lesson)))
       })
@@ -165,8 +164,7 @@ export default function CourseLesson() {
         const mine = rs.find((r) => r.user === user.id)
         if (mine) setUserRating(mine.rating)
         else setUserRating(0)
-        const avg =
-          rs.length > 0 ? rs.reduce((acc, r) => acc + (r.rating || 0), 0) / rs.length : 0
+        const avg = rs.length > 0 ? rs.reduce((acc, r) => acc + (r.rating || 0), 0) / rs.length : 0
         setRating(Math.round(avg))
       })
       .catch(() => {})
@@ -189,7 +187,12 @@ export default function CourseLesson() {
   const toggleComplete = async () => {
     if (!currentLesson) return
     try {
-      await toggleCompletion(currentLesson.id)
+      await toggleCompletion(
+        currentLesson.id,
+        user!.id,
+        !completed.has(currentLesson.id),
+        undefined,
+      )
       setCompleted((prev) => {
         const next = new Set(prev)
         if (next.has(currentLesson.id)) next.delete(currentLesson.id)
@@ -207,7 +210,7 @@ export default function CourseLesson() {
     const previous = userRating
     setUserRating(value)
     try {
-      await rateLesson(currentLesson.id, value)
+      await rateLesson({ lesson: currentLesson.id, user: user.id, rating: value })
     } catch (err) {
       setUserRating(previous)
       toast({ title: getErrorMessage(err), variant: 'destructive' })
@@ -237,8 +240,6 @@ export default function CourseLesson() {
       setPurchaseLoading(false)
     }
   }
-
-
 
   if (loading) {
     return (
@@ -327,7 +328,10 @@ export default function CourseLesson() {
                 {currentLesson ? stripHtml(currentLesson.title) : 'Aula'}
               </h1>
               {currentLesson?.description && (
-                <RichTextRenderer html={currentLesson.description} />
+                <div
+                  className="prose prose-sm max-w-none text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: currentLesson.description }}
+                />
               )}
             </div>
             <Button
@@ -391,7 +395,10 @@ export default function CourseLesson() {
           <Progress
             value={
               allLessons.length > 0
-                ? Math.round((allLessons.filter((l) => completed.has(l.id)).length / allLessons.length) * 100)
+                ? Math.round(
+                    (allLessons.filter((l) => completed.has(l.id)).length / allLessons.length) *
+                      100,
+                  )
                 : 0
             }
           />
@@ -460,14 +467,21 @@ export default function CourseLesson() {
 
       {/* Navegação inferior */}
       <div className="container mx-auto px-4 pb-10 flex items-center justify-between gap-3">
-        <Button variant="outline" disabled={!prevLesson} onClick={() => prevLesson && selectLesson(prevLesson)}>
+        <Button
+          variant="outline"
+          disabled={!prevLesson}
+          onClick={() => prevLesson && selectLesson(prevLesson)}
+        >
           <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
         </Button>
-        <Button variant="outline" disabled={!nextLesson} onClick={() => nextLesson && selectLesson(nextLesson)}>
+        <Button
+          variant="outline"
+          disabled={!nextLesson}
+          onClick={() => nextLesson && selectLesson(nextLesson)}
+        >
           Próxima <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
-
     </div>
   )
 }

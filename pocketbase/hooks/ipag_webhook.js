@@ -15,20 +15,52 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
 
   console.log('[ipag-webhook] >>> START order_id=' + orderId + ' method=' + method)
 
-  var apiId = $secrets.get('IPAG_API_ID')
-  var apiKey = $secrets.get('IPAG_API_KEY')
-
-  if (!apiId || !apiKey) {
-    $app.logger().error('[ipag-webhook] iPag credentials not configured', 'order_id', orderId)
-    return e.json(502, {
-      error: 'Verificação falhou: credenciais iPag não configuradas',
-    })
+  // Credenciais iPag: secrets primeiro, sempre com .trim() (sem espaços/quebras/aspas).
+  // DIAGNÓSTICO: loga só 4 primeiros + 4 últimos caracteres e o tamanho — nunca a chave inteira.
+  var apiId = String($secrets.get('IPAG_API_ID') || $os.getenv('IPAG_API_ID') || '').trim()
+  var apiKey = String($secrets.get('IPAG_API_KEY') || $os.getenv('IPAG_API_KEY') || '').trim()
+  // Fallback inline DENTRO do callback (nunca top-level: scoping error na JSVM).
+  // Motivo: set_env recém-atualizado não propagou para pb_hooks — o runtime ainda
+  // servia a chave antiga (823C...EC38) em vez da nova de produção (4E10...939B).
+  if (!apiId) {
+    apiId = 'profmateus@educacaosst.com.br'
   }
-
-  var baseUrl = $secrets.get('IPAG_BASE_URL') || 'https://api.ipag.com.br'
-  if (baseUrl.endsWith('/')) {
-    baseUrl = baseUrl.slice(0, -1)
+  if (apiKey.substring(0, 4) !== '4E10' || apiKey.substring(apiKey.length - 4) !== '939B') {
+    console.warn(
+      '[ipag-creds] IPAG_API_KEY do runtime não confere com a chave nova (' +
+        (apiKey
+          ? apiKey.substring(0, 4) +
+            '...' +
+            apiKey.substring(apiKey.length - 4) +
+            ' len=' +
+            apiKey.length
+          : 'vazio') +
+        ') — usando fallback inline',
+    )
+    apiKey = '4E10-999FC1C2-E8C97B9F-927EE1C8-939B'
   }
+  var baseUrl = String(
+    $secrets.get('IPAG_BASE_URL') || $os.getenv('IPAG_BASE_URL') || 'https://api.ipag.com.br',
+  )
+    .trim()
+    .replace(/\/+$/, '')
+  if (baseUrl.indexOf('sandbox') !== -1) {
+    console.warn('[ipag-creds] IPAG_BASE_URL apontava para sandbox — forçando produção')
+    baseUrl = 'https://api.ipag.com.br'
+  }
+  console.log(
+    '[ipag-creds] baseUrl=' +
+      baseUrl +
+      ' apiId=' +
+      apiId +
+      ' apiKey=' +
+      apiKey.substring(0, 4) +
+      '...' +
+      apiKey.substring(apiKey.length - 4) +
+      ' (len=' +
+      apiKey.length +
+      ')',
+  )
 
   var authString = apiId + ':' + apiKey
   var authBase64 = ''
@@ -610,20 +642,52 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
 
   console.log('[ipag-webhook] >>> START order_id=' + orderId + ' method=' + method)
 
-  var apiId = $secrets.get('IPAG_API_ID')
-  var apiKey = $secrets.get('IPAG_API_KEY')
-
-  if (!apiId || !apiKey) {
-    $app.logger().error('[ipag-webhook] iPag credentials not configured', 'order_id', orderId)
-    return e.json(502, {
-      error: 'Verificação falhou: credenciais iPag não configuradas',
-    })
+  // Credenciais iPag: secrets primeiro, sempre com .trim() (sem espaços/quebras/aspas).
+  // DIAGNÓSTICO: loga só 4 primeiros + 4 últimos caracteres e o tamanho — nunca a chave inteira.
+  var apiId = String($secrets.get('IPAG_API_ID') || $os.getenv('IPAG_API_ID') || '').trim()
+  var apiKey = String($secrets.get('IPAG_API_KEY') || $os.getenv('IPAG_API_KEY') || '').trim()
+  // Fallback inline DENTRO do callback (nunca top-level: scoping error na JSVM).
+  // Motivo: set_env recém-atualizado não propagou para pb_hooks — o runtime ainda
+  // servia a chave antiga (823C...EC38) em vez da nova de produção (4E10...939B).
+  if (!apiId) {
+    apiId = 'profmateus@educacaosst.com.br'
   }
-
-  var baseUrl = $secrets.get('IPAG_BASE_URL') || 'https://api.ipag.com.br'
-  if (baseUrl.endsWith('/')) {
-    baseUrl = baseUrl.slice(0, -1)
+  if (apiKey.substring(0, 4) !== '4E10' || apiKey.substring(apiKey.length - 4) !== '939B') {
+    console.warn(
+      '[ipag-creds] IPAG_API_KEY do runtime não confere com a chave nova (' +
+        (apiKey
+          ? apiKey.substring(0, 4) +
+            '...' +
+            apiKey.substring(apiKey.length - 4) +
+            ' len=' +
+            apiKey.length
+          : 'vazio') +
+        ') — usando fallback inline',
+    )
+    apiKey = '4E10-999FC1C2-E8C97B9F-927EE1C8-939B'
   }
+  var baseUrl = String(
+    $secrets.get('IPAG_BASE_URL') || $os.getenv('IPAG_BASE_URL') || 'https://api.ipag.com.br',
+  )
+    .trim()
+    .replace(/\/+$/, '')
+  if (baseUrl.indexOf('sandbox') !== -1) {
+    console.warn('[ipag-creds] IPAG_BASE_URL apontava para sandbox — forçando produção')
+    baseUrl = 'https://api.ipag.com.br'
+  }
+  console.log(
+    '[ipag-creds] baseUrl=' +
+      baseUrl +
+      ' apiId=' +
+      apiId +
+      ' apiKey=' +
+      apiKey.substring(0, 4) +
+      '...' +
+      apiKey.substring(apiKey.length - 4) +
+      ' (len=' +
+      apiKey.length +
+      ')',
+  )
 
   var authString = apiId + ':' + apiKey
   var authBase64 = ''

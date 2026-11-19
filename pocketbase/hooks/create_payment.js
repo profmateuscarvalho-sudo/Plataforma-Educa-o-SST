@@ -25,8 +25,45 @@ routerAdd(
       }
     }
 
-    if (!body.amount || body.amount <= 0) {
-      throw new BadRequestError('amount is required and must be greater than 0')
+    // Preço resolvido no SERVIDOR a partir do cadastro (nunca confiar no amount
+    // enviado pelo frontend) para compras avulsas de curso/mentoria.
+    // Assinatura mantém o amount enviado pelo fluxo existente.
+    var serverAmount = 0
+    if (body.product_type === 'course' || body.product_type === 'mentorship') {
+      if (body.product_type === 'course') {
+        if (!body.course_id) {
+          throw new BadRequestError('course_id é obrigatório para compra avulsa de curso')
+        }
+        var courseRec
+        try {
+          courseRec = $app.findRecordById('courses', body.course_id)
+        } catch (courseErr) {
+          throw new NotFoundError('Curso não encontrado.')
+        }
+        serverAmount = Number(courseRec.get('price') || 0)
+        if (!(serverAmount > 0)) {
+          throw new BadRequestError('Curso sem preço válido para compra avulsa.')
+        }
+      } else {
+        if (!body.mentorship_id) {
+          throw new BadRequestError('mentorship_id é obrigatório para compra avulsa de mentoria')
+        }
+        var mentorshipRec
+        try {
+          mentorshipRec = $app.findRecordById('mentorships', body.mentorship_id)
+        } catch (mentErr) {
+          throw new NotFoundError('Mentoria não encontrada.')
+        }
+        serverAmount = Number(mentorshipRec.get('price') || 0)
+        if (!(serverAmount > 0)) {
+          throw new BadRequestError('Mentoria sem preço válido para compra avulsa.')
+        }
+      }
+    } else {
+      if (!body.amount || body.amount <= 0) {
+        throw new BadRequestError('amount is required and must be greater than 0')
+      }
+      serverAmount = body.amount
     }
     if (!body.customer || !body.customer.name) {
       throw new BadRequestError('customer.name is required')
@@ -129,7 +166,7 @@ routerAdd(
       var paymentsCol = $app.findCollectionByNameOrId('payments')
       paymentRecord = new Record(paymentsCol)
       paymentRecord.set('user', userId)
-      paymentRecord.set('amount', body.amount)
+      paymentRecord.set('amount', serverAmount)
       paymentRecord.set('status', 'pending')
 
       if (body.product_type === 'subscription') {
@@ -146,6 +183,9 @@ routerAdd(
         }
       }
 
+      if (body.product_type === 'course' && body.course_id) {
+        paymentRecord.set('course_id', body.course_id)
+      }
       if (body.mentorship_id) {
         paymentRecord.set('mentorship_id', body.mentorship_id)
       }
@@ -160,7 +200,7 @@ routerAdd(
     }
 
     var paymentData = {
-      amount: body.amount,
+      amount: serverAmount,
       order_id: paymentRecordId,
       callback_url: callbackUrl,
       customer: body.customer,

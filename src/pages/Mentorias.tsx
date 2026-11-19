@@ -316,6 +316,7 @@ export default function Mentorias() {
         setIsOpen={setIsCheckoutOpen}
         itemTitle={selectedMentorship?.title || 'Mentoria'}
         price={selectedMentorship?.price || 0}
+        mentorshipId={selectedMentorship?.id}
       />
     </div>
   )

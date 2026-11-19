@@ -534,7 +534,10 @@ export default function StudentDashboard() {
                   </p>
                 ) : (
                   cat.courses.map((course) => {
-                    const status = access.getAccessStatus(course)
+                    const status = access.getAccessStatus({
+                      ...course,
+                      courseId: course.id,
+                    })
                     return (
                       <ProductCard
                         key={course.id}

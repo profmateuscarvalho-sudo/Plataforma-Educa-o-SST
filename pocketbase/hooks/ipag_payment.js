@@ -22,8 +22,43 @@ routerAdd(
         'Token do cartão ausente. Tokenize o cartão via /backend/v1/ipag/tokenize-card antes de pagar.',
       )
     }
-    if (!body.amount || body.amount <= 0) {
-      throw new BadRequestError('amount is required and must be greater than 0')
+    // Preço resolvido no SERVIDOR a partir do cadastro (nunca confiar no amount
+    // enviado pelo frontend). Cursos vêm de courses.price; mentorias de mentorships.price.
+    var productType = body.product_type || 'course'
+    var serverAmount = 0
+    if (productType === 'course') {
+      if (!body.course_id) {
+        throw new BadRequestError('course_id é obrigatório para compra avulsa de curso')
+      }
+      var courseRec
+      try {
+        courseRec = $app.findRecordById('courses', body.course_id)
+      } catch (courseErr) {
+        throw new NotFoundError('Curso não encontrado.')
+      }
+      serverAmount = Number(courseRec.get('price') || 0)
+      if (!(serverAmount > 0)) {
+        throw new BadRequestError('Curso sem preço válido para compra avulsa.')
+      }
+    } else if (productType === 'mentorship') {
+      if (!body.mentorship_id) {
+        throw new BadRequestError('mentorship_id é obrigatório para compra avulsa de mentoria')
+      }
+      var mentorshipRec
+      try {
+        mentorshipRec = $app.findRecordById('mentorships', body.mentorship_id)
+      } catch (mentErr) {
+        throw new NotFoundError('Mentoria não encontrada.')
+      }
+      serverAmount = Number(mentorshipRec.get('price') || 0)
+      if (!(serverAmount > 0)) {
+        throw new BadRequestError('Mentoria sem preço válido para compra avulsa.')
+      }
+    } else {
+      if (!body.amount || body.amount <= 0) {
+        throw new BadRequestError('amount is required and must be greater than 0')
+      }
+      serverAmount = body.amount
     }
 
     // Credenciais iPag: lidas dos secrets/env do runtime, sempre com .trim()
@@ -70,9 +105,12 @@ routerAdd(
     var paymentsCol = $app.findCollectionByNameOrId('payments')
     var paymentRecord = new Record(paymentsCol)
     paymentRecord.set('user', userId)
-    paymentRecord.set('amount', body.amount)
+    paymentRecord.set('amount', serverAmount)
     paymentRecord.set('status', 'pending')
-    paymentRecord.set('product_type', body.product_type || 'course')
+    paymentRecord.set('product_type', productType)
+    if (productType === 'course' && body.course_id) {
+      paymentRecord.set('course_id', body.course_id)
+    }
     if (body.mentorship_id) {
       paymentRecord.set('mentorship_id', body.mentorship_id)
     }
@@ -89,7 +127,7 @@ routerAdd(
 
     var customer = body.customer || {}
     var paymentData = {
-      amount: body.amount,
+      amount: serverAmount,
       order_id: paymentRecordId,
       callback_url:
         'https://educacao-sst-premium-969c2.shrd00.internal.goskip.dev/backend/v1/ipag-webhook',

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-19T02:36:04.530Z",
+  "generatedAt": "2026-11-19T02:43:26.166Z",
   "collections": [
     {
       "name": "users",
@@ -1118,6 +1118,13 @@
           "required": false,
           "system": false,
           "selectValues": ["monthly", "yearly"]
+        },
+        {
+          "name": "course_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "courses"
         }
       ],
       "indexes": []

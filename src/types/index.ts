@@ -113,6 +113,7 @@ export interface Payment extends RecordModel {
   status: 'pending' | 'paid' | 'failed'
   ipag_id: string
   product_type: string
+  course_id?: string
   mentorship_id?: string
   selected_slots?: AvailableSlot[]
   expand?: { user?: User }

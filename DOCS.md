@@ -152,6 +152,7 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 | `product_type` | select | `course` / `mentorship` / `subscription`. |
 | `plan_id` | text | Id do plano (quando pagamento de assinatura; `order_id` do iPag = id do payment). |
 | `billing_cycle` | text | Ciclo enviado na cobrança. |
+| `course_id` | relation → courses | Curso comprado avulsamente (opcional; usado na liberação por compra, ver 3.8). |
 | `mentorship_id` | relation → mentorships | Mentoria comprada. |
 | `selected_slots` | json | Horários escolhidos da mentoria. |
 | `ipag_id` | text | UUID da transação retornado pelo iPag. |
@@ -243,7 +244,8 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 ### 3.4 Checkout
 
 - **Assinatura** (`SubscriptionCheckoutModal` + `ipag_subscription_payment`): tokenização server-side → cobrança → `payments` com `product_type = subscription` → webhook ativa a assinatura.
-- **Cursos/Mentorias** (`CheckoutModal` + `ipag_payment`): rota `/backend/v1/ipag/pay` recebe **apenas token + bandeira** (nunca número/CVV), cria `payments` com `product_type = course|mentorship`, chama `/service/payment` e grava o resultado.
+- **Cursos/Mentorias** (`CheckoutModal` + `ipag_payment` / `create_payment`): rota `/backend/v1/ipag/pay` recebe **apenas token + bandeira** (nunca número/CVV), cria `payments` com `product_type = course|mentorship`, chama `/service/payment` e grava o resultado. O `CheckoutModal` tem abas **Pix (padrão)** e **Cartão**; o Pix usa `POST /backend/v1/create-payment` (`create_payment.js`) com QR Code + botão "Copiar código Pix" e polling de 3s em `payments` até `status = paid` (mesmo fluxo do checkout de assinatura).
+- **Preço validado no servidor:** ambos os hooks (`ipag_payment.js` e `create_payment.js`) **recalculam o amount a partir do cadastro** (`courses.price` quando `course_id` é enviado, `mentorships.price × sessões − 20% de desconto a partir de 2` quando `mentorship_id` é enviado) — o `amount` do frontend nunca é confiado. `course_id` é validado (curso existente) e gravado no `payments` com `product_type = course`.
 - Quando o iPag recusa, a razão real (sanitizada — números de cartão e CVV mascarados) é repassada ao frontend; o `payment` vira `failed`.
 - Tela `/planos/pendentes` faz polling de status para pagamentos que ficam `pending`.
 
@@ -252,6 +254,8 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 - Cursos, aulas, mentorias, lives e documentários carregam um `plan_tier` mínimo; `useStudentAccess` calcula o nível efetivo e libera/bloqueia o conteúdo (badges `LockedBadge`, CTAs de upgrade em `PlanSection`/`PricingSection`).
 - Ouro acessa tudo; Prata acessa conteúdo free+prata; Free acessa apenas conteúdo free.
 - Simulados públicos não exigem login; os de aluno exigem assinatura conforme regra do item.
+- **Compra avulsa:** um pagamento `paid` com `product_type = course` e `course_id` dá acesso àquele curso independentemente do plano (`hasPurchased` em `src/hooks/use-student-access.ts`, filtrando `status = 'paid'` e igualdade de `course_id`). Pagamentos `pending`/`failed` nunca liberam nada.
+- **Confirmação de mentoria:** `on_mentorship_payment.js` dispara e-mail quando o pagamento vira `paid` — na criação ou na atualização para `paid` — com idempotência via `email_logs` (`email_type = 'mentorship_payment_confirmed'`); não envia duas vezes.
 
 ### 3.6 Campanha Dia do TST
 

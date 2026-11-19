@@ -139,6 +139,7 @@ export default function CourseDetails() {
         setIsOpen={setIsCheckoutOpen}
         itemTitle={course.title}
         price={course.price}
+        courseId={course.id}
       />
     </div>
   )

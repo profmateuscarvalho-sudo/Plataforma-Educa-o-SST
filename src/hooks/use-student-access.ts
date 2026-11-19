@@ -77,8 +77,8 @@ export function useStudentAccess() {
     if (user?.plan_tier === 'prata' || user?.plan_tier === 'ouro') return true
     // Aluno com plano free tem acesso imediato pelo simples fato de estar autenticado (sem exigir confirmação de e-mail)
     if (user?.plan_tier === 'free' || !user?.plan_tier) return true
-    // Pagamentos aprovados anteriores
-    if (payments.length > 0) return true
+    // Pagamentos aprovados anteriores — APENAS 'paid': pending/failed nunca dá acesso
+    if (payments.some((p) => p.status === 'paid')) return true
     return false
   }, [user, subscriptions, payments])
 
@@ -103,29 +103,41 @@ export function useStudentAccess() {
     [activeTier],
   )
 
+  // Compra avulsa de curso: payment 'paid' com product_type 'course' e course_id
+  // apontando para o curso. A comparação antiga por título nunca casava — o campo
+  // product_type guarda 'course', nunca o nome do produto.
   const hasPurchased = useCallback(
-    (itemTitle: string): boolean => {
-      return payments.some(
-        (p) => p.status === 'paid' && p.product_type && p.product_type.includes(itemTitle),
-      )
+    (item: { courseId?: string; title?: string }): boolean => {
+      if (item.courseId) {
+        return payments.some(
+          (p) =>
+            p.status === 'paid' && p.product_type === 'course' && p.course_id === item.courseId,
+        )
+      }
+      return false
     },
     [payments],
   )
 
   const getAccessStatus = useCallback(
-    (item: { is_free?: boolean; title: string; requiredTier?: PlanTier }): AccessStatus => {
+    (item: {
+      is_free?: boolean
+      title?: string
+      requiredTier?: PlanTier
+      courseId?: string
+    }): AccessStatus => {
       if (item.is_free) return 'free'
+      if (item.courseId && hasPurchased(item)) return 'owned'
       if (activeTier === 'none') return 'locked'
       const required = item.requiredTier || 'prata'
       if (canAccess(required)) return 'subscriber'
-      if (hasPurchased(item.title)) return 'owned'
       return 'locked'
     },
     [activeTier, canAccess, hasPurchased],
   )
 
   const hasAccess = useCallback(
-    (item: { is_free?: boolean; title: string; requiredTier?: PlanTier }): boolean =>
+    (item: { is_free?: boolean; title?: string; requiredTier?: PlanTier; courseId?: string }) =>
       getAccessStatus(item) !== 'locked',
     [getAccessStatus],
   )

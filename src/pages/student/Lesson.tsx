@@ -112,7 +112,11 @@ export default function CourseLesson() {
       </div>
     )
 
-  const courseAccess = hasAccess({ is_free: course.is_free, title: course.title })
+  const courseAccess = hasAccess({
+    is_free: course.is_free,
+    title: course.title,
+    courseId: course.id,
+  })
   if (user.role === 'student' && !courseAccess) {
     return (
       <div className="flex flex-col min-h-[calc(100vh-64px)] bg-background text-foreground items-center justify-center p-8">

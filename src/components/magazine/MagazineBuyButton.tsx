@@ -1,14 +1,14 @@
 // Botão + bloco de compra avulsa da revista (BLOCO 4, Parte 2).
 // Usado no card do catálogo (/revistas) e no leitor bloqueado.
 // Mostra o preço vindo do servidor (/backend/v1/magazine-pricing) e o lembrete
-// de assinatura Prata (12x) linkando /planos. Quem já tem Prata/Ouro/admin não
-// renderiza nada (o pai já filtra).
+// de assinatura Prata (12x) linkando /planos. VISITANTE TAMBÉM VÊ o botão:
+// o clique leva ao login (o pai decide — navigate('/login?redirect=...')).
+// Prata/Ouro/admin NÃO renderizam (o pai já filtra com useStudentAccess).
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Loader2, ShoppingCart } from 'lucide-react'
+import { ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/hooks/use-auth'
 import {
   fetchMagazinePricing,
   priceForEdition,
@@ -29,7 +29,6 @@ export function MagazineBuyButton({
   className,
   variant = 'full',
 }: MagazineBuyButtonProps) {
-  const { user } = useAuth()
   const [pricing, setPricing] = useState<MagazinePricing | null>(null)
 
   useEffect(() => {
@@ -42,9 +41,8 @@ export function MagazineBuyButton({
     }
   }, [])
 
-  if (!user) return null
-  const price = priceForEdition(pricing, magazineId)
-  if (!(price > 0)) return null
+  // Preço só aparece quando já carregou do servidor; o botão continua visível
+  const price = pricing ? priceForEdition(pricing, magazineId) : 0
 
   return (
     <div className={cn('space-y-1.5', className)}>
@@ -61,7 +59,7 @@ export function MagazineBuyButton({
         ) : (
           <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
         )}
-        Comprar esta edição — {formatBRL(price)}
+        Comprar esta edição{price > 0 ? ` — ${formatBRL(price)}` : ''}
       </Button>
       <p className="text-[11px] text-muted-foreground text-center leading-snug">
         ou{' '}

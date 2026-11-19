@@ -9,6 +9,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { DocProject } from '@/types'
 import { getDocProject, createDocProject, updateDocProject } from '@/services/doc_projects'
 import { toast } from 'sonner'
+import { getErrorMessage, validateFile } from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
 
 export default function AdminDocumentaryWizard() {
@@ -30,6 +31,17 @@ export default function AdminDocumentaryWizard() {
     if (!project.title) {
       toast.error('Título é obrigatório')
       return
+    }
+    if (photoFile) {
+      const photoErr = validateFile(photoFile, {
+        maxSizeMB: 10,
+        mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        label: 'da capa',
+      })
+      if (photoErr) {
+        toast.error(photoErr)
+        return
+      }
     }
     setLoading(true)
     try {
@@ -59,8 +71,8 @@ export default function AdminDocumentaryWizard() {
         toast.success('Documentário criado!')
         navigate(`/admin/documentarios/${res.id}/editar`)
       }
-    } catch {
-      toast.error('Erro ao salvar')
+    } catch (err) {
+      toast.error(getErrorMessage(err))
     } finally {
       setLoading(false)
     }

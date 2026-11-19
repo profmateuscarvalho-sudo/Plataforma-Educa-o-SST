@@ -13,7 +13,7 @@ import { setMetaTags } from '@/lib/utils'
 import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
 import { AppLanguage } from '@/i18n'
 import { PageHeader } from '@/components/PageHeader'
-import { LockedBadge, LockedCta } from '@/components/LockedBadge'
+import { LockedBadge, LockedCta, LockedOverlay } from '@/components/LockedBadge'
 import { useStudentAccess } from '@/hooks/use-student-access'
 
 // Extrai o ano da revista a partir da data de criação/atualização ou do título (ex: "2026", "2025", "2024")

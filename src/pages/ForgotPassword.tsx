@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { SquareLogo } from '@/components/ui/Logos'
 import { toast } from '@/hooks/use-toast'
-import pb from '@/lib/pocketbase/client'
+import { BACKEND_URL } from '@/lib/constants'
 import { ArrowLeft, CheckCircle2, Mail } from 'lucide-react'
 
 export default function ForgotPassword() {
@@ -20,7 +20,14 @@ export default function ForgotPassword() {
     e.preventDefault()
     setLoading(true)
     try {
-      await pb.collection('users').requestPasswordReset(email)
+      const res = await fetch(`${BACKEND_URL}/backend/v1/auth/request-password-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      })
+      if (!res.ok) {
+        throw new Error(String(res.status))
+      }
       setSent(true)
       toast({
         title: t('auth.forgotPassword.successTitle'),

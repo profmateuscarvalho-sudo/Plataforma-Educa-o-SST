@@ -316,9 +316,10 @@ O painel é monolítico (um único papel admin), com módulos por área: alunos,
 ### 5.2 Brevo (e-mail e CRM de contatos)
 
 - Secret **`BREVO_API_KEY`** (nomes apenas; nunca no código/front).
-- **Envio transacional:** `POST https://api.brevo.com/v3/smtp/email` — e-mails de pagamento confirmado, upgrade de plano, boas-vindas no cadastro e leads Dia do TST (remetente institucional `assinante@educacaosst.com.br`, templates HTML próprios).
+- **Envio transacional:** `POST https://api.brevo.com/v3/smtp/email` — e-mails de pagamento confirmado, upgrade de plano, boas-vindas no cadastro, leads Dia do TST e redefinição de senha (remetente institucional `assinante@educacaosst.com.br`, templates HTML próprios).
 - **Sincronização de contatos:** `POST https://api.brevo.com/v3/contacts` com atributos `NOME` e `PLAN`, na **lista de ID 7**, `updateEnabled: true`.
 - Todo envio é auditado em `email_logs` (`sent`, `brevo_synced`, `brevo_status`, `error_message`).
+- **Redefinição de senha:** rota pública `POST /backend/v1/auth/request-password-reset` (`pocketbase/hooks/request_password_reset.js`). O frontend (`src/pages/ForgotPassword.tsx`) chama essa rota — **não** usa o `requestPasswordReset` nativo do PocketBase (SMTP não configurado). O hook gera o token nativo de reset via `user.newPasswordResetToken()` (o mesmo aceito por `confirmPasswordReset` no `src/pages/ResetPassword.tsx`), monta o link `https://www.educacaosst.com.br/reset-password/{token}` e envia "Redefinição de senha — Educação SST" via Brevo. E-mail inexistente responde 200 genérico (não revela existência). Anti-abuso: máx. 3 pedidos por e-mail a cada 15 min e 10 por IP por hora (acima disso, 200 genérico sem enviar). O envio é registrado em `email_logs` com `email_type='password_reset'`; o token nunca é logado por completo (apenas 4+4 caracteres).
 
 ### 5.3 Outros
 

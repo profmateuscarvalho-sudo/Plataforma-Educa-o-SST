@@ -31,7 +31,6 @@ import { LanguageSwitcher } from './LanguageSwitcher'
 import { InstallBanner, InstallInstructionsDialog, useInstallFlow } from './InstallBanner'
 import { MagazineTopBar } from './MagazineTopBar'
 import pb from '@/lib/pocketbase/client'
-import { FEATURE_FLAGS } from '@/lib/constants'
 
 export default function Layout() {
   const location = useLocation()
@@ -57,9 +56,6 @@ export default function Layout() {
     { name: t('nav.magazines'), href: '/revistas' },
     { name: t('nav.news'), href: '/noticias' },
     { name: t('nav.plans'), href: '/planos' },
-    ...(FEATURE_FLAGS.anunciePage
-      ? [{ name: t('nav.advertise'), href: '/anuncie-na-revista' }]
-      : []),
   ]
 
   return (
@@ -341,13 +337,6 @@ export default function Layout() {
                   {t('footer.sectorNews')}
                 </Link>
               </li>
-              {FEATURE_FLAGS.anunciePage && (
-                <li>
-                  <Link to="/anuncie-na-revista" className="hover:text-[#FAF8F3] transition-colors">
-                    {t('footer.advertise')}
-                  </Link>
-                </li>
-              )}
               <li>
                 <Link to="/submeter-artigo" className="hover:text-[#FAF8F3] transition-colors">
                   {t('footer.submitArticle')}

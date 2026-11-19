@@ -31,7 +31,7 @@ Plataforma de educação em **Segurança e Saúde no Trabalho (SST)**: cursos, r
 | `/dia-do-tst`                                 | `src/pages/DiaDoTst.tsx`                      | Campanha Dia do TST: capa-story, inscrição/lead, poste & marque, regulamento.                          |
 | `/planos/pendentes` (`/subscription/pending`) | `src/pages/SubscriptionPending.tsx`           | Tela "pagamento em processamento" com polling de status.                                               |
 | `/privacidade`                                | `src/pages/PrivacyPolicy.tsx`                 | Política de privacidade.                                                                               |
-| `/anuncie`                                    | `src/pages/public/Anuncie.tsx`                | Formulário para anunciantes.                                                                           |
+| `/anuncie`, `/anuncie-na-revista`             | — (redirect em `src/App.tsx`)                 | Redirecionam para `/revistas` (módulo de anúncios removido).                                           |
 | `/artigos/submit`                             | `src/pages/public/ArticleSubmission.tsx`      | Submissão de artigo por autor convidado (token de link gerado no admin).                               |
 | `/documentarios/pitch`                        | `src/pages/public/DocumentaryPitch.tsx`       | Submissão de pitch de documentário.                                                                    |
 | `/conexoes`                                   | `src/pages/public/ProfessionalConnection.tsx` | Cadastro de profissionais para conexões.                                                               |
@@ -76,38 +76,33 @@ Protegidas — exigem login; conteúdo adicional depende de plano (Prata/Ouro).
 
 Protegidas — exigem conta admin (role admin no `users`).
 
-| Rota                         | Componente                                  | Propósito                                                                       |
-| ---------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------- |
-| `/admin`                     | `src/pages/admin/Dashboard.tsx`             | **Dashboard atual**: visão geral (indicadores de alunos, assinaturas, receita). |
-| `/admin/alunos`              | `src/pages/admin/Students.tsx`              | Gestão de alunos (edição via `UserEditDialog`, plano via `UserPlanDialog`).     |
-| `/admin/acessos`             | `src/pages/admin/AccessDashboard.tsx`       | Dashboard de acessos por área (baseado em `access_events`).                     |
-| `/admin/planos`              | `src/pages/admin/SubscriptionPlans.tsx`     | CRUD de planos de assinatura (`SubscriptionPlanFormModal`).                     |
-| `/admin/cursos`              | `src/pages/admin/Courses.tsx`               | CRUD de cursos.                                                                 |
-| `/admin/cursos/builder`      | `src/pages/admin/CourseBuilder.tsx`         | Construtor do curso: módulos, aulas, materiais, quizzes.                        |
-| `/admin/revistas`            | `src/pages/admin/Magazines.tsx`             | CRUD das revistas.                                                              |
-| `/admin/revistas/artigos`    | `src/pages/admin/MagazineArticles.tsx`      | Artigos das revistas e workflow editorial (status).                             |
-| `/admin/revistas/conexoes`   | `src/pages/admin/MagazineConnections.tsx`   | Conexões profissionais ligadas à revista; geração de links de submissão.        |
-| `/admin/revistas/workplaces` | `src/pages/admin/MagazineWorkplaces.tsx`    | Workplaces da edição.                                                           |
-| `/admin/revistas/landing`    | `src/pages/admin/MagazineLandingConfig.tsx` | Configuração da landing page da revista.                                        |
-| `/admin/noticias`            | `src/pages/admin/News.tsx`                  | CRUD de notícias.                                                               |
-| `/admin/cases`               | `src/pages/admin/Cases.tsx`                 | Moderação de cases.                                                             |
-| `/admin/mentores`            | `src/pages/admin/Mentors.tsx`               | CRUD de mentores (`InstructorManager`/`MentorManager`).                         |
-| `/admin/mentorias`           | `src/pages/admin/Mentorships.tsx`           | CRUD de mentorias.                                                              |
-| `/admin/lives`               | `src/pages/admin/Lives.tsx`                 | Aulas ao vivo + mensagens de chat.                                              |
-| `/admin/simulados`           | `src/pages/admin/Simulados/*`               | CRUD de simulados, questões e wizard de criação.                                |
-| `/admin/documentarios`       | `src/pages/admin/Documentaries/*`           | Documentários e wizard de produção.                                             |
-| `/admin/base-conhecimento`   | `src/pages/admin/KnowledgeBase.tsx`         | Base de conhecimento da IA (RAG) com `KnowledgeEntryModal`.                     |
-| `/admin/banners`             | `src/pages/admin/Banners.tsx`               | Banners da plataforma (`BannerMirror`).                                         |
-| `/admin/avisos`              | `src/pages/admin/Announcements.tsx`         | Avisos/announcements exibidos aos alunos.                                       |
-| `/admin/leads`               | `src/pages/admin/Leads.tsx`                 | Lista de leads.                                                                 |
-| `/admin/leads/importar`      | `src/pages/admin/LeadImport.tsx`            | Importação de leads em massa.                                                   |
-| `/admin/pagamentos`          | `src/pages/admin/Payments.tsx`              | Pagamentos registrados.                                                         |
-| `/admin/emails`              | `src/pages/admin/EmailLog.tsx`              | Log de e-mails transacionais (envio + sync Brevo).                              |
-| `/admin/testes`              | `src/pages/admin/Testes.tsx`                | Central de testes/diagnóstico.                                                  |
-| `/admin/dia-do-tst`          | `src/pages/admin/DiaTst.tsx`                | Gestão da campanha: leads, regulamento, parceiros.                              |
-| `/admin/comercial`           | `src/pages/admin/Comercial.tsx`             | Pipeline comercial (oportunidades, `OportunidadeDrawer`).                       |
-| `/admin/comercial/clientes`  | `src/pages/admin/ComercialClientes.tsx`     | Clientes comerciais (`NewClientDialog`).                                        |
-| `/admin/tags`                | `src/pages/admin/ProfessionalTags.tsx`      | Opções de tags profissionais (usadas em cadastro/conexões).                     |
+| Rota                         | Componente                                | Propósito                                                                       |
+| ---------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------- |
+| `/admin`                     | `src/pages/admin/Dashboard.tsx`           | **Dashboard atual**: visão geral (indicadores de alunos, assinaturas, receita). |
+| `/admin/alunos`              | `src/pages/admin/Students.tsx`            | Gestão de alunos (edição via `UserEditDialog`, plano via `UserPlanDialog`).     |
+| `/admin/acessos`             | `src/pages/admin/AccessDashboard.tsx`     | Dashboard de acessos por área (baseado em `access_events`).                     |
+| `/admin/planos`              | `src/pages/admin/SubscriptionPlans.tsx`   | CRUD de planos de assinatura (`SubscriptionPlanFormModal`).                     |
+| `/admin/cursos`              | `src/pages/admin/Courses.tsx`             | CRUD de cursos.                                                                 |
+| `/admin/cursos/builder`      | `src/pages/admin/CourseBuilder.tsx`       | Construtor do curso: módulos, aulas, materiais, quizzes.                        |
+| `/admin/revistas`            | `src/pages/admin/Magazines.tsx`           | CRUD das revistas.                                                              |
+| `/admin/revistas/artigos`    | `src/pages/admin/MagazineArticles.tsx`    | Artigos das revistas e workflow editorial (status).                             |
+| `/admin/revistas/conexoes`   | `src/pages/admin/MagazineConnections.tsx` | Conexões profissionais ligadas à revista; geração de links de submissão.        |
+| `/admin/revistas/workplaces` | `src/pages/admin/MagazineWorkplaces.tsx`  | Workplaces da edição.                                                           |
+| `/admin/noticias`            | `src/pages/admin/News.tsx`                | CRUD de notícias.                                                               |
+| `/admin/cases`               | `src/pages/admin/Cases.tsx`               | Moderação de cases.                                                             |
+| `/admin/mentores`            | `src/pages/admin/Mentors.tsx`             | CRUD de mentores (`InstructorManager`/`MentorManager`).                         |
+| `/admin/mentorias`           | `src/pages/admin/Mentorships.tsx`         | CRUD de mentorias.                                                              |
+| `/admin/lives`               | `src/pages/admin/Lives.tsx`               | Aulas ao vivo + mensagens de chat.                                              |
+| `/admin/simulados`           | `src/pages/admin/Simulados/*`             | CRUD de simulados, questões e wizard de criação.                                |
+| `/admin/documentarios`       | `src/pages/admin/Documentaries/*`         | Documentários e wizard de produção.                                             |
+| `/admin/base-conhecimento`   | `src/pages/admin/KnowledgeBase.tsx`       | Base de conhecimento da IA (RAG) com `KnowledgeEntryModal`.                     |
+| `/admin/avisos`              | `src/pages/admin/Announcements.tsx`       | Avisos/announcements exibidos aos alunos.                                       |
+| `/admin/leads`               | `src/pages/admin/Leads.tsx`               | Lista de leads.                                                                 |
+| `/admin/leads/importar`      | `src/pages/admin/LeadImport.tsx`          | Importação de leads em massa.                                                   |
+| `/admin/pagamentos`          | `src/pages/admin/Payments.tsx`            | Pagamentos registrados.                                                         |
+| `/admin/emails`              | `src/pages/admin/EmailLog.tsx`            | Log de e-mails transacionais (envio + sync Brevo).                              |
+| `/admin/dia-do-tst`          | `src/pages/admin/DiaTst.tsx`              | Gestão da campanha: leads, regulamento, parceiros.                              |
+| `/admin/tags`                | `src/pages/admin/ProfessionalTags.tsx`    | Opções de tags profissionais (usadas em cadastro/conexões).                     |
 
 ---
 
@@ -213,13 +208,16 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 
 ### 2.6 Operação / infra
 
-- **banners** — `location`, `title`, `image`, `link`, `active`, `order` (exibidos via `BannerDisplay`).
+- **banners** — `location`, `title`, `image`, `link`, `active`, `order`. **Sem uso desde a remoção do módulo "Banners de Patrocínio"**; mantida apenas como histórico (dados e coleção intactos).
 - **announcements** — avisos exibidos na plataforma: `title`, `body`, `active`, `period`.
 - **leads** — leads gerais do site: `name`, `email`, `phone`, `source`.
 - **email_logs** — log de e-mails: `recipient_email`, `recipient_name`, `email_type` (`payment_confirmed`/`upgrade`/lead…), `sent` (bool), `sent_at`, `brevo_synced` (bool), `brevo_list_id`, `brevo_status` (HTTP), `error_message`, `user`, `subscription`.
 - **access_events** — telemetria de uso: `user`, `area` (área da plataforma), `created` — alimenta `/admin/acessos` e a termômetro de tendências.
-- **comercial** — `clientes` (empresas), `oportunidades` (pipeline com `etapa`, valor, moeda), `oportunidade_etapa_historico` (histórico de mudanças de etapa).
 - **knowledge_base** — documentos da IA: `title`, `content`, `status`, `vector/embedding` (RAG do agente).
+- **Coleções sem uso (mantidas apenas como histórico — dados e coleção intactos, nenhuma migração de exclusão criada):**
+  - **clientes**, **oportunidades**, **etapa_historico** (comercial) — módulo Comercial removido (Kanban/Clientes); os dados continuam no banco.
+  - **banners** — módulo "Banners de Patrocínio" removido.
+  - **magazine_landing_page** — módulo "Anúncios Revista" removido (a página `/anuncie` agora redireciona para `/revistas`).
 - **agent_limits / agent_messages** — limites de uso e histórico de conversas do assistente de IA.
 - **ipag_probe** (coleções de diagnóstico das migrações 0114–0130) — sondas de teste do iPag; pendentes de remoção via painel Skip Cloud.
 
@@ -285,17 +283,17 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 
 ### 4.2 Acesso por coleção
 
-| Nível                           | Coleções                                                                                                                                                                                                                  | Regra                                                                                                         |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Público (leitura)**           | `courses`, `modules`, `lessons` (metadados), `instructors`, `news`, `magazines`, `banners`, `announcements`, `subscription_plans`, `mentors`, `mentorships`, `simulados` (públicos), `dia_tst_config`, `dia_tst_partners` | Catálogo visível sem login; conteúdo restrito por plano é filtrado no frontend e protegido por regras de API. |
-| **Só autenticado (dono)**       | `subscriptions`, `payments`, `student_notes`, `support_messages`, `course_completions`, `lesson_ratings`, `access_events`, `simulado_submissions`, `agora_votes`, `case_likes`                                            | Cada usuário lê/escreve apenas os próprios registros (regra de `@request.auth.id`).                           |
-| **Só autenticado (comunidade)** | `professional_cases`, `case_comments`, `live_messages`, `agora_debates`                                                                                                                                                   | Leitura para usuários logados; escrita autoral; moderação/admin altera status.                                |
-| **Só admin**                    | `users` (listar/editar outros), `email_logs`, `access_events` (visão global), `knowledge_base`, `agent_limits`, `clientes/oportunidades` (comercial), `leads`, `leads_dia_tst`, `ipag_probe`                              | Somente `role = admin`.                                                                                       |
-| **Public write (formulários)**  | `leads`, `leads_dia_tst`, `lista_espera`, `workplaces`, `support_messages`, submissões da revista                                                                                                                         | Criação pública sem login (com as validações do item 3.6); leitura só admin.                                  |
+| Nível                           | Coleções                                                                                                                                                                                                       | Regra                                                                                                         |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Público (leitura)**           | `courses`, `modules`, `lessons` (metadados), `instructors`, `news`, `magazines`, `announcements`, `subscription_plans`, `mentors`, `mentorships`, `simulados` (públicos), `dia_tst_config`, `dia_tst_partners` | Catálogo visível sem login; conteúdo restrito por plano é filtrado no frontend e protegido por regras de API. |
+| **Só autenticado (dono)**       | `subscriptions`, `payments`, `student_notes`, `support_messages`, `course_completions`, `lesson_ratings`, `access_events`, `simulado_submissions`, `agora_votes`, `case_likes`                                 | Cada usuário lê/escreve apenas os próprios registros (regra de `@request.auth.id`).                           |
+| **Só autenticado (comunidade)** | `professional_cases`, `case_comments`, `live_messages`, `agora_debates`                                                                                                                                        | Leitura para usuários logados; escrita autoral; moderação/admin altera status.                                |
+| **Só admin**                    | `users` (listar/editar outros), `email_logs`, `access_events` (visão global), `knowledge_base`, `agent_limits`, `leads`, `leads_dia_tst`, `ipag_probe`                                                         | Somente `role = admin`.                                                                                       |
+| **Public write (formulários)**  | `leads`, `leads_dia_tst`, `lista_espera`, `workplaces`, `support_messages`, submissões da revista                                                                                                              | Criação pública sem login (com as validações do item 3.6); leitura só admin.                                  |
 
 ### 4.3 Papéis do painel `/admin`
 
-O painel é monolítico (um único papel admin), com módulos por área: alunos, acessos, planos, financeiro (pagamentos/e-mails), conteúdo (cursos, revistas, notícias, lives, simulados, documentários), comunidade (cases, agora), marketing (banners, avisos, leads, Dia do TST), comercial (clientes/oportunidades) e IA (base de conhecimento).
+O painel é monolítico (um único papel admin), com módulos por área: alunos, acessos, planos, financeiro (pagamentos/e-mails), conteúdo (cursos, revistas, notícias, lives, simulados, documentários), comunidade (cases, agora), marketing (avisos, leads, Dia do TST) e IA (base de conhecimento). Os módulos Comercial, Banners de Patrocínio, Anúncios Revista e Testes iPag foram removidos (seção 1.4).
 
 ---
 

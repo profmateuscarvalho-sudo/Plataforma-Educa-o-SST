@@ -24,7 +24,6 @@ import { Magazine, News, LiveSession } from '@/types'
 import { CategoryCard } from '@/components/student/CategoryCard'
 import { PlatformExplorer } from '@/components/PlatformExplorer'
 import { HomePlansSection } from '@/components/HomePlansSection'
-import { BannerDisplay } from '@/components/BannerDisplay'
 import { HubModulesMarquee } from '@/components/HubModulesMarquee'
 
 export default function Index() {
@@ -150,8 +149,6 @@ export default function Index() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
-      <BannerDisplay location="Home - Topo" className="px-6 pt-4 max-w-[1200px] mx-auto w-full" />
-
       {/* =========================================================================
           SEÇÃO 1: TOPO / PRIMEIRA DOBRA (fundo --background #FAF8F3)
           ========================================================================= */}

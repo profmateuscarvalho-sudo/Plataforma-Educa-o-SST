@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/carousel'
 import { setMetaTags, stripHtml } from '@/lib/utils'
 import { PUBLIC_URL, getSharePreviewUrl, getOgPreviewUrl } from '@/lib/constants'
-import { BannerDisplay } from '@/components/BannerDisplay'
 
 // NÃO alterar a lógica de injeção das tags Open Graph
 const injectOGTags = (title: string, desc: string, image: string, url: string) => {
@@ -140,8 +139,6 @@ export default function NewsDetails() {
           dangerouslySetInnerHTML={{ __html: news.content }}
         />
 
-        <BannerDisplay location="Lateral dos Artigos" className="my-10 max-w-sm mx-auto" />
-
         {galleryImages.length > 0 && (
           <div className="space-y-6 my-12 border-t border-[#E4DED1] pt-8">
             <span className="label-overline">REGISTROS VISUAIS</span>
@@ -224,8 +221,6 @@ export default function NewsDetails() {
             Copiar Link
           </Button>
         </div>
-
-        <BannerDisplay location="Rodapé" className="mt-12" />
       </main>
     </div>
   )

@@ -12,19 +12,14 @@ import {
   GraduationCap,
   Film,
   ClipboardList,
-  Settings,
   BadgeCent,
   Megaphone,
   UserCog,
-  MessagesSquare,
-  FlaskConical,
   ScrollText,
   Tag,
-  ImageIcon,
   Brain,
   ChevronDown,
   BarChart3,
-  Handshake,
   Award,
 } from 'lucide-react'
 
@@ -73,13 +68,6 @@ const sections: MenuSection[] = [
     items: [{ label: 'Campanha Dia do TST', icon: Award, path: '/admin/dia-tst' }],
   },
   {
-    title: 'Comercial',
-    items: [
-      { label: 'Kanban', icon: Handshake, path: '/admin/comercial' },
-      { label: 'Clientes', icon: Users, path: '/admin/comercial/clientes' },
-    ],
-  },
-  {
     title: 'Comunidade',
     items: [
       { label: 'Quadro de Avisos', icon: Megaphone, path: '/admin/avisos' },
@@ -91,9 +79,6 @@ const sections: MenuSection[] = [
     title: 'Configurações',
     items: [
       { label: 'Base de Conhecimento', icon: Brain, path: '/admin/base-conhecimento' },
-      { label: 'Banners de Patrocínio', icon: ImageIcon, path: '/admin/banners' },
-      { label: 'Anúncios Revista', icon: Settings, path: '/admin/configuracoes/anuncio-revista' },
-      { label: 'Testes iPag', icon: FlaskConical, path: '/admin/testes' },
       { label: 'Log de E-mails', icon: ScrollText, path: '/admin/email-log' },
     ],
   },

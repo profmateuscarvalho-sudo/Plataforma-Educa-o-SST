@@ -61,15 +61,6 @@ export const submitArticle = async (
   }
 }
 
-export const getMagazineLandingPage = async () => {
-  const records = await pb.collection('magazine_landing_page').getFullList()
-  return records[0] || null
-}
-
-export const updateMagazineLandingPage = async (id: string, data: any) => {
-  return pb.collection('magazine_landing_page').update(id, data)
-}
-
 export const submitConnection = async (formData: FormData, tokenId: string) => {
   await pb.collection('professional_connections').create(formData)
   await pb.collection('submission_tokens').update(tokenId, { used: true })

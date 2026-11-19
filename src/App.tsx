@@ -29,7 +29,6 @@ import ProfessionalConnection from './pages/public/ProfessionalConnection'
 import WorkplaceSubmission from './pages/public/WorkplaceSubmission'
 import PublicSimulados from './pages/public/Simulados'
 import SimuladoSession from './pages/public/SimuladoSession'
-import Anuncie from './pages/public/Anuncie'
 import Planos from './pages/Planos'
 
 import AppLayout from './pages/app/AppLayout'
@@ -72,23 +71,17 @@ import AdminDocumentaries from './pages/admin/Documentaries/List'
 import AdminDocumentaryWizard from './pages/admin/Documentaries/Wizard'
 import AdminSimulados from './pages/admin/Simulados/List'
 import AdminSimuladoWizard from './pages/admin/Simulados/Wizard'
-import AdminMagazineLanding from './pages/admin/MagazineLandingConfig'
 import DocumentaryPitch from './pages/public/DocumentaryPitch'
 import AdminSubscriptionPlans from './pages/admin/SubscriptionPlans'
 import AdminAnnouncements from './pages/admin/Announcements'
 import AdminCases from './pages/admin/Cases'
-import AdminTestes from './pages/admin/Testes'
 import AdminEmailLog from './pages/admin/EmailLog'
 import AdminProfessionalTags from './pages/admin/ProfessionalTags'
-import AdminBanners from './pages/admin/Banners'
 import AdminKnowledgeBase from './pages/admin/KnowledgeBase'
-import AdminComercial from './pages/admin/Comercial'
-import AdminComercialClientes from './pages/admin/ComercialClientes'
 import DiaDoTst from './pages/DiaDoTst'
 import AdminDiaTst from './pages/admin/DiaTst'
 import Convite from './pages/Convite'
 import PrivacyPolicy from './pages/PrivacyPolicy'
-import { FEATURE_FLAGS } from '@/lib/constants'
 
 const App = () => (
   <BrowserRouter>
@@ -121,16 +114,15 @@ const App = () => (
 
               <Route path="/simulados" element={<PublicSimulados />} />
               <Route path="/simulados/:id" element={<SimuladoSession />} />
-              <Route
-                path="/anuncie-na-revista"
-                element={FEATURE_FLAGS.anunciePage ? <Anuncie /> : <Navigate to="/" replace />}
-              />
               <Route path="/planos" element={<Planos />} />
               <Route path="/documentarios/:id" element={<DocumentaryPitch />} />
               <Route path="/convite" element={<Convite />} />
               <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
               <Route path="/dia-do-tst" element={<DiaDoTst />} />
             </Route>
+
+            <Route path="/anuncie" element={<Navigate to="/revistas" replace />} />
+            <Route path="/anuncie-na-revista" element={<Navigate to="/revistas" replace />} />
 
             <Route path="/plataforma/documentarios/:id" element={<DocumentaryViewer />} />
             <Route path="/plataforma/simulados/:id" element={<SimuladoSession />} />
@@ -180,10 +172,6 @@ const App = () => (
               <Route path="/admin/revistas/artigos" element={<AdminMagazineArticles />} />
               <Route path="/admin/revistas/conexoes" element={<AdminMagazineConnections />} />
               <Route path="/admin/revistas/locais" element={<AdminMagazineWorkplaces />} />
-              <Route
-                path="/admin/configuracoes/anuncio-revista"
-                element={<AdminMagazineLanding />}
-              />
               <Route path="/admin/noticias" element={<AdminNews />} />
               <Route path="/admin/leads" element={<AdminLeads />} />
               <Route path="/admin/dia-tst" element={<AdminDiaTst />} />
@@ -193,13 +181,9 @@ const App = () => (
               <Route path="/admin/planos" element={<AdminSubscriptionPlans />} />
               <Route path="/admin/avisos" element={<AdminAnnouncements />} />
               <Route path="/admin/casos" element={<AdminCases />} />
-              <Route path="/admin/testes" element={<AdminTestes />} />
               <Route path="/admin/email-log" element={<AdminEmailLog />} />
               <Route path="/admin/tags" element={<AdminProfessionalTags />} />
-              <Route path="/admin/banners" element={<AdminBanners />} />
               <Route path="/admin/base-conhecimento" element={<AdminKnowledgeBase />} />
-              <Route path="/admin/comercial" element={<AdminComercial />} />
-              <Route path="/admin/comercial/clientes" element={<AdminComercialClientes />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

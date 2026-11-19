@@ -223,24 +223,6 @@ export interface Author extends RecordModel {
   status: 'pending' | 'approved'
 }
 
-export interface MagazineLandingPlan {
-  title: string
-  insertions: string
-  price: number
-  pricePerInsertion: number
-  features: string[]
-  bestValue: boolean
-}
-
-export interface MagazineLandingPage extends RecordModel {
-  hero_title: string
-  hero_description: string
-  readers_count: string
-  plans: MagazineLandingPlan[]
-  whatsapp_number: string
-  cta_text: string
-}
-
 export interface Article extends RecordModel {
   title: string
   content: string
@@ -281,14 +263,6 @@ export interface DocProject extends RecordModel {
   youtube_url?: string
   presentation_photos?: string[]
   is_free?: boolean
-}
-
-export interface Banner extends RecordModel {
-  title: string
-  image: string
-  location: 'Home - Topo' | 'Home - Meio' | 'Lateral dos Artigos' | 'Rodapé'
-  destination_link: string
-  active: boolean
 }
 
 export interface Simulado extends RecordModel {
@@ -503,47 +477,12 @@ export interface AccessEvent extends RecordModel {
   expand?: { user?: User }
 }
 
-export type EtapaOportunidade =
-  | 'Cadastro'
-  | 'Prospecção'
-  | 'Aguardando retorno'
-  | 'Retorno recebido'
-  | 'Em decisão'
-  | 'Concluído'
-
-export type ResultadoOportunidade = 'Ganho' | 'Perdido'
-
-export interface ClienteComercial extends RecordModel {
-  nome_empresa: string
-  cnpj?: string
-  nome_contato: string
-  email?: string
-  telefone?: string
-  segmento?: string
-  origem?: string
-  observacoes?: string
-}
-
-export interface OportunidadeComercial extends RecordModel {
-  cliente_id: string
-  titulo: string
-  valor_estimado?: number
-  responsavel?: string
-  etapa: EtapaOportunidade
-  resultado?: ResultadoOportunidade
-  data_prevista_fechamento?: string
-  notas?: string
-  expand?: {
-    cliente_id?: ClienteComercial
-    responsavel?: User
-  }
-}
-
-export interface EtapaHistorico extends RecordModel {
-  oportunidade_id: string
-  etapa_anterior: string
-  etapa_nova: string
-  expand?: { oportunidade_id?: OportunidadeComercial }
+export interface Banner extends RecordModel {
+  title: string
+  image: string
+  location: 'Home - Topo' | 'Home - Meio' | 'Lateral dos Artigos' | 'Rodapé'
+  destination_link: string
+  active: boolean
 }
 
 // ----- App mobile (Dose do dia, sequência, push) -----

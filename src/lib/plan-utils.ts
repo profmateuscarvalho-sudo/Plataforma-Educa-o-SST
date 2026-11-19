@@ -1,4 +1,4 @@
-import { tierFromSubscriptions } from '@/hooks/use-student-access'
+import { tierFromSubscriptionsList } from '@/lib/plan-access'
 import type { Subscription } from '@/services/subscriptions'
 
 const tierRank: Record<string, number> = { free: 1, prata: 2, ouro: 3 }
@@ -36,7 +36,7 @@ export function getPlanButtonState(
 
   // Tier efetivo: o maior entre users.plan_tier e o plano da assinatura ativa (se informada)
   const userTier = (user.plan_tier || 'free').toLowerCase()
-  const subscriptionTier = tierFromSubscriptions(user.subscriptions || [])
+  const subscriptionTier = tierFromSubscriptionsList(user.subscriptions || [])
   const hasActiveSub = (user.subscriptions || []).some((s) => s.status === 'active')
   const isActive =
     hasActiveSub ||

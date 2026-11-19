@@ -114,7 +114,6 @@ export default function CourseLesson() {
 
   const courseAccess = hasAccess({
     is_free: course.is_free,
-    title: course.title,
     courseId: course.id,
   })
   if (user.role === 'student' && !courseAccess) {

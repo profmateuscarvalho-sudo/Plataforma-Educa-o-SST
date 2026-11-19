@@ -6,8 +6,8 @@ import { BackToHub } from '@/components/student/BackToHub'
 import { MagazineBuyButton } from '@/components/magazine/MagazineBuyButton'
 import { CheckoutModal } from '@/components/CheckoutModal'
 import { useAuth } from '@/hooks/use-auth'
-import { usePurchasedMagazines, isMagazinePurchased } from '@/hooks/use-purchased-magazines'
-import { fetchMagazineReadLink, type MagazineReadLink } from '@/lib/magazine-read-link'
+import { usePurchasedMagazines } from '@/hooks/use-purchased-magazines'
+import { useMagazineReadLink } from '@/hooks/use-magazine-read-link'
 import pb from '@/lib/pocketbase/client'
 import { getMagazines } from '@/services/magazines'
 import type { Magazine } from '@/types'
@@ -39,34 +39,16 @@ export default function MagazineReader() {
   const nextMag =
     currentIndex >= 0 && currentIndex < magazines.length - 1 ? magazines[currentIndex + 1] : null
 
-  // O ACESSO É DECIDIDO PELO SERVIDOR: sempre busca o link pela rota protegida
-  // (GET /backend/v1/magazine-read-link), que libera para Prata/Ouro ativo,
-  // admin, compra 'paid' desta edição ou edição is_free (amostra). Os campos
-  // da listagem são escondidos pela guarda e NÃO definem o estado aqui.
-  const [readLink, setReadLink] = useState<MagazineReadLink | null>(null)
-  const [linkLoading, setLinkLoading] = useState(true)
-
-  const loadReadLink = useCallback(() => {
-    if (!id) return
-    setLinkLoading(true)
-    fetchMagazineReadLink(id)
-      .then(setReadLink)
-      .catch(() =>
-        setReadLink({ access: false, link: '', embed_code: '', embed_src: '', is_free: false }),
-      )
-      .finally(() => setLinkLoading(false))
-  }, [id])
-
-  useEffect(() => {
-    loadReadLink()
-  }, [loadReadLink])
-
-  const unlocked = !!readLink?.access
-  // Sem direito confirmado pelo servidor (compra local apenas como fallback
-  // imediato pós-pagamento, antes da revalidação da rota).
-  const showLocked =
-    !linkLoading &&
-    (!unlocked || (!readLink?.link && !readLink?.embed_code && !readLink?.embed_src))
+  // O ACESSO É DECIDIDO PELO SERVIDOR: o hook busca o link sempre pela rota
+  // protegida (GET /backend/v1/magazine-read-link), que libera para Prata/Ouro
+  // ativo, admin, compra 'paid' desta edição ou edição is_free (amostra). Os
+  // campos da listagem são escondidos pela guarda e NÃO definem o estado aqui.
+  const {
+    readLink,
+    loading: linkLoading,
+    locked: showLocked,
+    refetch: loadReadLink,
+  } = useMagazineReadLink(id || null)
 
   const handleBuy = useCallback(() => {
     if (!user) {

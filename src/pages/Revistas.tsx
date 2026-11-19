@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
-import { fetchMagazineReadLink, type MagazineReadLink } from '@/lib/magazine-read-link'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -18,6 +17,7 @@ import { LockedBadge, LockedCta, LockedOverlay } from '@/components/LockedBadge'
 import { useStudentAccess } from '@/hooks/use-student-access'
 import { useAuth } from '@/hooks/use-auth'
 import { usePurchasedMagazines, isMagazinePurchased } from '@/hooks/use-purchased-magazines'
+import { useMagazineReadLink } from '@/hooks/use-magazine-read-link'
 import { MagazineBuyButton } from '@/components/magazine/MagazineBuyButton'
 import { CheckoutModal } from '@/components/CheckoutModal'
 
@@ -59,11 +59,15 @@ export default function Revistas() {
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [loading, setLoading] = useState(true)
   const [activeReaderMag, setActiveReaderMag] = useState<Magazine | null>(null)
-  // Link de leitura SEMPRE vem da rota protegida do servidor — nunca dos campos
-  // da listagem (a guarda esconde fliphtml5_link/embed_code de quem não tem
-  // direito; um assinante legítimo recebe o registro sem eles).
-  const [readLink, setReadLink] = useState<MagazineReadLink | null>(null)
-  const [readLinkLoading, setReadLinkLoading] = useState(false)
+  // Link de leitura SEMPRE vem da rota protegida do servidor (via
+  // useMagazineReadLink) — nunca dos campos da listagem (a guarda esconde
+  // fliphtml5_link/embed_code de quem não tem direito).
+  const {
+    readLink,
+    loading: readLinkLoading,
+    refetch: refetchReadLink,
+    reset: resetReadLink,
+  } = useMagazineReadLink(activeReaderMag?.id || null)
   const [checkoutMagId, setCheckoutMagId] = useState<string | null>(null)
   const [checkoutMagIdInReader, setCheckoutMagIdInReader] = useState<string | null>(null)
   const [purchasedRefresh, setPurchasedRefresh] = useState(0)
@@ -189,47 +193,16 @@ export default function Revistas() {
     if (fresh && fresh !== activeReaderMag) setActiveReaderMag(fresh)
   }, [magazines, activeReaderMag])
 
-  // Abre o leitor: busca o link pela ROTA PROTEGIDA do servidor. 403 → estado
-  // bloqueado (cadeado + compra); 200 → iframe (link) ou embed injetado.
-  useEffect(() => {
-    if (!activeReaderMag) {
-      setReadLink(null)
-      return
-    }
-    let vivo = true
-    setReadLinkLoading(true)
-    fetchMagazineReadLink(activeReaderMag.id)
-      .then((data) => {
-        if (vivo) setReadLink(data)
-      })
-      .catch(() => {
-        if (vivo)
-          setReadLink({ access: false, link: '', embed_code: '', embed_src: '', is_free: false })
-      })
-      .finally(() => {
-        if (vivo) setReadLinkLoading(false)
-      })
-    return () => {
-      vivo = false
-    }
-  }, [activeReaderMag])
-
   // Pagamento confirmado dentro do leitor: revalida a rota protegida (o
   // servidor passa a liberar o link desta edição) sem fechar o Dialog.
   const handlePaidInReader = useCallback(() => {
     setPurchasedRefresh((k) => k + 1)
-    if (!activeReaderMag) return
-    setReadLinkLoading(true)
-    fetchMagazineReadLink(activeReaderMag.id)
-      .then((data) => setReadLink(data))
-      .catch(() =>
-        setReadLink({ access: false, link: '', embed_code: '', embed_src: '', is_free: false }),
-      )
-      .finally(() => setReadLinkLoading(false))
-  }, [activeReaderMag])
+    refetchReadLink()
+  }, [refetchReadLink])
 
   const closeMagazineReader = () => {
     setActiveReaderMag(null)
+    resetReadLink()
     setSearchParams({}, { replace: true })
   }
 

@@ -9,7 +9,6 @@ import { CategoryCard } from '@/components/student/CategoryCard'
 import { ProductCard } from '@/components/student/ProductCard'
 import { MentorshipList } from '@/components/student/MentorshipList'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   ArrowLeft,
@@ -20,7 +19,6 @@ import {
   User,
   Users,
   ClipboardList,
-  Video,
   Calendar,
   ChevronRight,
   BookX,
@@ -58,7 +56,6 @@ export default function StudentDashboard() {
   const access = useStudentAccess()
   const navigate = useNavigate()
   const [view, setView] = useState<'hub' | 'cursos' | 'revistas' | 'mentorias'>('hub')
-  const [selectedMag, setSelectedMag] = useState<Magazine | null>(null)
   const [mentorships, setMentorships] = useState<Mentorship[]>([])
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([])
   const [docProjects, setDocProjects] = useState<DocProject[]>([])
@@ -588,7 +585,7 @@ export default function StudentDashboard() {
                       <button
                         key={mag.id}
                         type="button"
-                        onClick={() => setSelectedMag(mag)}
+                        onClick={() => navigate(`/plataforma/revista/${mag.id}`)}
                         className="group text-left"
                       >
                         <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-muted border border-border shadow-sm group-hover:shadow-[0_18px_40px_rgba(28,27,24,0.12)] transition-all group-hover:-translate-y-1">
@@ -617,29 +614,6 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
-
-      <Dialog open={!!selectedMag} onOpenChange={(open) => !open && setSelectedMag(null)}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 overflow-hidden bg-card/95 border-border rounded-[28px]">
-          <DialogTitle className="sr-only">{selectedMag?.title}</DialogTitle>
-          {selectedMag?.embed_code ? (
-            <div
-              className="w-full h-full bg-card [&>iframe]:w-full [&>iframe]:h-full"
-              dangerouslySetInnerHTML={{ __html: selectedMag.embed_code }}
-            />
-          ) : selectedMag?.fliphtml5_link ? (
-            <iframe
-              src={selectedMag.fliphtml5_link}
-              className="w-full h-full border-none rounded-[28px] bg-card"
-              allowFullScreen
-              scrolling="no"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground font-medium text-sm">
-              Conteúdo não disponível.
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

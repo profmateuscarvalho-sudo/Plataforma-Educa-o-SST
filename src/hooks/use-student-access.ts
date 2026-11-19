@@ -3,45 +3,35 @@ import { useAuth } from '@/hooks/use-auth'
 import { getUserPayments } from '@/services/payments'
 import { getUserSubscriptions, type Subscription } from '@/services/subscriptions'
 import { Payment } from '@/types'
-import { isContractActive } from '@/lib/date-utils'
+import {
+  effectiveTier,
+  canAccessCourse as courseAccess,
+  canAccessMagazine as magazineAccess,
+  canAccessLive as liveAccess,
+  canAccessDocumentary as documentaryAccess,
+  hasMentorshipDiscount as mentorshipDiscountFor,
+  tierAllows,
+  type AccessTier,
+  type PlanTier,
+} from '@/lib/plan-access'
+
+export type { AccessTier, PlanTier }
+
+// Reexporta a lógica pura para que as telas continuem importando tudo daqui.
+export { MENTORSHIP_DISCOUNT, mentorshipDiscountedPrice, tierAllows } from '@/lib/plan-access'
 
 export type AccessStatus = 'free' | 'owned' | 'subscriber' | 'locked'
-export type PlanTier = 'none' | 'free' | 'prata' | 'ouro'
 
-const tierLevel = (tier: string): number => {
-  switch (tier) {
-    case 'ouro':
-      return 3
-    case 'prata':
-      return 2
-    case 'free':
-      return 1
-    default:
-      return 0
-  }
+export interface CourseAccessItem {
+  id?: string
+  is_free?: boolean
 }
 
-// Deriva o tier a partir do plano da assinatura ativa (expand 'plan').
-// Corrige a divergência em que o painel/grupo ativa a assinatura (status 'active'
-// apontando para um plano pago em subscription_plans) mas users.plan_tier continua
-// 'free' — o site lia o tier só do usuário e exibia Free mesmo com assinatura paga.
-export function tierFromSubscriptions(subs: Subscription[]): PlanTier | null {
-  let best: PlanTier | null = null
-  for (const s of subs) {
-    if (s.status !== 'active') continue
-    const plan: any = (s as any).expand?.plan
-    if (!plan) continue
-    const name = String(plan.name || '').toLowerCase()
-    const price = Number(plan.price || 0)
-    let tier: PlanTier | null = null
-    if (name.includes('ouro')) tier = 'ouro'
-    else if (name.includes('prata')) tier = 'prata'
-    else if (price > 0) tier = 'prata'
-    if (tier && (!best || tierLevel(tier) > tierLevel(best))) best = tier
-  }
-  return best
-}
-
+/**
+ * Centraliza o tier efetivo do aluno e a matriz de acesso por área.
+ * A lógica pura vive em src/lib/plan-access.ts (testada em plan-access.test.ts);
+ * aqui ela é alimentada com user, assinaturas e pagamentos reais.
+ */
 export function useStudentAccess() {
   const { user } = useAuth()
   const userId = user?.id
@@ -59,86 +49,79 @@ export function useStudentAccess() {
       getUserPayments(userId).catch(() => []),
       getUserSubscriptions(userId).catch(() => []),
     ]).then(([p, subs]) => {
-      setPayments(p.filter((pay: Payment) => pay.status === 'paid'))
+      setPayments(p)
       setSubscriptions(subs as Subscription[])
       setLoading(false)
     })
   }, [userId])
 
-  const hasSubscriptionAccess = useMemo(() => {
-    if (user?.role === 'admin') return true
-    // Assinatura ativa no banco dá acesso
-    if (subscriptions.some((s) => s.status === 'active')) return true
-    // Usuários com plano pago (prata ou ouro) com contrato não vencido ou sem contrato restrito
-    if (user?.contract_end_date) {
-      return isContractActive(user.contract_end_date)
-    }
-    // Usuários com plano pago ou free sem contract_end_date definido
-    if (user?.plan_tier === 'prata' || user?.plan_tier === 'ouro') return true
-    // Aluno com plano free tem acesso imediato pelo simples fato de estar autenticado (sem exigir confirmação de e-mail)
-    if (user?.plan_tier === 'free' || !user?.plan_tier) return true
-    // Pagamentos aprovados anteriores — APENAS 'paid': pending/failed nunca dá acesso
-    if (payments.some((p) => p.status === 'paid')) return true
-    return false
-  }, [user, subscriptions, payments])
-
-  const activeTier = useMemo<PlanTier>(() => {
-    if (user?.role === 'admin') return 'ouro'
-    if (!hasSubscriptionAccess) return 'none'
-    const fromUser = (user?.plan_tier as PlanTier) || 'free'
-    const fromSubs = tierFromSubscriptions(subscriptions)
-    if (fromSubs && tierLevel(fromSubs) > tierLevel(fromUser)) return fromSubs
-    return fromUser
-  }, [user, hasSubscriptionAccess, subscriptions])
-
-  const hasActiveSubscription = useCallback(
-    (): boolean => hasSubscriptionAccess,
-    [hasSubscriptionAccess],
+  const effective = useMemo<AccessTier>(
+    () =>
+      effectiveTier(
+        user,
+        subscriptions as any[],
+        userId ? payments.some((p) => p.status === 'paid') : false,
+      ),
+    [user, subscriptions, payments, userId],
   )
 
-  const canAccess = useCallback(
-    (requiredTier: PlanTier): boolean => {
-      return tierLevel(activeTier) >= tierLevel(requiredTier)
-    },
-    [activeTier],
-  )
-
-  // Compra avulsa de curso: payment 'paid' com product_type 'course' e course_id
-  // apontando para o curso. A comparação antiga por título nunca casava — o campo
-  // product_type guarda 'course', nunca o nome do produto.
-  const hasPurchased = useCallback(
-    (item: { courseId?: string; title?: string }): boolean => {
-      if (item.courseId) {
-        return payments.some(
-          (p) =>
-            p.status === 'paid' && p.product_type === 'course' && p.course_id === item.courseId,
-        )
-      }
-      return false
-    },
+  // Ids dos cursos comprados avulso (payments 'paid' com product_type 'course')
+  const purchasedCourseIds = useMemo(
+    () =>
+      payments
+        .filter((p) => p.status === 'paid' && p.product_type === 'course' && p.course_id)
+        .map((p) => p.course_id as string),
     [payments],
   )
 
+  const activeTier = effective
+
+  const canAccess = useCallback(
+    (requiredTier: PlanTier): boolean => tierAllows(activeTier, requiredTier),
+    [activeTier],
+  )
+
+  const hasActiveSubscription = useCallback(
+    () => tierAllows(activeTier, 'prata') || activeTier === 'free',
+    [activeTier],
+  )
+
+  const canAccessCourse = useCallback(
+    (course: CourseAccessItem | null | undefined) =>
+      courseAccess(activeTier, course, purchasedCourseIds),
+    [activeTier, purchasedCourseIds],
+  )
+
+  const canAccessMagazine = useCallback(() => magazineAccess(activeTier), [activeTier])
+
+  const canAccessLive = useCallback(() => liveAccess(activeTier), [activeTier])
+
+  const canAccessDocumentary = useCallback(
+    (doc: { is_free?: boolean } | null | undefined) => documentaryAccess(activeTier, doc),
+    [activeTier],
+  )
+
+  const hasMentorshipDiscount = useCallback(() => mentorshipDiscountFor(activeTier), [activeTier])
+
+  // Compra avulsa de curso: payment 'paid' com product_type 'course' e course_id.
+  const hasPurchased = useCallback(
+    (item: { courseId?: string }): boolean =>
+      !!item.courseId && purchasedCourseIds.includes(item.courseId),
+    [purchasedCourseIds],
+  )
+
   const getAccessStatus = useCallback(
-    (item: {
-      is_free?: boolean
-      title?: string
-      requiredTier?: PlanTier
-      courseId?: string
-    }): AccessStatus => {
+    (item: { is_free?: boolean; courseId?: string }): AccessStatus => {
       if (item.is_free) return 'free'
-      if (item.courseId && hasPurchased(item)) return 'owned'
-      if (activeTier === 'none') return 'locked'
-      const required = item.requiredTier || 'prata'
-      if (canAccess(required)) return 'subscriber'
+      if (item.courseId && purchasedCourseIds.includes(item.courseId)) return 'owned'
+      if (canAccessCourse(item)) return 'subscriber'
       return 'locked'
     },
-    [activeTier, canAccess, hasPurchased],
+    [purchasedCourseIds, canAccessCourse],
   )
 
   const hasAccess = useCallback(
-    (item: { is_free?: boolean; title?: string; requiredTier?: PlanTier; courseId?: string }) =>
-      getAccessStatus(item) !== 'locked',
+    (item: { is_free?: boolean; courseId?: string }) => getAccessStatus(item) !== 'locked',
     [getAccessStatus],
   )
 
@@ -147,25 +130,36 @@ export function useStudentAccess() {
       payments,
       subscriptions,
       loading,
-      hasSubscriptionAccess,
+      activeTier,
+      tier: activeTier,
+      canAccess,
+      canAccessCourse,
+      canAccessMagazine,
+      canAccessLive,
+      canAccessDocumentary,
+      hasMentorshipDiscount,
       hasActiveSubscription,
       hasPurchased,
       getAccessStatus,
       hasAccess,
-      activeTier,
-      canAccess,
+      purchasedCourseIds,
     }),
     [
       payments,
       subscriptions,
       loading,
-      hasSubscriptionAccess,
+      activeTier,
+      canAccess,
+      canAccessCourse,
+      canAccessMagazine,
+      canAccessLive,
+      canAccessDocumentary,
+      hasMentorshipDiscount,
       hasActiveSubscription,
       hasPurchased,
       getAccessStatus,
       hasAccess,
-      activeTier,
-      canAccess,
+      purchasedCourseIds,
     ],
   )
 }

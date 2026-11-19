@@ -1,5 +1,7 @@
 import { Lock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 export function LockedBadge({ className }: { className?: string }) {
@@ -10,5 +12,44 @@ export function LockedBadge({ className }: { className?: string }) {
       <Lock className="w-3 h-3 mr-1" />
       Acesso para assinantes
     </Badge>
+  )
+}
+
+/**
+ * Cadeado com CTA "Disponível no plano Prata" levando a /planos.
+ * Usado nos catálogos/telas do aluno onde o conteúdo está bloqueado para o plano atual.
+ */
+export function LockedCta({ className, label }: { className?: string; label?: string }) {
+  return (
+    <Button
+      asChild
+      size="sm"
+      className={cn(
+        'h-9 rounded-full bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 font-semibold gap-1.5',
+        className,
+      )}
+    >
+      <Link to="/planos">
+        <Lock className="w-3.5 h-3.5" />
+        {label ?? 'Disponível no plano Prata'}
+      </Link>
+    </Button>
+  )
+}
+
+/** Overlay de cadeado para capas/cards (revistas, cursos, documentários, lives). */
+export function LockedOverlay({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        'absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2 text-white',
+        className,
+      )}
+    >
+      <div className="w-12 h-12 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center">
+        <Lock className="w-5 h-5" />
+      </div>
+      <span className="text-xs font-semibold px-2 text-center">Disponível no plano Prata</span>
+    </div>
   )
 }

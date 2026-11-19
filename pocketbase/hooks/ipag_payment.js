@@ -9,69 +9,13 @@
 // o token gerado server-side. Nada sensível é gravado em banco ou logado.
 // Quando o iPag recusa, a razão real retornada por ele (sanitizada) é
 // repassada ao frontend.
-// BLOCO 3 — helpers de tier (espelham access_guard.js). Não usar imports: o
-// bundler do pb_hooks trata como dependência npm e o deploy falha.
-function __tierNivel(userRec) {
-  try {
-    if (String(userRec.getString('role') || '') === 'admin') return 4
-  } catch (_) {}
-  var t = ''
-  try {
-    t = String(userRec.getString('plan_tier') || '').toLowerCase()
-  } catch (_) {}
-  if (t === 'ouro') return 3
-  if (t === 'prata') return 2
-  return 1
-}
-function __tierEfetivo(userId) {
-  if (!userId) return 1
-  var rec
-  try {
-    rec = $app.findRecordById('users', userId)
-  } catch (_) {
-    return 1
-  }
-  var best = __tierNivel(rec)
-  if (best >= 4) return 4
-  var fim = ''
-  try {
-    fim = String(rec.getString('contract_end_date') || '').trim()
-  } catch (_) {}
-  if (fim) {
-    var hoje = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
-    if (fim.slice(0, 10) < hoje) best = 1
-  }
-  try {
-    var subs = $app.findRecordsByFilter(
-      'subscriptions',
-      "user = '" + userId + "' && status = 'active'",
-      '-created',
-      20,
-      0,
-      { plan: null },
-    )
-    for (var i = 0; i < subs.length; i++) {
-      var sub = subs[i]
-      var fimSub = ''
-      try {
-        fimSub = String(sub.getString('contract_end_date') || '').trim()
-      } catch (_) {}
-      if (
-        fimSub &&
-        fimSub.slice(0, 10) < new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
-      )
-        continue
-      var plan = sub.expand() ? sub.expand()['plan'] : null
-      if (!plan) continue
-      var nome = String(plan.getString('name') || '').toLowerCase()
-      var preco = Number(plan.get('price') || 0)
-      if (nome.indexOf('ouro') !== -1) best = Math.max(best, 3)
-      else if (nome.indexOf('prata') !== -1 || preco > 0) best = Math.max(best, 2)
-    }
-  } catch (_) {}
-  return best
-}
-
+//
+// BLOCO 3 — desconto de 30% em mentorias para Prata/Ouro, calculado AQUI no
+// servidor; o amount vindo do navegador é ignorado.
+//
+// IMPORTANTE (limitação da JSVM desta plataforma): callbacks executam em pool
+// separado — NÃO referencie declarações top-level dentro deles. Todo helper é
+// declarado DENTRO do corpo do callback.
 routerAdd(
   'POST',
   '/backend/v1/ipag/pay',
@@ -85,6 +29,74 @@ routerAdd(
         'Token do cartão ausente. Tokenize o cartão via /backend/v1/ipag/tokenize-card antes de pagar.',
       )
     }
+
+    // --- tier efetivo (inline — JSVM: nada de top-level) ---
+    // 1 = Free, 2 = Prata, 3 = Ouro, 4 = admin. Tier do usuário SÓ vale com
+    // contract_end_date >= hoje (fuso SP, UTC-3 fixo); vencido = Free. Um
+    // subscription 'active' de plano Prata/Ouro com contrato vigente também
+    // conta (o webhook pode atualizar apenas um dos lugares).
+    function nivelEfetivo(uid) {
+      if (!uid) return 1
+      var rec = null
+      try {
+        rec = $app.findRecordById('users', uid)
+      } catch (_) {
+        return 1
+      }
+      var hoje = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      var best = 1
+      var role = ''
+      try {
+        role = String(rec.getString('role') || '')
+      } catch (_) {}
+      if (role === 'admin') return 4
+      var fim = ''
+      try {
+        fim = String(rec.getString('contract_end_date') || '').trim()
+      } catch (_) {}
+      var contratoOk = !fim || fim.slice(0, 10) >= hoje
+      var t = ''
+      try {
+        t = String(rec.getString('plan_tier') || '').toLowerCase()
+      } catch (_) {}
+      if (contratoOk && t === 'ouro') best = 3
+      else if (contratoOk && t === 'prata') best = 2
+      try {
+        var subs = $app.findRecordsByFilter(
+          'subscriptions',
+          "user = '" + uid + "' && status = 'active'",
+          '-created',
+          20,
+          0,
+        )
+        for (var i = 0; i < subs.length; i++) {
+          var fimSub = ''
+          try {
+            fimSub = String(subs[i].getString('contract_end_date') || '').trim()
+          } catch (_) {}
+          if (fimSub && fimSub.slice(0, 10) < hoje) continue
+          var pid = ''
+          try {
+            pid = subs[i].getString('plan')
+          } catch (_) {}
+          if (!pid) continue
+          var plano = null
+          try {
+            plano = $app.findRecordById('subscription_plans', pid)
+          } catch (_) {
+            continue
+          }
+          var nome = ''
+          try {
+            nome = String(plano.getString('name') || '').toLowerCase()
+          } catch (_) {}
+          if (nome.indexOf('ouro') !== -1) best = Math.max(best, 3)
+          else if (nome.indexOf('prata') !== -1) best = Math.max(best, 2)
+        }
+      } catch (_) {}
+      return best
+    }
+
     // Preço resolvido no SERVIDOR a partir do cadastro (nunca confiar no amount
     // enviado pelo frontend). Cursos vêm de courses.price; mentorias de mentorships.price.
     var productType = body.product_type || 'course'
@@ -114,14 +126,13 @@ routerAdd(
         throw new NotFoundError('Mentoria não encontrada.')
       }
       serverAmount = Number(mentorshipRec.get('price') || 0)
-      // BLOCO 3 — 30% de desconto em mentorias para Prata/Ouro, calculado no
-      // SERVIDOR (amount do navegador é ignorado). Free paga o preço cheio.
-      var nivelPagador = __tierEfetivo(userId)
+      // 30% de desconto para Prata/Ouro (nível >= 2). Free paga o preço cheio.
+      var nivelPagador = nivelEfetivo(userId)
       if (nivelPagador >= 2) {
         var cheio = serverAmount
         serverAmount = Math.max(0.01, Math.round(cheio * 0.7 * 100) / 100)
         console.log(
-          '[create-payment][mentorship] desconto 30% (nivel ' +
+          '[ipag-pay][mentorship] desconto 30% (nivel ' +
             nivelPagador +
             '): ' +
             cheio +

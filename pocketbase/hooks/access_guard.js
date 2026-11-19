@@ -1,27 +1,30 @@
 // ---------------------------------------------------------------------------
 // BLOCO 3 — Controle de acesso por plano (servidor)
 //
-// Dois hooks globais (onRecordGet + onRecordsList) que REMOVEM o conteúdo
-// sensível das respostas para quem não tem acesso (matriz do Bloco 3):
+// onRecordEnrich + onRecordsListRequest: ESCONDEM o conteúdo sensível da
+// resposta (record.hide — só afeta a serialização, não o banco) para quem
+// não tem acesso:
 //
-//   lessons / modules / materials -> vídeo/arquivo só p/ curso is_free, ou
-//                                    compra avulsa (payments paid), ou Prata/Ouro
-//   live_sessions                 -> panda_video_id só Prata/Ouro
-//   doc_projects                  -> panda_video_id/youtube_url só Prata/Ouro
-//                                    (is_free liberado a todos autenticados)
-//   magazines                     -> fliphtml5_link/embed_code só Prata/Ouro
-//                                    (compra avulsa de revista: Bloco 4)
+//   lessons             -> panda_video_id (campo REAL; não existe video_url)
+//   modules             -> nada a esconder hoje (sem campos de mídia no schema)
+//   materials           -> file (resolve o curso via module -> modules.course)
+//   live_sessions       -> panda_video_id (não existe stream_url/video_url)
+//   doc_projects        -> panda_video_id + youtube_url (is_free libera todos)
+//   magazines           -> fliphtml5_link + embed_code (catálogo fica público;
+//                          compra avulsa de edição: Bloco 4)
+//
+// Regra de entitulamento (idêntica em todos os casos): curso liberado se
+// courses.is_free = true; ou tier efetivo prata/ouro ATIVO (plan_tier +
+// contract_end_date >= hoje SP; vencida = Free; assinatura active com plano
+// Prata/Ouro também conta); ou pagamento 'paid' com course_id (compra avulsa);
+// ou admin/superuser.
 //
 // IMPORTANTE (limitação da JSVM desta plataforma): callbacks executam em pool
-// separado — NÃO referencie declarações top-level dentro deles. Toda função
-// aqui é declarada DENTRO do corpo do callback (duplicada entre os dois hooks).
-//
-// Campos reais do schema: live_sessions e lessons usam panda_video_id (não
-// stream_url/video_url); doc_projects usa panda_video_id + youtube_url;
-// materials/lessons apontam para o curso via module -> modules.course.
+// separado — NÃO referencie funções/const top-level dentro deles. TODA a
+// lógica vive INLINE no corpo de cada callback (duplicada entre os dois).
 // ---------------------------------------------------------------------------
 
-onRecordGet((e) => {
+onRecordEnrich((e) => {
   var rec = e.record
   if (!rec) return e.next()
   var col = ''
@@ -40,65 +43,72 @@ onRecordGet((e) => {
   }
   if (!PROTEGIDAS[col]) return e.next()
 
+  // superuser: nunca esconder (evita quebrar o painel)
+  try {
+    if (e.requestInfo && e.requestInfo.hasSuperuserAuth && e.requestInfo.hasSuperuserAuth()) {
+      return e.next()
+    }
+  } catch (_) {}
+
   // --- helpers inline (JSVM: nada de top-level) ---
   function hojeSpDate() {
     return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
   }
-  function contractAtivo(u) {
-    var fim = ''
-    try {
-      fim = String(u.getString('contract_end_date') || '').trim()
-    } catch (_) {}
-    if (!fim) return true
-    return fim.slice(0, 10) >= hojeSpDate()
-  }
-  function nivelEfetivo(userId, authRec) {
+  function nivelEfetivo(authRec) {
     var role = ''
     try {
       role = String(authRec.getString('role') || '')
     } catch (_) {}
     if (role === 'admin') return 4
-    if (!userId) return 1
+    var uid = ''
+    try {
+      uid = String(authRec.getString('id') || '')
+    } catch (_) {}
+    if (!uid) return 1
     var best = 1
     var t = ''
     try {
       t = String(authRec.getString('plan_tier') || '').toLowerCase()
     } catch (_) {}
-    var ok = contractAtivo(authRec)
-    if (t === 'ouro' && ok) best = 3
-    else if (t === 'prata' && ok) best = 2
+    var fim = ''
     try {
-      var subs = $app.findRecordsByFilter(
-        'subscriptions',
-        "user = '" + userId + "' && status = 'active'",
-        '-created',
-        20,
-        0,
-      )
-      for (var i = 0; i < subs.length; i++) {
-        var pid = ''
-        try {
-          pid = subs[i].getString('plan')
-        } catch (_) {}
-        if (!pid) continue
-        var plano = null
-        try {
-          plano = $app.findRecordById('subscription_plans', pid)
-        } catch (_) {
-          continue
-        }
-        var nome = ''
-        var preco = 0
-        try {
-          nome = String(plano.getString('name') || '').toLowerCase()
-        } catch (_) {}
-        try {
-          preco = Number(plano.get('price') || 0)
-        } catch (_) {}
-        if (nome.indexOf('ouro') !== -1) best = Math.max(best, 3)
-        else if (nome.indexOf('prata') !== -1 || preco > 0) best = Math.max(best, 2)
-      }
+      fim = String(authRec.getString('contract_end_date') || '').trim()
     } catch (_) {}
+    var contratoOk = !fim || fim.slice(0, 10) >= hojeSpDate()
+    if (contratoOk) {
+      if (t === 'ouro') best = 3
+      else if (t === 'prata') best = 2
+    }
+    if (best < 2) {
+      try {
+        var subs = $app.findRecordsByFilter(
+          'subscriptions',
+          "user = '" + uid + "' && status = 'active'",
+          '-created',
+          20,
+          0,
+        )
+        for (var i = 0; i < subs.length; i++) {
+          var pid = ''
+          try {
+            pid = subs[i].getString('plan')
+          } catch (_) {}
+          if (!pid) continue
+          var plano = null
+          try {
+            plano = $app.findRecordById('subscription_plans', pid)
+          } catch (_) {
+            continue
+          }
+          var nome = ''
+          try {
+            nome = String(plano.getString('name') || '').toLowerCase()
+          } catch (_) {}
+          if (nome.indexOf('ouro') !== -1) best = Math.max(best, 3)
+          else if (nome.indexOf('prata') !== -1) best = Math.max(best, 2)
+        }
+      } catch (_) {}
+    }
     return best
   }
   function comprouCurso(uid, cid) {
@@ -120,24 +130,15 @@ onRecordGet((e) => {
       return false
     }
   }
-  function limpa(r, campo) {
+  function esconde(r, campo) {
     try {
-      r.set(campo, '')
+      r.hide(campo)
     } catch (_) {}
   }
-  function limpaSePresente(r, campo) {
-    var v = ''
-    try {
-      v = String(r.getString(campo) || '')
-    } catch (_) {
-      v = ''
-    }
-    if (v) limpa(r, campo)
-  }
   // lessons/materials: curso via module -> modules.course; modules: course direto
-  function cursoDoItem(r) {
+  function cursoDoItem(r, c) {
     try {
-      if (col === 'modules') return String(r.getString('course') || '')
+      if (c === 'modules') return String(r.getString('course') || '')
       var mid = String(r.getString('module') || '')
       if (!mid) return ''
       var mod = $app.findRecordById('modules', mid)
@@ -146,69 +147,75 @@ onRecordGet((e) => {
       return ''
     }
   }
-
-  var userId = e.auth ? e.auth.id : ''
-  var nivel = nivelEfetivo(userId, e.auth)
-
-  if (col === 'lessons' || col === 'modules' || col === 'materials') {
-    if (nivel >= 2) return e.next()
-    var courseId = cursoDoItem(rec)
-    var liberado = false
-    try {
-      var c = $app.findRecordById('courses', courseId)
-      liberado = c.getBool('is_free')
-    } catch (_) {}
-    if (!liberado) liberado = comprouCurso(userId, courseId)
-    if (!liberado) {
-      if (col === 'lessons') {
-        limpaSePresente(rec, 'panda_video_id') // vídeo da aula vem daqui
-        try {
-          rec.set('video_file', '')
-        } catch (_) {}
-        try {
-          rec.set('video_url', '')
-        } catch (_) {}
-      } else if (col === 'materials') {
-        limpa(rec, 'file')
-      } else {
-        limpaSePresente(rec, 'video_url')
-        limpaSePresente(rec, 'panda_video_id')
-      }
-    }
-    return e.next()
-  }
-
-  if (col === 'live_sessions') {
-    if (nivel < 2) limpaSePresente(rec, 'panda_video_id')
-    return e.next()
-  }
-
-  if (col === 'doc_projects') {
-    if (nivel < 2) {
-      var isFree = false
+  function aplicaProtecao(r, c, nivel, uid) {
+    if (c === 'lessons' || c === 'modules' || c === 'materials') {
+      if (nivel >= 2) return
+      var courseId = cursoDoItem(r, c)
+      var liberado = false
       try {
-        isFree = rec.getBool('is_free')
-      } catch (_) {}
-      if (!isFree) {
-        limpaSePresente(rec, 'panda_video_id')
-        limpaSePresente(rec, 'youtube_url')
+        var curso = $app.findRecordById('courses', courseId)
+        liberado = curso.getBool('is_free')
+      } catch (_) {
+        liberado = false
       }
+      if (!liberado) liberado = comprouCurso(uid, courseId)
+      if (!liberado) {
+        if (c === 'lessons') {
+          esconde(r, 'panda_video_id')
+        } else if (c === 'materials') {
+          esconde(r, 'file')
+        }
+        // modules: sem campos de mídia no schema atual — nada a esconder
+      }
+      return
     }
-    return e.next()
+    if (c === 'live_sessions') {
+      if (nivel < 2) esconde(r, 'panda_video_id')
+      return
+    }
+    if (c === 'doc_projects') {
+      if (nivel < 2) {
+        var isFree = false
+        try {
+          isFree = r.getBool('is_free')
+        } catch (_) {}
+        if (!isFree) {
+          esconde(r, 'panda_video_id')
+          esconde(r, 'youtube_url')
+        }
+      }
+      return
+    }
+    if (c === 'magazines') {
+      if (nivel < 2) {
+        esconde(r, 'fliphtml5_link')
+        esconde(r, 'embed_code')
+      }
+      return
+    }
   }
 
-  if (col === 'magazines') {
-    if (nivel < 2) {
-      limpaSePresente(rec, 'fliphtml5_link')
-      limpaSePresente(rec, 'embed_code')
+  var auth = null
+  try {
+    auth = e.requestInfo ? e.requestInfo.auth : null
+  } catch (_) {}
+  var nivel = 1
+  if (auth) {
+    try {
+      nivel = nivelEfetivo(auth)
+    } catch (_) {
+      nivel = 1
     }
-    return e.next()
   }
-
+  var uid = ''
+  try {
+    uid = auth ? auth.id : ''
+  } catch (_) {}
+  aplicaProtecao(rec, col, nivel, uid)
   return e.next()
 })
 
-onRecordsList((e) => {
+onRecordsListRequest((e) => {
   var col = ''
   try {
     col = e.collection.name
@@ -225,65 +232,71 @@ onRecordsList((e) => {
   }
   if (!PROTEGIDAS[col]) return e.next()
 
+  try {
+    if (e.requestInfo && e.requestInfo.hasSuperuserAuth && e.requestInfo.hasSuperuserAuth()) {
+      return e.next()
+    }
+  } catch (_) {}
+
   // --- helpers inline (duplicados do hook acima: JSVM exige inline) ---
   function hojeSpDate() {
     return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
   }
-  function contractAtivo(u) {
-    var fim = ''
-    try {
-      fim = String(u.getString('contract_end_date') || '').trim()
-    } catch (_) {}
-    if (!fim) return true
-    return fim.slice(0, 10) >= hojeSpDate()
-  }
-  function nivelEfetivo(userId, authRec) {
+  function nivelEfetivo(authRec) {
     var role = ''
     try {
       role = String(authRec.getString('role') || '')
     } catch (_) {}
     if (role === 'admin') return 4
-    if (!userId) return 1
+    var uid = ''
+    try {
+      uid = String(authRec.getString('id') || '')
+    } catch (_) {}
+    if (!uid) return 1
     var best = 1
     var t = ''
     try {
       t = String(authRec.getString('plan_tier') || '').toLowerCase()
     } catch (_) {}
-    var ok = contractAtivo(authRec)
-    if (t === 'ouro' && ok) best = 3
-    else if (t === 'prata' && ok) best = 2
+    var fim = ''
     try {
-      var subs = $app.findRecordsByFilter(
-        'subscriptions',
-        "user = '" + userId + "' && status = 'active'",
-        '-created',
-        20,
-        0,
-      )
-      for (var i = 0; i < subs.length; i++) {
-        var pid = ''
-        try {
-          pid = subs[i].getString('plan')
-        } catch (_) {}
-        if (!pid) continue
-        var plano = null
-        try {
-          plano = $app.findRecordById('subscription_plans', pid)
-        } catch (_) {
-          continue
-        }
-        var nome = ''
-        var preco = 0
-        try {
-          nome = String(plano.getString('name') || '').toLowerCase()
-        } catch (_) {}
-        try {
-          preco = Number(plano.get('price') || 0)
-        } catch (_) {}
-        if (nome.indexOf('ouro') !== -1) best = Math.max(best, 3)
-        else if (nome.indexOf('prata') !== -1 || preco > 0) best = Math.max(best, 2)
-      }
+      fim = String(authRec.getString('contract_end_date') || '').trim()
     } catch (_) {}
+    var contratoOk = !fim || fim.slice(0, 10) >= hojeSpDate()
+    if (contratoOk) {
+      if (t === 'ouro') best = 3
+      else if (t === 'prata') best = 2
+    }
+    if (best < 2) {
+      try {
+        var subs = $app.findRecordsByFilter(
+          'subscriptions',
+          "user = '" + uid + "' && status = 'active'",
+          '-created',
+          20,
+          0,
+        )
+        for (var i = 0; i < subs.length; i++) {
+          var pid = ''
+          try {
+            pid = subs[i].getString('plan')
+          } catch (_) {}
+          if (!pid) continue
+          var plano = null
+          try {
+            plano = $app.findRecordById('subscription_plans', pid)
+          } catch (_) {
+            continue
+          }
+          var nome = ''
+          try {
+            nome = String(plano.getString('name') || '').toLowerCase()
+          } catch (_) {}
+          if (nome.indexOf('ouro') !== -1) best = Math.max(best, 3)
+          else if (nome.indexOf('prata') !== -1) best = Math.max(best, 2)
+        }
+      } catch (_) {}
+    }
     return best
   }
   function comprouCurso(uid, cid) {
@@ -305,23 +318,14 @@ onRecordsList((e) => {
       return false
     }
   }
-  function limpa(r, campo) {
+  function esconde(r, campo) {
     try {
-      r.set(campo, '')
+      r.hide(campo)
     } catch (_) {}
   }
-  function limpaSePresente(r, campo) {
-    var v = ''
+  function cursoDoItem(r, c) {
     try {
-      v = String(r.getString(campo) || '')
-    } catch (_) {
-      v = ''
-    }
-    if (v) limpa(r, campo)
-  }
-  function cursoDoItem(r) {
-    try {
-      if (col === 'modules') return String(r.getString('course') || '')
+      if (c === 'modules') return String(r.getString('course') || '')
       var mid = String(r.getString('module') || '')
       if (!mid) return ''
       var mod = $app.findRecordById('modules', mid)
@@ -331,61 +335,70 @@ onRecordsList((e) => {
     }
   }
 
-  var userId = e.auth ? e.auth.id : ''
-  var nivel = nivelEfetivo(userId, e.auth)
+  var auth = null
+  try {
+    auth = e.requestInfo ? e.requestInfo.auth : null
+  } catch (_) {}
+  var nivel = 1
+  if (auth) {
+    try {
+      nivel = nivelEfetivo(auth)
+    } catch (_) {
+      nivel = 1
+    }
+  }
+  var uid = ''
+  try {
+    uid = auth ? auth.id : ''
+  } catch (_) {}
   var courseCache = {}
+  var liberadoCache = {}
 
   for (var i = 0; i < e.records.length; i++) {
     var rec = e.records[i]
-    if (col === 'lessons' || col === 'modules' || col === 'materials') {
+    var c = col
+    if (c === 'lessons' || c === 'modules' || c === 'materials') {
       if (nivel >= 2) continue
-      var courseId = cursoDoItem(rec)
-      var liberado = false
-      if (courseCache[courseId] !== undefined) {
-        liberado = courseCache[courseId]
-      } else {
+      var courseId = cursoDoItem(rec, c)
+      var liberado = liberadoCache[courseId]
+      if (liberado === undefined) {
+        liberado = false
         try {
-          var c = $app.findRecordById('courses', courseId)
-          liberado = c.getBool('is_free')
+          var curso = $app.findRecordById('courses', courseId)
+          liberado = curso.getBool('is_free')
         } catch (_) {
           liberado = false
         }
-        courseCache[courseId] = liberado
+        if (!liberado && courseId) {
+          courseCache[courseId] = 1
+          liberado = comprouCurso(uid, courseId)
+        }
+        liberadoCache[courseId] = liberado
       }
-      if (!liberado) liberado = comprouCurso(userId, courseId)
       if (!liberado) {
-        if (col === 'lessons') {
-          limpaSePresente(rec, 'panda_video_id')
-          try {
-            rec.set('video_file', '')
-          } catch (_) {}
-          try {
-            rec.set('video_url', '')
-          } catch (_) {}
-        } else if (col === 'materials') {
-          limpa(rec, 'file')
-        } else {
-          limpaSePresente(rec, 'video_url')
-          limpaSePresente(rec, 'panda_video_id')
+        if (c === 'lessons') {
+          esconde(rec, 'panda_video_id')
+        } else if (c === 'materials') {
+          esconde(rec, 'file')
         }
       }
-    } else if (col === 'live_sessions') {
-      if (nivel < 2) limpaSePresente(rec, 'panda_video_id')
-    } else if (col === 'doc_projects') {
+    } else if (c === 'live_sessions') {
+      if (nivel < 2) esconde(rec, 'panda_video_id')
+    } else if (c === 'doc_projects') {
       if (nivel < 2) {
         var isFree = false
         try {
           isFree = rec.getBool('is_free')
         } catch (_) {}
         if (!isFree) {
-          limpaSePresente(rec, 'panda_video_id')
-          limpaSePresente(rec, 'youtube_url')
+          esconde(rec, 'panda_video_id')
+          esconde(rec, 'youtube_url')
         }
       }
-    } else if (col === 'magazines') {
+    } else if (c === 'magazines') {
       if (nivel < 2) {
-        limpaSePresente(rec, 'fliphtml5_link')
-        limpaSePresente(rec, 'embed_code')
+        esconde(rec, 'fliphtml5_link')
+        esconde(rec, 'embed_code')
       }
     }
   }

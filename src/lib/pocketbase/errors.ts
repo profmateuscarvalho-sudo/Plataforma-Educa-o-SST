@@ -20,31 +20,35 @@ export function extractFieldErrors(error: unknown): FieldErrors {
   return errors
 }
 
-/**
- * Valida um arquivo (foto/upload) informado em formulários admin.
- * Mensagens em pt-BR; devolve null quando o arquivo é aceito.
- */
-export function validateFile(
-  file: File | null | undefined,
-  opts?: { maxSizeMB?: number; mimeTypes?: string[]; label?: string },
-): string | null {
-  if (!file || !file.size) return null
-  const label = opts?.label || 'arquivo'
-  const maxSizeMB = opts?.maxSizeMB ?? 10
-  if (file.size > maxSizeMB * 1024 * 1024) {
-    return `A ${label} deve ter no máximo ${maxSizeMB} MB.`
-  }
-  const allowed = opts?.mimeTypes
-  if (allowed && allowed.length > 0 && !allowed.includes(file.type)) {
-    return `Formato inválido para a ${label}. Aceitos: ${allowed.join(', ')}.`
-  }
-  return null
-}
-
 export function getErrorMessage(error: unknown): string {
   if (!(error instanceof ClientResponseError)) {
     return error instanceof Error ? error.message : 'An unexpected error occurred.'
   }
   const msgs = Object.values(extractFieldErrors(error))
   return msgs.length > 0 ? msgs.join(' ') : error.message || 'An unexpected error occurred.'
+}
+
+export interface ValidateFileOptions {
+  maxSizeMB?: number
+  mimeTypes?: string[]
+  label?: string
+}
+
+/**
+ * Valida um arquivo selecionado (tamanho e tipo MIME).
+ * Retorna uma mensagem de erro em string, ou null quando o arquivo é válido.
+ * Consumidores: InstructorManager, MentorManager, admin/Documentaries/Wizard.
+ */
+export function validateFile(file: File, options: ValidateFileOptions = {}): string | null {
+  const { maxSizeMB = 10, mimeTypes, label = 'arquivo' } = options
+
+  if (maxSizeMB > 0 && file.size > maxSizeMB * 1024 * 1024) {
+    return `O ${label} excede o tamanho máximo de ${maxSizeMB}MB.`
+  }
+
+  if (mimeTypes && mimeTypes.length > 0 && !mimeTypes.includes(file.type)) {
+    return `Tipo de ${label} não permitido. Formatos aceitos: ${mimeTypes.join(', ')}.`
+  }
+
+  return null
 }

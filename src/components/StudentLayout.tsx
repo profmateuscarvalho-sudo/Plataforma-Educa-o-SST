@@ -24,11 +24,11 @@ export default function StudentLayout() {
       !access.loading &&
       user &&
       user.role !== 'admin' &&
-      !access.hasSubscriptionAccess
+      access.activeTier === 'none'
     ) {
       navigate('/subscription-pending', { replace: true })
     }
-  }, [user?.id, user?.role, loading, access.loading, access.hasSubscriptionAccess, navigate])
+  }, [user?.id, user?.role, loading, access.loading, access.activeTier, navigate])
 
   useEffect(() => {
     window.scrollTo(0, 0)

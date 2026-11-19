@@ -2,26 +2,6 @@ import { ClientResponseError } from 'pocketbase'
 
 export type FieldErrors = Record<string, string>
 
-const MAX_FILE_MB = 10
-const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-
-/** Valida tamanho e tipo de um arquivo escolhido num input. Retorna mensagem de erro ou undefined. */
-export function validateFile(
-  file: File,
-  opts: { maxSizeMB?: number; mimeTypes?: string[]; label?: string } = {},
-): string | undefined {
-  const label = opts.label ? `da ${opts.label}` : 'do arquivo'
-  const maxMB = opts.maxSizeMB ?? MAX_FILE_MB
-  const allowed = opts.mimeTypes ?? IMAGE_MIME_TYPES
-  if (file.size > maxMB * 1024 * 1024) {
-    return `O arquivo excede o limite de ${maxMB}MB.`
-  }
-  if (allowed.length > 0 && !allowed.includes(file.type)) {
-    return `Formato inválido. Formatos aceitos: ${allowed.map((t) => t.replace('image/', '.').toUpperCase()).join(', ')}.`
-  }
-  return undefined
-}
-
 export function extractFieldErrors(error: unknown): FieldErrors {
   if (!(error instanceof ClientResponseError)) return {}
   const data = error.response?.data

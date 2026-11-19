@@ -89,9 +89,9 @@ export default function SubscriptionPending() {
     // Evita redirecionar prematuramente enquanto access ainda está carregando do banco
     if (access.loading) return
 
-    // Se useStudentAccess conceder acesso (seja por assinaturas ativas, plano ouro/prata,
-    // contrato ou free verificado), redireciona imediatamente
-    if (access.hasSubscriptionAccess || user.role === 'admin') {
+    // Se useStudentAccess conceder acesso (tier efetivo: plano, assinatura ativa,
+    // contrato vigente ou free), redireciona imediatamente
+    if (access.activeTier !== 'none' || user.role === 'admin') {
       navigate('/plataforma', { replace: true })
       return
     }
@@ -108,7 +108,7 @@ export default function SubscriptionPending() {
   }, [
     user,
     access.loading,
-    access.hasSubscriptionAccess,
+    access.activeTier,
     access.subscriptions,
     status?.subscription?.status,
     navigate,
@@ -123,10 +123,10 @@ export default function SubscriptionPending() {
   )
 
   useEffect(() => {
-    if (!user || access.hasSubscriptionAccess) return
+    if (!user || access.activeTier !== 'none') return
     const interval = setInterval(fetchStatus, 15000)
     return () => clearInterval(interval)
-  }, [user, fetchStatus, access.hasSubscriptionAccess])
+  }, [user, fetchStatus, access.activeTier])
 
   const handleSignOut = () => {
     signOut()
@@ -248,7 +248,7 @@ export default function SubscriptionPending() {
 
                 if (
                   currentUser?.role === 'admin' ||
-                  access.hasSubscriptionAccess ||
+                  access.activeTier !== 'none' ||
                   isSubActive ||
                   isPaidPlan ||
                   hasValidContract ||

@@ -25,8 +25,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
 
       const imgField = record.getString('image')
       if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + imgField
       } else {
         const galleryField = record.get('images')
         let firstImage = ''
@@ -41,8 +40,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
           }
         }
         if (firstImage) {
-          image =
-            pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + firstImage
+          image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + firstImage
         } else {
           image = 'https://img.usecurling.com/p/1200/630?q=industry%20safety&color=gray'
         }
@@ -55,8 +53,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       description = record.getString('description') || 'Curso de Segurança e Saúde no Trabalho.'
       const imgField = record.getString('thumbnail')
       if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + imgField
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=education%20course&color=green'
       }
@@ -68,8 +65,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       description = record.getString('summary') || 'Edição da Revista SST.'
       const imgField = record.getString('thumbnail')
       if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + imgField
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=magazine%20cover&color=blue'
       }
@@ -87,8 +83,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       if (plainText.length > 155) description += '...'
       const imgField = record.getString('banner')
       if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + imgField
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=exam%20study&color=blue'
       }
@@ -101,8 +96,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
         record.getString('description') || 'Documentário em Segurança e Saúde no Trabalho.'
       const photos = record.get('presentation_photos')
       if (Array.isArray(photos) && photos.length > 0) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + photos[0]
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + photos[0]
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=documentary%20film&color=gray'
       }
@@ -114,8 +108,7 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       description = record.getString('description') || 'Mentoria em Segurança e Saúde no Trabalho.'
       const imgField = record.getString('mentor_photo')
       if (imgField) {
-        image =
-          pbUrl + '/api/files/' + record.collectionId() + '/' + record.getId() + '/' + imgField
+        image = pbUrl + '/api/files/' + record.collectionId() + '/' + record.id + '/' + imgField
       } else {
         image = 'https://img.usecurling.com/p/1200/630?q=mentoring%20professional&color=orange'
       }
@@ -132,6 +125,10 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       image = 'https://img.usecurling.com/p/1200/630?q=corporate%20workshop&color=blue'
       redirectUrl = siteUrl + '/convite/' + id
       ogType = 'website'
+    } else if (type === 'agora' || type === 'debates') {
+      // Modulo "Agora de Debates" removido: links antigos caem na plataforma com titulo padrao.
+      redirectUrl = siteUrl + '/plataforma'
+      return e.redirect(302, redirectUrl)
     } else {
       return e.redirect(302, siteUrl)
     }

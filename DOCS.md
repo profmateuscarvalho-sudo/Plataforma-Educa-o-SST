@@ -1,6 +1,6 @@
 # Documentação — Plataforma Educação SST
 
-Plataforma de educação em **Segurança e Saúde no Trabalho (SST)**: cursos, revista digital, mentorias, aulas ao vivo, simulados, documentários, comunidade "Agora", cases e a campanha **Dia do TST**.
+Plataforma de educação em **Segurança e Saúde no Trabalho (SST)**: cursos, revista digital, mentorias, aulas ao vivo, simulados, documentários, cases e a campanha **Dia do TST**.
 
 - **Frontend:** React + Vite + TypeScript + Tailwind (kit shadcn/ui), PWA com service worker.
 - **Backend:** PocketBase gerenciado na Skip Cloud, com lógica server-side em `pocketbase/hooks/` (JSVM) e migrações em `pocketbase/migrations/`.
@@ -44,33 +44,31 @@ Plataforma de educação em **Segurança e Saúde no Trabalho (SST)**: cursos, r
 
 Protegidas — exigem login; conteúdo adicional depende de plano (Prata/Ouro).
 
-| Rota                            | Componente                                | Propósito                                                                              |
-| ------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------- |
-| `/plataforma`                   | `src/pages/student/Dashboard.tsx`         | Hub do aluno: continuar de onde parou, dose do dia, fita da semana, agenda, destaques. |
-| `/plataforma/cursos/aula/:id`   | `src/pages/student/Lesson.tsx`            | Player de aula com materiais, quiz e avaliação.                                        |
-| `/plataforma/estudo`            | `src/pages/student/Study.tsx`             | Área de estudo organizada por trilhas/categorias.                                      |
-| `/plataforma/caderno`           | `src/pages/student/Notebook.tsx`          | Caderno de anotações (público/privado, compartilháveis).                               |
-| `/plataforma/perfil`            | `src/pages/student/Profile.tsx`           | Perfil, plano, avatar, suporte.                                                        |
-| `/plataforma/ao-vivo`           | `src/pages/student/LiveSessions.tsx`      | Agenda de aulas ao vivo.                                                               |
-| `/plataforma/ao-vivo/:id`       | `src/pages/student/Live.tsx`              | Sala de live com chat em tempo real.                                                   |
-| `/plataforma/cases`             | `src/pages/student/CaseFeed.tsx`          | Feed de cases profissionais (com `CaseFeedContent`/`CaseFeedSidebar`).                 |
-| `/plataforma/agora`             | `src/pages/student/AgoraList.tsx`         | Lista de debates "Agora" (moderados, com votação).                                     |
-| `/plataforma/agora/criar`       | `src/pages/student/AgoraCreate.tsx`       | Criação de debate.                                                                     |
-| `/plataforma/agora/:id`         | `src/pages/student/AgoraRoom.tsx`         | Sala do debate: argumentos, votos, apoios, painel do moderador.                        |
-| `/plataforma/documentarios`     | `src/pages/student/Documentaries.tsx`     | Catálogo de documentários.                                                             |
-| `/plataforma/documentarios/:id` | `src/pages/student/DocumentaryViewer.tsx` | Visualizador do documentário (com projeto de produção).                                |
-| `/plataforma/revistas/:id`      | `src/pages/student/MagazineReader.tsx`    | Leitor da revista.                                                                     |
-| `/plataforma/simulados`         | `src/pages/student/Simulados.tsx`         | Simulados do aluno com histórico de resultados.                                        |
+| Rota                                       | Componente                                | Propósito                                                                              |
+| ------------------------------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| `/plataforma`                              | `src/pages/student/Dashboard.tsx`         | Hub do aluno: continuar de onde parou, dose do dia, fita da semana, agenda, destaques. |
+| `/plataforma/cursos/aula/:id`              | `src/pages/student/Lesson.tsx`            | Player de aula com materiais, quiz e avaliação.                                        |
+| `/plataforma/estudo`                       | `src/pages/student/Study.tsx`             | Área de estudo organizada por trilhas/categorias.                                      |
+| `/plataforma/caderno`                      | `src/pages/student/Notebook.tsx`          | Caderno de anotações (público/privado, compartilháveis).                               |
+| `/plataforma/perfil`                       | `src/pages/student/Profile.tsx`           | Perfil, plano, avatar, suporte.                                                        |
+| `/plataforma/ao-vivo`                      | `src/pages/student/LiveSessions.tsx`      | Agenda de aulas ao vivo.                                                               |
+| `/plataforma/ao-vivo/:id`                  | `src/pages/student/Live.tsx`              | Sala de live com chat em tempo real.                                                   |
+| `/plataforma/cases`                        | `src/pages/student/CaseFeed.tsx`          | Feed de cases profissionais (com `CaseFeedContent`/`CaseFeedSidebar`).                 |
+| `/plataforma/agora`, `/plataforma/agora/*` | — (redirect em `src/App.tsx`)             | Redirecionam para `/plataforma` (módulo "Ágora de Debates" removido).                  |
+| `/plataforma/documentarios`                | `src/pages/student/Documentaries.tsx`     | Catálogo de documentários.                                                             |
+| `/plataforma/documentarios/:id`            | `src/pages/student/DocumentaryViewer.tsx` | Visualizador do documentário (com projeto de produção).                                |
+| `/plataforma/revistas/:id`                 | `src/pages/student/MagazineReader.tsx`    | Leitor da revista.                                                                     |
+| `/plataforma/simulados`                    | `src/pages/student/Simulados.tsx`         | Simulados do aluno com histórico de resultados.                                        |
 
 ### 1.3 App mobile (versão PWA)
 
-| Rota          | Componente                   | Propósito                                                         |
-| ------------- | ---------------------------- | ----------------------------------------------------------------- |
-| `/app`        | `src/pages/app/Home.tsx`     | Home do app: dose do dia, sequência, continuar assistindo, cases. |
-| `/app/estudo` | `src/pages/app/Study.tsx`    | Estudo no formato mobile.                                         |
-| `/app/cases`  | `src/pages/app/Cases.tsx`    | Feed de cases mobile.                                             |
-| `/app/agora`  | `src/pages/app/AgoraApp.tsx` | Debates no mobile.                                                |
-| `/app/perfil` | `src/pages/app/Profile.tsx`  | Perfil no mobile (usa `BottomNav`/`AppLayout`).                   |
+| Rota                         | Componente                    | Propósito                                                         |
+| ---------------------------- | ----------------------------- | ----------------------------------------------------------------- |
+| `/app`                       | `src/pages/app/Home.tsx`      | Home do app: dose do dia, sequência, continuar assistindo, cases. |
+| `/app/estudo`                | `src/pages/app/Study.tsx`     | Estudo no formato mobile.                                         |
+| `/app/cases`                 | `src/pages/app/Cases.tsx`     | Feed de cases mobile.                                             |
+| `/app/agora`, `/app/agora/*` | — (redirect em `src/App.tsx`) | Redirecionam para `/app` (módulo "Ágora de Debates" removido).    |
+| `/app/perfil`                | `src/pages/app/Profile.tsx`   | Perfil no mobile (usa `BottomNav`/`AppLayout`).                   |
 
 ### 1.4 Painel administrativo (`/admin`)
 
@@ -187,9 +185,6 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 - **professional_cases** — `user`, `title`, `description`, `images`, `status` (moderação), `workplace`.
 - **case_comments** — `case` (relation), `user`, `comment`.
 - **case_likes** — `case`, `user` (toggle).
-- **agora_debates** — debate: `title`, `description`, `tags`, `status` (aberto/fechado), `moderator`, `rules`.
-- **agora_votes** — `debate`, `user`, `position` (a favor/contra), `argument`.
-- **agora_supports** — apoio a votos (`voto`, `user`).
 - **workplaces** — empresas cadastradas (pelos usuários ou na revista).
 - **professional_tag_options** — catálogo de tags profissionais: `label`, `active`, `order`.
 
@@ -218,6 +213,7 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
   - **clientes**, **oportunidades**, **etapa_historico** (comercial) — módulo Comercial removido (Kanban/Clientes); os dados continuam no banco.
   - **banners** — módulo "Banners de Patrocínio" removido.
   - **magazine_landing_page** — módulo "Anúncios Revista" removido (a página `/anuncie` agora redireciona para `/revistas`).
+  - **agora_debates**, **agora_votos**, **agora_apoios** — módulo "Ágora de Debates" removido (telas, rotas e menus excluídos; links antigos `/plataforma/agora` e `/app/agora` redirecionam para o hub). Os dados de debates/votos/apoios continuam no banco.
 - **agent_limits / agent_messages** — limites de uso e histórico de conversas do assistente de IA.
 - **ipag_probe** (coleções de diagnóstico das migrações 0114–0130) — sondas de teste do iPag; pendentes de remoção via painel Skip Cloud.
 
@@ -286,14 +282,14 @@ Todas as coleções são PocketBase (espelho completo em `src/lib/pocketbase/sch
 | Nível                           | Coleções                                                                                                                                                                                                       | Regra                                                                                                         |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | **Público (leitura)**           | `courses`, `modules`, `lessons` (metadados), `instructors`, `news`, `magazines`, `announcements`, `subscription_plans`, `mentors`, `mentorships`, `simulados` (públicos), `dia_tst_config`, `dia_tst_partners` | Catálogo visível sem login; conteúdo restrito por plano é filtrado no frontend e protegido por regras de API. |
-| **Só autenticado (dono)**       | `subscriptions`, `payments`, `student_notes`, `support_messages`, `course_completions`, `lesson_ratings`, `access_events`, `simulado_submissions`, `agora_votes`, `case_likes`                                 | Cada usuário lê/escreve apenas os próprios registros (regra de `@request.auth.id`).                           |
-| **Só autenticado (comunidade)** | `professional_cases`, `case_comments`, `live_messages`, `agora_debates`                                                                                                                                        | Leitura para usuários logados; escrita autoral; moderação/admin altera status.                                |
+| **Só autenticado (dono)**       | `subscriptions`, `payments`, `student_notes`, `support_messages`, `course_completions`, `lesson_ratings`, `access_events`, `simulado_submissions`, `case_likes`                                                | Cada usuário lê/escreve apenas os próprios registros (regra de `@request.auth.id`).                           |
+| **Só autenticado (comunidade)** | `professional_cases`, `case_comments`, `live_messages`                                                                                                                                                         | Leitura para usuários logados; escrita autoral; moderação/admin altera status.                                |
 | **Só admin**                    | `users` (listar/editar outros), `email_logs`, `access_events` (visão global), `knowledge_base`, `agent_limits`, `leads`, `leads_dia_tst`, `ipag_probe`                                                         | Somente `role = admin`.                                                                                       |
 | **Public write (formulários)**  | `leads`, `leads_dia_tst`, `lista_espera`, `workplaces`, `support_messages`, submissões da revista                                                                                                              | Criação pública sem login (com as validações do item 3.6); leitura só admin.                                  |
 
 ### 4.3 Papéis do painel `/admin`
 
-O painel é monolítico (um único papel admin), com módulos por área: alunos, acessos, planos, financeiro (pagamentos/e-mails), conteúdo (cursos, revistas, notícias, lives, simulados, documentários), comunidade (cases, agora), marketing (avisos, leads, Dia do TST) e IA (base de conhecimento). Os módulos Comercial, Banners de Patrocínio, Anúncios Revista e Testes iPag foram removidos (seção 1.4).
+O painel é monolítico (um único papel admin), com módulos por área: alunos, acessos, planos, financeiro (pagamentos/e-mails), conteúdo (cursos, revistas, notícias, lives, simulados, documentários), comunidade (cases), marketing (avisos, leads, Dia do TST) e IA (base de conhecimento). Os módulos Comercial, Banners de Patrocínio, Anúncios Revista, "Ágora de Debates" e Testes iPag foram removidos (seção 1.4).
 
 ---
 

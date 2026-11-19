@@ -13,6 +13,8 @@ import { setMetaTags } from '@/lib/utils'
 import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
 import { AppLanguage } from '@/i18n'
 import { PageHeader } from '@/components/PageHeader'
+import { LockedBadge, LockedCta } from '@/components/LockedBadge'
+import { useStudentAccess } from '@/hooks/use-student-access'
 
 // Extrai o ano da revista a partir da data de criação/atualização ou do título (ex: "2026", "2025", "2024")
 function getMagazineYear(mag: Magazine): number {
@@ -50,6 +52,10 @@ export default function Revistas() {
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [loading, setLoading] = useState(true)
   const [activeReaderMag, setActiveReaderMag] = useState<Magazine | null>(null)
+  // Revista virou conteúdo de assinante (Prata/Ouro). O catálogo (capa, título,
+  // edição) continua público; a leitura exige plano. Compra avulsa: Bloco 4.
+  const { canAccessMagazine, loading: accessLoading } = useStudentAccess()
+  const magLocked = !accessLoading && !canAccessMagazine()
 
   // Idioma ativo
   const currentLang: AppLanguage = i18n.language?.startsWith('es') ? 'es' : 'pt-BR'
@@ -106,6 +112,8 @@ export default function Revistas() {
   }, [searchParams, magazines, t])
 
   const openMagazineReader = (mag: Magazine) => {
+    // Leitura exige Prata/Ouro (compra avulsa entra no Bloco 4)
+    if (magLocked) return
     setActiveReaderMag(mag)
     setSearchParams({ revista: mag.id }, { replace: true })
   }
@@ -205,7 +213,7 @@ export default function Revistas() {
                   <div className="md:col-span-5 flex justify-center md:justify-start">
                     <div
                       onClick={() => openMagazineReader(latestMag)}
-                      className="cursor-pointer group relative w-[240px] sm:w-[280px] lg:w-[320px] aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.55)] border border-white/15 bg-[#122e26] transition-transform duration-500 hover:scale-105"
+                      className={`group relative w-[240px] sm:w-[280px] lg:w-[320px] aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.55)] border border-white/15 bg-[#122e26] transition-transform duration-500 ${magLocked ? '' : 'cursor-pointer hover:scale-105'}`}
                     >
                       {latestMag.thumbnail ? (
                         <img
@@ -230,6 +238,12 @@ export default function Revistas() {
 
                   {/* Número, mês e botão primário "Ler edição" à direita */}
                   <div className="md:col-span-7 space-y-6">
+                    {magLocked && (
+                      <div className="flex flex-wrap items-center gap-3">
+                        <LockedBadge />
+                        {/* RESERVADO (Bloco 4): espaço p/ compra avulsa desta edição */}
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 text-[#FDBE2D] border border-white/15">
                         <span className="w-2 h-2 rounded-full bg-[#FDBE2D]" />
@@ -257,14 +271,21 @@ export default function Revistas() {
                     </p>
 
                     <div className="pt-2 flex flex-wrap items-center gap-4 sm:gap-6">
-                      <Button
-                        size="lg"
-                        className="h-12 px-8 rounded-full font-bold bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] shadow-none text-base"
-                        onClick={() => openMagazineReader(latestMag)}
-                      >
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        Ler edição
-                      </Button>
+                      {magLocked ? (
+                        <>
+                          <LockedCta className="h-12 px-8 rounded-full font-bold text-base" />
+                          {/* RESERVADO (Bloco 4): botão de compra avulsa da edição em destaque */}
+                        </>
+                      ) : (
+                        <Button
+                          size="lg"
+                          className="h-12 px-8 rounded-full font-bold bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] shadow-none text-base"
+                          onClick={() => openMagazineReader(latestMag)}
+                        >
+                          <BookOpen className="w-4 h-4 mr-2" />
+                          Ler edição
+                        </Button>
+                      )}
 
                       <Link
                         to="/submeter-artigo"
@@ -317,7 +338,7 @@ export default function Revistas() {
                         <div
                           key={mag.id}
                           onClick={() => openMagazineReader(mag)}
-                          className="group cursor-pointer rounded-[28px] bg-white border border-[#E4DED1] overflow-hidden p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(28,27,24,0.1)]"
+                          className={`group rounded-[28px] bg-white border border-[#E4DED1] overflow-hidden p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 ${magLocked ? '' : 'cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(28,27,24,0.1)]'}`}
                         >
                           {/* Capa */}
                           <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF8F3] border border-[#E4DED1] mb-4 shrink-0 flex items-center justify-center">
@@ -334,12 +355,16 @@ export default function Revistas() {
                               </div>
                             )}
 
-                            {/* Overlay hover suave */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-3">
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FDBE2D] text-[#1C1B18] font-bold text-xs shadow-md">
-                                Ler edição &rarr;
-                              </span>
-                            </div>
+                            {/* Overlay: hover suave quando liberada / cadeado quando bloqueada */}
+                            {magLocked ? (
+                              <LockedOverlay className="rounded-none" />
+                            ) : (
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-3">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FDBE2D] text-[#1C1B18] font-bold text-xs shadow-md">
+                                  Ler edição &rarr;
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Informações da revista */}
@@ -351,11 +376,32 @@ export default function Revistas() {
                               <h4 className="font-serif font-semibold text-base sm:text-lg text-[#1C1B18] leading-tight line-clamp-2 group-hover:text-[#173F33] transition-colors">
                                 {mag.title}
                               </h4>
+                              {magLocked && (
+                                <div className="mt-2">
+                                  <LockedBadge />
+                                </div>
+                              )}
                             </div>
 
-                            <div className="pt-3 border-t border-[#E4DED1] flex items-center justify-between text-xs font-semibold text-[#1C1B18] group-hover:text-[#173F33]">
-                              <span>Ler edição</span>
-                              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                            {/* Ações: quando bloqueada, CTA /planos + espaço reservado
+                                para o botão de COMPRA AVULSA (Bloco 4) */}
+                            <div className="pt-3 border-t border-[#E4DED1]">
+                              {magLocked ? (
+                                <div className="space-y-2">
+                                  <LockedCta className="w-full justify-center" />
+                                  {/* RESERVADO (Bloco 4): botão de compra avulsa da edição */}
+                                  <div className="h-9 rounded-full border border-dashed border-[#E4DED1] bg-[#FAF8F3]/60 flex items-center justify-center">
+                                    <span className="text-[10px] uppercase tracking-wider text-[#B9B2A2] font-bold">
+                                      Comprar esta edição
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-between text-xs font-semibold text-[#1C1B18] group-hover:text-[#173F33]">
+                                  <span>Ler edição</span>
+                                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -374,7 +420,15 @@ export default function Revistas() {
         <DialogContent className="max-w-6xl w-[95vw] h-[88vh] p-0 overflow-hidden bg-black/10 border-none rounded-[28px]">
           <DialogTitle className="sr-only">{activeReaderMag?.title}</DialogTitle>
           {activeReaderMag &&
-            (activeReaderMag.embed_code ? (
+            (magLocked ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-[#122e26] p-8 text-center">
+                <LockedBadge />
+                <p className="text-[#F4F1E8] text-sm sm:text-base max-w-md">
+                  A leitura completa desta edição faz parte do plano Prata.
+                </p>
+                <LockedCta className="h-11 px-6 rounded-full font-bold text-sm" />
+              </div>
+            ) : activeReaderMag.embed_code ? (
               <div
                 className="w-full h-full bg-white [&>iframe]:w-full [&>iframe]:h-full"
                 dangerouslySetInnerHTML={{ __html: activeReaderMag.embed_code }}

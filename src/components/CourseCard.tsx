@@ -3,8 +3,13 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
+import { LockedBadge, LockedCta } from '@/components/LockedBadge'
+import { useStudentAccess } from '@/hooks/use-student-access'
 
 export function CourseCard({ course }: { course: Course }) {
+  // Catálogo continua visível para todos; curso pago sem acesso ganha cadeado + CTA /planos
+  const { canAccessCourse } = useStudentAccess()
+  const locked = !canAccessCourse(course)
   const imgUrl = course.thumbnail
     ? pb.files.getUrl(course, course.thumbnail)
     : 'https://img.usecurling.com/p/600/400?q=education&color=green'
@@ -33,6 +38,7 @@ export function CourseCard({ course }: { course: Course }) {
           >
             {planBadgeText}
           </span>
+          {locked && <LockedBadge />}
         </div>
       </div>
 
@@ -73,6 +79,12 @@ export function CourseCard({ course }: { course: Course }) {
             </Link>
           </Button>
         </div>
+
+        {locked && (
+          <div className="pt-1">
+            <LockedCta className="w-full justify-center" />
+          </div>
+        )}
       </div>
     </div>
   )

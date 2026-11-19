@@ -12,12 +12,18 @@ import { setMetaTags } from '@/lib/utils'
 import { PUBLIC_URL, getSharePreviewUrl } from '@/lib/constants'
 import { PageHeader } from '@/components/PageHeader'
 import { useToast } from '@/hooks/use-toast'
+import { LockedBadge, LockedCta } from '@/components/LockedBadge'
+import { useStudentAccess } from '@/hooks/use-student-access'
 
 export default function CourseDetails() {
   const { id } = useParams()
   const [course, setCourse] = useState<Course | null>(null)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const { toast } = useToast()
+  // Detalhe permanece público; acesso (aulas) depende do plano. Prata/Ouro, compra
+  // avulsa ou curso is_free liberam; caso contrário, CTA leva a /planos.
+  const { canAccessCourse, loading: accessLoading } = useStudentAccess()
+  const courseLocked = !!course && !accessLoading && !canAccessCourse(course)
 
   useEffect(() => {
     if (id) getCourse(id).then(setCourse).catch(console.error)
@@ -99,6 +105,15 @@ export default function CourseDetails() {
                   )}
                 </p>
               </div>
+              {courseLocked ? (
+                <div className="mb-4 space-y-3">
+                  <LockedBadge className="w-full justify-center" />
+                  <LockedCta className="w-full justify-center h-12 text-base" />
+                  <p className="text-xs text-center text-slate-500">
+                    Ou compre o curso avulso abaixo — a compra libera o acesso a todas as aulas.
+                  </p>
+                </div>
+              ) : null}
               <Button
                 size="lg"
                 className="w-full h-14 text-lg font-bold mb-4 shadow-lg shadow-primary/20"

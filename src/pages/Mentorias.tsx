@@ -9,6 +9,8 @@ import { Mentorship, Mentor } from '@/types'
 import { Star, AlertCircle, Users, ArrowRight } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { stripHtml } from '@/lib/utils'
+import { mentorshipDiscountedPrice } from '@/lib/plan-access'
+import { useStudentAccess } from '@/hooks/use-student-access'
 
 const safeFileUrl = (record: any, filename?: string): string => {
   if (!filename || !record) return ''
@@ -27,6 +29,9 @@ export default function Mentorias() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [selectedMentorship, setSelectedMentorship] = useState<Mentorship | null>(null)
   const [waitlistOpen, setWaitlistOpen] = useState(false)
+  // Desconto de 30% só para Prata/Ouro; a cobrança real continua no servidor (v0.0.350)
+  const { hasMentorshipDiscount } = useStudentAccess()
+  const showMentorshipDiscount = hasMentorshipDiscount()
 
   useEffect(() => {
     const loadData = async () => {
@@ -222,14 +227,41 @@ export default function Mentorias() {
                             <span className="text-xs uppercase tracking-wider text-[#7F7869] block font-bold">
                               Investimento
                             </span>
-                            <span className="font-bold text-lg sm:text-xl text-[#1C1B18]">
-                              {m.price === 0
-                                ? 'Gratuito'
-                                : new Intl.NumberFormat('pt-BR', {
+                            {showMentorshipDiscount && m.price > 0 ? (
+                              <div className="flex flex-col">
+                                <span className="text-sm text-[#7F7869] line-through">
+                                  {new Intl.NumberFormat('pt-BR', {
                                     style: 'currency',
                                     currency: 'BRL',
                                   }).format(m.price || 0)}
-                            </span>
+                                </span>
+                                <span className="font-bold text-lg sm:text-xl text-[#173F33]">
+                                  {new Intl.NumberFormat('pt-BR', {
+                                    style: 'currency',
+                                    currency: 'BRL',
+                                  }).format(mentorshipDiscountedPrice(m.price || 0))}
+                                  <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-wider text-[#173F33] bg-[#FDBE2D]/20 px-2 py-0.5 rounded-full">
+                                    30% off
+                                  </span>
+                                </span>
+                              </div>
+                            ) : m.price === 0 ? (
+                              <span className="font-bold text-lg sm:text-xl text-[#1C1B18]">
+                                Gratuito
+                              </span>
+                            ) : (
+                              <div className="flex flex-col">
+                                <span className="font-bold text-lg sm:text-xl text-[#1C1B18]">
+                                  {new Intl.NumberFormat('pt-BR', {
+                                    style: 'currency',
+                                    currency: 'BRL',
+                                  }).format(m.price || 0)}
+                                </span>
+                                <span className="text-[11px] font-semibold text-[#7F7869]">
+                                  30% off para assinantes Prata
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           <Button

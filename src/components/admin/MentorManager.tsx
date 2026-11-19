@@ -17,12 +17,8 @@ import { Plus, Trash2, Edit } from 'lucide-react'
 import { getMentors, createMentor, updateMentor, deleteMentor } from '@/services/mentors'
 import { Mentor } from '@/types'
 import { toast } from '@/hooks/use-toast'
-import {
-  getErrorMessage,
-  extractFieldErrors,
-  type FieldErrors,
-  validateFile,
-} from '@/lib/pocketbase/errors'
+import { getErrorMessage, extractFieldErrors, type FieldErrors } from '@/lib/form-errors'
+import { validateFile } from '@/lib/file-validation'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { isRichTextEmpty } from '@/lib/utils'

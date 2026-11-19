@@ -375,3 +375,11 @@ O painel é monolítico (um único papel admin), com módulos por área: alunos,
 | `src/lib/pocketbase/schema.json`  | Espelho do schema live (fonte de verdade dos campos).                                   |
 | `pocketbase/hooks/*.js`           | Lógica server-side (JSVM): iPag, Brevo, cadastro, Dia do TST, e-mails.                  |
 | `pocketbase/migrations/*.js`      | Migrações JS de coleções (imutáveis após aplicadas).                                    |
+
+> **⚠ NÃO editar arquivos em `src/lib/pocketbase/`** (`client.ts`, `errors.ts`, `schema.json`) — são regenerados
+> pela plataforma a cada migração e qualquer código do projeto colocado ali é descartado (foi o caso da
+> `validateFile`, que sumiu 3 vezes). Código do projeto vive fora dessa pasta:
+>
+> - `src/lib/file-validation.ts` — `validateFile` (validação de tamanho/tipo de arquivo, mensagens em pt-BR);
+> - `src/lib/form-errors.ts` — `getErrorMessage` / `extractFieldErrors` / `FieldErrors` (erros de formulário traduzidos).
+>   Para usar, importe de `@/lib/file-validation` e `@/lib/form-errors` — nunca de `@/lib/pocketbase/errors`.

@@ -9,7 +9,8 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { DocProject } from '@/types'
 import { getDocProject, createDocProject, updateDocProject } from '@/services/doc_projects'
 import { toast } from 'sonner'
-import { getErrorMessage, validateFile } from '@/lib/pocketbase/errors'
+import { getErrorMessage } from '@/lib/form-errors'
+import { validateFile } from '@/lib/file-validation'
 import pb from '@/lib/pocketbase/client'
 
 export default function AdminDocumentaryWizard() {

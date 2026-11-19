@@ -130,6 +130,26 @@ onRecordEnrich((e) => {
       return false
     }
   }
+  // BLOCO 4 — pagamento 'paid' desta edição (product_type magazine + magazine_id)
+  function comprouRevista(uid, mid) {
+    if (!uid || !mid) return false
+    try {
+      var paid = $app.findRecordsByFilter(
+        'payments',
+        "user = '" +
+          uid +
+          "' && status = 'paid' && product_type = 'magazine' && magazine_id = '" +
+          mid +
+          "'",
+        '-created',
+        1,
+        0,
+      )
+      return paid.length > 0
+    } catch (_) {
+      return false
+    }
+  }
   function esconde(r, campo) {
     try {
       r.hide(campo)
@@ -187,7 +207,8 @@ onRecordEnrich((e) => {
       return
     }
     if (c === 'magazines') {
-      if (nivel < 2) {
+      // BLOCO 4 — além de Prata/Ouro/admin, libera quem pagou ESTA edição
+      if (nivel < 2 && !comprouRevista(uid, String(r.getString('id') || ''))) {
         esconde(r, 'fliphtml5_link')
         esconde(r, 'embed_code')
       }
@@ -318,6 +339,26 @@ onRecordsListRequest((e) => {
       return false
     }
   }
+  // BLOCO 4 — pagamento 'paid' desta edição (product_type magazine + magazine_id)
+  function comprouRevista(uid, mid) {
+    if (!uid || !mid) return false
+    try {
+      var paid = $app.findRecordsByFilter(
+        'payments',
+        "user = '" +
+          uid +
+          "' && status = 'paid' && product_type = 'magazine' && magazine_id = '" +
+          mid +
+          "'",
+        '-created',
+        1,
+        0,
+      )
+      return paid.length > 0
+    } catch (_) {
+      return false
+    }
+  }
   function esconde(r, campo) {
     try {
       r.hide(campo)
@@ -396,7 +437,8 @@ onRecordsListRequest((e) => {
         }
       }
     } else if (c === 'magazines') {
-      if (nivel < 2) {
+      // BLOCO 4 — além de Prata/Ouro/admin, libera quem pagou ESTA edição
+      if (nivel < 2 && !comprouRevista(uid, String(rec.getString('id') || ''))) {
         esconde(rec, 'fliphtml5_link')
         esconde(rec, 'embed_code')
       }

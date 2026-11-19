@@ -194,6 +194,7 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
   var billingCycle = record.getString('billing_cycle') || 'monthly'
 
   var emailDataToSend = null
+  var magazineEmailData = null
 
   try {
     // Atualiza status do payment
@@ -384,6 +385,35 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
   } catch (dbErr) {
     $app.logger().error('[ipag-webhook] Erro ao salvar dados no banco', 'error', dbErr.message)
     return e.json(500, { error: 'Erro ao gravar dados do pagamento' })
+  }
+
+  // BLOCO 4 — compra avulsa de revista: dados para o e-mail de confirmação
+  if (
+    mappedStatus === 'paid' &&
+    productType === 'magazine' &&
+    userId &&
+    record.getString('magazine_id') &&
+    !alreadyPaid
+  ) {
+    try {
+      var magUser = $app.findRecordById('users', userId)
+      var mag = $app.findRecordById('magazines', record.getString('magazine_id'))
+      var magTitle = String(mag.getString('title') || '').trim()
+      if (magTitle && magUser.getString('email')) {
+        magazineEmailData = {
+          userEmail: magUser.getString('email'),
+          userName: magUser.getString('name'),
+          userId: userId,
+          magazineId: record.getString('magazine_id'),
+          title: magTitle,
+          amount: record.getFloat('amount') || 0,
+        }
+      }
+    } catch (magErr) {
+      $app
+        .logger()
+        .error('[ipag-webhook] Erro ao montar e-mail de compra de revista', 'error', magErr.message)
+    }
   }
 
   var tDbEnd = Date.now() - tDbStart
@@ -640,6 +670,136 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
     }
   }
 
+  // BLOCO 4 — e-mail de confirmação de compra avulsa de revista (modelo visual dos outros)
+  if (magazineEmailData) {
+    var brevoKeyMag = $secrets.get('BREVO_API_KEY')
+    if (brevoKeyMag) {
+      try {
+        var mTitle = magazineEmailData.title
+        var mMatch = mTitle.match(/n[ºo°.]?\s*(\d+)/i)
+        var mNum = mMatch ? mMatch[1] : ''
+        var mDisplay = mNum ? 'Edição nº ' + mNum : mTitle
+        var fmtBRLMag = function (v) {
+          var n = Number(v) || 0
+          return 'R$ ' + n.toFixed(2).replace('.', ',')
+        }
+        var magHtml =
+          '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
+          '<body style="margin:0;padding:0;font-family:Georgia,serif;background:#0f172a;">' +
+          '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
+          '<tr><td align="center">' +
+          '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
+          '<tr><td style="padding:40px 48px 36px;text-align:center;border-top:6px solid #2E9E6D;">' +
+          '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
+          '</td></tr>' +
+          '<tr><td style="padding:0 48px 28px;text-align:center;">' +
+          '<span style="display:inline-block;padding:8px 24px;background:#D1FAE5;border-radius:50px;font-size:13px;font-weight:700;color:#065F46;letter-spacing:1px;">COMPRA CONFIRMADA</span>' +
+          '</td></tr>' +
+          '<tr><td style="padding:0 48px 48px;">' +
+          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:32px;">' +
+          '<div style="width:72px;height:72px;background:#D1FAE5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">' +
+          '<span style="font-size:36px;">✓</span>' +
+          '</div>' +
+          '</td></tr></table>' +
+          '<h2 style="margin:0 0 24px;font-size:26px;color:#1e293b;letter-spacing:-.3px;text-align:center;">Sua revista está liberada!</h2>' +
+          '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
+          magazineEmailData.userName +
+          '</strong>,</p>' +
+          '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Seu pagamento foi confirmado e a <strong>' +
+          mDisplay +
+          '</strong> da Revista Educação SST já está disponível para leitura.</p>' +
+          '<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">' +
+          '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Produto</td>' +
+          '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">' +
+          mDisplay +
+          '</td></tr>' +
+          '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;">Valor pago</td>' +
+          '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;">' +
+          fmtBRLMag(magazineEmailData.amount) +
+          '</td></tr>' +
+          '</table>' +
+          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">' +
+          '<a href="https://www.educacaosst.com.br/plataforma/revista/' +
+          magazineEmailData.magazineId +
+          '" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Ler agora</a>' +
+          '</td></tr></table>' +
+          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0;padding-top:24px;">' +
+          '<p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Em caso de dúvidas, entre em contato com nossa equipe de suporte.</p>' +
+          '</td></tr></table>' +
+          '</td></tr>' +
+          '<tr><td style="background:#f8fafc;padding:28px 48px;text-align:center;border-top:1px solid #e2e8f0;">' +
+          '<p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST — Todos os direitos reservados.</p>' +
+          '</td></tr>' +
+          '</table></td></tr></table></body></html>'
+        var magSent = false
+        var magErrMsg = ''
+        var magStatus = 0
+        try {
+          var magRes = $http.send({
+            url: 'https://api.brevo.com/v3/smtp/email',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': brevoKeyMag },
+            body: JSON.stringify({
+              sender: { name: 'Educação SST', email: 'assinante@educacaosst.com.br' },
+              to: [{ email: magazineEmailData.userEmail, name: magazineEmailData.userName }],
+              subject: 'Sua revista está liberada — Educação SST',
+              htmlContent: magHtml,
+            }),
+            timeout: 4,
+          })
+          magStatus = magRes.statusCode
+          magSent = magRes.statusCode >= 200 && magRes.statusCode < 300
+          if (!magSent) {
+            var magErrBody = magRes.body
+              ? String.fromCharCode.apply(null, new Uint8Array(magRes.body))
+              : 'unknown'
+            magErrMsg = magErrBody
+            $app
+              .logger()
+              .error(
+                '[ipag-webhook] Falha no envio do email de revista',
+                'status',
+                magRes.statusCode,
+                'body',
+                magErrBody,
+              )
+          }
+        } catch (magMailErr) {
+          magErrMsg = magMailErr.message
+          $app
+            .logger()
+            .error(
+              '[ipag-webhook] Erro/timeout ao enviar email de revista',
+              'error',
+              magMailErr.message,
+            )
+        }
+        try {
+          var magLogsCol = $app.findCollectionByNameOrId('email_logs')
+          var magLog = new Record(magLogsCol)
+          magLog.set('recipient_email', magazineEmailData.userEmail)
+          magLog.set('recipient_name', magazineEmailData.userName)
+          magLog.set('email_type', 'magazine_purchase')
+          magLog.set('sent', magSent)
+          magLog.set('sent_at', magSent ? new Date().toISOString() : '')
+          magLog.set('brevo_synced', magSent)
+          magLog.set('brevo_status', magStatus || (magSent ? 200 : 500))
+          magLog.set('error_message', magErrMsg)
+          magLog.set('user', magazineEmailData.userId)
+          $app.save(magLog)
+        } catch (magLogErr) {
+          $app
+            .logger()
+            .error('[ipag-webhook] Erro ao gravar email_log de revista', 'error', magLogErr.message)
+        }
+      } catch (magBlockErr) {
+        $app
+          .logger()
+          .error('[ipag-webhook] Erro no bloco de email de revista', 'error', magBlockErr.message)
+      }
+    }
+  }
+
   var totalTime = Date.now() - t0
   console.log('[ipag-webhook] <<< END order_id=' + orderId + ' total=' + totalTime + 'ms')
 
@@ -847,6 +1007,7 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
   var billingCycle = record.getString('billing_cycle') || 'monthly'
 
   var emailDataToSend = null
+  var magazineEmailData = null
 
   try {
     // Atualiza status do payment
@@ -1031,6 +1192,39 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
             '[ipag-webhook] Erro no pós-processamento da assinatura',
             'error',
             postProcErr.message,
+          )
+      }
+    }
+
+    // BLOCO 4 — compra avulsa de revista: dados para o e-mail de confirmação
+    if (
+      mappedStatus === 'paid' &&
+      productType === 'magazine' &&
+      userId &&
+      record.getString('magazine_id') &&
+      !alreadyPaid
+    ) {
+      try {
+        var magUser2 = $app.findRecordById('users', userId)
+        var mag2 = $app.findRecordById('magazines', record.getString('magazine_id'))
+        var magTitle2 = String(mag2.getString('title') || '').trim()
+        if (magTitle2 && magUser2.getString('email')) {
+          magazineEmailData = {
+            userEmail: magUser2.getString('email'),
+            userName: magUser2.getString('name'),
+            userId: userId,
+            magazineId: record.getString('magazine_id'),
+            title: magTitle2,
+            amount: record.getFloat('amount') || 0,
+          }
+        }
+      } catch (magErr2) {
+        $app
+          .logger()
+          .error(
+            '[ipag-webhook] Erro ao montar e-mail de compra de revista',
+            'error',
+            magErr2.message,
           )
       }
     }
@@ -1288,6 +1482,140 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
         $app.save(logRecord)
       } catch (logErr) {
         $app.logger().error('[ipag-webhook] Erro ao gravar email_log', 'error', logErr.message)
+      }
+    }
+  }
+
+  // BLOCO 4 — e-mail de confirmação de compra avulsa de revista
+  if (magazineEmailData) {
+    var brevoKeyMag2 = $secrets.get('BREVO_API_KEY')
+    if (brevoKeyMag2) {
+      try {
+        var mTitle2 = magazineEmailData.title
+        var mMatch2 = mTitle2.match(/n[ºo°.]?\s*(\d+)/i)
+        var mNum2 = mMatch2 ? mMatch2[1] : ''
+        var mDisplay2 = mNum2 ? 'Edição nº ' + mNum2 : mTitle2
+        var fmtBRLMag2 = function (v) {
+          var n = Number(v) || 0
+          return 'R$ ' + n.toFixed(2).replace('.', ',')
+        }
+        var magHtml2 =
+          '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
+          '<body style="margin:0;padding:0;font-family:Georgia,serif;background:#0f172a;">' +
+          '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
+          '<tr><td align="center">' +
+          '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
+          '<tr><td style="padding:40px 48px 36px;text-align:center;border-top:6px solid #2E9E6D;">' +
+          '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
+          '</td></tr>' +
+          '<tr><td style="padding:0 48px 28px;text-align:center;">' +
+          '<span style="display:inline-block;padding:8px 24px;background:#D1FAE5;border-radius:50px;font-size:13px;font-weight:700;color:#065F46;letter-spacing:1px;">COMPRA CONFIRMADA</span>' +
+          '</td></tr>' +
+          '<tr><td style="padding:0 48px 48px;">' +
+          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:32px;">' +
+          '<div style="width:72px;height:72px;background:#D1FAE5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">' +
+          '<span style="font-size:36px;">✓</span>' +
+          '</div>' +
+          '</td></tr></table>' +
+          '<h2 style="margin:0 0 24px;font-size:26px;color:#1e293b;letter-spacing:-.3px;text-align:center;">Sua revista está liberada!</h2>' +
+          '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
+          magazineEmailData.userName +
+          '</strong>,</p>' +
+          '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Seu pagamento foi confirmado e a <strong>' +
+          mDisplay2 +
+          '</strong> da Revista Educação SST já está disponível para leitura.</p>' +
+          '<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">' +
+          '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Produto</td>' +
+          '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">' +
+          mDisplay2 +
+          '</td></tr>' +
+          '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;">Valor pago</td>' +
+          '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;">' +
+          fmtBRLMag2(magazineEmailData.amount) +
+          '</td></tr>' +
+          '</table>' +
+          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">' +
+          '<a href="https://www.educacaosst.com.br/plataforma/revista/' +
+          magazineEmailData.magazineId +
+          '" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Ler agora</a>' +
+          '</td></tr></table>' +
+          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0;padding-top:24px;">' +
+          '<p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Em caso de dúvidas, entre em contato com nossa equipe de suporte.</p>' +
+          '</td></tr></table>' +
+          '</td></tr>' +
+          '<tr><td style="background:#f8fafc;padding:28px 48px;text-align:center;border-top:1px solid #e2e8f0;">' +
+          '<p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST — Todos os direitos reservados.</p>' +
+          '</td></tr>' +
+          '</table></td></tr></table></body></html>'
+        var magSent2 = false
+        var magErrMsg2 = ''
+        var magStatus2 = 0
+        try {
+          var magRes2 = $http.send({
+            url: 'https://api.brevo.com/v3/smtp/email',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': brevoKeyMag2 },
+            body: JSON.stringify({
+              sender: { name: 'Educação SST', email: 'assinante@educacaosst.com.br' },
+              to: [{ email: magazineEmailData.userEmail, name: magazineEmailData.userName }],
+              subject: 'Sua revista está liberada — Educação SST',
+              htmlContent: magHtml2,
+            }),
+            timeout: 4,
+          })
+          magStatus2 = magRes2.statusCode
+          magSent2 = magRes2.statusCode >= 200 && magRes2.statusCode < 300
+          if (!magSent2) {
+            var magErrBody2 = magRes2.body
+              ? String.fromCharCode.apply(null, new Uint8Array(magRes2.body))
+              : 'unknown'
+            magErrMsg2 = magErrBody2
+            $app
+              .logger()
+              .error(
+                '[ipag-webhook] Falha no envio do email de revista',
+                'status',
+                magRes2.statusCode,
+                'body',
+                magErrBody2,
+              )
+          }
+        } catch (magMailErr2) {
+          magErrMsg2 = magMailErr2.message
+          $app
+            .logger()
+            .error(
+              '[ipag-webhook] Erro/timeout ao enviar email de revista',
+              'error',
+              magMailErr2.message,
+            )
+        }
+        try {
+          var magLogsCol2 = $app.findCollectionByNameOrId('email_logs')
+          var magLog2 = new Record(magLogsCol2)
+          magLog2.set('recipient_email', magazineEmailData.userEmail)
+          magLog2.set('recipient_name', magazineEmailData.userName)
+          magLog2.set('email_type', 'magazine_purchase')
+          magLog2.set('sent', magSent2)
+          magLog2.set('sent_at', magSent2 ? new Date().toISOString() : '')
+          magLog2.set('brevo_synced', magSent2)
+          magLog2.set('brevo_status', magStatus2 || (magSent2 ? 200 : 500))
+          magLog2.set('error_message', magErrMsg2)
+          magLog2.set('user', magazineEmailData.userId)
+          $app.save(magLog2)
+        } catch (magLogErr2) {
+          $app
+            .logger()
+            .error(
+              '[ipag-webhook] Erro ao gravar email_log de revista',
+              'error',
+              magLogErr2.message,
+            )
+        }
+      } catch (magBlockErr2) {
+        $app
+          .logger()
+          .error('[ipag-webhook] Erro no bloco de email de revista', 'error', magBlockErr2.message)
       }
     }
   }

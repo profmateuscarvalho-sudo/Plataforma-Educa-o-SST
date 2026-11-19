@@ -98,10 +98,34 @@ routerAdd(
     }
 
     // Preço resolvido no SERVIDOR a partir do cadastro (nunca confiar no amount
-    // enviado pelo frontend). Cursos vêm de courses.price; mentorias de mentorships.price.
+    // enviado pelo frontend). Cursos vêm de courses.price; mentorias de
+    // mentorships.price. BLOCO 4: revista avulsa — preço via magazine_lib
+    // (magazine_landing_page), cobrando cada edição pelo seu preço correto.
     var productType = body.product_type || 'course'
     var serverAmount = 0
-    if (productType === 'course') {
+    if (productType === 'magazine') {
+      if (!body.magazine_id) {
+        throw new BadRequestError('magazine_id é obrigatório para compra avulsa de revista')
+      }
+      try {
+        $app.findRecordById('magazines', body.magazine_id)
+      } catch (magErr) {
+        throw new NotFoundError('Revista não encontrada.')
+      }
+      var precoMag = magazineLib.precoDaEdicao(body.magazine_id)
+      serverAmount = precoMag.price
+      console.log(
+        '[ipag-pay][magazine] magazine_id=' +
+          body.magazine_id +
+          ' isCurrent=' +
+          precoMag.isCurrent +
+          ' serverAmount=' +
+          serverAmount +
+          ' (amount do frontend ignorado: ' +
+          JSON.stringify(body.amount || null) +
+          ')',
+      )
+    } else if (productType === 'course') {
       if (!body.course_id) {
         throw new BadRequestError('course_id é obrigatório para compra avulsa de curso')
       }
@@ -199,6 +223,10 @@ routerAdd(
     paymentRecord.set('product_type', productType)
     if (productType === 'course' && body.course_id) {
       paymentRecord.set('course_id', body.course_id)
+    }
+    // BLOCO 4 — grava a edição comprada (access_guard libera por este vínculo)
+    if (productType === 'magazine' && body.magazine_id) {
+      paymentRecord.set('magazine_id', body.magazine_id)
     }
     if (body.mentorship_id) {
       paymentRecord.set('mentorship_id', body.mentorship_id)

@@ -165,9 +165,35 @@ routerAdd(
     }
 
     // Preço resolvido no SERVIDOR a partir do cadastro (nunca confiar no amount
-    // enviado pelo frontend) para compras avulsas de curso/mentoria.
+    // enviado pelo frontend) para compras avulsa de curso/mentoria.
     // Assinatura: amount já calculado acima via pricing_lib (body.amount ignorado).
-    if (body.product_type === 'course' || body.product_type === 'mentorship') {
+    // BLOCO 4: revista avulsa — preço via magazine_lib (magazine_landing_page),
+    // Pix SEM desconto de 20% (o desconto de Pix só vale para assinatura).
+    if (body.product_type === 'magazine') {
+      if (!body.magazine_id) {
+        throw new BadRequestError('magazine_id é obrigatório para compra avulsa de revista')
+      }
+      try {
+        $app.findRecordById('magazines', body.magazine_id)
+      } catch (magErr) {
+        throw new NotFoundError('Revista não encontrada.')
+      }
+      var precoMag = magazineLib.precoDaEdicao(body.magazine_id)
+      serverAmount = precoMag.price
+      console.log(
+        '[create-payment][magazine] magazine_id=' +
+          body.magazine_id +
+          ' isCurrent=' +
+          precoMag.isCurrent +
+          ' type=' +
+          body.type +
+          ' serverAmount=' +
+          serverAmount +
+          ' (amount do frontend ignorado: ' +
+          JSON.stringify(body.amount || null) +
+          ')',
+      )
+    } else if (body.product_type === 'course' || body.product_type === 'mentorship') {
       if (body.product_type === 'course') {
         if (!body.course_id) {
           throw new BadRequestError('course_id é obrigatório para compra avulsa de curso')
@@ -343,6 +369,10 @@ routerAdd(
 
       if (body.product_type === 'course' && body.course_id) {
         paymentRecord.set('course_id', body.course_id)
+      }
+      // BLOCO 4 — grava a edição comprada (access_guard libera por este vínculo)
+      if (body.product_type === 'magazine' && body.magazine_id) {
+        paymentRecord.set('magazine_id', body.magazine_id)
       }
       if (body.mentorship_id) {
         paymentRecord.set('mentorship_id', body.mentorship_id)

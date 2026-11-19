@@ -27,7 +27,8 @@ export interface CreatePaymentCard {
 }
 
 export interface CreatePaymentPayload {
-  amount: number
+  /** Opcional e IGNORADO para assinatura — o backend recalcula pelo plano (segurança). */
+  amount?: number
   type: 'card' | 'pix'
   customer: {
     name: string
@@ -39,6 +40,8 @@ export interface CreatePaymentPayload {
   product_type?: string
   plan_id?: string
   billing_cycle?: 'monthly' | 'yearly'
+  /** Parcelas do cartão (1-12). Validado no backend. */
+  installments?: number
   mentorship_id?: string
   selected_slots?: { date: string; time: string }[]
 }

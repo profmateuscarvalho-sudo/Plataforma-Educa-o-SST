@@ -34,6 +34,7 @@ import { createSubscription } from '@/services/subscriptions'
 import { createPayment, type CreatePaymentPayload } from '@/services/payments'
 import { SubscriptionPlan } from '@/types'
 import { cn } from '@/lib/utils'
+import { calcularPrecosDePlano, formatBRL, round2 } from '@/lib/pricing'
 import { tokenizeCardDetailed } from '@/lib/ipag'
 import { detectCardBrand } from '@/lib/card-brand'
 import { formatCpf, sanitizeCpf, validateCpf } from '@/lib/cpf'
@@ -47,7 +48,6 @@ export function SubscriptionCheckoutModal({
   setIsOpen: (v: boolean) => void
   plan: SubscriptionPlan | null
 }) {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card'>('pix')
   const [installments, setInstallments] = useState(1)
   const [step, setStep] = useState<'idle' | 'tokenizing' | 'paying'>('idle')
@@ -70,7 +70,6 @@ export function SubscriptionCheckoutModal({
       setActivePaymentId(null)
       setPixData(null)
       setCpfError(null)
-      setBillingCycle(plan.interval === 'yearly' ? 'yearly' : 'monthly')
       setPaymentMethod('pix')
       setInstallments(1)
     }
@@ -112,16 +111,15 @@ export function SubscriptionCheckoutModal({
 
   if (!plan) return null
 
-  const monthlyPrice = plan.price ?? 0
-  const yearlyPrice = plan.price_yearly || Math.round(monthlyPrice * 12 * 0.83 * 100) / 100
-  const currentPrice = billingCycle === 'monthly' ? monthlyPrice : yearlyPrice
-  const displayName = `${plan.name} ${billingCycle === 'monthly' ? 'Mensal' : 'Anual'}`
-  const description =
-    billingCycle === 'monthly' ? 'Cobrança recorrente' : 'Cobrança única, 1x por ano'
-  const savings = monthlyPrice * 12 - yearlyPrice
+  // Assinatura é SEMPRE anual (Bloco 2): sem seletor de ciclo.
+  // Valores vêm de src/lib/pricing.ts (mesma lógica validada no backend).
+  const pricing = calcularPrecosDePlano(plan)
+  const cardTotal = pricing.yearlyCardTotal
+  const pixTotal = pricing.yearlyPixTotal
+  const displayName = plan.name
+  const description = 'Assinatura anual — 12x sem juros no cartão ou Pix à vista (-20%)'
 
-  const formatCurrency = (v: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+  const formatCurrency = formatBRL
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCpf(e.target.value)
@@ -172,12 +170,14 @@ export function SubscriptionCheckoutModal({
     // Sanitiza garantindo exatamente 11 dígitos numéricos limpos
     const cleanCpf = sanitizeCpf(rawCpf)
 
+    // SEGURANÇA: o frontend NÃO envia amount — o backend busca o plano,
+    // aplica a mesma função de cálculo (com a promoção vigente) e define o valor.
     const payload: CreatePaymentPayload = {
-      amount: currentPrice,
       type: paymentMethod,
       product_type: 'subscription',
       plan_id: plan.id,
-      billing_cycle: billingCycle,
+      billing_cycle: 'yearly',
+      installments: paymentMethod === 'card' ? installments : 1,
       customer: {
         name: user.name || user.email || '',
         cpf_cnpj: cleanCpf,
@@ -234,7 +234,7 @@ export function SubscriptionCheckoutModal({
       payload.card = {
         token: tokenResult.token,
         method,
-        installments: billingCycle === 'yearly' ? installments : 1,
+        installments,
       }
 
       setStep('paying')
@@ -327,40 +327,7 @@ export function SubscriptionCheckoutModal({
               <DialogDescription>Pagamento via iPag · ambiente seguro</DialogDescription>
             </DialogHeader>
 
-            {/* Billing Toggle */}
-            <div className="flex bg-slate-100 rounded-lg p-1 mt-1">
-              <button
-                type="button"
-                onClick={() => setBillingCycle('monthly')}
-                className={cn(
-                  'flex-1 py-2 text-sm font-medium rounded-md transition-all',
-                  billingCycle === 'monthly'
-                    ? 'bg-white shadow-sm text-foreground'
-                    : 'text-muted-foreground',
-                )}
-              >
-                Mensal
-              </button>
-              <button
-                type="button"
-                onClick={() => setBillingCycle('yearly')}
-                className={cn(
-                  'flex-1 py-2 text-sm font-medium rounded-md transition-all relative',
-                  billingCycle === 'yearly'
-                    ? 'bg-white shadow-sm text-foreground'
-                    : 'text-muted-foreground',
-                )}
-              >
-                Anual
-                {billingCycle === 'yearly' && (
-                  <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                    -17%
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Plan Summary */}
+            {/* Plan Summary — assinatura anual (sem seletor de ciclo) */}
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
               <div className="flex items-center justify-between">
                 <div>
@@ -368,11 +335,9 @@ export function SubscriptionCheckoutModal({
                   <p className="text-xs text-slate-500 mt-0.5">{description}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold text-primary">{formatCurrency(currentPrice)}</p>
+                  <p className="text-xl font-bold text-primary">{formatCurrency(cardTotal)}</p>
                   <p className="text-xs text-slate-400">
-                    {billingCycle === 'monthly'
-                      ? 'por mês'
-                      : `economia de ${formatCurrency(savings)}`}
+                    12x de {formatCurrency(pricing.installment)} sem juros
                   </p>
                 </div>
               </div>
@@ -462,6 +427,10 @@ export function SubscriptionCheckoutModal({
                       <p className="text-sm text-muted-foreground">
                         Clique em pagar para gerar o QR Code Pix instantaneamente.
                       </p>
+                      <p className="mt-2 text-lg font-bold text-emerald-600">
+                        {formatCurrency(pixTotal)} à vista
+                      </p>
+                      <p className="text-xs text-slate-400">20% de desconto no Pix</p>
                     </div>
                   </TabsContent>
 
@@ -512,31 +481,29 @@ export function SubscriptionCheckoutModal({
                         />
                       </div>
                     </div>
-                    {billingCycle === 'yearly' && (
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Parcelamento</Label>
-                        <Select
-                          value={String(installments)}
-                          onValueChange={(v) => setInstallments(Number(v))}
-                        >
-                          <SelectTrigger className="h-10">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => {
-                              const installmentValue = yearlyPrice / n
-                              return (
-                                <SelectItem key={n} value={String(n)}>
-                                  {n === 1
-                                    ? `1x de ${formatCurrency(installmentValue)} (à vista)`
-                                    : `${n}x de ${formatCurrency(installmentValue)}`}
-                                </SelectItem>
-                              )
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Parcelamento (sem juros)</Label>
+                      <Select
+                        value={String(installments)}
+                        onValueChange={(v) => setInstallments(Number(v))}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => {
+                            const installmentValue = Math.round((cardTotal / n) * 100) / 100
+                            return (
+                              <SelectItem key={n} value={String(n)}>
+                                {n === 1
+                                  ? `1x de ${formatCurrency(installmentValue)} (à vista)`
+                                  : `${n}x de ${formatCurrency(installmentValue)} — total ${formatCurrency(cardTotal)}`}
+                              </SelectItem>
+                            )
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </TabsContent>
                 </Tabs>
 

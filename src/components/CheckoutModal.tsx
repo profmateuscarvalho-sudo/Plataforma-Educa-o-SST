@@ -25,6 +25,7 @@ import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { AvailableSlot } from '@/types'
+import { formatBRL, priceForEdition, fetchMagazinePricing } from '@/lib/magazine-pricing'
 import { formatCpf, sanitizeCpf, validateCpf } from '@/lib/cpf'
 import { tokenizeCardDetailed } from '@/lib/ipag'
 import { detectCardBrand } from '@/lib/card-brand'
@@ -44,8 +45,12 @@ interface CheckoutModalProps {
   itemPrice?: number
   courseId?: string
   mentorshipId?: string
+  magazineId?: string
   selectedSlots?: AvailableSlot[]
   slotPrice?: number
+  /** Chamado quando o pagamento é confirmado (Pix 'paid' ou cartão aprovado)
+      — o pai revalida o acesso (ex.: usePurchasedMagazines) sem recarregar. */
+  onPaid?: () => void
 }
 
 type PayStep = 'idle' | 'tokenizing' | 'paying'
@@ -65,8 +70,10 @@ export function CheckoutModal({
   itemPrice,
   courseId,
   mentorshipId,
+  magazineId,
   selectedSlots,
   slotPrice,
+  onPaid,
 }: CheckoutModalProps) {
   const isModalOpen = open !== undefined ? open : isOpen || false
   const handleOpen = setIsOpen || setOpen
@@ -81,11 +88,29 @@ export function CheckoutModal({
   const slots = selectedSlots || []
   const slotCount = slots.length
   const hasMentorship = !!mentorshipId && slotCount > 0
-  const productType: 'course' | 'mentorship' = hasMentorship ? 'mentorship' : 'course'
-  const productId = hasMentorship ? mentorshipId : courseId
+  const isMagazine = !!magazineId
+  const productType: 'course' | 'mentorship' | 'magazine' = isMagazine
+    ? 'magazine'
+    : hasMentorship
+      ? 'mentorship'
+      : 'course'
   const baseDisplayPrice = price ?? itemPrice ?? course?.price ?? item?.price ?? 0
-  const subtotal = hasMentorship ? (slotPrice || 0) * slotCount : baseDisplayPrice
-  const discount = hasMentorship && slotCount >= 2 ? subtotal * 0.2 : 0
+  // Revista: preço exibido vem do servidor (/backend/v1/magazine-pricing);
+  // o cobrado é recalculado no servidor. Sem desconto de Pix (só planos).
+  const [magazinePrice, setMagazinePrice] = useState<number | null>(null)
+  useEffect(() => {
+    if (!isMagazine) return
+    let alive = true
+    fetchMagazinePricing()
+      .then((p) => alive && setMagazinePrice(priceForEdition(p, magazineId as string)))
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [isMagazine, magazineId])
+  const displayPrice = isMagazine ? (magazinePrice ?? baseDisplayPrice) : baseDisplayPrice
+  const subtotal = hasMentorship ? (slotPrice || 0) * slotCount : displayPrice
+  const discount = !isMagazine && hasMentorship && slotCount >= 2 ? subtotal * 0.2 : 0
   const finalPrice = subtotal - discount
 
   const [payMethod, setPayMethod] = useState<'pix' | 'card'>('pix')
@@ -127,12 +152,15 @@ export function CheckoutModal({
         if (paymentRecord.status === 'paid') {
           clearInterval(interval)
           await refreshUser()
+          onPaid?.()
           setIsSuccess(true)
           toast({
             title: 'Pagamento Pix confirmado!',
-            description: mentorshipId
-              ? 'Sua mentoria foi confirmada! Você receberá um e-mail com o link de agendamento.'
-              : 'Seu curso foi liberado. Bom estudo!',
+            description: isMagazine
+              ? 'Sua edição da revista foi liberada. Boa leitura!'
+              : mentorshipId
+                ? 'Sua mentoria foi confirmada! Você receberá um e-mail com o link de agendamento.'
+                : 'Seu curso foi liberado. Bom estudo!',
           })
         }
       } catch {
@@ -144,7 +172,17 @@ export function CheckoutModal({
       isSubscribed = false
       clearInterval(interval)
     }
-  }, [isModalOpen, pixData, activePaymentId, isSuccess, refreshUser, mentorshipId, toast])
+  }, [
+    isModalOpen,
+    pixData,
+    activePaymentId,
+    isSuccess,
+    refreshUser,
+    isMagazine,
+    onPaid,
+    mentorshipId,
+    toast,
+  ])
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCpf(e.target.value)
@@ -171,7 +209,8 @@ export function CheckoutModal({
   const buildPayload = (rawCpf: string) => {
     const cleanCpf = sanitizeCpf(rawCpf)
     const payload: Record<string, any> = {
-      // amount é recalculado no servidor a partir do cadastro do curso/mentoria
+      // amount é recalculado no servidor (curso/mentoria do cadastro; revista via
+      // magazine_lib — o valor do navegador nunca é usado como preço cobrado)
       amount: finalPrice,
       type: payMethod,
       product_type: productType,
@@ -182,7 +221,10 @@ export function CheckoutModal({
         phone: user?.phone || '',
       },
     }
-    if (productType === 'course' && courseId) {
+    if (isMagazine && magazineId) {
+      // Revista avulsa: sem desconto — o servidor cobra o preço cheio
+      payload.magazine_id = magazineId
+    } else if (productType === 'course' && courseId) {
       payload.course_id = courseId
     } else if (productType === 'mentorship' && mentorshipId) {
       payload.mentorship_id = mentorshipId
@@ -292,6 +334,7 @@ export function CheckoutModal({
       })
       if (response && response.status === 'approved') {
         await refreshUser()
+        onPaid?.()
         setIsSuccess(true)
         toast({ title: 'Pagamento processado com sucesso!' })
       } else {
@@ -363,9 +406,11 @@ export function CheckoutModal({
             <CheckCircle2 className="w-16 h-16 text-emerald-500" />
             <DialogTitle className="text-2xl">Compra Aprovada!</DialogTitle>
             <p className="text-muted-foreground">
-              {mentorshipId
-                ? 'Sua mentoria foi confirmada! Você receberá um e-mail com o link de agendamento em instantes.'
-                : 'Sua compra foi concluída com sucesso e o curso já está liberado.'}
+              {isMagazine
+                ? 'Sua edição da revista foi liberada. Boa leitura!'
+                : mentorshipId
+                  ? 'Sua mentoria foi confirmada! Você receberá um e-mail com o link de agendamento em instantes.'
+                  : 'Sua compra foi concluída com sucesso e o curso já está liberado.'}
             </p>
           </div>
         ) : pixData ? (

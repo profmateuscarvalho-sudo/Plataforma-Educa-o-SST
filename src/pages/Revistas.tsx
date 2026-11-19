@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import { BookOpen, BookX, ImageOff, ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { getMagazines } from '@/services/magazines'
@@ -15,6 +15,10 @@ import { AppLanguage } from '@/i18n'
 import { PageHeader } from '@/components/PageHeader'
 import { LockedBadge, LockedCta, LockedOverlay } from '@/components/LockedBadge'
 import { useStudentAccess } from '@/hooks/use-student-access'
+import { useAuth } from '@/hooks/use-auth'
+import { usePurchasedMagazines, isMagazinePurchased } from '@/hooks/use-purchased-magazines'
+import { MagazineBuyButton } from '@/components/magazine/MagazineBuyButton'
+import { CheckoutModal } from '@/components/CheckoutModal'
 
 // Extrai o ano da revista a partir da data de criação/atualização ou do título (ex: "2026", "2025", "2024")
 function getMagazineYear(mag: Magazine): number {
@@ -49,13 +53,30 @@ function getMagazineMonth(mag: Magazine): string {
 export default function Revistas() {
   const { t, i18n } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [loading, setLoading] = useState(true)
   const [activeReaderMag, setActiveReaderMag] = useState<Magazine | null>(null)
+  const [checkoutMagId, setCheckoutMagId] = useState<string | null>(null)
+  const [purchasedRefresh, setPurchasedRefresh] = useState(0)
+  const { user } = useAuth()
   // Revista virou conteúdo de assinante (Prata/Ouro). O catálogo (capa, título,
-  // edição) continua público; a leitura exige plano. Compra avulsa: Bloco 4.
+  // edição) continua público; a leitura exige plano OU compra avulsa da edição.
   const { canAccessMagazine, loading: accessLoading } = useStudentAccess()
-  const magLocked = !accessLoading && !canAccessMagazine()
+  const { purchased } = usePurchasedMagazines(user?.id, purchasedRefresh)
+
+  const hasFullAccess = !accessLoading && canAccessMagazine()
+  const isUnlocked = useCallback(
+    (mag: Magazine) => hasFullAccess || isMagazinePurchased(purchased, mag.id),
+    [hasFullAccess, purchased],
+  )
+  // Bloqueio por edição (função). Enquanto o acesso carrega, trata como liberada
+  // para não renderizar estado bloqueado por engano.
+  const magLocked = useCallback(
+    (mag: Magazine) => !accessLoading && !isUnlocked(mag),
+    [accessLoading, isUnlocked],
+  )
 
   // Idioma ativo
   const currentLang: AppLanguage = i18n.language?.startsWith('es') ? 'es' : 'pt-BR'
@@ -69,6 +90,17 @@ export default function Revistas() {
       console.error('Error fetching magazines:', err)
     } finally {
       setLoading(false)
+    }
+  }, [currentLang])
+
+  // Revalidação silenciosa (sem skeleton): usada após pagamento confirmado para
+  // buscar os links de leitura liberados pelo access_guard sem recarregar a página.
+  const refetchData = useCallback(async () => {
+    try {
+      const data = await getMagazines({ language: currentLang })
+      setMagazines(data)
+    } catch {
+      // mantém a lista atual em caso de erro transitório
     }
   }, [currentLang])
 
@@ -111,12 +143,44 @@ export default function Revistas() {
     })
   }, [searchParams, magazines, t])
 
-  const openMagazineReader = (mag: Magazine) => {
-    // Leitura exige Prata/Ouro (compra avulsa entra no Bloco 4)
-    if (magLocked) return
-    setActiveReaderMag(mag)
-    setSearchParams({ revista: mag.id }, { replace: true })
-  }
+  const openMagazineReader = useCallback(
+    (mag: Magazine) => {
+      // Leitura exige Prata/Ouro OU compra avulsa desta edição
+      if (magLocked(mag)) return
+      setActiveReaderMag(mag)
+      setSearchParams({ revista: mag.id }, { replace: true })
+    },
+    [magLocked, setSearchParams],
+  )
+
+  // Compra avulsa: visitante vai ao login e volta para esta URL; logado abre o
+  // checkout com magazineId (preço exibido do servidor, cobrado pelo backend).
+  const handleBuy = useCallback(
+    (buyMagId: string) => {
+      if (!user) {
+        const target = `${location.pathname}${location.search}`
+        navigate(`/login?redirect=${encodeURIComponent(target)}`)
+        return
+      }
+      setCheckoutMagId(buyMagId)
+    },
+    [user, location.pathname, location.search, navigate],
+  )
+
+  // Pagamento confirmado: revalida "minhas revistas" e o catálogo (o access_guard
+  // passa a devolver o link desta edição) — liberação sem recarregar a página.
+  const handlePaid = useCallback(() => {
+    setPurchasedRefresh((k) => k + 1)
+    refetchData()
+  }, [refetchData])
+
+  // Após a liberação, o access_guard passa a devolver o link de leitura desta
+  // edição — sincroniza a edição aberta no Dialog com a lista revalidada.
+  useEffect(() => {
+    if (!activeReaderMag) return
+    const fresh = magazines.find((m) => m.id === activeReaderMag.id)
+    if (fresh && fresh !== activeReaderMag) setActiveReaderMag(fresh)
+  }, [magazines, activeReaderMag])
 
   const closeMagazineReader = () => {
     setActiveReaderMag(null)
@@ -128,6 +192,7 @@ export default function Revistas() {
     if (magazines.length === 0) return null
     return magazines.find((m) => m.is_featured) || magazines[0]
   }, [magazines])
+  const latestMagLocked = latestMag ? magLocked(latestMag) : false
 
   // Agrupamento por ano para o acervo (2026, 2025, 2024...)
   const archiveByYear = useMemo(() => {
@@ -213,7 +278,7 @@ export default function Revistas() {
                   <div className="md:col-span-5 flex justify-center md:justify-start">
                     <div
                       onClick={() => openMagazineReader(latestMag)}
-                      className={`group relative w-[240px] sm:w-[280px] lg:w-[320px] aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.55)] border border-white/15 bg-[#122e26] transition-transform duration-500 ${magLocked ? '' : 'cursor-pointer hover:scale-105'}`}
+                      className={`group relative w-[240px] sm:w-[280px] lg:w-[320px] aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.55)] border border-white/15 bg-[#122e26] transition-transform duration-500 ${latestMagLocked ? '' : 'cursor-pointer hover:scale-105'}`}
                     >
                       {latestMag.thumbnail ? (
                         <img
@@ -238,10 +303,9 @@ export default function Revistas() {
 
                   {/* Número, mês e botão primário "Ler edição" à direita */}
                   <div className="md:col-span-7 space-y-6">
-                    {magLocked && (
+                    {latestMagLocked && (
                       <div className="flex flex-wrap items-center gap-3">
                         <LockedBadge />
-                        {/* RESERVADO (Bloco 4): espaço p/ compra avulsa desta edição */}
                       </div>
                     )}
                     <div className="space-y-2">
@@ -271,10 +335,14 @@ export default function Revistas() {
                     </p>
 
                     <div className="pt-2 flex flex-wrap items-center gap-4 sm:gap-6">
-                      {magLocked ? (
+                      {latestMagLocked ? (
                         <>
                           <LockedCta className="h-12 px-8 rounded-full font-bold text-base" />
-                          {/* RESERVADO (Bloco 4): botão de compra avulsa da edição em destaque */}
+                          <MagazineBuyButton
+                            magazineId={latestMag.id}
+                            onBuy={handleBuy}
+                            className="w-full max-w-xs [&>p]:text-[#F4F1E8]/70 [&>p>a]:text-[#FDBE2D]"
+                          />
                         </>
                       ) : (
                         <Button
@@ -333,12 +401,13 @@ export default function Revistas() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
                     {yearMags.map((mag) => {
                       const imgUrl = mag.thumbnail ? pb.files.getUrl(mag, mag.thumbnail) : null
+                      const locked = magLocked(mag)
 
                       return (
                         <div
                           key={mag.id}
                           onClick={() => openMagazineReader(mag)}
-                          className={`group rounded-[28px] bg-white border border-[#E4DED1] overflow-hidden p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 ${magLocked ? '' : 'cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(28,27,24,0.1)]'}`}
+                          className={`group rounded-[28px] bg-white border border-[#E4DED1] overflow-hidden p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 ${locked ? '' : 'cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(28,27,24,0.1)]'}`}
                         >
                           {/* Capa */}
                           <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF8F3] border border-[#E4DED1] mb-4 shrink-0 flex items-center justify-center">
@@ -356,7 +425,7 @@ export default function Revistas() {
                             )}
 
                             {/* Overlay: hover suave quando liberada / cadeado quando bloqueada */}
-                            {magLocked ? (
+                            {locked ? (
                               <LockedOverlay className="rounded-none" />
                             ) : (
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-3">
@@ -376,25 +445,24 @@ export default function Revistas() {
                               <h4 className="font-serif font-semibold text-base sm:text-lg text-[#1C1B18] leading-tight line-clamp-2 group-hover:text-[#173F33] transition-colors">
                                 {mag.title}
                               </h4>
-                              {magLocked && (
+                              {locked && (
                                 <div className="mt-2">
                                   <LockedBadge />
                                 </div>
                               )}
                             </div>
 
-                            {/* Ações: quando bloqueada, CTA /planos + espaço reservado
-                                para o botão de COMPRA AVULSA (Bloco 4) */}
+                            {/* Ações: bloqueada → compra avulsa + CTA /planos;
+                                liberada (assinante ou comprou) → "Ler edição" */}
                             <div className="pt-3 border-t border-[#E4DED1]">
-                              {magLocked ? (
+                              {locked ? (
                                 <div className="space-y-2">
+                                  <MagazineBuyButton
+                                    magazineId={mag.id}
+                                    onBuy={handleBuy}
+                                    variant="compact"
+                                  />
                                   <LockedCta className="w-full justify-center" />
-                                  {/* RESERVADO (Bloco 4): botão de compra avulsa da edição */}
-                                  <div className="h-9 rounded-full border border-dashed border-[#E4DED1] bg-[#FAF8F3]/60 flex items-center justify-center">
-                                    <span className="text-[10px] uppercase tracking-wider text-[#B9B2A2] font-bold">
-                                      Comprar esta edição
-                                    </span>
-                                  </div>
                                 </div>
                               ) : (
                                 <div className="flex items-center justify-between text-xs font-semibold text-[#1C1B18] group-hover:text-[#173F33]">
@@ -420,12 +488,18 @@ export default function Revistas() {
         <DialogContent className="max-w-6xl w-[95vw] h-[88vh] p-0 overflow-hidden bg-black/10 border-none rounded-[28px]">
           <DialogTitle className="sr-only">{activeReaderMag?.title}</DialogTitle>
           {activeReaderMag &&
-            (magLocked ? (
+            (magLocked(activeReaderMag) ? (
               <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-[#122e26] p-8 text-center">
                 <LockedBadge />
                 <p className="text-[#F4F1E8] text-sm sm:text-base max-w-md">
-                  A leitura completa desta edição faz parte do plano Prata.
+                  A leitura completa desta edição faz parte do plano Prata — ou compre esta edição
+                  avulsa.
                 </p>
+                <MagazineBuyButton
+                  magazineId={activeReaderMag.id}
+                  onBuy={handleBuy}
+                  className="w-full max-w-xs [&>p]:text-[#F4F1E8]/70 [&>p>a]:text-[#FDBE2D]"
+                />
                 <LockedCta className="h-11 px-6 rounded-full font-bold text-sm" />
               </div>
             ) : activeReaderMag.embed_code ? (
@@ -444,6 +518,16 @@ export default function Revistas() {
             ))}
         </DialogContent>
       </Dialog>
+
+      {/* Checkout da compra avulsa (Pix sem desconto / cartão). Ao confirmar,
+          handlePaid revalida o acesso e a edição abre no mesmo Dialog sem reload. */}
+      <CheckoutModal
+        open={!!checkoutMagId}
+        setOpen={(v) => !v && setCheckoutMagId(null)}
+        title="Revista Educação SST — edição avulsa"
+        magazineId={checkoutMagId || undefined}
+        onPaid={handlePaid}
+      />
     </div>
   )
 }

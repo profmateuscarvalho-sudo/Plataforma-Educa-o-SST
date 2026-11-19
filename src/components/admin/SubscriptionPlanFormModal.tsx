@@ -16,6 +16,7 @@ import { Loader2, Plus, X } from 'lucide-react'
 import { createSubscriptionPlan, updateSubscriptionPlan } from '@/services/subscription-plans'
 import { SubscriptionPlan } from '@/types'
 import { useToast } from '@/hooks/use-toast'
+import { extractFieldErrors, type FieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
 interface SubscriptionPlanFormModalProps {
   open: boolean
@@ -78,7 +79,8 @@ export function SubscriptionPlanFormModal({
     const errs: Record<string, string> = {}
     if (!name.trim()) errs.name = 'O nome é obrigatório.'
     const numPrice = parseFloat(price)
-    if (isNaN(numPrice) || numPrice < 0) errs.price = 'O preço deve ser um número válido.'
+    if (isNaN(numPrice) || numPrice < 0)
+      errs.price = 'O preço deve ser um número maior ou igual a 0.'
     if (priceYearly) {
       const numYearly = parseFloat(priceYearly)
       if (isNaN(numYearly) || numYearly < 0)
@@ -102,7 +104,7 @@ export function SubscriptionPlanFormModal({
         description: description.trim(),
         price: parseFloat(price),
         interval,
-        features: JSON.stringify(features),
+        features: features,
         is_coming_soon: isComingSoon,
       }
 
@@ -120,7 +122,11 @@ export function SubscriptionPlanFormModal({
       onSuccess()
       setOpen(false)
     } catch (err) {
-      toast({ title: 'Erro ao salvar plano', variant: 'destructive' })
+      toast({
+        title: 'Erro ao salvar plano',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      })
     } finally {
       setIsSubmitting(false)
     }

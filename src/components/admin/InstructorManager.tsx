@@ -22,9 +22,18 @@ import {
 } from '@/services/instructors'
 import { Instructor } from '@/types'
 import { toast } from '@/hooks/use-toast'
-import { getErrorMessage, extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
+import {
+  getErrorMessage,
+  extractFieldErrors,
+  type FieldErrors,
+  validateFile,
+} from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
+import { isRichTextEmpty } from '@/lib/utils'
+
+const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const PHOTO_MAX_MB = 10
 
 export function InstructorManager() {
   const [instructors, setInstructors] = useState<Instructor[]>([])
@@ -49,9 +58,36 @@ export function InstructorManager() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setFieldErrors({})
-    const fd = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const fd = new FormData(form)
     const photo = fd.get('photo') as File
-    if (!photo?.size) fd.delete('photo')
+    if (!photo?.size) {
+      fd.delete('photo')
+    } else {
+      const photoError = validateFile(photo, {
+        maxSizeMB: PHOTO_MAX_MB,
+        mimeTypes: PHOTO_MIME_TYPES,
+        label: 'foto do professor',
+      })
+      if (photoError) {
+        toast({ title: 'Foto inválida', description: photoError, variant: 'destructive' })
+        return
+      }
+    }
+    const bio = String(fd.get('bio') || '')
+    const topics = String(fd.get('topics') || '').trim()
+    if (isRichTextEmpty(bio) || !topics) {
+      const errs: FieldErrors = {}
+      if (isRichTextEmpty(bio)) errs.bio = 'A bio é obrigatória (preencha o editor de texto).'
+      if (!topics) errs.topics = 'Os tópicos de atuação são obrigatórios.'
+      setFieldErrors(errs)
+      toast({
+        title: 'Campos obrigatórios',
+        description: [errs.bio, errs.topics].filter(Boolean).join(' '),
+        variant: 'destructive',
+      })
+      return
+    }
     try {
       if (editing) {
         await updateInstructor(editing.id, fd)
@@ -176,8 +212,8 @@ export function InstructorManager() {
               {fieldErrors.bio && <p className="text-xs text-red-500 mt-1">{fieldErrors.bio}</p>}
             </div>
             <div>
-              <Label>Foto *</Label>
-              <Input type="file" name="photo" accept="image/*" required={!editing} />
+              <Label>Foto * (JPG, PNG ou WebP — até 10 MB)</Label>
+              <Input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp" required={!editing} />
               {editing?.photo && (
                 <img
                   src={pb.files.getUrl(editing, editing.photo)}

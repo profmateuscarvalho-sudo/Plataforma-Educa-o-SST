@@ -17,6 +17,20 @@ export function stripHtml(html: string) {
   return tmp.textContent || tmp.innerText || ''
 }
 
+/**
+ * Verifica se um HTML de editor rico (RichTextEditor) está vazio na prática:
+ * sem texto visível e sem imagem ou outro elemento de mídia.
+ * Captura casos como "<p><br></p>", "<div><br></div>", "&nbsp;" etc.
+ */
+export function isRichTextEmpty(html?: string | null): boolean {
+  if (!html) return true
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  if (tmp.querySelector('img, iframe, video, audio, embed, object')) return false
+  const text = (tmp.textContent || '').replace(/[\s\u00A0\u200B]/g, '')
+  return text.length === 0
+}
+
 export function setMetaTags({
   title,
   description,

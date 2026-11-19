@@ -17,9 +17,18 @@ import { Plus, Trash2, Edit } from 'lucide-react'
 import { getMentors, createMentor, updateMentor, deleteMentor } from '@/services/mentors'
 import { Mentor } from '@/types'
 import { toast } from '@/hooks/use-toast'
-import { getErrorMessage, extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
+import {
+  getErrorMessage,
+  extractFieldErrors,
+  type FieldErrors,
+  validateFile,
+} from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
+import { isRichTextEmpty } from '@/lib/utils'
+
+const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const PHOTO_MAX_MB = 10
 
 export function MentorManager() {
   const [mentors, setMentors] = useState<Mentor[]>([])
@@ -46,7 +55,34 @@ export function MentorManager() {
     setFieldErrors({})
     const fd = new FormData(e.currentTarget)
     const photo = fd.get('photo') as File
-    if (!photo?.size) fd.delete('photo')
+    if (!photo?.size) {
+      fd.delete('photo')
+    } else {
+      const photoError = validateFile(photo, {
+        maxSizeMB: PHOTO_MAX_MB,
+        mimeTypes: PHOTO_MIME_TYPES,
+        label: 'foto do mentor',
+      })
+      if (photoError) {
+        toast({ title: 'Foto inválida', description: photoError, variant: 'destructive' })
+        return
+      }
+    }
+    const miniCv = String(fd.get('mini_cv') || '')
+    const topics = String(fd.get('topics') || '').trim()
+    if (isRichTextEmpty(miniCv) || !topics) {
+      const errs: FieldErrors = {}
+      if (isRichTextEmpty(miniCv))
+        errs.mini_cv = 'O mini CV é obrigatório (preencha o editor de texto).'
+      if (!topics) errs.topics = 'Os tópicos de atuação são obrigatórios.'
+      setFieldErrors(errs)
+      toast({
+        title: 'Campos obrigatórios',
+        description: [errs.mini_cv, errs.topics].filter(Boolean).join(' '),
+        variant: 'destructive',
+      })
+      return
+    }
     try {
       if (editing) {
         await updateMentor(editing.id, fd)
@@ -173,8 +209,8 @@ export function MentorManager() {
               )}
             </div>
             <div>
-              <Label>Foto *</Label>
-              <Input type="file" name="photo" accept="image/*" required={!editing} />
+              <Label>Foto * (JPG, PNG ou WebP — até 10 MB)</Label>
+              <Input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp" required={!editing} />
               {editing?.photo && (
                 <img
                   src={pb.files.getUrl(editing, editing.photo)}

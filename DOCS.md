@@ -373,13 +373,42 @@ O painel é monolítico (um único papel admin), com módulos por área: alunos,
 - Todo envio é auditado em `email_logs` (`sent`, `brevo_synced`, `brevo_status`, `error_message`).
 - **Redefinição de senha:** rota pública `POST /backend/v1/auth/request-password-reset` (`pocketbase/hooks/request_password_reset.js`). O frontend (`src/pages/ForgotPassword.tsx`) chama essa rota — **não** usa o `requestPasswordReset` nativo do PocketBase (SMTP não configurado). O hook gera o token nativo de reset via `user.newPasswordResetToken()` (o mesmo aceito por `confirmPasswordReset` no `src/pages/ResetPassword.tsx`), monta o link `https://www.educacaosst.com.br/reset-password/{token}` e envia "Redefinição de senha — Educação SST" via Brevo. E-mail inexistente responde 200 genérico (não revela existência). Anti-abuso: máx. 3 pedidos por e-mail a cada 15 min e 10 por IP por hora (acima disso, 200 genérico sem enviar). O envio é registrado em `email_logs` com `email_type='password_reset'`; o token nunca é logado por completo (apenas 4+4 caracteres).
 
-### 5.3 Outros
+### 5.3 Template de e-mail transacional (`pocketbase/hooks/email_template_lib.js`)
+
+Lib compartilhada de visual dos e-mails transacionais (PARTE 1 do projeto de e-mails; padrão
+global var + IIFE, como `magazine_lib.js` — nenhum hook dá `require`, basta o arquivo existir).
+Nada de flex/grid/background-image sem fallback; largura 600px, estilos inline, tabelas.
+
+- `emailLib.baseLayout(opts)` — documento completo: `<html>` → body escuro (`#0f172a`) → card
+  branco de **600px**. Opts: `headerColor` (barra superior 6px), `badgeText/badgeBg/badgeColor`
+  (selo "PAGAMENTO CONFIRMADO"/"UPGRADE CONFIRMADO"), `iconChar` (✓/⬆ em círculo com fallback
+  de tabela, sem flex), `heading`, `greetingName` ("Olá, Nome"), `bodyHtml` (parágrafos),
+  `contentHtml` (quadro-resumo + botão), `noteHtml` (observação final).
+- `emailLib.header()` — logo **`https://www.educacaosst.com.br/icon-512.png`** (⚠ conferir se a
+  URL pública do logo está estável — registrado pelo dono em 5.3), `alt="Educação SST"`, largura
+  fixa no atributo `width="150"`, e texto "Educação SST" embaixo (visível quando as imagens são
+  bloqueadas) + linha "Segurança e Saúde no Trabalho".
+- `emailLib.footer()` — "Educação SST LTDA — CNPJ 56.009.540/0001-90", contato
+  `assinante@educacaosst.com.br` e link para `/privacidade`.
+- `emailLib.bulletproofButton(label, href, bgColor, textColor)` — botão à prova de cliente de
+  e-mail: `table > tr > td` com `bgcolor` + padding + `<a>` dentro, e **fallback VML** para
+  Outlook desktop (`mso v:roundrect`).
+- `emailLib.summaryTable(rows, accentColor)` — quadro-resumo (tabela 100%, linhas label/valor,
+  fundo `#f8fafc`, borda `#e2e8f0`); `rows` = array `{label, value}` (valores vazios são omitidos).
+- `emailLib.formatBRL(v)` — `R$ 1.234,56`.
+
+**E-mails que já usam o template:** pagamento confirmado **da assinatura** e upgrade de plano
+(ambos no `pocketbase/hooks/ipag_webhook.js`, rota `POST /backend/v1/ipag-webhook`).
+**Ainda não migrados** (mantêm HTML inline próprio até as Partes 2 e 3): boas-vindas no cadastro,
+redefinição de senha, mentoria, curso avulso, revista avulsa e leads Dia do TST.
+
+### 5.4 Outros
 
 - **Assistente de IA (agente nativo Skip Cloud):** agente definido via `$ai.agents` com base de conhecimento RAG (`knowledge_base`); chat do aluno em `AgentChatWidget` + `src/lib/skipAi.ts` (streaming).
 - **PWA:** service worker e prompts de instalação (`src/lib/pwa.ts`, `InstallBanner`/`InstallPrompt`).
 - **Realtime:** chat de lives e atualizações da plataforma via realtime do PocketBase (`useRealtime`).
 
-### 5.4 Topologia de rede
+### 5.5 Topologia de rede
 
 - **Site publicado** (`www.educacaosst.com.br`): serve **apenas o frontend estático**; `/backend/*` não é roteável ao PocketBase por esse domínio (exige proxy no painel).
 - **Backend direto:** `https://educacao-sst-premium-969c2.shrd00.internal.goskip.dev` — host usado pelas rotas custom (`/backend/v1/...`) e **obrigatoriamente o host do webhook iPag** configurado no gateway.

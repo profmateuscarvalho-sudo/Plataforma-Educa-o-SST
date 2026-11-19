@@ -1,3 +1,6 @@
+// PARTE 1 — lib de template de e-mail (email_template_lib.js): global var +
+// IIFE, mesmo padrão de magazine_lib/pricing_lib, consumida sem require.
+// Detalhes do que exporta no fim deste arquivo e no DOCS.md.
 routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
   var t0 = Date.now()
   var method = (e.request.method || '').toUpperCase()
@@ -439,6 +442,8 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         ? 'Seu plano foi atualizado — Educação SST'
         : 'Pagamento Confirmado — Educação SST'
 
+      // PARTE 1 — modelo de e-mail da lib (email_template_lib.js): layout 600px,
+      // logo, botão bulletproof e rodapé padrão. isUpgrade controla cores/texto.
       var headerBadge = isUpgrade ? 'UPGRADE CONFIRMADO' : 'PAGAMENTO CONFIRMADO'
       var headerColor = isUpgrade ? '#E8792B' : '#2E9E6D'
       var badgeBg = isUpgrade ? '#FED7AA' : '#D1FAE5'
@@ -449,97 +454,66 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         ? 'Parabéns! Seu plano foi atualizado para o <strong>Plano ' +
           planLabel +
           '</strong>. Aproveite todos os benefícios da sua nova assinatura anual na plataforma Educação SST.'
-        : 'Seu pagamento foi confirmado com sucesso! Sua <strong>assinatura anual</strong> do plano <strong>' +
-          (emailDataToSend.planName || 'Plano ' + planLabel) +
-          '</strong> está ativa. Você já pode acessar todos os conteúdos exclusivos da plataforma Educação SST.'
+        : 'Seu pagamento foi confirmado com sucesso! Sua <strong>assinatura anual</strong> está ativa. Você já pode acessar todos os conteúdos exclusivos da plataforma Educação SST.'
 
-      // BLOCO 2 — resumo da assinatura anual: plano, validade (dd/mm/aaaa) e valor pago
-      var formatBRLHook = function (v) {
-        var n = Number(v) || 0
-        return 'R$ ' + n.toFixed(2).replace('.', ',')
+      // Quadro-resumo: plano atual + "assinatura anual" (nunca nome antigo),
+      // valor pago, forma de pagamento, data do pagamento e validade (dd/mm/aaaa).
+      var planDisplay = emailDataToSend.planName || 'Plano ' + planLabel
+      var paymentMethod = record.getString('payment_method') || ''
+      if (!paymentMethod) {
+        paymentMethod = record.getString('type') || ''
       }
-      var validityBR = ''
+      var paymentMethodIsCard = paymentMethod.toLowerCase().indexOf('card') !== -1
+      var paymentMethodLabel = 'Pix'
+      if (paymentMethodIsCard) {
+        var instCount = Math.max(1, Math.floor(Number(record.getFloat('installments')) || 1))
+        paymentMethodLabel =
+          'Cartão em ' + instCount + 'x de ' + emailLib.formatBRL(paidAmount / instCount)
+      }
+      var paidDateBR = ''
+      try {
+        var nowSp = new Date(Date.now() - 3 * 3600000)
+        var pdParts = nowSp.toISOString().substring(0, 10).split('-')
+        paidDateBR = pdParts[2] + '/' + pdParts[1] + '/' + pdParts[0]
+      } catch (_) {
+        paidDateBR = ''
+      }
+      var validityBRLib = ''
       if (emailDataToSend.contractEnd && /^\d{4}-\d{2}-\d{2}/.test(emailDataToSend.contractEnd)) {
         var vParts = emailDataToSend.contractEnd.substring(0, 10).split('-')
-        validityBR = vParts[2] + '/' + vParts[1] + '/' + vParts[0]
+        validityBRLib = vParts[2] + '/' + vParts[1] + '/' + vParts[0]
       }
-      var summaryRows = ''
-      summaryRows +=
-        '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Plano</td>' +
-        '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">' +
-        (emailDataToSend.planName || 'Plano ' + planLabel) +
-        '</td></tr>'
-      summaryRows +=
-        '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Modalidade</td>' +
-        '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">Assinatura anual</td></tr>'
-      if (validityBR) {
-        summaryRows +=
-          '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;border-bottom:1px solid #e2e8f0;">Válido até</td>' +
-          '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;border-bottom:1px solid #e2e8f0;">' +
-          validityBR +
-          '</td></tr>'
-      }
-      summaryRows +=
-        '<tr><td style="padding:8px 16px;font-size:14px;color:#334155;">Valor pago</td>' +
-        '<td style="padding:8px 16px;font-size:14px;color:#0f172a;font-weight:700;text-align:right;">' +
-        formatBRLHook(emailDataToSend.paidAmount) +
-        '</td></tr>'
-      var summaryTable =
-        '<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">' +
-        summaryRows +
-        '</table>'
+      var summaryTable = emailLib.summaryTable(
+        [
+          { label: 'Plano', value: planDisplay + ' — assinatura anual' },
+          { label: 'Valor pago', value: emailLib.formatBRL(paidAmount) },
+          { label: 'Forma de pagamento', value: paymentMethodLabel },
+          { label: 'Data do pagamento', value: paidDateBR },
+          { label: 'Acesso válido até', value: validityBRLib },
+        ],
+        headerColor,
+      )
 
-      var htmlContent =
-        '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>' +
-        '<body style="margin:0;padding:0;font-family:Georgia,serif;background:#0f172a;">' +
-        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:48px 0;">' +
-        '<tr><td align="center">' +
-        '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);">' +
-        '<tr><td style="padding:40px 48px 36px;text-align:center;border-top:6px solid ' +
-        headerColor +
-        ';">' +
-        '<p style="margin:0;font-size:14px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Segurança e Saúde no Trabalho</p>' +
-        '</td></tr>' +
-        '<tr><td style="padding:0 48px 28px;text-align:center;">' +
-        '<span style="display:inline-block;padding:8px 24px;background:' +
-        badgeBg +
-        ';border-radius:50px;font-size:13px;font-weight:700;color:' +
-        badgeColor +
-        ';letter-spacing:1px;">' +
-        headerBadge +
-        '</span>' +
-        '</td></tr>' +
-        '<tr><td style="padding:0 48px 48px;">' +
-        '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:32px;">' +
-        '<div style="width:72px;height:72px;background:' +
-        badgeBg +
-        ';border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">' +
-        '<span style="font-size:36px;">' +
-        iconChar +
-        '</span>' +
-        '</div>' +
-        '</td></tr></table>' +
-        '<h2 style="margin:0 0 24px;font-size:26px;color:#1e293b;letter-spacing:-.3px;text-align:center;">' +
-        headingText +
-        '</h2>' +
-        '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">Olá <strong>' +
-        emailDataToSend.userName +
-        '</strong>,</p>' +
-        '<p style="margin:0 0 20px;font-size:16px;line-height:1.75;color:#334155;">' +
-        messageBody +
-        '</p>' +
-        summaryTable +
-        '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">' +
-        '<a href="https://www.educacaosst.com.br/plataforma" style="display:inline-block;padding:16px 48px;background:#facc15;color:#0f172a;font-weight:700;text-decoration:none;border-radius:10px;font-size:17px;letter-spacing:.3px;box-shadow:0 4px 14px rgba(250,204,21,.4);">Acessar Plataforma</a>' +
-        '</td></tr></table>' +
-        '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0;padding-top:24px;">' +
-        '<p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Aproveite todos os recursos disponíveis no seu plano. Em caso de dúvidas, entre em contato com nossa equipe de suporte.</p>' +
-        '</td></tr></table>' +
-        '</td></tr>' +
-        '<tr><td style="background:#f8fafc;padding:28px 48px;text-align:center;border-top:1px solid #e2e8f0;">' +
-        '<p style="margin:0;font-size:13px;color:#94a3b8;">© 2024 Educação SST — Todos os direitos reservados.</p>' +
-        '</td></tr>' +
-        '</table></td></tr></table></body></html>'
+      var htmlContent = emailLib.baseLayout({
+        headerColor: headerColor,
+        badgeText: headerBadge,
+        badgeBg: badgeBg,
+        badgeColor: badgeColor,
+        iconChar: iconChar,
+        heading: headingText,
+        greetingName: emailDataToSend.userName,
+        bodyHtml: messageBody,
+        contentHtml:
+          summaryTable +
+          emailLib.bulletproofButton(
+            'Acessar Plataforma',
+            'https://www.educacaosst.com.br/plataforma',
+            '#facc15',
+            '#0f172a',
+          ),
+        noteHtml:
+          'Aproveite todos os recursos disponíveis no seu plano. Em caso de dúvidas, entre em contato com nossa equipe de suporte.',
+      })
 
       var emailSent = false
       var errorMsg = ''

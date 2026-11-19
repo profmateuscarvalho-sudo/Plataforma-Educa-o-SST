@@ -369,57 +369,10 @@ export interface CaseLike extends RecordModel {
 export interface PlatformAnnouncement extends RecordModel {
   title: string
   content: string
-  type:
-    | 'Texto Customizado'
-    | 'Novo Curso'
-    | 'Documentário'
-    | 'Mentoria'
-    | 'Aula Ao Vivo'
-    | 'Ágora de Debates'
+  type: 'Texto Customizado' | 'Novo Curso' | 'Documentário' | 'Mentoria' | 'Aula Ao Vivo'
   reference_id: string
   active: boolean
   priority: number
-}
-
-// ----- Ágora de Debates -----
-
-export type AgoraDebateStatus = 'agendado' | 'em_andamento' | 'encerrado'
-export type AgoraPosicao = 'a_favor' | 'contra' | 'complementacao'
-
-export interface AgoraDebate extends RecordModel {
-  tema: string
-  descricao: string
-  categoria_tags?: string
-  data_inicio: string
-  data_termino: string
-  regras_conduta?: string
-  moderador_id: string
-  status: AgoraDebateStatus
-  conclusoes?: string
-  aprendizados?: string
-  expand?: {
-    moderador_id?: User
-  }
-}
-
-export interface AgoraVoto extends RecordModel {
-  debate_id: string
-  usuario_id: string
-  posicao: AgoraPosicao
-  justificativa: string
-  apoios?: number
-  expand?: {
-    usuario_id?: User
-    debate_id?: AgoraDebate
-  }
-}
-
-export interface AgoraApoio extends RecordModel {
-  voto_id: string
-  usuario_id: string
-  expand?: {
-    usuario_id?: User
-  }
 }
 
 export interface AgentKnowledgeBase extends RecordModel {

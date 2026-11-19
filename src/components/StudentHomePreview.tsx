@@ -11,7 +11,6 @@ import {
   Calendar,
   Crown,
   BookMarked,
-  Landmark,
   User,
 } from 'lucide-react'
 
@@ -23,7 +22,6 @@ const cards = [
   { title: 'Aulas ao Vivo', icon: Radio, count: '3', gradient: 'from-red-600 to-rose-800' },
   { title: 'Simulados', icon: ClipboardList, count: '10', gradient: 'from-cyan-600 to-blue-800' },
   { title: 'Caderno', icon: BookMarked, count: '', gradient: 'from-amber-600 to-orange-800' },
-  { title: 'Ágora', icon: Landmark, count: '', gradient: 'from-[#C17A4E] to-[#8C4F2B]' },
   { title: 'Perfil', icon: User, count: '', gradient: 'from-slate-700 to-slate-900' },
 ]
 
@@ -147,20 +145,6 @@ export function StudentHomePreview() {
               <div className="flex items-start gap-1 p-1.5 rounded bg-red-50">
                 <Radio className="w-3 h-3 text-red-600 shrink-0 mt-0.5" />
                 <p className="text-[9px] text-red-900 font-medium">Ao Vivo</p>
-              </div>
-              <div className="flex flex-col gap-1 p-1.5 rounded bg-[#FAF8F3] border border-[#C17A4E]/30">
-                <div className="flex items-center justify-between gap-1">
-                  <div className="flex items-center gap-1 min-w-0">
-                    <Landmark className="w-3 h-3 text-[#C17A4E] shrink-0" />
-                    <p className="text-[9px] text-[#8C4F2B] font-bold truncate">Ágora</p>
-                  </div>
-                  <span className="text-[8px] font-mono font-bold text-[#C17A4E] bg-[#C17A4E]/15 px-1 rounded">
-                    4d 18h
-                  </span>
-                </div>
-                <p className="text-[8.5px] text-slate-700 font-medium line-clamp-1 leading-tight">
-                  Trava-quedas acima de 4m
-                </p>
               </div>
             </div>
           </div>

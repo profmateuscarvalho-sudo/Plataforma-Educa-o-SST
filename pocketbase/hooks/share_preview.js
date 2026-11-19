@@ -75,25 +75,6 @@ routerAdd('GET', '/backend/v1/share/{type}/{id}', (e) => {
       }
       redirectUrl = siteUrl + '/revistas?revista=' + id
       ogType = 'website'
-    } else if (type === 'agora' || type === 'debates') {
-      if (id && id !== 'list' && id !== 'all') {
-        const record = $app.findRecordById('agora_debates', id)
-        title = '🏛️ Debate: ' + record.getString('tema')
-        const content = record.getString('descricao') || ''
-        let plainText = content
-          .replace(/<[^>]*>?/gm, '')
-          .replace(/&nbsp;/g, ' ')
-          .trim()
-        description = plainText.substring(0, 155)
-        if (plainText.length > 155) description += '...'
-        redirectUrl = siteUrl + '/plataforma/agora/' + id
-      } else {
-        title = 'Ágora de Debates | Educação SST'
-        description = 'Participe dos debates técnicos de Segurança e Saúde no Trabalho.'
-        redirectUrl = siteUrl + '/plataforma/agora'
-      }
-      image = 'https://img.usecurling.com/p/1200/630?q=greek%20forum%20debate&color=terracotta'
-      ogType = 'website'
     } else if (type === 'simulados') {
       const record = $app.findRecordById('simulados', id)
       title = record.getString('title')

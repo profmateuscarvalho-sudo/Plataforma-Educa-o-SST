@@ -27,22 +27,13 @@ import {
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { ClockDisplay } from '@/components/student/ClockDisplay'
-import {
-  Magazine,
-  Mentorship,
-  LiveSession,
-  DocProject,
-  PlatformAnnouncement,
-  AgoraDebate,
-} from '@/types'
+import { Magazine, Mentorship, LiveSession, DocProject, PlatformAnnouncement } from '@/types'
 import { getMentorships } from '@/services/mentorships'
 import { getLiveSessions } from '@/services/live'
 import { getDocProjects } from '@/services/doc_projects'
 import { getAnnouncements } from '@/services/announcements'
 import { getFeaturedMagazine } from '@/services/magazines'
-import { getDebates } from '@/services/agora'
-import { AgoraCountdown } from '@/components/agora/AgoraCountdown'
-import { BellRing, Radio, Megaphone, Crown, Award, Sparkles, Landmark } from 'lucide-react'
+import { BellRing, Radio, Megaphone, Crown, Award, Sparkles } from 'lucide-react'
 
 const tierConfig: Record<string, { label: string; icon: typeof Crown }> = {
   free: {
@@ -72,7 +63,6 @@ export default function StudentDashboard() {
   const [docProjects, setDocProjects] = useState<DocProject[]>([])
   const [announcements, setAnnouncements] = useState<PlatformAnnouncement[]>([])
   const [featuredMagazine, setFeaturedMagazine] = useState<Magazine | null>(null)
-  const [debates, setDebates] = useState<AgoraDebate[]>([])
 
   const currentLang = i18n.language?.startsWith('es') ? 'es' : 'pt-BR'
 
@@ -100,9 +90,6 @@ export default function StudentDashboard() {
       .catch(() => {})
     getFeaturedMagazine(currentLang)
       .then(setFeaturedMagazine)
-      .catch(() => {})
-    getDebates("status != 'encerrado'")
-      .then(setDebates)
       .catch(() => {})
   }, [user, currentLang])
 
@@ -186,13 +173,6 @@ export default function StudentDashboard() {
       icon: BookMarked,
       count: 0,
       action: () => navigate('/plataforma/caderno'),
-    },
-    {
-      title: 'Ágora de Debates',
-      desc: 'Discussões técnicas e votos',
-      icon: Landmark,
-      count: debates.length,
-      action: () => navigate('/plataforma/agora'),
     },
     {
       title: 'Meu Perfil',
@@ -372,76 +352,26 @@ export default function StudentDashboard() {
                 </div>
 
                 <div className="divide-y divide-border">
-                  {/* Debates Ativos da Ágora */}
-                  {debates.length > 0 &&
-                    debates.map((debate) => {
-                      const mod = debate.expand?.moderador_id
-                      const modName = mod?.name || mod?.email || 'Moderador'
-                      return (
-                        <div
-                          key={debate.id}
-                          className="py-4 first:pt-0 last:pb-0 space-y-2 cursor-pointer group"
-                          onClick={() => navigate(`/plataforma/agora/${debate.id}`)}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="inline-flex items-center gap-2 text-xs font-semibold text-foreground">
-                              {/* Ponto amarelo para novidade */}
-                              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                              Ágora de Debates
-                            </span>
-                            <AgoraCountdown
-                              dataTermino={debate.data_termino}
-                              status={debate.status}
-                              compact
-                            />
-                          </div>
-
-                          <h3 className="font-sans font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                            {debate.tema}
-                          </h3>
-
-                          <p className="text-xs text-muted-foreground flex items-center justify-between">
-                            <span>Mod: {modName}</span>
-                            <span className="inline-flex items-center font-semibold text-foreground text-xs group-hover:translate-x-0.5 transition-transform">
-                              Entrar <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
-                            </span>
-                          </p>
-                        </div>
-                      )
-                    })}
-
                   {/* Avisos cadastrados via PlatformAnnouncement */}
-                  {announcements
-                    .filter((a) => {
-                      if (a.type?.includes('Ágora de Debates') && a.reference_id) {
-                        return !debates.some((d) => d.id === a.reference_id)
-                      }
-                      return true
-                    })
-                    .map((a) => (
-                      <div
-                        key={a.id}
-                        className="py-4 first:pt-0 last:pb-0 cursor-pointer group space-y-1"
-                        onClick={() => {
-                          if (a.type?.includes('Ágora de Debates') && a.reference_id) {
-                            navigate(`/plataforma/agora/${a.reference_id}`)
-                          }
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                          <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
-                            {a.title}
-                          </p>
-                        </div>
-                        {a.type === 'Texto Customizado' && a.content && (
-                          <div
-                            className="text-xs text-muted-foreground pl-4 line-clamp-2 prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: a.content }}
-                          />
-                        )}
+                  {announcements.map((a) => (
+                    <div
+                      key={a.id}
+                      className="py-4 first:pt-0 last:pb-0 cursor-pointer group space-y-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                        <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                          {a.title}
+                        </p>
                       </div>
-                    ))}
+                      {a.type === 'Texto Customizado' && a.content && (
+                        <div
+                          className="text-xs text-muted-foreground pl-4 line-clamp-2 prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: a.content }}
+                        />
+                      )}
+                    </div>
+                  ))}
 
                   {/* Linha de Aula ao Vivo: ponto --danger */}
                   {visibleLives.length > 0 && (
@@ -527,8 +457,7 @@ export default function StudentDashboard() {
                     </div>
                   )}
 
-                  {debates.length === 0 &&
-                    visibleLives.length === 0 &&
+                  {visibleLives.length === 0 &&
                     cat.courses.length === 0 &&
                     docProjects.length === 0 &&
                     mentorships.length === 0 &&

@@ -9,7 +9,6 @@ import {
   Video,
   Radio,
   NotebookPen,
-  Landmark,
   UserCircle,
   ArrowRight,
   Hourglass,
@@ -34,7 +33,6 @@ import { getCourses } from '@/services/courses'
 import { getMagazines } from '@/services/magazines'
 import { getMentorships } from '@/services/mentorships'
 import { getStudentNotes } from '@/services/student-notes'
-import { getDebates } from '@/services/agora'
 
 // Lucide doesn't export a "magazine" icon — alias the closest available.
 const MagazineIcon = NotebookPen
@@ -114,15 +112,6 @@ const MODULES: PlatformModule[] = [
     color: 'var(--sst-green)',
     wash: 'var(--sst-green-wash)',
     to: '/plataforma/caderno',
-  },
-  {
-    key: 'agora',
-    label: 'Ágora de debates',
-    desc: 'Discussões e votos',
-    icon: Landmark,
-    color: '#C17A4E',
-    wash: 'rgba(193, 122, 78, 0.12)',
-    to: '/app/agora',
   },
   {
     key: 'perfil',
@@ -265,7 +254,7 @@ export default function Home() {
       .catch(() => setContinuar([]))
   }, [user])
 
-  // Counts + live + revista + agora
+  // Counts + live + revista
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -306,11 +295,6 @@ export default function Home() {
       }
       try {
         c.caderno = (await getStudentNotes(user!.id)).length
-      } catch {
-        /* noop */
-      }
-      try {
-        c.agora = (await getDebates("status != 'encerrado'")).length
       } catch {
         /* noop */
       }

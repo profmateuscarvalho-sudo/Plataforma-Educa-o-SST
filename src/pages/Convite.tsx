@@ -1,16 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
-import {
-  ArrowRight,
-  BookOpen,
-  Users,
-  Newspaper,
-  Video,
-  NotebookPen,
-  MessageSquare,
-  Check,
-} from 'lucide-react'
+import { ArrowRight, BookOpen, Users, Newspaper, Video, NotebookPen, Check } from 'lucide-react'
 import { useEffect } from 'react'
 
 const BENEFITS = [
@@ -29,11 +20,6 @@ const BENEFITS = [
     icon: NotebookPen,
     title: 'Caderno de Estudos',
     desc: 'Ferramenta digital para anotações e mapas mentais',
-  },
-  {
-    icon: MessageSquare,
-    title: 'Ágora de Debates',
-    desc: 'Participe e vote em discussões técnicas e normativas reais',
   },
   { icon: Users, title: 'Comunidade', desc: 'Conecte-se com milhares de profissionais de SST' },
 ]
@@ -75,7 +61,6 @@ const PLAN_FEATURES = [
   'Cursos selecionados',
   'Aulas ao vivo',
   'Caderno de estudos',
-  'Ágora de Debates',
 ]
 
 export default function Convite() {

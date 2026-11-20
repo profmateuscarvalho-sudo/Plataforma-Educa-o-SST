@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getCourseModules, getCourseLessons, getCourseMaterials } from '@/services/curriculum'
 import { getCourse } from '@/services/courses'
 import { Module, Lesson, Material, Course } from '@/types'
@@ -36,11 +36,13 @@ import {
 
 const LESSON_ID_RE = /aula\/([^/?]+)/
 const MODULE_ID_RE = /modulo\/([^/?]+)/
+const COURSE_ID_RE = /curso\/([^/?]+)/
 
 export default function CourseLesson() {
   const { '*': wildcard } = useParams()
   const { user } = useAuth()
   const access = useStudentAccess()
+  const navigate = useNavigate()
 
   const [modules, setModules] = useState<Module[]>([])
   const [lessons, setLessons] = useState<Record<string, Lesson[]>>({})
@@ -60,11 +62,20 @@ export default function CourseLesson() {
   useTrackAccess('Cursos')
 
   useEffect(() => {
-    // Parse da URL: /plataforma/curso/:id/aula ou /modulo/:id
+    // Parse da URL. Formatos aceitos:
+    //   /plataforma/curso/:courseId                    (só o curso)
+    //   /plataforma/curso/:courseId/aula               (só o curso)
+    //   /plataforma/curso/:courseId/aula/:lessonId     (aula específica)
+    //   /plataforma/curso/:courseId/modulo/:moduleId   (módulo específico)
+    // Formatos legados (sem o id do curso): aula/:id e modulo/:id
     const lessonMatch = wildcard?.match(LESSON_ID_RE)
     const moduleMatch = wildcard?.match(MODULE_ID_RE)
+    const courseMatch = wildcard?.match(COURSE_ID_RE)
     const targetLessonId = lessonMatch?.[1]
     const targetModuleId = moduleMatch?.[1]
+    // URL trouxe só o curso (com ou sem "/aula" no final): abrir a 1ª aula
+    // não concluída (ou a 1ª aula) e normalizar a URL para /aula/:id.
+    const courseOnlyId = !targetLessonId && !targetModuleId ? courseMatch?.[1] : undefined
 
     const load = async () => {
       setLoading(true)
@@ -79,7 +90,7 @@ export default function CourseLesson() {
           }
         }
 
-        let courseId = ''
+        let courseId = courseOnlyId || ''
         if (lesson) {
           try {
             const mod = await pb.collection('modules').getOne(lesson.module)
@@ -123,12 +134,32 @@ export default function CourseLesson() {
           }
         }
 
-        // Seleciona a aula: a pedida na URL, a primeira disponível, ou a anterior
+        // Seleciona a aula: a pedida na URL, a 1ª não concluída (quando a URL
+        // trouxe só o curso), ou a primeira disponível
         const allLessons = sortedMods.flatMap((m) => sortedLessons[m.id] || [])
-        const found =
-          (lesson && allLessons.find((l) => l.id === lesson!.id)) || allLessons[0] || null
+        let found: Lesson | null = null
+        if (courseOnlyId) {
+          let done = new Set<string>()
+          if (user) {
+            try {
+              const cs = await getCompletions(user.id)
+              done = new Set(cs.map((c) => c.lesson))
+            } catch {
+              done = new Set()
+            }
+          }
+          found = allLessons.find((l) => !done.has(l.id)) || allLessons[0] || null
+        } else {
+          found = (lesson && allLessons.find((l) => l.id === lesson!.id)) || allLessons[0] || null
+        }
         setCurrentLesson(found)
         if (found) setActiveVideoId(found.id)
+
+        // URL chegou só com o curso: normaliza para /aula/:id via replace
+        // (sem criar histórico extra). O efeito roda de novo já com a aula.
+        if (courseOnlyId && found) {
+          navigate(`/plataforma/curso/${courseOnlyId}/aula/${found.id}`, { replace: true })
+        }
       } catch {
         setModules([])
         setLessons({})
@@ -139,7 +170,7 @@ export default function CourseLesson() {
       }
     }
     load()
-  }, [wildcard])
+  }, [wildcard, user])
 
   // Conclusões e avaliações (por aluno)
   useEffect(() => {

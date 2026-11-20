@@ -134,7 +134,10 @@ const App = () => (
 
             <Route element={<StudentLayout />}>
               <Route path="/plataforma" element={<StudentDashboard />} />
+              <Route path="/plataforma/curso/:id" element={<CourseLesson />} />
               <Route path="/plataforma/curso/:id/aula" element={<CourseLesson />} />
+              <Route path="/plataforma/curso/:id/aula/*" element={<CourseLesson />} />
+              <Route path="/plataforma/curso/:id/modulo/*" element={<CourseLesson />} />
               <Route path="/plataforma/documentarios" element={<StudentDocumentaries />} />
               <Route path="/plataforma/caderno" element={<StudentNotebook />} />
               <Route path="/plataforma/simulados" element={<StudentSimulados />} />

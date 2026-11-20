@@ -519,7 +519,7 @@ export default function Revistas() {
                 title={activeReaderMag.title}
                 embedCode={readLink.embed_code}
                 src={readLink.embed_src || readLink.link}
-                containerClassName="w-full h-full rounded-[28px] bg-white [&>iframe]:w-full [&>iframe]:h-full"
+                containerClassName="w-full h-full rounded-[28px] bg-white"
               />
             ))}
         </DialogContent>

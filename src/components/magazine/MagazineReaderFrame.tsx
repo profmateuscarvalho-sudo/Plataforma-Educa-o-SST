@@ -48,6 +48,14 @@ export function withIframeFullscreenPermissions(html: string): string {
   })
 }
 
+// Extrai o src do primeiro <iframe> dentro do embed_code do FlipHTML5. O embed
+// vem com wrappers internos extras: renderizar o MESMO <iframe> nosso (com o
+// src extraído) evita depender de seletores de filho direto para dimensionar.
+export function extractIframeSrc(html: string): string {
+  const match = html.match(/<iframe\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/i)
+  return match?.[1]?.trim() || ''
+}
+
 export interface MagazineReaderFrameProps {
   title: string
   /** HTML de embed vindo da rota protegida (readLink.embed_code). */
@@ -68,6 +76,10 @@ export interface MagazineReaderFrameProps {
  *   fixed ocupando 100% da viewport (100dvh), sem menu/rodapé do layout, com
  *   botão "X" para fechar. NUNCA abre o link em nova aba (o link da revista não
  *   pode ser exposto).
+ *
+ * Renderização: SEMPRE o mesmo <iframe> nosso (do src direto da rota protegida
+ * ou do src extraído do embed_code). Só injeta o HTML de embed quando ele não
+ * tem iframe algum — e força width/height 100% em todos os iframes internos.
  */
 export function MagazineReaderFrame({
   title,
@@ -80,8 +92,24 @@ export function MagazineReaderFrame({
   const [overlayOpen, setOverlayOpen] = useState(false)
   // Detecta iOS uma vez por montagem (userAgent não muda durante a sessão).
   const isIosRef = useRef(isIosLikeDevice())
-  const hasContent = Boolean(embedCode || src)
+
+  const embedSrc = embedCode ? extractIframeSrc(embedCode) : ''
+  const effectiveSrc = src || embedSrc || ''
+  const injectHtml = !effectiveSrc && !!embedCode
+  const hasContent = Boolean(effectiveSrc || injectHtml)
   const active = isFullscreen || overlayOpen
+
+  // Fallback do embed injetado: força width/height 100% em TODOS os iframes
+  // internos (o embed do FlipHTML5 usa wrappers extras que os seletores de
+  // filho direto do CSS não alcançam).
+  useEffect(() => {
+    if (!injectHtml || !containerRef.current) return
+    const iframes = containerRef.current.querySelectorAll('iframe')
+    iframes.forEach((f) => {
+      f.style.width = '100%'
+      f.style.height = '100%'
+    })
+  }, [injectHtml, embedCode])
 
   // Sincroniza o estado do botão com o fullscreen real (Esc, F11 etc. incluídos).
   useEffect(() => {
@@ -149,14 +177,14 @@ export function MagazineReaderFrame({
     toggleNativeFullscreen()
   }, [hasContent, overlayOpen, toggleNativeFullscreen])
 
-  const readerContent = embedCode ? (
+  const readerContent = injectHtml ? (
     <div
-      className="w-full h-full bg-white [&>iframe]:w-full [&>iframe]:h-full"
-      dangerouslySetInnerHTML={{ __html: withIframeFullscreenPermissions(embedCode) }}
+      className="w-full h-full bg-white [&_iframe]:w-full [&_iframe]:h-full"
+      dangerouslySetInnerHTML={{ __html: withIframeFullscreenPermissions(embedCode || '') }}
     />
-  ) : src ? (
+  ) : effectiveSrc ? (
     <iframe
-      src={src}
+      src={effectiveSrc}
       title={title}
       className="w-full h-full block bg-white border-none"
       allowFullScreen

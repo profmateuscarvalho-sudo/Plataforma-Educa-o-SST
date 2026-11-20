@@ -159,7 +159,7 @@ export default function MagazineReader() {
             title={magazine.title}
             embedCode={readLink?.embed_code}
             src={readLink?.embed_src || readLink?.link}
-            containerClassName="w-full h-full max-w-[1200px] rounded-[28px] shadow-sm border border-border [&>iframe]:h-[calc(80vh-56px)] [&>iframe]:w-full [&>iframe]:h-[80vh] [&>div]:h-[calc(80vh-56px)]"
+            containerClassName="w-full max-w-[1200px] h-[75vh] md:h-[80vh] rounded-[28px] shadow-sm border border-border [&>*]:min-h-0"
           />
         )}
       </div>

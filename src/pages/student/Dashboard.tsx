@@ -552,9 +552,7 @@ export default function StudentDashboard() {
                         imageUrl={imgThumb(course)}
                         status={status}
                         category="Curso"
-                        accessUrl={
-                          status !== 'locked' ? `/plataforma/curso/${course.id}/aula` : undefined
-                        }
+                        accessUrl={`/plataforma/curso/${course.id}`}
                         price={course.price}
                       />
                     )

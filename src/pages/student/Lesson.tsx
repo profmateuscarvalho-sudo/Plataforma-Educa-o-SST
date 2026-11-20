@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getCourseModules, getCourseLessons, getCourseMaterials } from '@/services/curriculum'
 import { getCourse } from '@/services/courses'
 import { Module, Lesson, Material, Course } from '@/types'
@@ -39,7 +39,7 @@ const MODULE_ID_RE = /modulo\/([^/?]+)/
 const COURSE_ID_RE = /curso\/([^/?]+)/
 
 export default function CourseLesson() {
-  const { '*': wildcard } = useParams()
+  const { pathname } = useLocation()
   const { user } = useAuth()
   const access = useStudentAccess()
   const navigate = useNavigate()
@@ -68,9 +68,9 @@ export default function CourseLesson() {
     //   /plataforma/curso/:courseId/aula/:lessonId     (aula específica)
     //   /plataforma/curso/:courseId/modulo/:moduleId   (módulo específico)
     // Formatos legados (sem o id do curso): aula/:id e modulo/:id
-    const lessonMatch = wildcard?.match(LESSON_ID_RE)
-    const moduleMatch = wildcard?.match(MODULE_ID_RE)
-    const courseMatch = wildcard?.match(COURSE_ID_RE)
+    const lessonMatch = pathname.match(LESSON_ID_RE)
+    const moduleMatch = pathname.match(MODULE_ID_RE)
+    const courseMatch = pathname.match(COURSE_ID_RE)
     const targetLessonId = lessonMatch?.[1]
     const targetModuleId = moduleMatch?.[1]
     // URL trouxe só o curso (com ou sem "/aula" no final): abrir a 1ª aula
@@ -80,7 +80,7 @@ export default function CourseLesson() {
     const load = async () => {
       setLoading(true)
       try {
-        // Resolve a aula/curso a partir do wildcard antes de carregar tudo
+        // Resolve a aula/curso a partir da URL antes de carregar tudo
         let lesson: Lesson | null = null
         if (targetLessonId) {
           try {
@@ -170,7 +170,7 @@ export default function CourseLesson() {
       }
     }
     load()
-  }, [wildcard, user])
+  }, [pathname, user])
 
   // Conclusões e avaliações (por aluno)
   useEffect(() => {

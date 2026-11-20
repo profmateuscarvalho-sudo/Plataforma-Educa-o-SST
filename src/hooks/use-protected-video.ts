@@ -47,6 +47,11 @@ export function useProtectedVideo(
     [type],
   )
 
+  // Sincroniza o id recebido por parâmetro (sem isto o vídeo nunca é buscado)
+  useEffect(() => {
+    setActive(activeId ? { id: activeId, type } : null)
+  }, [activeId, type])
+
   // Busca na rota protegida sempre que o alvo muda. try/catch/finally: o
   // loading SEMPRE termina (mesmo em erro de rede).
   useEffect(() => {

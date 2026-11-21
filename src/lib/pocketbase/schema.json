@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-21T01:57:22.493Z",
+  "generatedAt": "2026-11-21T02:41:46.377Z",
   "collections": [
     {
       "name": "users",
@@ -4263,12 +4263,90 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "slot",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "mentorship_slots"
         }
       ],
       "indexes": [
         "CREATE INDEX idx_mentorship_bookings_mentor_start ON mentorship_bookings (mentor, start_at)",
         "CREATE INDEX idx_mentorship_bookings_user ON mentorship_bookings (user)",
         "CREATE INDEX idx_mentorship_bookings_status ON mentorship_bookings (status)"
+      ]
+    },
+    {
+      "name": "mentorship_slots",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "mentorship",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "mentorships"
+        },
+        {
+          "name": "mentor",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "mentors"
+        },
+        {
+          "name": "start_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "end_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["livre", "reservado", "vendido", "bloqueado"]
+        },
+        {
+          "name": "booking",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "mentorship_bookings"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_mentorship_slots_ms ON mentorship_slots (mentorship, start_at)",
+        "CREATE INDEX idx_mentorship_slots_status ON mentorship_slots (mentorship, status)"
       ]
     }
   ]

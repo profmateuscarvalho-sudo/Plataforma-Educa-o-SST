@@ -1,53 +1,54 @@
 // ---------------------------------------------------------------------------
-// MENTORIAS — ROTA PROTEGIDA DE HORÁRIOS LIVRES
-// GET /backend/v1/mentorias/{id}/horarios  (também aceita ?mentorship=ID)
+// MENTORIAS — ROTA DE HORÁRIOS LIVRES (novo modelo: mentorship_slots)
+// GET /backend/v1/mentorias/{id}/horarios?mes=AAAA-MM
 //
-// Exige aluno/admin autenticado (o aluno usa na Parte 2 para escolher horário).
-// Gera os horários LIVRES a partir da agenda semanal do mentor daquela
-// mentoria (mentor_availability), para as próximas weeks_ahead semanas no fuso
-// de São Paulo (UTC-3 fixo), fatiando cada faixa em sessões de session_minutes.
-// Remove: passado/antecedência mínima (min_notice_hours), datas bloqueadas
-// (mentor_blocked_dates), slots ocupados por bookings 'confirmado' e por
-// 'reservado' ainda não expirados (expires_at no futuro).
-// Resposta 200: { mentorship_id, session_minutes, weeks_ahead,
-//                 days: [{ date: "2025-01-15", slots: ["19:00","20:00"] }] }
-// Resposta 401: { error: "Autenticação necessária" }
+// Devolve, para o mês pedido (default: mês atual de São Paulo), os DIAS com
+// horários LIVRES, ignorando horários no passado e com menos de 24h de
+// antecedência. Slot com booking 'reservado' cujo expires_at já passou volta a
+// ser livre. Fuso de São Paulo (UTC-3 fixo, sem horário de verão). Formato:
+//   { mentorship_id, session_minutes, mes, total, days: [
+//       { date: "2025-12-03", slots: ["19:00","20:00","21:00"] }] }
 //
-// IMPORTANTE (limitação da JSVM desta plataforma): callbacks executam em pool
-// separado — NÃO referencie declarações top-level dentro deles. Tudo inline.
+// Requer autenticação (aluno, admin ou superuser — o aluno usa na Parte 2).
+//
+// CONVENÇÃO JSVM: toda a lógica fica INLINE dentro do callback — declarações
+// top-level no mesmo arquivo causam "Hook scoping error"; sem imports.
 // ---------------------------------------------------------------------------
 routerAdd(
   'GET',
   '/backend/v1/mentorias/{id}/horarios',
   (e) => {
-    var q = {}
-    try {
-      q = e.requestInfo().query || {}
-    } catch (_) {}
     var mentorshipId = ''
+    var mes = ''
+    var debug = false
     try {
+      var q = e.requestInfo().query || {}
       mentorshipId = String(e.request.pathValue('id') || '').trim()
-    } catch (_) {}
-    if (!mentorshipId) mentorshipId = String(q.mentorship || q.id || '').trim()
-
-    var uid = ''
-    var isAdmin = false
-    try {
-      if (e.auth) {
-        uid = String(e.auth.id || '')
-        isAdmin = String(e.auth.getString('role') || '') === 'admin'
-      }
-    } catch (_) {}
-    try {
-      if (e.hasSuperuserAuth && e.hasSuperuserAuth()) isAdmin = true
+      mes = String(q.mes || '').trim()
+      debug = String(q.debug || '') === '1'
     } catch (_) {}
 
-    if (!uid && !isAdmin) {
+    // autenticação: aluno OU admin OU superuser
+    var isAuthed = false
+    try {
+      if (e.auth && e.auth.id) isAuthed = true
+    } catch (_) {}
+    try {
+      if (e.hasSuperuserAuth && e.hasSuperuserAuth()) isAuthed = true
+    } catch (_) {}
+    if (!isAuthed) {
       return e.json(401, { error: 'Autenticação necessária' })
     }
-    if (!mentorshipId) {
-      return e.json(400, { error: 'Id da mentoria é obrigatório' })
+
+    // valida mês AAAA-MM (default: mês atual de São Paulo)
+    if (!/^\d{4}-\d{2}$/.test(mes)) {
+      try {
+        mes = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 7)
+      } catch (_) {
+        mes = ''
+      }
     }
+    if (!mes) return e.json(400, { error: 'Mês inválido' })
 
     var mentoria = null
     try {
@@ -55,184 +56,130 @@ routerAdd(
     } catch (_) {
       return e.json(404, { error: 'Mentoria não encontrada' })
     }
+    if (!mentoria) return e.json(404, { error: 'Mentoria não encontrada' })
+
+    var sessionMinutes = 60
+    try {
+      var sm = Number(mentoria.get('session_minutes') || 0)
+      if (sm >= 15) sessionMinutes = Math.floor(sm)
+    } catch (_) {}
 
     var mentorId = ''
     try {
       mentorId = String(mentoria.getString('mentor') || '').trim()
     } catch (_) {}
-    if (!mentorId) {
-      return e.json(200, { mentorship_id: mentorshipId, days: [] })
+
+    // Janela do mês no fuso SP (relógio SP tratado como UTC, -3h para o real)
+    var mesAno = mes.split('-')
+    var anoMes = Number(mesAno[0])
+    var numMes = Number(mesAno[1])
+    if (!(numMes >= 1 && numMes <= 12)) {
+      return e.json(400, { error: 'Mês inválido' })
     }
+    var inicioMesIso = new Date(
+      Date.UTC(anoMes, numMes - 1, 1, 0, 0, 0) - 3 * 3600 * 1000,
+    ).toISOString()
+    var fimMesIso = new Date(
+      Date.UTC(anoMes, numMes, 0, 23, 59, 59) - 3 * 3600 * 1000,
+    ).toISOString()
+    var agoraMs = Date.now()
+    var corteAntecedenciaMs = agoraMs + 24 * 3600 * 1000 // 24h de antecedência
 
-    var sessionMinutes = 60
-    var noticeHours = 24
-    var weeksAhead = 4
-    try {
-      var sm = Number(mentoria.get('session_minutes'))
-      if (sm >= 15) sessionMinutes = Math.floor(sm)
-    } catch (_) {}
-    try {
-      var nh = Number(mentoria.get('min_notice_hours'))
-      if (nh >= 0) noticeHours = Math.floor(nh)
-    } catch (_) {}
-    try {
-      var wa = Number(mentoria.get('weeks_ahead'))
-      if (wa >= 1) weeksAhead = Math.floor(wa)
-    } catch (_) {}
+    var faixaFiltro =
+      "mentorship = '" +
+      mentorshipId +
+      "' && start_at >= '" +
+      inicioMesIso +
+      "' && start_at <= '" +
+      fimMesIso +
+      "'"
 
-    // agora: fuso São Paulo = UTC-3 fixo (sem horário de verão)
-    var nowRealMs = Date.now()
-    var sp = new Date(nowRealMs + 3 * 3600 * 1000) // relógio de SP deslocado
-    var todaySp = sp.toISOString().slice(0, 10)
-    var minStartRealMs = nowRealMs + noticeHours * 3600 * 1000
-
-    // agenda semanal ativa do mentor
-    var faixas = []
+    // 1) slots LIVRES do mês
+    var slotsLivre = []
     try {
-      var av = $app.findRecordsByFilter(
-        'mentor_availability',
-        "mentor = '" + mentorId + "' && active = true",
-        'weekday',
-        200,
+      slotsLivre = $app.findRecordsByFilter(
+        'mentorship_slots',
+        faixaFiltro + " && status = 'livre'",
+        'start_at',
+        1000,
         0,
       )
-      for (var i = 0; i < av.length; i++) {
-        faixas.push({
-          weekday: Number(av[i].get('weekday')),
-          start: String(av[i].get('start_time') || ''),
-          end: String(av[i].get('end_time') || ''),
-        })
-      }
-    } catch (err) {
-      console.log('[horarios] erro mentor_availability: ' + err)
+    } catch (errS) {
+      console.log('[horarios] erro mentorship_slots (livre): ' + errS)
     }
 
-    // datas bloqueadas (slice(0,10) normaliza o ISO guardado pelo PocketBase)
-    var bloqueadas = {}
+    // 2) slots 'reservado' cuja reserva EXPIROU voltam a ser livres
+    var reservados = []
     try {
-      var bl = $app.findRecordsByFilter(
-        'mentor_blocked_dates',
-        "mentor = '" + mentorId + "'",
-        '',
-        500,
+      reservados = $app.findRecordsByFilter(
+        'mentorship_slots',
+        faixaFiltro + " && status = 'reservado'",
+        'start_at',
+        1000,
         0,
       )
-      for (var b = 0; b < bl.length; b++) {
-        var bd = String(bl[b].get('date') || '').slice(0, 10)
-        if (bd) bloqueadas[bd] = true
+    } catch (errR) {
+      console.log('[horarios] erro mentorship_slots (reservado): ' + errR)
+    }
+    for (var r = 0; r < reservados.length; r++) {
+      var expirou = false
+      try {
+        var bookingId = String(reservados[r].get('booking') || '')
+        if (!bookingId) {
+          expirou = true // reserva órfã (sem booking) → liberada
+        } else {
+          var booking = $app.findRecordById('mentorship_bookings', bookingId)
+          var expStr = String(booking.get('expires_at') || '')
+          var expMs = expStr ? Date.parse(expStr) : NaN
+          if (isNaN(expMs) || expMs <= agoraMs) expirou = true
+        }
+      } catch (_) {
+        expirou = true // booking sumiu → reserva morta
       }
-    } catch (err) {
-      console.log('[horarios] erro mentor_blocked_dates: ' + err)
+      if (expirou) slotsLivre.push(reservados[r])
     }
 
-    // slots ocupados: 'confirmado' + 'reservado' ainda não expirado
-    var nowIso = new Date(nowRealMs).toISOString()
-    var ocupados = [] // { startMs, endMs }
-    try {
-      var bk = $app.findRecordsByFilter(
-        'mentorship_bookings',
-        "mentor = '" +
-          mentorId +
-          "' && (status = 'confirmado' || (status = 'reservado' && expires_at > '" +
-          nowIso +
-          "'))",
-        '',
-        500,
-        0,
-      )
-      for (var k = 0; k < bk.length; k++) {
-        var stMs = Date.parse(String(bk[k].get('start_at') || ''))
-        var enMs = Date.parse(String(bk[k].get('end_at') || ''))
-        if (isNaN(stMs) || isNaN(enMs)) continue
-        ocupados.push({ startMs: stMs, endMs: enMs })
-      }
-    } catch (err) {
-      console.log('[horarios] erro mentorship_bookings: ' + err)
-    }
-
-    var dois = function (n) {
-      return (n < 10 ? '0' : '') + n
-    }
-
-    // percorre os dias das próximas weeks_ahead semanas (a partir de hoje em SP)
-    var baseMs = Date.UTC(sp.getUTCFullYear(), sp.getUTCMonth(), sp.getUTCDate(), 12, 0, 0)
+    // 3) agrupa por dia (relógio SP), cortando passado e < 24h de antecedência
     var grupos = {}
     var ordem = []
-    var vistos = {}
-
-    for (var d = 0; d < weeksAhead * 7; d++) {
-      var diaMs = baseMs + d * 86400000
-      var dia = new Date(diaMs).toISOString().slice(0, 10)
-      var wd = new Date(diaMs).getUTCDay()
-      if (bloqueadas[dia]) continue
-
-      var partes = dia.split('-')
-      var yy = Number(partes[0])
-      var mm = Number(partes[1]) - 1
-      var dd = Number(partes[2])
-
-      for (var f = 0; f < faixas.length; f++) {
-        var faixa = faixas[f]
-        if (faixa.weekday !== wd) continue
-        var hm1 = faixa.start.split(':')
-        var hm2 = faixa.end.split(':')
-        if (hm1.length < 2 || hm2.length < 2) continue
-        var hIni = Number(hm1[0])
-        var mIni = Number(hm1[1])
-        var fimMs = Date.UTC(yy, mm, dd, Number(hm2[0]), Number(hm2[1])) // relógio SP como UTC
-        var slotMs = Date.UTC(yy, mm, dd, hIni, mIni)
-        while (slotMs + sessionMinutes * 60000 <= fimMs) {
-          var realStartMs = slotMs - 3 * 3600 * 1000 // converte relógio SP → UTC real
-          if (realStartMs >= minStartRealMs && !vistos[dia + ' ' + slotMs]) {
-            var livre = true
-            for (var o = 0; o < ocupados.length; o++) {
-              if (
-                realStartMs < ocupados[o].endMs &&
-                realStartMs + sessionMinutes * 60000 > ocupados[o].startMs
-              ) {
-                livre = false
-                break
-              }
-            }
-            if (livre) {
-              vistos[dia + ' ' + slotMs] = true
-              var hora =
-                dois(new Date(slotMs).getUTCHours()) + ':' + dois(new Date(slotMs).getUTCMinutes())
-              if (!grupos[dia]) {
-                grupos[dia] = []
-                ordem.push(dia)
-              }
-              grupos[dia].push(hora)
-            }
-          }
-          slotMs += sessionMinutes * 60000
-        }
+    var total = 0
+    for (var i = 0; i < slotsLivre.length; i++) {
+      var startIso = String(slotsLivre[i].get('start_at') || '')
+      var startMs = Date.parse(startIso)
+      if (isNaN(startMs)) continue
+      if (startMs < corteAntecedenciaMs) continue
+      var spDate = new Date(startMs + 3 * 3600 * 1000) // relógio SP
+      var dia = spDate.toISOString().slice(0, 10)
+      var hora = spDate.toISOString().slice(11, 16)
+      if (!grupos[dia]) {
+        grupos[dia] = []
+        ordem.push(dia)
       }
+      grupos[dia].push(hora)
+      total++
     }
 
     ordem.sort()
     var days = []
     for (var g = 0; g < ordem.length; g++) {
       var diaG = ordem[g]
-      var slots = grupos[diaG]
-      slots.sort()
-      days.push({ date: diaG, slots: slots })
+      var slotsDia = grupos[diaG]
+      slotsDia.sort()
+      days.push({ date: diaG, slots: slotsDia })
     }
 
     var resp = {
       mentorship_id: mentorshipId,
       mentor_id: mentorId,
       session_minutes: sessionMinutes,
-      min_notice_hours: noticeHours,
-      weeks_ahead: weeksAhead,
-      today: todaySp,
+      mes: mes,
+      total: total,
       days: days,
     }
-    try {
-      if (String(q.debug || '') === '1') {
-        console.log('[horarios] debug ' + mentorshipId + ': ' + JSON.stringify(resp))
-      }
-    } catch (_) {}
+
+    if (debug) {
+      console.log('[horarios] ' + mentorshipId + ' mes=' + mes + ': ' + JSON.stringify(resp))
+    }
 
     return e.json(200, resp)
   },

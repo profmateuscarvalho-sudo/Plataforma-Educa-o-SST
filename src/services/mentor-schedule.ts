@@ -1,73 +1,106 @@
 import pb from '@/lib/pocketbase/client'
-import {
-  MentorAvailability,
-  MentorBlockedDate,
-  MentorshipHorarios,
-  MentorshipBooking,
-} from '@/types'
+import { MentorshipBooking, MentorshipHorarios, MentorshipSlot } from '@/types'
 
 // ---------------------------------------------------------------------------
-// AGENDA DO MENTOR — mentor_availability e mentor_blocked_dates
+// NOVO MODELO DE AGENDA (slots explícitos — mentorship_slots).
+// A agenda semanal recorrente da v0.0.383 (mentor_availability /
+// mentor_blocked_dates) ficou FORA DE CENA: nenhum código novo a alimenta.
 // ---------------------------------------------------------------------------
 
-export const getMentorAvailability = async (mentorId: string): Promise<MentorAvailability[]> => {
-  try {
-    return await pb
-      .collection('mentor_availability')
-      .getFullList<MentorAvailability>({ filter: `mentor = "${mentorId}"`, sort: 'weekday' })
-  } catch (error) {
-    console.error('Failed to fetch mentor availability:', error)
-    return []
-  }
+function hojeSaoPauloIso(): string {
+  return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }
 
-export const createAvailability = async (
-  data: Partial<MentorAvailability> | Record<string, any>,
-) => {
-  return await pb.collection('mentor_availability').create<MentorAvailability>(data)
+function mesAtualSaoPaulo(): string {
+  return hojeSaoPauloIso().slice(0, 7)
 }
 
-export const updateAvailability = async (
-  id: string,
-  data: Partial<MentorAvailability> | Record<string, any>,
-) => {
-  return await pb.collection('mentor_availability').update<MentorAvailability>(id, data)
-}
-
-export const deleteAvailability = async (id: string) => {
-  return await pb.collection('mentor_availability').delete(id)
-}
-
-export const getMentorBlockedDates = async (mentorId: string): Promise<MentorBlockedDate[]> => {
-  try {
-    return await pb
-      .collection('mentor_blocked_dates')
-      .getFullList<MentorBlockedDate>({ filter: `mentor = "${mentorId}"`, sort: 'date' })
-  } catch (error) {
-    console.error('Failed to fetch mentor blocked dates:', error)
-    return []
-  }
-}
-
-export const createBlockedDate = async (data: Partial<MentorBlockedDate> | Record<string, any>) => {
-  return await pb.collection('mentor_blocked_dates').create<MentorBlockedDate>(data)
-}
-
-export const deleteBlockedDate = async (id: string) => {
-  return await pb.collection('mentor_blocked_dates').delete(id)
-}
-
-// ---------------------------------------------------------------------------
-// HORÁRIOS LIVRES — rota protegida GET /backend/v1/mentorias/{id}/horarios
-// (mesmo padrão de magazine-read-link / video-link: chamada direta ao backend)
-// ---------------------------------------------------------------------------
-
-export const getMentorshipHorarios = async (mentorshipId: string): Promise<MentorshipHorarios> => {
+/** Horários LIVRES por dia, para o mês: GET /backend/v1/mentorias/{id}/horarios?mes=AAAA-MM */
+export const getMentorshipHorarios = async (
+  mentorshipId: string,
+  mes?: string,
+): Promise<MentorshipHorarios> => {
+  const m = mes || mesAtualSaoPaulo()
   const res = await pb.send<MentorshipHorarios>(
-    `/backend/v1/mentorias/${encodeURIComponent(mentorshipId)}/horarios`,
+    `/backend/v1/mentorias/${encodeURIComponent(mentorshipId)}/horarios?mes=${encodeURIComponent(m)}`,
     { method: 'GET' },
   )
   return res
+}
+
+/** Todos os slots da mentoria num mês (admin — regra da coleção exige admin) */
+export const getMentorshipSlots = async (
+  mentorshipId: string,
+  mes: string,
+): Promise<MentorshipSlot[]> => {
+  try {
+    const [ano, num] = mes.split('-').map(Number)
+    const inicio = new Date(Date.UTC(ano, num - 1, 1, 0, 0, 0) - 3 * 3600 * 1000).toISOString()
+    const fim = new Date(Date.UTC(ano, num, 0, 23, 59, 59) - 3 * 3600 * 1000).toISOString()
+    return await pb.collection('mentorship_slots').getFullList<MentorshipSlot>({
+      filter: `mentorship = "${mentorshipId}" && start_at >= "${inicio}" && start_at <= "${fim}"`,
+      sort: 'start_at',
+    })
+  } catch (error) {
+    console.error('Failed to fetch mentorship slots:', error)
+    return []
+  }
+}
+
+export const createSlot = async (data: {
+  mentorship: string
+  mentor?: string
+  start_at: string
+  end_at: string
+}) => {
+  return await pb.collection('mentorship_slots').create<MentorshipSlot>({
+    ...data,
+    status: 'livre',
+  })
+}
+
+/** Remove horário LIVRE. Vendido/bloqueado não pode ser removido. */
+export const deleteSlot = async (slot: MentorshipSlot) => {
+  if (slot.status !== 'livre') {
+    throw new Error('Horário vendido não pode ser removido — só cancelando a sessão.')
+  }
+  return await pb.collection('mentorship_slots').delete(slot.id)
+}
+
+/** Copia os horários (hora do dia) de um dia para outras datas, na mesma mentoria */
+export const copySlotsFromDay = async (
+  mentorshipId: string,
+  mentorId: string | undefined,
+  origemDia: string,
+  horarios: string[],
+  destinos: string[],
+) => {
+  const criados: string[] = []
+  for (const destino of destinos) {
+    if (destino === origemDia) continue
+    for (const h of horarios) {
+      const [ano, num, dia] = destino.split('-').map(Number)
+      const [hh, mm] = h.split(':').map(Number)
+      const start = new Date(Date.UTC(ano, num - 1, dia, hh, mm, 0) - 3 * 3600 * 1000)
+      const startIso = start.toISOString()
+      // conflito: já existe slot da mesma mentoria no mesmo horário?
+      const existentes = await getMentorshipSlots(mentorshipId, destino.slice(0, 7))
+      const conflito = existentes.some((s) => {
+        const st = String(s.start_at || '')
+        return new Date(st).getTime() === start.getTime()
+      })
+      if (conflito) continue
+      const endIso = new Date(start.getTime() + 60 * 60 * 1000).toISOString() // ajustado pelo chamador
+      await createSlot({
+        mentorship: mentorshipId,
+        mentor: mentorId,
+        start_at: startIso,
+        end_at: endIso,
+      })
+      criados.push(`${destino} ${h}`)
+    }
+  }
+  return criados
 }
 
 // ---------------------------------------------------------------------------

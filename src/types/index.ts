@@ -206,7 +206,17 @@ export interface MentorshipBooking extends RecordModel {
   expand?: { user?: User; mentor?: Mentor; mentorship?: Mentorship }
 }
 
-/** Dia de horários livres retornado por GET /backend/v1/mentorias/{id}/horarios */
+/** Slot explícito do novo modelo de agenda (mentorship_slots) */
+export interface MentorshipSlot extends RecordModel {
+  mentorship: string
+  mentor?: string
+  start_at: string
+  end_at: string
+  status: 'livre' | 'reservado' | 'vendido' | 'bloqueado'
+  booking?: string
+}
+
+/** Dia de horários livres retornado por GET /backend/v1/mentorias/{id}/horarios?mes=AAAA-MM */
 export interface MentorshipHorariosDia {
   date: string
   slots: string[]
@@ -216,9 +226,8 @@ export interface MentorshipHorarios {
   mentorship_id: string
   mentor_id?: string
   session_minutes: number
-  min_notice_hours: number
-  weeks_ahead: number
-  today?: string
+  mes: string
+  total: number
   days: MentorshipHorariosDia[]
 }
 

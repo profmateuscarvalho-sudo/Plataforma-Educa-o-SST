@@ -1,11 +1,19 @@
 import pb from '@/lib/pocketbase/client'
 import { Payment } from '@/types'
 
-export const getPayments = async () => {
-  return await pb.collection('payments').getFullList<Payment>({
+export interface PagedPayments {
+  items: Payment[]
+  totalItems: number
+}
+
+// Lista paginada no servidor (50 por página) — antes era getFullList com
+// expand de user para TODOS os pagamentos, lento com a base crescendo.
+export const getPayments = async (page = 1, perPage = 50): Promise<PagedPayments> => {
+  const res = await pb.collection('payments').getList<Payment>(page, perPage, {
     sort: '-created',
     expand: 'user',
   })
+  return { items: res.items, totalItems: res.totalItems }
 }
 
 export const getUserPayments = async (userId: string) => {

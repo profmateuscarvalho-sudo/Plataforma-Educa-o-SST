@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BookOpen, Users, DollarSign, FileText } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { getLeads } from '@/services/leads'
-import { getCourses } from '@/services/courses'
+import { countLeads } from '@/services/leads'
+import { getCoursesPaged } from '@/services/courses'
 import { getStudents } from '@/services/users'
 
 export default function AdminDashboard() {
@@ -10,20 +10,23 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let cancelled = false
-    Promise.allSettled([getLeads(), getCourses(), getStudents()]).then((results) => {
+    // Contagens via totalItems (meta do PocketBase) — perPage=1, sem baixar
+    // listas. "Assinantes ativos" conta users com contrato vigente no servidor.
+    const nowIso = new Date().toISOString()
+    Promise.allSettled([
+      countLeads(),
+      getCoursesPaged(1, 1),
+      getStudents(1, 1),
+      pb_countActiveStudents(nowIso),
+    ]).then((results) => {
       if (cancelled) return
-      const [leadsRes, coursesRes, studentsRes] = results.map((r) =>
-        r.status === 'fulfilled' ? r.value : [],
-      )
-      const now = new Date()
-      const active = studentsRes.filter(
-        (s) => s.contract_end_date && new Date(s.contract_end_date) > now,
-      ).length
+      const v = (i: number, fallback: number) =>
+        results[i].status === 'fulfilled' ? (results[i].value as number) : fallback
       setStats({
-        leads: leadsRes.length,
-        courses: coursesRes.length,
-        students: studentsRes.length,
-        activeSubscribers: active,
+        leads: v(0, 0),
+        courses: v(1, 0),
+        students: v(2, 0),
+        activeSubscribers: v(3, 0),
       })
     })
     return () => {
@@ -78,4 +81,12 @@ export default function AdminDashboard() {
       </div>
     </div>
   )
+}
+
+async function pb_countActiveStudents(nowIso: string): Promise<number> {
+  const pb = (await import('@/lib/pocketbase/client')).default
+  const res = await pb.collection('users').getList(1, 1, {
+    filter: `role != 'admin' && contract_end_date > "${nowIso}"`,
+  })
+  return res.totalItems
 }

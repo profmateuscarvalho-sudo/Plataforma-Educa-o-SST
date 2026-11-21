@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import {
-  getMentorships,
+  getMentorshipsPaged,
   createMentorship,
   updateMentorship,
   deleteMentorship,
@@ -34,7 +34,11 @@ export default function AdminMentorships() {
   const [isFree, setIsFree] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
-  const load = () => getMentorships().then(setMentorships).catch(console.error)
+  // Página de 50 no servidor — antes perPage=1000 (logs: 45s por request).
+  const load = () =>
+    getMentorshipsPaged()
+      .then((res) => setMentorships(res.items))
+      .catch(console.error)
 
   useEffect(() => {
     load()

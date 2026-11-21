@@ -3,19 +3,31 @@ import { User } from '@/types'
 import { SubscriptionPlan } from '@/types'
 import { getSubscriptionPlans } from '@/services/subscription-plans'
 
-export const getStudents = async () => {
-  // O endpoint custom /backend/v1/admin/students não existe mais no backend —
-  // requisições a ele caíam no host estático e davam 404 "File not found".
-  // A coleção users expõe e-mail para admins (regra de lista), então lemos
-  // diretamente por ela; se algo falhar, repete sem filtro de role.
+export interface Paged<T> {
+  items: T[]
+  totalItems: number
+  totalPages: number
+}
+
+// Página de alunos direto do servidor (50 por página): o painel não baixa mais
+// a base inteira para contar/mostrar — use totalItems para os contadores.
+export const getStudents = async (page = 1, perPage = 50, search = ''): Promise<Paged<User>> => {
+  const parts = ["role != 'admin'"]
+  const q = search.trim().replace(/["\\]/g, '')
+  if (q) {
+    parts.push(`(name ~ "${q}" || email ~ "${q}" || phone ~ "${q}")`)
+  }
+  const filter = parts.join(' && ')
   try {
-    return await pb.collection('users').getFullList<User>({
-      filter: "role != 'admin'",
+    const res = await pb.collection('users').getList<User>(page, perPage, {
+      filter,
       sort: '-created',
     })
+    return { items: res.items, totalItems: res.totalItems, totalPages: res.totalPages }
   } catch (err) {
-    console.warn('Fallback sem filtro de role em getStudents:', err)
-    return await pb.collection('users').getFullList<User>({ sort: '-created' })
+    console.warn('Fallback sem filtro em getStudents:', err)
+    const res = await pb.collection('users').getList<User>(page, perPage, { sort: '-created' })
+    return { items: res.items, totalItems: res.totalItems, totalPages: res.totalPages }
   }
 }
 

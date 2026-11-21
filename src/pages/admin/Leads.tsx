@@ -9,12 +9,23 @@ import { exportLeadsToExcel } from '@/lib/export-leads'
 
 export default function AdminLeads() {
   const [leads, setLeads] = useState<Lead[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
-    getLeads().then(setLeads)
-  }, [])
+    getLeads(page)
+      .then((res) => {
+        setLeads(res.items)
+        setTotal(res.totalItems)
+        setTotalPages(Math.max(1, Math.ceil(res.totalItems / 50)))
+      })
+      .catch(console.error)
+  }, [page])
 
+  // Export usa a página atual (50 registros) — exportar a base inteira de
+  // leads não fazia sentido em uma tela paginada; use Importar CSV para carga.
   const handleExport = () => {
     setExporting(true)
     try {
@@ -54,6 +65,30 @@ export default function AdminLeads() {
       </div>
 
       <LeadList leads={leads} />
+
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className="text-sm text-slate-500">
+          Página {page} de {totalPages} — {total} leads
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            Anterior
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Próxima
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

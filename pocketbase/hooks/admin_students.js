@@ -1,7 +1,7 @@
 // Lista alunos para o painel de acessos/admin, com e-mail visível só para
-// admins. Criado originalmente na v0.0.313; recriado aqui porque requisições
-// a /backend/v1/admin/students estavam caindo no host estático e devolvendo
-// 404 "File not found".
+// admins. Paginado no servidor (page/per_page na query, 50 por padrão) —
+// antes baixava até 5000 registros numa chamada e saturava o JSVM, atrasando
+// todas as outras requisições do backend na mesma janela.
 routerAdd(
   'GET',
   '/backend/v1/admin/students',
@@ -11,7 +11,35 @@ routerAdd(
     }
 
     try {
-      var records = $app.findRecordsByFilter('users', "role != 'admin'", '-created', 5000, 0)
+      var q = e.request.url.query()
+      var page = parseInt(q.get('page') || '1', 10)
+      var perPage = parseInt(q.get('per_page') || '50', 10)
+      if (isNaN(page) || page < 1) page = 1
+      if (isNaN(perPage) || perPage < 1 || perPage > 200) perPage = 50
+      var search = (q.get('search') || '').trim()
+      // Sanitiza aspas para não quebrar o filtro do PocketBase.
+      search = search.replace(/["\\]/g, '')
+
+      var filter = "role != 'admin'"
+      if (search !== '') {
+        filter =
+          "role != 'admin' && (name ~ \"" +
+          search +
+          '" || email ~ "' +
+          search +
+          '" || phone ~ "' +
+          search +
+          '")'
+      }
+
+      var records = $app.findRecordsByFilter(
+        'users',
+        filter,
+        '-created',
+        perPage,
+        (page - 1) * perPage,
+      )
+      var total = $app.countRecords('users', filter)
 
       var students = []
       for (var i = 0; i < records.length; i++) {
@@ -36,7 +64,13 @@ routerAdd(
         })
       }
 
-      return e.json(200, students)
+      return e.json(200, {
+        page: page,
+        per_page: perPage,
+        totalItems: total,
+        totalPages: Math.ceil(total / perPage),
+        items: students,
+      })
     } catch (err) {
       $app.logger().error('Failed to list admin students', 'error', err.message)
       return e.json(500, { error: 'Erro ao carregar lista de alunos' })

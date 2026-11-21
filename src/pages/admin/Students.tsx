@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -29,8 +29,13 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { useRealtime } from '@/hooks/use-realtime'
 
+const PAGE_SIZE = 50
+
 export default function AdminStudents() {
   const [students, setStudents] = useState<User[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [search, setSearch] = useState('')
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [editOpen, setEditOpen] = useState(false)
@@ -39,26 +44,33 @@ export default function AdminStudents() {
   const [resendingId, setResendingId] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const loadStudents = () => getStudents().then(setStudents).catch(console.error)
+  // Busca server-side com debounce: digitar dispara uma nova página de 50,
+  // não a base inteira. Antes era getFullList + filter no cliente.
+  const loadStudents = useCallback(
+    (p = page, q = search) => {
+      const t = setTimeout(
+        () => {
+          getStudents(p, PAGE_SIZE, q)
+            .then((res) => {
+              setStudents(res.items)
+              setTotal(res.totalItems)
+              setTotalPages(Math.max(1, res.totalPages))
+            })
+            .catch(console.error)
+        },
+        q ? 300 : 0,
+      )
+      return () => clearTimeout(t)
+    },
+    [page, search],
+  )
 
   useEffect(() => {
-    loadStudents()
-  }, [])
+    return loadStudents()
+  }, [loadStudents])
+
   useRealtime('users', () => {
     loadStudents()
-  })
-
-  const filtered = students.filter((s) => {
-    const q = search.toLowerCase()
-    return (
-      s.name?.toLowerCase().includes(q) ||
-      s.email?.toLowerCase().includes(q) ||
-      s.phone?.toLowerCase().includes(q) ||
-      s.professional_profile?.toLowerCase().includes(q) ||
-      JSON.stringify(s.professional_tags || [])
-        .toLowerCase()
-        .includes(q)
-    )
   })
 
   const handleResend = async (s: User) => {
@@ -121,7 +133,7 @@ export default function AdminStudents() {
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2">
           <Users className="w-4 h-4 text-slate-400" />
-          <span className="text-sm font-medium text-slate-600">{students.length} alunos</span>
+          <span className="text-sm font-medium text-slate-600">{total} alunos</span>
         </div>
       </div>
 
@@ -130,9 +142,12 @@ export default function AdminStudents() {
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
-              placeholder="Buscar por nome, e-mail, telefone ou perfil..."
+              placeholder="Buscar por nome, e-mail ou telefone..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setPage(1)
+                setSearch(e.target.value)
+              }}
               className="pl-10 h-10"
             />
           </div>
@@ -153,7 +168,7 @@ export default function AdminStudents() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((s) => {
+                {students.map((s) => {
                   const isActive = isContractActive(s.contract_end_date)
                   return (
                     <TableRow key={s.id} className="border-slate-100">
@@ -244,7 +259,7 @@ export default function AdminStudents() {
                     </TableRow>
                   )
                 })}
-                {filtered.length === 0 && (
+                {students.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-slate-500">
                       {search ? 'Nenhum aluno encontrado na busca.' : 'Nenhum aluno cadastrado.'}
@@ -254,6 +269,31 @@ export default function AdminStudents() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Paginação: 50 por página, direto do servidor */}
+          <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
+            <span className="text-sm text-slate-500">
+              Página {page} de {totalPages} — {total} alunos
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -261,7 +301,7 @@ export default function AdminStudents() {
         user={editingUser}
         open={editOpen}
         setOpen={setEditOpen}
-        onSuccess={loadStudents}
+        onSuccess={() => loadStudents()}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>

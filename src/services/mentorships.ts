@@ -1,6 +1,8 @@
 import pb from '@/lib/pocketbase/client'
 import { Mentorship } from '@/types'
 
+// Lista completa — usada pelas telas do aluno (catálogo público, base pequena:
+// 2 registros). NÃO usar em telas admin; para elas há getMentorshipsPaged.
 export const getMentorships = async (): Promise<Mentorship[]> => {
   try {
     return await pb
@@ -9,6 +11,21 @@ export const getMentorships = async (): Promise<Mentorship[]> => {
   } catch (error) {
     console.error('Failed to fetch mentorships:', error)
     return []
+  }
+}
+
+// Versão paginada no servidor (50 por página) para as telas do admin — antes
+// era perPage=1000 e chegou a 45s nos logs de requests.
+export const getMentorshipsPaged = async (page = 1, perPage = 50) => {
+  try {
+    const res = await pb.collection('mentorships').getList<Mentorship>(page, perPage, {
+      sort: '-created',
+      expand: 'mentor',
+    })
+    return { items: res.items, totalItems: res.totalItems, totalPages: res.totalPages }
+  } catch (error) {
+    console.error('Failed to fetch mentorships:', error)
+    return { items: [] as Mentorship[], totalItems: 0, totalPages: 0 }
   }
 }
 

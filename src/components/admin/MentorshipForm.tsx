@@ -1,14 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Calendar } from '@/components/ui/calendar'
 import { Switch } from '@/components/ui/switch'
 import { Mentorship } from '@/types'
 import { FieldErrors } from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
-import { format } from 'date-fns'
 
 interface MentorshipFormProps {
   editing: Mentorship | null
@@ -18,25 +16,6 @@ interface MentorshipFormProps {
   fieldErrors: FieldErrors
 }
 
-const parseDates = (s?: string): Date[] => {
-  if (!s) return []
-  try {
-    const arr = JSON.parse(s)
-    if (Array.isArray(arr))
-      return arr.map((d: string) => new Date(d)).filter((d: Date) => !isNaN(d.getTime()))
-  } catch {
-    /* fallthrough */
-  }
-  return s
-    .split(',')
-    .filter(Boolean)
-    .map((d: string) => new Date(d.trim()))
-    .filter((d: Date) => !isNaN(d.getTime()))
-}
-
-const formatDates = (dates: Date[]): string =>
-  JSON.stringify(dates.map((d) => format(d, 'yyyy-MM-dd')))
-
 export function MentorshipForm({
   editing,
   isFree,
@@ -44,20 +23,23 @@ export function MentorshipForm({
   onSubmit,
   fieldErrors,
 }: MentorshipFormProps) {
-  const [selectedDates, setSelectedDates] = useState<Date[]>(parseDates(editing?.available_dates))
-
-  useEffect(() => {
-    setSelectedDates(parseDates(editing?.available_dates))
-  }, [editing])
+  const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    fd.set('is_free', String(isFree))
-    fd.set('available_dates', formatDates(selectedDates))
-    const photo = fd.get('mentor_photo') as File
-    if (!photo?.size) fd.delete('mentor_photo')
-    await onSubmit(fd)
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      const fd = new FormData(e.currentTarget)
+      fd.set('is_free', String(isFree))
+      // available_dates / available_slots NÃO são enviados: ficam congelados
+      // no banco (decisão do usuário — agenda nova = mentorship_slots).
+      const photo = fd.get('mentor_photo') as File
+      if (!photo?.size) fd.delete('mentor_photo')
+      await onSubmit(fd)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -152,10 +134,7 @@ export function MentorshipForm({
         </div>
       </div>
       {/* Campos antigos (available_dates / available_slots) escondidos — continuam
-          no banco, mas a agenda real agora vem de mentor_availability. */}
-      <div className="hidden">
-        <input type="hidden" name="available_dates" value={formatDates(selectedDates)} />
-      </div>
+          no banco, mas a agenda real agora vem de mentorship_slots. */}
       <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
         ⚠️ O link de agendamento só será enviado ao aluno após a confirmação do pagamento.
       </div>
@@ -163,7 +142,7 @@ export function MentorshipForm({
         <Switch id="ment_is_free" checked={isFree} onCheckedChange={setIsFree} />
         <Label htmlFor="ment_is_free">Acesso Gratuito</Label>
       </div>
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="w-full" disabled={submitting}>
         {editing ? 'Salvar Alterações' : 'Criar Mentoria'}
       </Button>
     </form>

@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/table'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import { getMentors, createMentor, updateMentor, deleteMentor } from '@/services/mentors'
-import { MentorScheduleEditor } from '@/components/admin/MentorScheduleEditor'
 import { Mentor } from '@/types'
 import { toast } from '@/hooks/use-toast'
 import { getErrorMessage, extractFieldErrors, type FieldErrors } from '@/lib/form-errors'
@@ -231,12 +230,6 @@ export function MentorManager() {
                 />
               </div>
             </div>
-            {editing && (
-              <div className="border-t pt-4">
-                <p className="text-sm font-bold text-secondary mb-3">Agenda do mentor</p>
-                <MentorScheduleEditor mentor={editing} />
-              </div>
-            )}
             <Button type="submit" className="w-full">
               {editing ? 'Salvar Alteracoes' : 'Criar Mentor'}
             </Button>

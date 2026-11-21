@@ -74,6 +74,7 @@ export const copySlotsFromDay = async (
   origemDia: string,
   horarios: string[],
   destinos: string[],
+  duracaoMin?: number,
 ) => {
   const criados: string[] = []
   for (const destino of destinos) {
@@ -90,7 +91,9 @@ export const copySlotsFromDay = async (
         return new Date(st).getTime() === start.getTime()
       })
       if (conflito) continue
-      const endIso = new Date(start.getTime() + 60 * 60 * 1000).toISOString() // ajustado pelo chamador
+      const endIso = new Date(
+        start.getTime() + (duracaoMin && duracaoMin > 0 ? duracaoMin : 60) * 60 * 1000,
+      ).toISOString()
       await createSlot({
         mentorship: mentorshipId,
         mentor: mentorId,

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-21T01:30:21.063Z",
+  "generatedAt": "2026-11-21T01:48:40.209Z",
   "collections": [
     {
       "name": "users",
@@ -428,6 +428,30 @@
         {
           "name": "available_slots",
           "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "session_minutes",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "min_notice_hours",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "weeks_ahead",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "max_slots_per_purchase",
+          "type": "number",
           "required": false,
           "system": false
         }
@@ -2406,6 +2430,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "meeting_link",
+          "type": "url",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -4026,6 +4062,213 @@
       "indexes": [
         "CREATE INDEX idx_prt_email ON password_reset_throttle (email)",
         "CREATE INDEX idx_prt_ip ON password_reset_throttle (ip)"
+      ]
+    },
+    {
+      "name": "mentor_availability",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "mentor",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "mentors"
+        },
+        {
+          "name": "weekday",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "start_time",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "end_time",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_mentor_availability_mentor ON mentor_availability (mentor, active)"
+      ]
+    },
+    {
+      "name": "mentor_blocked_dates",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "mentor",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "mentors"
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_mentor_blocked_dates_mentor ON mentor_blocked_dates (mentor, date)"
+      ]
+    },
+    {
+      "name": "mentorship_bookings",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.role = 'admin' || user = @request.auth.id)",
+        "view": "@request.auth.id != '' && (@request.auth.role = 'admin' || user = @request.auth.id)",
+        "create": null,
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "mentorship",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "mentorships"
+        },
+        {
+          "name": "mentor",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "mentors"
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "payment",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "payments"
+        },
+        {
+          "name": "start_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "end_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["reservado", "confirmado", "cancelado", "concluido"]
+        },
+        {
+          "name": "expires_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "meeting_link",
+          "type": "url",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_mentorship_bookings_mentor_start ON mentorship_bookings (mentor, start_at)",
+        "CREATE INDEX idx_mentorship_bookings_user ON mentorship_bookings (user)",
+        "CREATE INDEX idx_mentorship_bookings_status ON mentorship_bookings (status)"
       ]
     }
   ]

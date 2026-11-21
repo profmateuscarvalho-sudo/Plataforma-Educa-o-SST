@@ -113,25 +113,48 @@ export function MentorshipForm({
           />
         </div>
       </div>
-      <div>
-        <Label>Datas Disponíveis (selecione no calendário)</Label>
-        <div className="p-4 border rounded-xl bg-slate-50 flex justify-center">
-          <Calendar
-            mode="multiple"
-            selected={selectedDates}
-            onSelect={(d) => setSelectedDates(d || [])}
-            className="rounded-md bg-white"
-            disabled={(d) =>
-              d < new Date(new Date().setHours(0, 0, 0, 0)) || d.getDay() === 0 || d.getDay() === 6
-            }
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t pt-4">
+        <div>
+          <Label>Duração da sessão (min)</Label>
+          <Input
+            name="session_minutes"
+            type="number"
+            min={15}
+            defaultValue={editing?.session_minutes ?? 60}
           />
         </div>
-        {selectedDates.length > 0 && (
-          <p className="text-xs text-slate-500 mt-2">
-            {selectedDates.length} data(s):{' '}
-            {selectedDates.map((d) => format(d, 'dd/MM/yyyy')).join(', ')}
-          </p>
-        )}
+        <div>
+          <Label>Antecedência mínima (h)</Label>
+          <Input
+            name="min_notice_hours"
+            type="number"
+            min={0}
+            defaultValue={editing?.min_notice_hours ?? 24}
+          />
+        </div>
+        <div>
+          <Label>Semanas à frente</Label>
+          <Input
+            name="weeks_ahead"
+            type="number"
+            min={1}
+            defaultValue={editing?.weeks_ahead ?? 4}
+          />
+        </div>
+        <div>
+          <Label>Máx. horários por compra</Label>
+          <Input
+            name="max_slots_per_purchase"
+            type="number"
+            min={1}
+            defaultValue={editing?.max_slots_per_purchase ?? 4}
+          />
+        </div>
+      </div>
+      {/* Campos antigos (available_dates / available_slots) escondidos — continuam
+          no banco, mas a agenda real agora vem de mentor_availability. */}
+      <div className="hidden">
+        <input type="hidden" name="available_dates" value={formatDates(selectedDates)} />
       </div>
       <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
         ⚠️ O link de agendamento só será enviado ao aluno após a confirmação do pagamento.

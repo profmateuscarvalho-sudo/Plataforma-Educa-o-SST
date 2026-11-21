@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import { getMentors, createMentor, updateMentor, deleteMentor } from '@/services/mentors'
+import { MentorScheduleEditor } from '@/components/admin/MentorScheduleEditor'
 import { Mentor } from '@/types'
 import { toast } from '@/hooks/use-toast'
 import { getErrorMessage, extractFieldErrors, type FieldErrors } from '@/lib/form-errors'
@@ -215,6 +216,27 @@ export function MentorManager() {
                 />
               )}
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Email do mentor (avisos)</Label>
+                <Input type="email" name="email" defaultValue={editing?.email || ''} />
+              </div>
+              <div>
+                <Label>Link da sala (Meet/Zoom)</Label>
+                <Input
+                  type="url"
+                  name="meeting_link"
+                  placeholder="https://meet.google.com/..."
+                  defaultValue={editing?.meeting_link || ''}
+                />
+              </div>
+            </div>
+            {editing && (
+              <div className="border-t pt-4">
+                <p className="text-sm font-bold text-secondary mb-3">Agenda do mentor</p>
+                <MentorScheduleEditor mentor={editing} />
+              </div>
+            )}
             <Button type="submit" className="w-full">
               {editing ? 'Salvar Alteracoes' : 'Criar Mentor'}
             </Button>

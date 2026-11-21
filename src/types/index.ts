@@ -171,6 +171,55 @@ export interface Mentor extends RecordModel {
   mini_cv: string
   topics: string
   photo: string
+  email?: string
+  meeting_link?: string
+}
+
+/** Faixa de horário da agenda semanal do mentor (mentor_availability) */
+export interface MentorAvailability extends RecordModel {
+  mentor: string
+  weekday: number // 0 = domingo ... 6 = sábado
+  start_time: string // "19:00"
+  end_time: string // "22:00"
+  active?: boolean
+}
+
+/** Data bloqueada na agenda do mentor (mentor_blocked_dates) */
+export interface MentorBlockedDate extends RecordModel {
+  mentor: string
+  date: string
+  reason?: string
+}
+
+/** Reserva de sessão de mentoria (mentorship_bookings) */
+export interface MentorshipBooking extends RecordModel {
+  mentorship: string
+  mentor: string
+  user: string
+  payment?: string
+  start_at: string
+  end_at: string
+  status: 'reservado' | 'confirmado' | 'cancelado' | 'concluido'
+  expires_at?: string
+  meeting_link?: string
+  notes?: string
+  expand?: { user?: User; mentor?: Mentor; mentorship?: Mentorship }
+}
+
+/** Dia de horários livres retornado por GET /backend/v1/mentorias/{id}/horarios */
+export interface MentorshipHorariosDia {
+  date: string
+  slots: string[]
+}
+
+export interface MentorshipHorarios {
+  mentorship_id: string
+  mentor_id?: string
+  session_minutes: number
+  min_notice_hours: number
+  weeks_ahead: number
+  today?: string
+  days: MentorshipHorariosDia[]
 }
 
 export interface Instructor extends RecordModel {
@@ -193,6 +242,10 @@ export interface Mentorship extends RecordModel {
   mentor?: string
   available_slots?: AvailableSlot[]
   expand?: { mentor?: Mentor }
+  session_minutes?: number
+  min_notice_hours?: number
+  weeks_ahead?: number
+  max_slots_per_purchase?: number
 }
 
 export interface Lead extends RecordModel {

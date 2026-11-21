@@ -86,7 +86,8 @@ routerAdd('GET', '/backend/v1/og-preview', (e) => {
         redirectUrl = siteUrl + '/revistas?revista=' + magId
       } else {
         title = 'Acervo Cientifico | Educacao SST'
-        description = 'Acesso gratuito as publicacoes periodicas em Seguranca e Saude no Trabalho.'
+        description =
+          'Publicações periódicas em Segurança e Saúde no Trabalho. Leitura completa para assinantes.'
         redirectUrl = siteUrl + '/revistas'
       }
       ogType = 'website'

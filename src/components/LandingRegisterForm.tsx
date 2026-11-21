@@ -179,7 +179,7 @@ export function LandingRegisterForm() {
             {passError && <p className="text-xs font-medium text-destructive">{passError}</p>}
           </div>
           <Button type="submit" className="w-full h-11 text-base font-bold mt-2" disabled={loading}>
-            {loading ? 'Criando conta...' : 'Assine Gratuitamente'}
+            {loading ? 'Criando conta...' : 'Criar conta grátis'}
           </Button>
           <div className="text-center">
             <p className="text-xs text-slate-500">

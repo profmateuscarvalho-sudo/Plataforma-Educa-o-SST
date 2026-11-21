@@ -13,7 +13,7 @@ const BENEFITS = [
   {
     icon: Newspaper,
     title: 'Revista Digital',
-    desc: 'Revista Educação SST científica disponível gratuitamente',
+    desc: 'Revista Educação SST científica para assinantes Prata',
   },
   { icon: Video, title: 'Aulas ao Vivo', desc: 'Participe de aulas ao vivo toda quarta-feira' },
   {

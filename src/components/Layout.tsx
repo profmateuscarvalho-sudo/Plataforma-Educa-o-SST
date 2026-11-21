@@ -29,7 +29,7 @@ import { SquareLogo } from './ui/Logos'
 import { useAuth } from '@/hooks/use-auth'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { InstallBanner, InstallInstructionsDialog, useInstallFlow } from './InstallBanner'
-import { MagazineTopBar } from './MagazineTopBar'
+
 import pb from '@/lib/pocketbase/client'
 
 export default function Layout() {
@@ -60,9 +60,6 @@ export default function Layout() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
-      {/* Faixa da Revista (substitui o pop-up, rola com a página) */}
-      <MagazineTopBar />
-
       <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
           {/* Esquerda: Símbolo "E." amarelo (44px), link para a página inicial */}
@@ -94,7 +91,7 @@ export default function Layout() {
             })}
           </nav>
 
-          {/* Direita: idioma, Área do Assinante e Assinar grátis */}
+          {/* Direita: idioma, Área do Assinante e Criar conta grátis */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="hidden min-[1150px]:flex items-center gap-4">
               <LanguageSwitcher />
@@ -154,7 +151,7 @@ export default function Layout() {
 
             {/* Botão primário visível sempre (desktop e mobile <1150px) */}
             <Button asChild size="default" className="shadow-none">
-              <Link to="/planos">Assinar grátis</Link>
+              <Link to="/planos">Criar conta grátis</Link>
             </Button>
 
             {/* Abaixo de 1150px: botão hambúrguer */}

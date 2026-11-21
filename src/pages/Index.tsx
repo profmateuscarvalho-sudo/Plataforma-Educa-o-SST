@@ -429,8 +429,8 @@ export default function Index() {
               </div>
 
               <p className="text-base sm:text-lg text-[#F4F1E8]/80 leading-relaxed max-w-xl font-normal">
-                As {magazines.length || 32} edições estão no acervo, com leitura gratuita. No plano
-                Ouro, a edição impressa chega na sua casa pelo Box+.
+                As {magazines.length || 32} edições estão no acervo, com leitura completa para
+                assinantes Prata. No plano Ouro, a edição impressa chega na sua casa pelo Box+.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 flex-wrap">
@@ -560,8 +560,8 @@ export default function Index() {
             Menos informação. <em>Mais direção.</em>
           </h2>
           <p className="text-base sm:text-xl text-[#1C1B18]/85 max-w-xl mx-auto mb-8 font-normal leading-relaxed">
-            Crie sua conta no plano Free e leia a Revista hoje. O resto do itinerário você descobre
-            no seu ritmo.
+            Crie sua conta grátis e comece pelos cursos e simulados. O resto do itinerário você
+            descobre no seu ritmo.
           </p>
           <div className="flex justify-center">
             <Button

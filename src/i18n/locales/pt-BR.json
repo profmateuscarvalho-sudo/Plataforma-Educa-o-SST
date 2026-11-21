@@ -38,7 +38,7 @@
     "title": "Educação e desenvolvimento em",
     "titleHighlight": "SST",
     "subtitle": "Eleve o seu conhecimento a partir de nossos programas educacionais focados em Segurança e Saúde no Trabalho e construa um itinerário profissional de forma sólida com foco na prática e na sua realidade de trabalho.",
-    "ctaFree": "Assine Gratuitamente",
+    "ctaFree": "Criar conta grátis",
     "ctaPlans": "Ver Planos",
     "featureCourses": "Cursos em SST",
     "featureMagazines": "Revistas científicas",
@@ -51,7 +51,7 @@
     "latestNews": "Últimas Notícias",
     "latestNewsDesc": "Acompanhe as novidades e atualizações do mercado de Segurança e Saúde no Trabalho.",
     "magazineOfMonth": "Revista do Mês",
-    "clickToReadFree": "Clique aqui para ler grátis",
+
     "close": "Fechar"
   },
   "pricing": {
@@ -64,7 +64,7 @@
     "shippingCosts": "+ custos de frete",
     "comingSoon": "Em breve",
     "mostPopular": "MAIS POPULAR",
-    "subscribeForFree": "Assine Gratuitamente",
+    "subscribeForFree": "Criar conta grátis",
     "subscribe": "Assine",
     "plans": {
       "free": {
@@ -241,7 +241,7 @@
   },
   "revistas": {
     "title": "Acervo Científico",
-    "subtitle": "Acesso gratuito às nossas publicações periódicas com artigos focados em Segurança e Saúde no Trabalho, Fatores Humanos, Nova Visão de Segurança, Gestão e Gerenciamentos dos Riscos Ocupacionais e muito mais.",
+    "subtitle": "Publicações periódicas com artigos focados em Segurança e Saúde no Trabalho, Fatores Humanos, Nova Visão de Segurança, Gestão e Gerenciamentos dos Riscos Ocupacionais e muito mais.",
     "readEdition": "Ler Edição",
     "coverUnavailable": "Capa indisponível",
     "processing": "Processando",

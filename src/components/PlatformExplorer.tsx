@@ -30,7 +30,7 @@ export function PlatformExplorer({
       num: '01',
       navLabel: 'Revistas',
       title: 'Revista Educação SST',
-      paragraph: `São ${magazineCount} edições no acervo, com leitura gratuita, escritas por quem vive a SST na prática. No plano Ouro, a edição do mês também chega impressa pelo Box+.`,
+      paragraph: `São ${magazineCount} edições no acervo, com leitura completa no plano Prata ou por edição avulsa, escritas por quem vive a SST na prática. No plano Ouro, a edição do mês também chega impressa pelo Box+.`,
       footer: (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="text-xs sm:text-sm text-[#1C1B18]">

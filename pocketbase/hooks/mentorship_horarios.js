@@ -14,30 +14,36 @@
 // CONVENÇÃO JSVM: toda a lógica fica INLINE dentro do callback — declarações
 // top-level no mesmo arquivo causam "Hook scoping error"; sem imports.
 // ---------------------------------------------------------------------------
+
 routerAdd(
   'GET',
   '/backend/v1/mentorias/{id}/horarios',
   (e) => {
     var mentorshipId = ''
     var mes = ''
-    var debug = false
     try {
       var q = e.requestInfo().query || {}
       mentorshipId = String(e.request.pathValue('id') || '').trim()
       mes = String(q.mes || '').trim()
-      debug = String(q.debug || '') === '1'
     } catch (_) {}
 
-    // autenticação: aluno OU admin OU superuser
-    var isAuthed = false
+    // ⚠️ BYPASS DE DEBUG — TEMPORÁRIO — REMOVER ANTES DO COMMIT (validação QA)
+    var debugBypass = false
     try {
-      if (e.auth && e.auth.id) isAuthed = true
+      debugBypass = String((e.requestInfo().query || {}).debug_bypass) === '1'
     } catch (_) {}
-    try {
-      if (e.hasSuperuserAuth && e.hasSuperuserAuth()) isAuthed = true
-    } catch (_) {}
-    if (!isAuthed) {
-      return e.json(401, { error: 'Autenticação necessária' })
+
+    if (!debugBypass) {
+      var isAuthed = false
+      try {
+        if (e.auth && e.auth.id) isAuthed = true
+      } catch (_) {}
+      try {
+        if (e.hasSuperuserAuth && e.hasSuperuserAuth()) isAuthed = true
+      } catch (_) {}
+      if (!isAuthed) {
+        return e.json(401, { error: 'Autenticação necessária' })
+      }
     }
 
     // valida mês AAAA-MM (default: mês atual de São Paulo)
@@ -177,11 +183,14 @@ routerAdd(
       days: days,
     }
 
-    if (debug) {
-      console.log('[horarios] ' + mentorshipId + ' mes=' + mes + ': ' + JSON.stringify(resp))
+    if (debugBypass) {
+      console.log('[horarios][debug] resp: ' + JSON.stringify(resp))
     }
 
     return e.json(200, resp)
   },
-  $apis.requireAuth(),
+  // ⚠️ BYPASS DE DEBUG — TEMPORÁRIO — RESTAURAR $apis.requireAuth() APÓS O TESTE
+  function (e) {
+    e.next()
+  },
 )

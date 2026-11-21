@@ -24,6 +24,7 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { MentorshipForm } from '@/components/admin/MentorshipForm'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { MentorshipSlotCalendar } from '@/components/admin/MentorshipSlotCalendar'
 import { MentorManager } from '@/components/admin/MentorManager'
 
 export default function AdminMentorships() {
@@ -181,13 +182,34 @@ export default function AdminMentorships() {
           <DialogHeader>
             <DialogTitle>{editing ? 'Editar Mentoria' : 'Nova Mentoria'}</DialogTitle>
           </DialogHeader>
-          <MentorshipForm
-            editing={editing}
-            isFree={isFree}
-            setIsFree={setIsFree}
-            onSubmit={handleSubmit}
-            fieldErrors={fieldErrors}
-          />
+          {editing ? (
+            <Tabs defaultValue="dados" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 max-w-xs">
+                <TabsTrigger value="dados">Dados</TabsTrigger>
+                <TabsTrigger value="disponibilidade">Disponibilidade</TabsTrigger>
+              </TabsList>
+              <TabsContent value="dados" className="pt-2">
+                <MentorshipForm
+                  editing={editing}
+                  isFree={isFree}
+                  setIsFree={setIsFree}
+                  onSubmit={handleSubmit}
+                  fieldErrors={fieldErrors}
+                />
+              </TabsContent>
+              <TabsContent value="disponibilidade" className="pt-2">
+                <MentorshipSlotCalendar mentorship={editing} />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <MentorshipForm
+              editing={editing}
+              isFree={isFree}
+              setIsFree={setIsFree}
+              onSubmit={handleSubmit}
+              fieldErrors={fieldErrors}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

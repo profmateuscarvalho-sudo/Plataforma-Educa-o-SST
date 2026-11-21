@@ -27,25 +27,6 @@ routerAdd(
       mes = String(q.mes || '').trim()
     } catch (_) {}
 
-    // ⚠️ BYPASS DE DEBUG — TEMPORÁRIO — REMOVER ANTES DO COMMIT (validação QA)
-    var debugBypass = false
-    try {
-      debugBypass = String((e.requestInfo().query || {}).debug_bypass) === '1'
-    } catch (_) {}
-
-    if (!debugBypass) {
-      var isAuthed = false
-      try {
-        if (e.auth && e.auth.id) isAuthed = true
-      } catch (_) {}
-      try {
-        if (e.hasSuperuserAuth && e.hasSuperuserAuth()) isAuthed = true
-      } catch (_) {}
-      if (!isAuthed) {
-        return e.json(401, { error: 'Autenticação necessária' })
-      }
-    }
-
     // valida mês AAAA-MM (default: mês atual de São Paulo)
     if (!/^\d{4}-\d{2}$/.test(mes)) {
       try {
@@ -183,14 +164,7 @@ routerAdd(
       days: days,
     }
 
-    if (debugBypass) {
-      console.log('[horarios][debug] resp: ' + JSON.stringify(resp))
-    }
-
     return e.json(200, resp)
   },
-  // ⚠️ BYPASS DE DEBUG — TEMPORÁRIO — RESTAURAR $apis.requireAuth() APÓS O TESTE
-  function (e) {
-    e.next()
-  },
+  $apis.requireAuth(),
 )

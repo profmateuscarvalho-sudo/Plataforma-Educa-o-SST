@@ -1,33 +1,23 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { BookOpen, Users, DollarSign, FileText } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { countLeads } from '@/services/leads'
-import { getCoursesPaged } from '@/services/courses'
-import { getStudents } from '@/services/users'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { BookOpen, Users, DollarSign, FileText, UserX } from 'lucide-react'
+import { getAdminOverviewStats } from '@/services/admin-stats'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ leads: 0, courses: 0, students: 0, activeSubscribers: 0 })
+  const [stats, setStats] = useState({
+    leads: 0,
+    courses: 0,
+    students: 0,
+    activeSubscribers: 0,
+    freeAccounts: 0,
+  })
 
   useEffect(() => {
     let cancelled = false
-    // Contagens via totalItems (meta do PocketBase) — perPage=1, sem baixar
-    // listas. "Assinantes ativos" conta users com contrato vigente no servidor.
-    const nowIso = new Date().toISOString()
-    Promise.allSettled([
-      countLeads(),
-      getCoursesPaged(1, 1),
-      getStudents(1, 1),
-      pb_countActiveStudents(nowIso),
-    ]).then((results) => {
-      if (cancelled) return
-      const v = (i: number, fallback: number) =>
-        results[i].status === 'fulfilled' ? (results[i].value as number) : fallback
-      setStats({
-        leads: v(0, 0),
-        courses: v(1, 0),
-        students: v(2, 0),
-        activeSubscribers: v(3, 0),
-      })
+    // Todas as contagens são resolvidas no servidor (totalItems, perPage=1) —
+    // nenhuma lista é baixada. Um card separado mostra as contas Free.
+    getAdminOverviewStats().then((s) => {
+      if (!cancelled) setStats(s)
     })
     return () => {
       cancelled = true
@@ -41,7 +31,7 @@ export default function AdminDashboard() {
         <p className="text-slate-500">Métricas da plataforma de educação SST.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
           {
             label: 'Total de Alunos',
@@ -60,6 +50,12 @@ export default function AdminDashboard() {
             val: stats.activeSubscribers.toString(),
             icon: FileText,
             color: 'text-green-600',
+          },
+          {
+            label: 'Contas Free',
+            val: stats.freeAccounts.toString(),
+            icon: UserX,
+            color: 'text-slate-400',
           },
           {
             label: 'Leads Capturados',
@@ -81,12 +77,4 @@ export default function AdminDashboard() {
       </div>
     </div>
   )
-}
-
-async function pb_countActiveStudents(nowIso: string): Promise<number> {
-  const pb = (await import('@/lib/pocketbase/client')).default
-  const res = await pb.collection('users').getList(1, 1, {
-    filter: `role != 'admin' && contract_end_date > "${nowIso}"`,
-  })
-  return res.totalItems
 }

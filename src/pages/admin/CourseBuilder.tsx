@@ -190,7 +190,7 @@ export default function CourseBuilder() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="outline" asChild>
-            <Link to={`/aluno/curso/${course.id}/aula`} target="_blank">
+            <Link to={`/plataforma/curso/${course.id}/aula`} target="_blank">
               <Eye className="w-4 h-4 mr-2" /> Visualizar como Aluno
             </Link>
           </Button>

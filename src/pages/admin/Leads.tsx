@@ -5,7 +5,8 @@ import { Upload, Download, Loader2 } from 'lucide-react'
 import { getLeads } from '@/services/leads'
 import { Lead } from '@/types'
 import { LeadList } from '@/components/admin/leads/LeadList'
-import { exportLeadsToExcel } from '@/lib/export-leads'
+import { exportAdminCsv } from '@/lib/admin-export'
+import { useToast } from '@/hooks/use-toast'
 
 export default function AdminLeads() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -13,6 +14,7 @@ export default function AdminLeads() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [exporting, setExporting] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     getLeads(page)
@@ -24,12 +26,20 @@ export default function AdminLeads() {
       .catch(console.error)
   }, [page])
 
-  // Export usa a página atual (50 registros) — exportar a base inteira de
-  // leads não fazia sentido em uma tela paginada; use Importar CSV para carga.
-  const handleExport = () => {
+  // Export CSV completo via rota server-side (hook admin_export.js): o servidor
+  // pagina a base inteira aplicando os mesmos critérios da tela; o navegador
+  // só recebe o arquivo pronto (não baixa lista nenhuma).
+  const handleExport = async () => {
     setExporting(true)
     try {
-      exportLeadsToExcel(leads)
+      await exportAdminCsv('leads')
+      toast({ title: 'Exportação concluída', description: 'CSV de leads baixado.' })
+    } catch (err: unknown) {
+      toast({
+        title: 'Erro ao exportar leads',
+        description: err instanceof Error ? err.message : 'Tente novamente.',
+        variant: 'destructive',
+      })
     } finally {
       setExporting(false)
     }
@@ -43,17 +53,13 @@ export default function AdminLeads() {
           <p className="text-slate-500 mt-1">Gerencie contatos e dispare campanhas de e-mail.</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            onClick={handleExport}
-            disabled={exporting || leads.length === 0}
-            variant="outline"
-          >
+          <Button onClick={handleExport} disabled={exporting} variant="outline">
             {exporting ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
               <Download className="w-4 h-4 mr-2" />
             )}
-            Exportar para Excel
+            Exportar CSV
           </Button>
           <Button asChild>
             <Link to="/admin/leads/import">

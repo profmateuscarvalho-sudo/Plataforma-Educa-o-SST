@@ -13,8 +13,9 @@ import { User } from '@/types'
 import { formatCivilOrLocalDate, formatCreationDate, isContractActive } from '@/lib/date-utils'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Search, Users, Edit, Mail, Trash2, Loader2 } from 'lucide-react'
+import { Search, Users, Edit, Mail, Trash2, Loader2, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { exportAdminCsv } from '@/lib/admin-export'
 import { UserEditDialog } from '@/components/admin/UserEditDialog'
 import {
   AlertDialog,
@@ -42,6 +43,7 @@ export default function AdminStudents() {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [resendingId, setResendingId] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
   const { toast } = useToast()
 
   // Busca server-side com debounce: digitar dispara uma nova página de 50,
@@ -110,6 +112,24 @@ export default function AdminStudents() {
     }
   }
 
+  // Export CSV completo via rota server-side (hook admin_export.js) com a
+  // busca ativa; o navegador só recebe o arquivo pronto.
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      await exportAdminCsv('students', { search })
+      toast({ title: 'Exportação concluída', description: 'CSV de alunos baixado.' })
+    } catch (err: unknown) {
+      toast({
+        title: 'Erro ao exportar alunos',
+        description: err instanceof Error ? err.message : 'Tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const planBadge = (tier?: string) => {
     const cls =
       tier === 'ouro'
@@ -131,9 +151,19 @@ export default function AdminStudents() {
           <h2 className="text-2xl font-semibold text-slate-900">Alunos</h2>
           <p className="text-sm text-slate-500 mt-1">Gestão de alunos cadastrados na plataforma.</p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2">
-          <Users className="w-4 h-4 text-slate-400" />
-          <span className="text-sm font-medium text-slate-600">{total} alunos</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2">
+            <Users className="w-4 h-4 text-slate-400" />
+            <span className="text-sm font-medium text-slate-600">{total} alunos</span>
+          </div>
+          <Button onClick={handleExport} disabled={exporting} variant="outline">
+            {exporting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Exportar CSV
+          </Button>
         </div>
       </div>
 

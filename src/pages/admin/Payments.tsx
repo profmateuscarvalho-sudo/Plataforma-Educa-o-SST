@@ -4,6 +4,9 @@ import { getPayments } from '@/services/payments'
 import { Payment } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Loader2, Download } from 'lucide-react'
+import { exportAdminCsv } from '@/lib/admin-export'
+import { useToast } from '@/hooks/use-toast'
 
 const PAGE_SIZE = 50
 
@@ -12,6 +15,8 @@ export default function AdminPayments() {
   const [page, setPage] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
+  const [exporting, setExporting] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     getPayments(page, PAGE_SIZE)
@@ -23,13 +28,41 @@ export default function AdminPayments() {
       .catch(console.error)
   }, [page])
 
+  // Export CSV completo via rota server-side (hook admin_export.js); o navegador
+  // só recebe o arquivo pronto, nunca baixa a lista no cliente.
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      await exportAdminCsv('payments')
+      toast({ title: 'Exportação concluída', description: 'CSV de pagamentos baixado.' })
+    } catch (err: unknown) {
+      toast({
+        title: 'Erro ao exportar pagamentos',
+        description: err instanceof Error ? err.message : 'Tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-3xl font-serif font-bold text-secondary">Pagamentos IPAG</h2>
-        <span className="text-sm text-slate-500">
-          Página {page} de {totalPages} — {totalItems} pagamentos
-        </span>
+        <div className="flex items-center gap-4 flex-wrap">
+          <span className="text-sm text-slate-500">
+            Página {page} de {totalPages} — {totalItems} pagamentos
+          </span>
+          <Button onClick={handleExport} disabled={exporting} variant="outline">
+            {exporting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Exportar CSV
+          </Button>
+        </div>
       </div>
       <Card>
         <CardContent className="p-0 divide-y">

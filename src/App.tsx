@@ -49,7 +49,7 @@ import AdminAccessDashboard from './pages/admin/AccessDashboard'
 import AdminCourses from './pages/admin/Courses'
 import AdminCourseBuilder from './pages/admin/CourseBuilder'
 import AdminMagazines from './pages/admin/Magazines'
-import AdminPayments from './pages/admin/Payments'
+import AdminVendas from './pages/admin/Vendas'
 import AdminLives from './pages/admin/Lives'
 import StudentLive from './pages/student/Live'
 import StudentLiveSessions from './pages/student/LiveSessions'
@@ -172,7 +172,8 @@ const App = () => (
               <Route path="/admin/leads" element={<AdminLeads />} />
               <Route path="/admin/dia-tst" element={<AdminDiaTst />} />
               <Route path="/admin/leads/import" element={<AdminLeadImport />} />
-              <Route path="/admin/pagamentos" element={<AdminPayments />} />
+              <Route path="/admin/vendas" element={<AdminVendas />} />
+              <Route path="/admin/pagamentos" element={<Navigate to="/admin/vendas" replace />} />
               <Route path="/admin/lives" element={<AdminLives />} />
               <Route path="/admin/planos" element={<AdminSubscriptionPlans />} />
               <Route path="/admin/avisos" element={<AdminAnnouncements />} />

@@ -60,7 +60,7 @@ const sections: MenuSection[] = [
     items: [
       { label: 'Alunos', icon: GraduationCap, path: '/admin/alunos' },
       { label: 'Planos de Assinatura', icon: BadgeCent, path: '/admin/planos' },
-      { label: 'Pagamentos', icon: BookOpen, path: '/admin/pagamentos' },
+      { label: 'Vendas', icon: BookOpen, path: '/admin/vendas' },
       { label: 'Leads', icon: Users, path: '/admin/leads' },
     ],
   },

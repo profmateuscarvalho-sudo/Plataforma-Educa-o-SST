@@ -11,6 +11,7 @@
  */
 
 import { toast } from '@/hooks/use-toast'
+import { APP_VERSION } from '@/lib/app-version'
 
 /**
  * Critério robusto de detecção de preview / editor do Skip:
@@ -172,9 +173,11 @@ export function registerAppServiceWorker(): void {
   if (hasRegistered) return
   hasRegistered = true
 
-  // Registra o sw.js com escopo raiz
+  // Registra o sw.js com escopo raiz. A query ?v=<versão do build> é o que faz
+  // cada publicação reinstalar o worker (URL nova ⇒ byte-check difere ⇒ install),
+  // e o activate() do worker novo limpa os caches das versões anteriores.
   navigator.serviceWorker
-    .register('/sw.js', { scope: '/' })
+    .register(`/sw.js?v=${encodeURIComponent(APP_VERSION)}`, { scope: '/' })
     .then((registration) => {
       registrationInstance = registration
 

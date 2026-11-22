@@ -1,5 +1,6 @@
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
+import { APP_VERSION_LABEL } from '@/lib/app-version'
 import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
@@ -184,6 +185,11 @@ export default function AdminLayout() {
         <main className="flex-1 p-8 overflow-auto">
           <Outlet />
         </main>
+        <footer className="h-8 flex-shrink-0 border-t bg-white px-8 flex items-center justify-end">
+          <span className="text-[11px] text-slate-400" title="Versão do build">
+            {APP_VERSION_LABEL}
+          </span>
+        </footer>
       </div>
     </div>
   )

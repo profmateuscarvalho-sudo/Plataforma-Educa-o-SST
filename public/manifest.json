@@ -2,6 +2,7 @@
   "name": "Educação SST",
   "short_name": "Educação SST",
   "description": "Plataforma de educação em Segurança e Saúde do Trabalho (SST).",
+  "version": "0.0.389",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",

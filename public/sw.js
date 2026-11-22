@@ -4,21 +4,31 @@
  * 1. index.html e rotas de navegação: Network-first com fallback para cache
  *    (garante que publicação nova chegue de imediato sem cache stale de HTML).
  * 2. Assets estáticos (JS, CSS, fontes com hash Vite / imagens do site): Cache-first,
- *    pois Vite usa hashing em nomes de arquivo na build de produção.
+ *    com TETO de entradas (evictFIFO) para o cache não crescer sem fim.
  * 3. Materiais de leitura / mídia (capas, PDFs, imagens da API): Cache-first com revalidação
- *    em segundo plano para permitir leitura offline de revistas e materiais.
+ *    em segundo plano, também com teto, para permitir leitura offline de revistas e materiais.
  *
  * Versão do cache:
- * Atualizada a cada publicação (0.0.310-v2). Ao ativar, apaga todos os caches antigos.
+ * O registro do worker usa /sw.js?v=<versão do build> (src/lib/app-version.ts,
+ * derivada do package.json que a plataforma incrementa a cada publicação).
+ * URL diferente ⇒ navegador baixa e reinstala o worker novo; ao ativar, apaga
+ * todos os caches de versões anteriores.
  *
  * Ativação imediata:
  * self.skipWaiting() na instalação e self.clients.claim() na ativação.
  */
 
-const CACHE_VERSION = 'edu-sst-v0.0.310-v2'
-const SHELL_CACHE = `${CACHE_VERSION}-shell`
-const ASSET_CACHE = `${CACHE_VERSION}-assets`
-const READING_CACHE = `${CACHE_VERSION}-reading`
+// Fallback quando aberto direto sem query (não deve acontecer: pwa.ts registra
+// sempre com ?v=). O sufixo de milissegundos garante caches únicos por sessão.
+var CACHE_VERSION = 'edu-sst-' + (self.location.search.split('v=')[1] || 'dev-' + Date.now())
+var SHELL_CACHE = CACHE_VERSION + '-shell'
+var ASSET_CACHE = CACHE_VERSION + '-assets'
+var READING_CACHE = CACHE_VERSION + '-reading'
+
+// Teto de entradas por cache — impede crescimento indefinido nos devices dos alunos.
+var MAX_ASSET_ENTRIES = 400
+var MAX_READING_ENTRIES = 200
+var MAX_SHELL_ENTRIES = 60
 
 const APP_SCREENS = ['/app', '/app/', '/app/estudar', '/app/cases', '/app/perfil', '/login']
 
@@ -36,7 +46,7 @@ self.addEventListener('activate', (event) => {
     (async () => {
       const keys = await caches.keys()
       await Promise.all(
-        keys.filter((k) => !k.startsWith(CACHE_VERSION)).map((k) => caches.delete(k)),
+        keys.filter((k) => k.indexOf(CACHE_VERSION) !== 0).map((k) => caches.delete(k)),
       )
       await self.clients.claim()
     })(),
@@ -49,6 +59,25 @@ self.addEventListener('message', (event) => {
     self.skipWaiting()
   }
 })
+
+// --- Teto de cache (FIFO simples): mantém no máximo `max` entradas, ---
+// --- removendo as mais antigas quando estoura.                      ---
+async function putWithCap(cacheName, request, response, max) {
+  try {
+    const cache = await caches.open(cacheName)
+    await cache.put(request, response)
+    const keys = await cache.keys()
+    if (keys.length > max) {
+      // keys() é em ordem de inserção: remove do início (mais antigos)
+      const excess = keys.length - max
+      for (let i = 0; i < excess; i++) {
+        cache.delete(keys[i]).catch(() => {})
+      }
+    }
+  } catch {
+    /* cap é best-effort: nunca derruba a resposta */
+  }
+}
 
 function isReadingAsset(url) {
   // Capas de revista, revistas abertas e PDFs/imagens da API PocketBase
@@ -79,8 +108,7 @@ self.addEventListener('fetch', (event) => {
         try {
           const networkResponse = await fetch(request)
           if (networkResponse && networkResponse.ok) {
-            const cache = await caches.open(SHELL_CACHE)
-            cache.put(request, networkResponse.clone()).catch(() => {})
+            putWithCap(SHELL_CACHE, request, networkResponse.clone(), MAX_SHELL_ENTRIES)
           }
           return networkResponse
         } catch {
@@ -108,8 +136,7 @@ self.addEventListener('fetch', (event) => {
         try {
           const networkResponse = await fetch(request)
           if (networkResponse && networkResponse.ok) {
-            const cache = await caches.open(SHELL_CACHE)
-            cache.put(request, networkResponse.clone()).catch(() => {})
+            putWithCap(SHELL_CACHE, request, networkResponse.clone(), MAX_SHELL_ENTRIES)
           }
           return networkResponse
         } catch {
@@ -133,14 +160,15 @@ self.addEventListener('fetch', (event) => {
           // Revalida em segundo plano sem bloquear exibição
           fetch(request)
             .then((resp) => {
-              if (resp && resp.ok) cache.put(request, resp.clone())
+              if (resp && resp.ok)
+                putWithCap(READING_CACHE, request, resp.clone(), MAX_READING_ENTRIES)
             })
             .catch(() => {})
           return cached
         }
         try {
           const resp = await fetch(request)
-          if (resp && resp.ok) cache.put(request, resp.clone())
+          if (resp && resp.ok) putWithCap(READING_CACHE, request, resp.clone(), MAX_READING_ENTRIES)
           return resp
         } catch {
           return new Response('', { status: 504 })
@@ -160,7 +188,7 @@ self.addEventListener('fetch', (event) => {
         if (cached) return cached
         try {
           const resp = await fetch(request)
-          if (resp && resp.ok) cache.put(request, resp.clone())
+          if (resp && resp.ok) putWithCap(ASSET_CACHE, request, resp.clone(), MAX_ASSET_ENTRIES)
           return resp
         } catch {
           return new Response('', { status: 504 })
@@ -179,7 +207,7 @@ self.addEventListener('fetch', (event) => {
         const cached = await cache.match(request)
         const fetchPromise = fetch(request)
           .then((resp) => {
-            if (resp && resp.ok) cache.put(request, resp.clone())
+            if (resp && resp.ok) putWithCap(ASSET_CACHE, request, resp.clone(), MAX_ASSET_ENTRIES)
             return resp
           })
           .catch(() => cached)

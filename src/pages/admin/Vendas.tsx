@@ -67,6 +67,10 @@ const FORMA_OPTS: { value: VendasForma; label: string }[] = [
   { value: 'cartao', label: 'Cartão' },
 ]
 
+// Sentinela dos filtros "sem filtro" (Radix Select não aceita value="").
+const TODOS = 'all'
+type ComTodos<T> = T | typeof TODOS
+
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 // Datas (AAAA-MM-DD) no relógio de São Paulo — casam com a janela do hook
@@ -119,9 +123,9 @@ export default function AdminVendas() {
   const [periodo, setPeriodo] = useState<VendasPeriodo>('este_mes')
   const [start, setStart] = useState(inicioMesSP())
   const [end, setEnd] = useState(hojeSP())
-  const [tipo, setTipo] = useState<VendasTipo | ''>('')
-  const [status, setStatus] = useState<VendasStatus | ''>('')
-  const [forma, setForma] = useState<VendasForma | ''>('')
+  const [tipo, setTipo] = useState<ComTodos<VendasTipo>>(TODOS)
+  const [status, setStatus] = useState<ComTodos<VendasStatus>>(TODOS)
+  const [forma, setForma] = useState<ComTodos<VendasForma>>(TODOS)
   const [busca, setBusca] = useState('')
   const [buscaAplicada, setBuscaAplicada] = useState('')
 
@@ -142,9 +146,9 @@ export default function AdminVendas() {
       periodo,
       start,
       end,
-      tipo,
-      status,
-      forma,
+      tipo: tipo === TODOS ? '' : tipo,
+      status: status === TODOS ? '' : status,
+      forma: forma === TODOS ? '' : forma,
       search: buscaAplicada,
       page,
       perPage: PAGE_SIZE,
@@ -286,12 +290,12 @@ export default function AdminVendas() {
           )}
           <div className="space-y-1">
             <label className="text-xs font-medium text-slate-500">Tipo de produto</label>
-            <Select value={tipo} onValueChange={(v) => setTipo(v as VendasTipo | '')}>
+            <Select value={tipo} onValueChange={(v) => setTipo(v as ComTodos<VendasTipo>)}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value={TODOS}>Todos</SelectItem>
                 {TIPO_OPTS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
                     {o.label}
@@ -302,12 +306,12 @@ export default function AdminVendas() {
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-slate-500">Status</label>
-            <Select value={status} onValueChange={(v) => setStatus(v as VendasStatus | '')}>
+            <Select value={status} onValueChange={(v) => setStatus(v as ComTodos<VendasStatus>)}>
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value={TODOS}>Todos</SelectItem>
                 {STATUS_OPTS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
                     {o.label}
@@ -318,12 +322,12 @@ export default function AdminVendas() {
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-slate-500">Forma</label>
-            <Select value={forma} onValueChange={(v) => setForma(v as VendasForma | '')}>
+            <Select value={forma} onValueChange={(v) => setForma(v as ComTodos<VendasForma>)}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="Todas" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value={TODOS}>Todas</SelectItem>
                 {FORMA_OPTS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
                     {o.label}

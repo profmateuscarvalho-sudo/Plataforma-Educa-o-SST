@@ -39,7 +39,14 @@ routerAdd(
         perPage,
         (page - 1) * perPage,
       )
-      var total = $app.countRecords('users', filter)
+      // countRecords(col, string) lança TypeError no JSVM (só aceita $dbx.exp);
+      // contagem paginada com o MESMO filtro PB das linhas.
+      var total = 0
+      for (;;) {
+        var pgTotal = $app.findRecordsByFilter('users', filter, '-created', 500, total)
+        total += pgTotal.length
+        if (pgTotal.length < 500) break
+      }
 
       var students = []
       for (var i = 0; i < records.length; i++) {
@@ -72,7 +79,8 @@ routerAdd(
         items: students,
       })
     } catch (err) {
-      $app.logger().error('Failed to list admin students', 'error', err.message)
+      // console.* é o que aparece no stream de hooks (não $app.logger())
+      console.error('admin_students: falha na listagem:', err && err.message ? err.message : err)
       return e.json(500, { error: 'Erro ao carregar lista de alunos' })
     }
   },

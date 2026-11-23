@@ -180,14 +180,22 @@ routerAdd(
             cards: calculaCards(),
           })
         }
-        var idsU = []
+        var partesU = []
         for (var iu = 0; iu < usuariosAchados.length; iu++)
-          idsU.push('"' + usuariosAchados[iu].id + '"')
-        partes.push('user in (' + idsU.join(',') + ')')
+          partesU.push('user = "' + usuariosAchados[iu].id + '"')
+        // O parser de filtro do JSVM não tem operador "in" — usa cadeia OR.
+        partes.push('(' + partesU.join(' || ') + ')')
       }
 
       var filtro = partes.join(' && ')
-      var total = $app.countRecords('payments', filtro)
+      // countRecords(col, string) lança TypeError no JSVM (só aceita $dbx.exp);
+      // contagem paginada com o MESMO filtro PB das linhas — 0 registros ⇒ total 0.
+      var total = 0
+      for (;;) {
+        var pgTotal = $app.findRecordsByFilter('payments', filtro, '-created', 500, total)
+        total += pgTotal.length
+        if (pgTotal.length < 500) break
+      }
       var registros = $app.findRecordsByFilter(
         'payments',
         filtro,
@@ -217,15 +225,10 @@ routerAdd(
       function mapa(campo, ids) {
         var out = {}
         if (ids.length === 0) return out
-        var quoted = []
-        for (var i = 0; i < ids.length; i++) quoted.push('"' + ids[i] + '"')
-        var recs = $app.findRecordsByFilter(
-          campo[0],
-          'id in (' + quoted.join(',') + ')',
-          '',
-          500,
-          0,
-        )
+        // O parser de filtro do JSVM não tem operador "in" — usa cadeia OR.
+        var partesId = []
+        for (var i = 0; i < ids.length; i++) partesId.push('id = "' + ids[i] + '"')
+        var recs = $app.findRecordsByFilter(campo[0], '(' + partesId.join(' || ') + ')', '', 500, 0)
         for (var j = 0; j < recs.length; j++) out[recs[j].id] = recs[j]
         return out
       }
@@ -259,7 +262,8 @@ routerAdd(
         cards: calculaCards(),
       })
     } catch (err) {
-      $app.logger().error('admin_vendas: falha na listagem', 'error', err.message)
+      // console.* é o que aparece no stream de hooks (não $app.logger())
+      console.error('admin_vendas: falha na listagem:', err && err.message ? err.message : err)
       return e.json(500, { error: 'Erro ao carregar vendas' })
     }
 
@@ -413,9 +417,11 @@ routerAdd(
         if (planosPagos.length > 0) {
           var idsP = []
           for (var c = 0; c < planosPagos.length; c++) idsP.push('"' + planosPagos[c].id + '"')
+          var partesP = []
+          for (var cp = 0; cp < idsP.length; cp++) partesP.push('plan = ' + idsP[cp])
           var subs = $app.findRecordsByFilter(
             'subscriptions',
-            "status = 'active' && plan in (" + idsP.join(',') + ')',
+            "status = 'active' && (" + partesP.join(' || ') + ')',
             '',
             0,
             0,
@@ -429,38 +435,40 @@ routerAdd(
               idsAlunos.push('"' + su + '"')
             }
           }
-          if (idsAlunos.length > 0) {
-            assinantes = $app.countRecords(
-              'users',
-              "role = 'student' && contract_end_date > '" +
-                nowIso +
-                "' && id in (" +
-                idsAlunos.join(',') +
-                ')',
-            )
-          }
+          // O parser de filtro do JSVM não tem operador "in" — usa cadeia OR.
+          var partesAlunos = []
+          for (var da = 0; da < idsAlunos.length; da++) partesAlunos.push('id = ' + idsAlunos[da])
+          assinantes = $app.findRecordsByFilter(
+            'users',
+            "role = 'student' && contract_end_date > '" +
+              nowIso +
+              "' && (" +
+              partesAlunos.join(' || ') +
+              ')',
+            '',
+            0,
+            0,
+          ).length
         }
       } catch (_) {}
 
       // assinaturas vencendo em 30 dias (alunos pagos com contrato vigente)
       var em30Iso = new Date(Date.now() + 30 * 86400 * 1000).toISOString()
-      var venc30 = 0
-      try {
-        venc30 = $app.countRecords(
-          'users',
-          "role = 'student' && plan_tier in ('prata','ouro') && contract_end_date > '" +
-            nowIso +
-            "' && contract_end_date <= '" +
-            em30Iso +
-            "'",
-        )
-      } catch (_) {}
+      var venc30 = $app.findRecordsByFilter(
+        'users',
+        "role = 'student' && (plan_tier = 'prata' || plan_tier = 'ouro')" +
+          " && contract_end_date > '" +
+          nowIso +
+          "' && contract_end_date <= '" +
+          em30Iso +
+          "'",
+        '',
+        0,
+        0,
+      ).length
 
       // pagamentos pendentes
-      var pendentes = 0
-      try {
-        pendentes = $app.countRecords('payments', "status = 'pending'")
-      } catch (_) {}
+      var pendentes = $app.findRecordsByFilter('payments', "status = 'pending'", '', 0, 0).length
 
       var cards = {
         receita_mes: Math.round(receitaMes * 100) / 100,

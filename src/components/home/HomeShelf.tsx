@@ -4,7 +4,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface HomeShelfProps {
   title: string
-  moreTo: string
+  /** Link "Ver todos": omitir quando não existe listagem pública da área. */
+  moreTo?: string
   moreLabel?: string
   children: React.ReactNode
 }
@@ -81,12 +82,14 @@ export function HomeShelf({ title, moreTo, moreLabel = 'Ver todos', children }: 
         <h2 className="font-serif text-xl sm:text-2xl font-bold text-foreground tracking-tight">
           {title}
         </h2>
-        <Link
-          to={moreTo}
-          className="editorial-link text-sm sm:text-base font-semibold text-foreground hover:text-[#173F33] dark:hover:text-[#FDBE2D] shrink-0"
-        >
-          {moreLabel} &rarr;
-        </Link>
+        {moreTo && (
+          <Link
+            to={moreTo}
+            className="editorial-link text-sm sm:text-base font-semibold text-foreground hover:text-[#173F33] dark:hover:text-[#FDBE2D] shrink-0"
+          >
+            {moreLabel} &rarr;
+          </Link>
+        )}
       </div>
 
       <div className="relative">

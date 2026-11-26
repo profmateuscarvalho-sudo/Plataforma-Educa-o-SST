@@ -5,7 +5,12 @@ import pb from '@/lib/pocketbase/client'
 import { HomeShelf } from '@/components/home/HomeShelf'
 import { Magazine, Course, Mentorship, DocProject } from '@/types'
 import { formatBRL, priceForEdition, MagazinePricing } from '@/lib/magazine-pricing'
-import { MENTORSHIP_DISCOUNT, mentorshipDiscountedPrice } from '@/lib/plan-access'
+import {
+  MENTORSHIP_DISCOUNT,
+  mentorshipDiscountedPrice,
+  tierAllows,
+  type AccessTier,
+} from '@/lib/plan-access'
 
 const IMG_W = 208
 const IMG_H = 250
@@ -114,7 +119,15 @@ export function CoursesShelf({ courses }: { courses: Course[] }) {
   )
 }
 
-export function MentorshipsShelf({ mentorships }: { mentorships: Mentorship[] }) {
+export function MentorshipsShelf({
+  mentorships,
+  tier = 'none',
+}: {
+  mentorships: Mentorship[]
+  /** Tier do visitante: Prata/Ouro veem o preço com desconto em destaque. */
+  tier?: AccessTier
+}) {
+  const temDesconto = tierAllows(tier, 'prata')
   return (
     <HomeShelf title="Mentorias" moreTo="/mentorias">
       {mentorships.map((m) => {
@@ -123,8 +136,6 @@ export function MentorshipsShelf({ mentorships }: { mentorships: Mentorship[] })
           : m.expand?.mentor?.photo
             ? pb.files.getUrl(m.expand.mentor, m.expand.mentor.photo, { thumb: '400x250' })
             : null
-        const discounted = mentorshipDiscountedPrice(m.price)
-        const discountedText = formatBRL(discounted)
         return (
           <ShelfCard
             key={m.id}
@@ -152,15 +163,28 @@ export function MentorshipsShelf({ mentorships }: { mentorships: Mentorship[] })
               <p className="font-serif font-semibold text-sm text-[#1C1B18] line-clamp-2 leading-snug">
                 {m.title}
               </p>
-              <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
-                <span className="font-bold text-sm text-[#1C1B18]">{formatBRL(m.price)}</span>
-                <span className="text-[11px] text-muted-foreground line-through">
-                  {discountedText}
-                </span>
-                <span className="text-[11px] font-bold text-[#173F33]">
-                  {Math.round(MENTORSHIP_DISCOUNT * 100)}% Prata/Ouro
-                </span>
-              </div>
+              {temDesconto ? (
+                <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
+                  {/* Prata/Ouro: preço cheio riscado + 30% off em destaque */}
+                  <span className="text-[11px] text-muted-foreground line-through">
+                    {formatBRL(m.price)}
+                  </span>
+                  <span className="font-bold text-sm text-[#173F33]">
+                    {formatBRL(mentorshipDiscountedPrice(m.price))}
+                  </span>
+                  <span className="text-[11px] font-bold text-[#173F33]">
+                    {Math.round(MENTORSHIP_DISCOUNT * 100)}% off Prata/Ouro
+                  </span>
+                </div>
+              ) : (
+                <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
+                  {/* Demais: preço cheio + aviso do desconto de assinante */}
+                  <span className="font-bold text-sm text-[#1C1B18]">{formatBRL(m.price)}</span>
+                  <span className="text-[11px] font-semibold text-[#173F33]">
+                    30% off para assinantes Prata
+                  </span>
+                </div>
+              )}
               <p className="mt-1 text-[11px] text-muted-foreground font-medium">
                 {m.available_dates ? `Próxima data: ${m.available_dates}` : 'Novas datas em breve'}
               </p>
@@ -173,8 +197,9 @@ export function MentorshipsShelf({ mentorships }: { mentorships: Mentorship[] })
 }
 
 export function DocumentariesShelf({ docs }: { docs: DocProject[] }) {
+  // Sem "Ver todos": ainda não existe listagem pública de documentários.
   return (
-    <HomeShelf title="Documentários" moreTo="/documentarios">
+    <HomeShelf title="Documentários">
       {docs.map((doc) => {
         const cover = doc.presentation_photos?.[0]
           ? pb.files.getUrl(doc, doc.presentation_photos[0], { thumb: '400x250' })

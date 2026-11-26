@@ -138,6 +138,19 @@ export function calcularPrecosDePlano(plan: {
   })
 }
 
+/**
+ * "Menos de R$ X por dia": total anual ÷ 365, em centavos, arredondado PARA CIMA
+ * até a próxima DEZENA de centavos e sempre ESTRITAMENTE acima do valor real
+ * (se o real cair exatamente numa dezena, sobe mais uma: 0,40 → 0,50).
+ * Ex.: cartão 178,80 → 48,98 cents/dia → 0,50; Pix 144 → 39,45 → 0,40.
+ */
+export function valorPorDiaMenosDe(totalAnual: number): number {
+  const realCentavos = (Math.max(0, totalAnual || 0) / 365) * 100
+  let cents = Math.ceil(realCentavos / 10) * 10
+  if (cents <= realCentavos) cents += 10
+  return cents / 100
+}
+
 /** "R$ 1.234,56" (pt-BR). */
 export function formatBRL(value: number): string {
   return value.toLocaleString('pt-BR', {

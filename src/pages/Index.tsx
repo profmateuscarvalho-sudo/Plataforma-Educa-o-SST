@@ -181,8 +181,8 @@ export default function Index() {
           1. HERO
           ===================================================================== */}
       <section style={{ background: BG_HERO }} className="relative overflow-hidden">
-        <div className="max-w-[1200px] mx-auto px-5 sm:px-6 pt-12 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-10 items-center">
+        <div className="max-w-[1240px] mx-auto px-5 sm:px-6 pt-12 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-14 items-center">
             {/* Coluna de texto (primeiro no celular, à esquerda no desktop) */}
             <div>
               <span
@@ -198,26 +198,34 @@ export default function Index() {
               </span>
 
               <h1
-                className="mt-6 mb-5 text-[38px] leading-[1.04] sm:text-[52px] lg:text-[62px] xl:text-[70px]"
-                style={{ fontFamily: F_PLAYFAIR, fontWeight: 900, color: HERO_INK }}
+                className="mt-6 mb-5"
+                style={{
+                  fontFamily: F_PLAYFAIR,
+                  fontWeight: 900,
+                  color: HERO_INK,
+                  fontSize: 'clamp(40px, 5vw, 68px)',
+                  lineHeight: 1.05,
+                }}
               >
                 Quer evoluir na área de SST?
               </h1>
 
               <p
-                className="italic mb-6 text-[24px] sm:text-[30px] lg:text-[34px]"
+                className="italic mb-6"
                 style={{
                   fontFamily: F_PLAYFAIR,
                   fontStyle: 'italic',
                   fontWeight: 800,
                   color: HERO_INK,
+                  fontSize: 'clamp(22px, 2.4vw, 32px)',
+                  lineHeight: 1.25,
                 }}
               >
                 Assine a revista digital e tenha acesso a plataforma de estudos.
               </p>
 
               <p
-                className="text-[16px] sm:text-[17px] leading-relaxed max-w-[540px] mb-8"
+                className="text-[18px] leading-relaxed max-w-[540px] mb-8"
                 style={{ fontFamily: F_INTER, color: HERO_MUTED }}
               >
                 Revista mensal, cursos, aulas ao vivo, documentários e mentorias para quem quer
@@ -257,8 +265,10 @@ export default function Index() {
             </div>
 
             {/* Vídeo da revista (desktop) / capa ou poster (celular) */}
-            <div className="flex flex-col items-center lg:items-end">
-              <div className="relative w-[260px] sm:w-[320px] lg:w-full lg:max-w-[640px] aspect-[4/5] lg:aspect-auto lg:h-[430px] xl:h-[460px]">
+            <div className="flex flex-col items-center">
+              {/* Caixa na proporção real do vídeo (720×494) — nada de altura
+               * fixa, scale ou cover: o vídeo aparece sempre inteiro. */}
+              <div className="relative w-full max-w-[600px]" style={{ aspectRatio: '720 / 494' }}>
                 {/* Vídeo da revista sendo folheada — só existe no desktop,
                  * dentro de um wrapper que não renderiza em telas pequenas. */}
                 {showVideo && (
@@ -271,11 +281,12 @@ export default function Index() {
                       preload="metadata"
                       poster={heroMedia.posterUrl ?? undefined}
                       src={heroMedia.videoUrl ?? undefined}
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full"
                       style={{
+                        objectFit: 'contain',
                         borderRadius: 18,
                         boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
-                        transform: 'perspective(1400px) rotateY(-7deg) rotateX(3deg)',
+                        transform: 'perspective(1400px) rotateY(-5deg) rotateX(2deg)',
                       }}
                     />
                   </div>
@@ -296,11 +307,12 @@ export default function Index() {
                       loading={isMobile ? 'eager' : 'lazy'}
                       fetchPriority={isMobile ? 'high' : 'low'}
                       decoding="async"
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full"
                       style={{
+                        objectFit: 'contain',
                         borderRadius: 18,
                         boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
-                        transform: 'perspective(1400px) rotateY(-7deg) rotateX(3deg)',
+                        transform: 'perspective(1400px) rotateY(-5deg) rotateX(2deg)',
                       }}
                     />
                   ) : (
@@ -312,7 +324,7 @@ export default function Index() {
                         background: '#2A2620',
                         color: SEC_ON_DARK,
                         boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
-                        transform: 'perspective(1400px) rotateY(-5deg) rotateX(2deg)',
+                        transform: 'perspective(1400px) rotateY(-7deg) rotateX(3deg)',
                       }}
                     >
                       <span
@@ -328,8 +340,9 @@ export default function Index() {
                   ))}
               </div>
 
-              {/* Selos abaixo do vídeo/capa */}
-              <div className="mt-6 lg:mt-8 flex flex-col sm:flex-row sm:flex-wrap items-center gap-2.5 sm:gap-3">
+              {/* Selos abaixo do vídeo/capa — lado a lado, centralizados,
+               * quebrando linha só se faltar espaço */}
+              <div className="mt-6 lg:mt-8 flex flex-wrap justify-center items-center gap-2.5 sm:gap-3">
                 <span
                   className="inline-flex items-center px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] rounded-full"
                   style={{ fontFamily: F_INTER, background: YELLOW, color: INK }}

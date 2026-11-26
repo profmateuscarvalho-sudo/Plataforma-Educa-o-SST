@@ -37,19 +37,20 @@ export function LockedCta({ className, label }: { className?: string; label?: st
   )
 }
 
-/** Overlay de cadeado para capas/cards (revistas, cursos, documentários, lives). */
+/** Overlay de cadeado para capas/cards (revistas, cursos, documentários, lives). Leva para /planos. */
 export function LockedOverlay({ className }: { className?: string }) {
   return (
-    <div
+    <Link
+      to="/planos"
       className={cn(
-        'absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2 text-white',
+        'absolute inset-0 bg-black/50 hover:bg-black/60 transition-colors flex flex-col items-center justify-center gap-2 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
         className,
       )}
     >
       <div className="w-12 h-12 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center">
-        <Lock className="w-5 h-5" />
+        <Lock className="w-5 h-5" aria-hidden="true" />
       </div>
-      <span className="text-xs font-semibold px-2 text-center">Disponível no plano Prata</span>
-    </div>
+      <span className="text-xs font-semibold px-2 text-center">Assine</span>
+    </Link>
   )
 }

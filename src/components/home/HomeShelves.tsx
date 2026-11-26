@@ -6,6 +6,11 @@ import { HomeShelf } from '@/components/home/HomeShelf'
 import { Magazine, Course, Mentorship, DocProject } from '@/types'
 import { formatBRL, priceForEdition, MagazinePricing } from '@/lib/magazine-pricing'
 import {
+  getMagazineCardKicker,
+  getMagazineCardTitle,
+  pickLatestMagazine,
+} from '@/lib/magazine-utils'
+import {
   MENTORSHIP_DISCOUNT,
   mentorshipDiscountedPrice,
   tierAllows,
@@ -42,21 +47,21 @@ function ShelfCard({
 }
 
 export function MagazineShelf({ magazines }: { magazines: Magazine[] }) {
+  const latestId = pickLatestMagazine(magazines)?.id
   return (
     <HomeShelf title="Edições da Revista" moreTo="/revistas">
       {magazines.map((mag) => {
         const cover = magazineCoverUrl(mag)
+        const isLatest = mag.id === latestId
+        const title = getMagazineCardTitle(mag, isLatest)
+        const kicker = getMagazineCardKicker(mag, isLatest)
         return (
-          <ShelfCard
-            key={mag.id}
-            to={`/revistas?revista=${mag.id}`}
-            ariaLabel={`Revista ${mag.title}`}
-          >
+          <ShelfCard key={mag.id} to={`/revistas?revista=${mag.id}`} ariaLabel={`Revista ${title}`}>
             <div className="relative aspect-[4/5] bg-[#FAF8F3]">
               {cover ? (
                 <img
                   src={cover}
-                  alt={`Capa da ${mag.title}`}
+                  alt={`Capa da ${title}`}
                   width={IMG_W}
                   height={IMG_H}
                   loading="lazy"
@@ -65,13 +70,18 @@ export function MagazineShelf({ magazines }: { magazines: Magazine[] }) {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[#7F7869] font-serif text-sm px-2 text-center">
-                  {mag.title}
+                  {title}
                 </div>
               )}
             </div>
             <div className="px-3 py-2.5">
+              {kicker && (
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#7F7869] line-clamp-1">
+                  {kicker}
+                </p>
+              )}
               <p className="font-serif font-semibold text-sm text-[#1C1B18] line-clamp-1">
-                {mag.title}
+                {title}
               </p>
             </div>
           </ShelfCard>

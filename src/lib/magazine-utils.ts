@@ -1,3 +1,5 @@
+import type { Magazine } from '@/types'
+
 /**
  * Helper para formatação de títulos de edições da Revista Educação SST.
  *
@@ -38,4 +40,44 @@ export function extractMagazineIssueNumber(rawTitle?: string | null, fallback = 
   if (!rawTitle) return fallback
   const match = rawTitle.match(/n[ºo°.]?\s*(\d+)/i)
   return match ? match[1] : fallback
+}
+
+/**
+ * Mês e ano da edição por extenso, com inicial maiúscula (ex.: "Outubro 2026").
+ * Usa o mesmo campo de data (created) do destaque da página /revistas.
+ */
+export function formatMagazineMonthYear(mag: Magazine & { created?: string }): string {
+  if (!mag.created) return ''
+  const d = new Date(mag.created)
+  if (isNaN(d.getTime())) return ''
+  const tz = { timeZone: 'America/Sao_Paulo' }
+  const mes = d.toLocaleDateString('pt-BR', { month: 'long', ...tz })
+  const ano = d.toLocaleDateString('pt-BR', { year: 'numeric', ...tz })
+  if (!mes) return ''
+  return `${mes.charAt(0).toUpperCase()}${mes.slice(1)} ${ano}`
+}
+
+/** Edição mais recente: a marcada como destaque, ou a primeira da lista (já ordenada). */
+export function pickLatestMagazine(list: Magazine[]): Magazine | null {
+  if (list.length === 0) return null
+  return list.find((m) => m.is_featured) || list[0]
+}
+
+/** Título do card: "Edição do Mês" na mais recente; nas demais, mês e ano por extenso. */
+export function getMagazineCardTitle(mag: Magazine, isLatest: boolean): string {
+  if (isLatest) return 'Edição do Mês'
+  return formatMagazineMonthYear(mag) || mag.title
+}
+
+/**
+ * Linha pequena acima do título: "Edição nº 34" nas demais;
+ * "Edição nº 35 · Novembro 2026" na mais recente.
+ */
+export function getMagazineCardKicker(mag: Magazine, isLatest: boolean): string {
+  const issue = extractMagazineIssueNumber(mag.title, '')
+  const monthYear = formatMagazineMonthYear(mag)
+  const parts: string[] = []
+  if (issue) parts.push(`Edição nº ${issue}`)
+  if (isLatest && monthYear) parts.push(monthYear)
+  return parts.join(' · ')
 }

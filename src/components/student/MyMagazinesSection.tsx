@@ -9,7 +9,11 @@ import { Newspaper, BookOpen } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { Button } from '@/components/ui/button'
 import { usePurchasedMagazines, PurchasedMagazine } from '@/hooks/use-purchased-magazines'
-import { extractMagazineIssueNumber } from '@/lib/magazine-utils'
+import {
+  getMagazineCardKicker,
+  getMagazineCardTitle,
+  pickLatestMagazine,
+} from '@/lib/magazine-utils'
 import { Magazine } from '@/types'
 
 interface PurchasedMagazineItem {
@@ -24,16 +28,17 @@ function buildItems(
   purchased: PurchasedMagazine[],
   magazines: Magazine[],
 ): PurchasedMagazineItem[] {
+  const latestId = pickLatestMagazine(magazines)?.id
   return purchased
     .map((p) => {
       const mag = magazines.find((m) => m.id === p.magazineId)
       if (!mag) return null
-      const issueNumber = extractMagazineIssueNumber(mag.title)
+      const isLatest = mag.id === latestId
       return {
         magazineId: mag.id,
-        title: mag.title,
+        title: getMagazineCardTitle(mag, isLatest),
         thumbnailUrl: mag.thumbnail ? pb.files.getUrl(mag, mag.thumbnail) : undefined,
-        issueLabel: issueNumber ? `Edição ${issueNumber}` : 'Edição avulsa',
+        issueLabel: getMagazineCardKicker(mag, isLatest) || 'Edição avulsa',
         purchasedAt: p.purchasedAt,
       }
     })

@@ -21,6 +21,11 @@ import { useMagazineReadLink } from '@/hooks/use-magazine-read-link'
 import { MagazineBuyButton } from '@/components/magazine/MagazineBuyButton'
 import { MagazineReaderFrame } from '@/components/magazine/MagazineReaderFrame'
 import { CheckoutModal } from '@/components/CheckoutModal'
+import {
+  getMagazineCardKicker,
+  getMagazineCardTitle,
+  pickLatestMagazine,
+} from '@/lib/magazine-utils'
 
 // Extrai o ano da revista a partir da data de criação/atualização ou do título (ex: "2026", "2025", "2024")
 function getMagazineYear(mag: Magazine): number {
@@ -31,25 +36,6 @@ function getMagazineYear(mag: Magazine): number {
   const match = mag.title.match(/20\d{2}/)
   if (match) return parseInt(match[0], 10)
   return 2025
-}
-
-// Extrai número da revista (ex: "Revista nº 32" -> "Edição nº 32")
-function getMagazineIssueNumber(mag: Magazine): string {
-  const match = mag.title.match(/n[ºo°]?\s*(\d+)/i)
-  return match ? `Edição nº ${match[1]}` : mag.title
-}
-
-// Extrai mês ou data formatada
-function getMagazineMonth(mag: Magazine): string {
-  if (mag.created) {
-    try {
-      const d = new Date(mag.created)
-      return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
-    } catch {
-      return ''
-    }
-  }
-  return ''
 }
 
 export default function Revistas() {
@@ -210,7 +196,7 @@ export default function Revistas() {
   // Edição mais recente em destaque
   const latestMag = useMemo(() => {
     if (magazines.length === 0) return null
-    return magazines.find((m) => m.is_featured) || magazines[0]
+    return pickLatestMagazine(magazines)
   }, [magazines])
   const latestMagLocked = latestMag ? magLocked(latestMag) : false
 
@@ -333,17 +319,11 @@ export default function Revistas() {
                       </span>
 
                       <div className="text-sm sm:text-base font-semibold text-[#FDBE2D] tracking-wide uppercase pt-1">
-                        {getMagazineIssueNumber(latestMag)}
-                        {getMagazineMonth(latestMag) && (
-                          <span className="text-[#F4F1E8]/70">
-                            {' '}
-                            &middot; {getMagazineMonth(latestMag)}
-                          </span>
-                        )}
+                        {getMagazineCardKicker(latestMag, true)}
                       </div>
 
                       <h2 className="title-h2-fluid text-[#F4F1E8] font-serif font-semibold leading-tight">
-                        {latestMag.title}
+                        {getMagazineCardTitle(latestMag, true)}
                       </h2>
                     </div>
 
@@ -417,6 +397,7 @@ export default function Revistas() {
                     {yearMags.map((mag) => {
                       const imgUrl = mag.thumbnail ? pb.files.getUrl(mag, mag.thumbnail) : null
                       const locked = magLocked(mag)
+                      const isLatest = mag.id === latestMag?.id
 
                       return (
                         <div
@@ -455,10 +436,10 @@ export default function Revistas() {
                           <div className="space-y-2 flex-grow flex flex-col justify-between">
                             <div>
                               <span className="text-[11px] font-bold uppercase tracking-wider text-[#7F7869] block mb-1">
-                                {getMagazineIssueNumber(mag)}
+                                {getMagazineCardKicker(mag, isLatest)}
                               </span>
                               <h4 className="font-serif font-semibold text-base sm:text-lg text-[#1C1B18] leading-tight line-clamp-2 group-hover:text-[#173F33] transition-colors">
-                                {mag.title}
+                                {getMagazineCardTitle(mag, isLatest)}
                               </h4>
                             </div>
 
@@ -512,7 +493,7 @@ export default function Revistas() {
                   onBuy={setCheckoutMagIdInReader}
                   className="w-full max-w-xs [&>p]:text-[#F4F1E8]/70 [&>p>a]:text-[#FDBE2D]"
                 />
-                <LockedCta className="h-11 px-6 rounded-full font-bold text-sm" />
+                <LockedCta label="Assine" className="h-11 px-6 rounded-full font-bold text-sm" />
               </div>
             ) : (
               <MagazineReaderFrame

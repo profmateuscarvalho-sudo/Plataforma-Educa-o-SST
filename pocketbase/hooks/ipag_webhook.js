@@ -442,8 +442,72 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         ? 'Seu plano foi atualizado — Educação SST'
         : 'Pagamento Confirmado — Educação SST'
 
-      // PARTE 1 — modelo de e-mail da lib (email_template_lib.js): layout 600px,
-      // logo, botão bulletproof e rodapé padrão. isUpgrade controla cores/texto.
+      // PARTE 1 — template de e-mail INLINE (JSVM: callback não pode chamar
+      // top-level de outro arquivo; `emailLib` nem existia — ReferenceError
+      // garantido). Mesmo layout 600px de email_template_lib.js: logo, badge,
+      // quadro-resumo, botão bulletproof e rodapé.
+      function fmtBRLInline(v) {
+        var n = Number(v)
+        if (!isFinite(n)) n = 0
+        return 'R$ ' + n.toFixed(2).replace('.', ',')
+      }
+      function summaryTableInline(rows, accentColor) {
+        var h =
+          '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:24px 0;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">'
+        for (var i = 0; i < rows.length; i++) {
+          var bg = i % 2 === 0 ? '#ffffff' : '#f8fafc'
+          h +=
+            '<tr><td style="padding:10px 16px;background:' +
+            bg +
+            ';font-family:Arial,sans-serif;font-size:13px;color:#64748b;border-bottom:1px solid #e2e8f0">' +
+            rows[i].label +
+            '</td><td style="padding:10px 16px;background:' +
+            bg +
+            ';font-family:Arial,sans-serif;font-size:13px;font-weight:bold;color:#0f172a;border-bottom:1px solid #e2e8f0;text-align:right">' +
+            rows[i].value +
+            '</td></tr>'
+        }
+        return h + '</table>'
+      }
+      function bulletproofButtonInline(label, url, bg, fg) {
+        return (
+          '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto"><tr><td style="background:' +
+          bg +
+          ';border-radius:8px"><a href="' +
+          url +
+          '" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;color:' +
+          fg +
+          ';text-decoration:none">' +
+          label +
+          '</a></td></tr></table>'
+        )
+      }
+      function baseLayoutInline(opts) {
+        var name = opts.greetingName
+          ? '<p style="margin:0 0 12px">Olá, <strong>' + opts.greetingName + '</strong>!</p>'
+          : ''
+        return (
+          '<div style="margin:0;padding:0;background:#f1f5f9"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:24px 0"><tr><td align="center"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,sans-serif;font-size:15px;color:#0f172a;line-height:1.6"><tr><td style="background:' +
+          opts.headerColor +
+          ';padding:20px 32px"><table role="presentation" width="100%"><tr><td><img src="https://www.educacaosst.com.br/logo.png" alt="Educação SST" width="150" style="display:block"></td><td align="right"><span style="display:inline-block;padding:6px 12px;border-radius:999px;background:' +
+          opts.badgeBg +
+          ';color:' +
+          opts.badgeColor +
+          ';font-size:11px;font-weight:bold;letter-spacing:1px">' +
+          opts.badgeText +
+          '</span></td></tr></table></td></tr><tr><td style="padding:32px"><h1 style="margin:0 0 16px;font-size:22px;color:#0f172a">' +
+          opts.iconChar +
+          ' ' +
+          opts.heading +
+          '</h1>' +
+          name +
+          (opts.bodyHtml || '') +
+          (opts.contentHtml || '') +
+          '<p style="margin:16px 0 0;font-size:13px;color:#64748b">' +
+          (opts.noteHtml || '') +
+          '</p></td></tr><tr><td style="padding:20px 32px;background:#0f172a;color:#94a3b8;font-size:12px;text-align:center">Educação SST — Plataforma de educação em Segurança e Saúde no Trabalho<br>Este é um e-mail automático, não responda.</td></tr></table></td></tr></table></div>'
+        )
+      }
       var headerBadge = isUpgrade ? 'UPGRADE CONFIRMADO' : 'PAGAMENTO CONFIRMADO'
       var headerColor = isUpgrade ? '#E8792B' : '#2E9E6D'
       var badgeBg = isUpgrade ? '#FED7AA' : '#D1FAE5'
@@ -468,7 +532,7 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
       if (paymentMethodIsCard) {
         var instCount = Math.max(1, Math.floor(Number(record.getFloat('installments')) || 1))
         paymentMethodLabel =
-          'Cartão em ' + instCount + 'x de ' + emailLib.formatBRL(paidAmount / instCount)
+          'Cartão em ' + instCount + 'x de ' + fmtBRLInline(paidAmount / instCount)
       }
       var paidDateBR = ''
       try {
@@ -483,10 +547,10 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         var vParts = emailDataToSend.contractEnd.substring(0, 10).split('-')
         validityBRLib = vParts[2] + '/' + vParts[1] + '/' + vParts[0]
       }
-      var summaryTable = emailLib.summaryTable(
+      var summaryTable = summaryTableInline(
         [
           { label: 'Plano', value: planDisplay + ' — assinatura anual' },
-          { label: 'Valor pago', value: emailLib.formatBRL(paidAmount) },
+          { label: 'Valor pago', value: fmtBRLInline(paidAmount) },
           { label: 'Forma de pagamento', value: paymentMethodLabel },
           { label: 'Data do pagamento', value: paidDateBR },
           { label: 'Acesso válido até', value: validityBRLib },
@@ -494,7 +558,7 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         headerColor,
       )
 
-      var htmlContent = emailLib.baseLayout({
+      var htmlContent = baseLayoutInline({
         headerColor: headerColor,
         badgeText: headerBadge,
         badgeBg: badgeBg,
@@ -505,7 +569,7 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         bodyHtml: messageBody,
         contentHtml:
           summaryTable +
-          emailLib.bulletproofButton(
+          bulletproofButtonInline(
             'Acessar Plataforma',
             'https://www.educacaosst.com.br/plataforma',
             '#facc15',

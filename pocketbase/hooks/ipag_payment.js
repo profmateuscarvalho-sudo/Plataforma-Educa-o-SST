@@ -112,7 +112,35 @@ routerAdd(
       } catch (magErr) {
         throw new NotFoundError('Revista não encontrada.')
       }
-      var precoMag = magazineLib.precoDaEdicao(body.magazine_id)
+      // INLINE OBRIGATÓRIO (JSVM): `magazineLib` (top-level de outro arquivo)
+      // dava ReferenceError dentro do callback. Mesma lógica de
+      // magazine_lib.js: edição do mês = revista mais recente; preços de
+      // magazine_landing_page (atual 29.90 / anteriores 14.90 como fallback).
+      var precoMag = (function () {
+        function round2m(n) {
+          return Math.round((n + Number.EPSILON) * 100) / 100
+        }
+        var latestId = ''
+        try {
+          var latest = $app.findRecordsByFilter('magazines', '', '-created', 1, 0)
+          latestId = latest.length > 0 ? latest[0].id : ''
+        } catch (_) {}
+        var cur = 29.9
+        var prev = 14.9
+        try {
+          var lp = $app.findRecordsByFilter('magazine_landing_page', '', '-created', 1, 0)
+          if (lp.length > 0) {
+            var c = Number(lp[0].get('current_issue_price')) || 0
+            var p = Number(lp[0].get('previous_issue_price')) || 0
+            if (c > 0) cur = c
+            if (p > 0) prev = p
+          }
+        } catch (_) {}
+        var isCurrent = !body.magazine_id || body.magazine_id === latestId
+        var price = isCurrent ? cur : prev
+        if (!(price > 0)) price = isCurrent ? 29.9 : 14.9
+        return { price: round2m(price), isCurrent: isCurrent, latestId: latestId }
+      })()
       serverAmount = precoMag.price
       console.log(
         '[ipag-pay][magazine] magazine_id=' +

@@ -28,7 +28,6 @@ const F_PLAYFAIR = "'Playfair Display', Georgia, serif"
 const F_INTER = "'Inter', system-ui, sans-serif"
 
 /* Gradientes exatos da spec */
-const BG_MENU = 'linear-gradient(90deg, #2A2620, #342E25)'
 const BG_HERO =
   'radial-gradient(circle at 82% 35%, rgba(253,190,45,0.20) 0%, transparent 42%), linear-gradient(135deg, #2A2620 0%, #3A3227 55%, #4D3E25 100%)'
 const BG_REVISTA = 'linear-gradient(135deg, #1E3832 0%, #2B4A40 55%, #3B4A36 100%)'
@@ -69,9 +68,11 @@ function coverUrl(mag: Magazine): string | null {
   return pb.files.getUrl(mag, mag.thumbnail, { thumb: '400x500' })
 }
 
-/** "R$ 0,50" → "0,50" (a spec usa os valores sem o prefixo). */
+/** "R$ 0,50" → "0,50": remove o prefixo do formatBRL. O separador entre o
+ *  símbolo e o valor pode ser espaço não separável (U+00A0) — por isso \s,
+ *  e não o espaço simples. */
 function semPrefixo(v: number): string {
-  return formatBRL(v).replace('R$ ', '')
+  return formatBRL(v).replace(/^R\$\s?/, '')
 }
 
 /** Contagem regressiva até o fim da promoção (1 tick/s, só quando ativa). */
@@ -147,81 +148,10 @@ export default function Index() {
   const revistaCovers = magazines.slice(0, 5)
   const restantes = Math.max(0, magazines.length - revistaCovers.length)
 
-  /* Logotipo do menu */
-  const logo = (
-    <Link
-      to="/"
-      className="flex items-center gap-2.5 group shrink-0"
-      aria-label="Educação SST — início"
-    >
-      <span
-        className="inline-flex items-center justify-center w-9 h-9 text-[20px]"
-        style={{ background: YELLOW, color: INK, fontFamily: F_ANTON, borderRadius: 4 }}
-        aria-hidden="true"
-      >
-        E.
-      </span>
-      <span
-        className="text-[17px] sm:text-[19px] tracking-wide group-hover:opacity-85 transition-opacity"
-        style={{ fontFamily: F_ANTON, color: CREAM }}
-      >
-        EDUCAÇÃO SST.
-      </span>
-    </Link>
-  )
-
   return (
     <div className="overflow-x-hidden" style={{ background: CREAM, color: INK }}>
       {/* =====================================================================
-          1. MENU
-          ===================================================================== */}
-      <header style={{ background: BG_MENU }} className="relative z-40">
-        <div className="max-w-[1200px] mx-auto px-5 sm:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-4">
-          {logo}
-
-          <nav
-            aria-label="Navegação principal"
-            className="hidden lg:flex items-center gap-7 text-[15px] font-medium"
-            style={{ fontFamily: F_INTER, color: SEC_ON_DARK }}
-          >
-            <Link to="/revistas" className="hover:text-[#FDBE2D] transition-colors">
-              Revista
-            </Link>
-            <Link to="/cursos" className="hover:text-[#FDBE2D] transition-colors">
-              Cursos
-            </Link>
-            <Link to="/mentorias" className="hover:text-[#FDBE2D] transition-colors">
-              Mentorias
-            </Link>
-            <Link to="/simulados" className="hover:text-[#FDBE2D] transition-colors">
-              Simulados
-            </Link>
-            <Link to="/planos" className="hover:text-[#FDBE2D] transition-colors">
-              Planos
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-3 sm:gap-4">
-            <Link
-              to="/login"
-              className="hidden sm:inline-flex text-sm sm:text-[15px] font-semibold hover:text-[#FDBE2D] transition-colors"
-              style={{ fontFamily: F_INTER, color: SEC_ON_DARK }}
-            >
-              Entrar
-            </Link>
-            <Button
-              asChild
-              size="sm"
-              className="h-11 min-h-[44px] px-5 rounded-full font-bold text-[14px] sm:text-[15px] bg-[#FDBE2D] hover:bg-[#e0a724] text-[#1C1B18] border border-[#e0a724]/40 shadow-none"
-            >
-              <Link to="/planos">Assinar o Prata</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* =====================================================================
-          2. HERO
+          1. HERO
           ===================================================================== */}
       <section style={{ background: BG_HERO }} className="relative overflow-hidden">
         <div className="max-w-[1200px] mx-auto px-5 sm:px-6 pt-12 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24">
@@ -294,15 +224,15 @@ export default function Index() {
               )}
             </div>
 
-            {/* Capas: à direita no desktop, abaixo do texto no celular */}
+            {/* Capas: leque no desktop (as 3 visíveis), só a principal no celular */}
             <div className="flex flex-col items-center lg:items-end">
-              <div className="relative w-[260px] sm:w-[320px] lg:w-[340px] xl:w-[380px] aspect-[4/5]">
-                {/* 3ª capa: atrás, inclinada +8° */}
+              <div className="relative w-[260px] sm:w-[320px] aspect-[4/5] lg:w-full lg:max-w-[520px] lg:aspect-auto lg:h-[430px] xl:h-[460px]">
+                {/* 3ª capa: ~30% da largura para a direita, girada +8° (só desktop) */}
                 {heroCovers[2] && coverUrl(heroCovers[2]) && (
                   <div
                     aria-hidden="true"
-                    className="absolute inset-x-[8%] top-[5%] w-[84%] aspect-[4/5] rounded-xl overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.5)]"
-                    style={{ transform: 'rotate(8deg)', background: '#2A2620' }}
+                    className="hidden lg:block absolute top-[6%] h-[88%] aspect-[4/5] left-1/2 translate-x-[calc(-50%_+_100px)] rotate-[8deg] rounded-xl overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.5)]"
+                    style={{ background: '#2A2620' }}
                   >
                     <img
                       src={coverUrl(heroCovers[2])!}
@@ -315,12 +245,12 @@ export default function Index() {
                     />
                   </div>
                 )}
-                {/* 2ª capa: atrás, inclinada -9° */}
+                {/* 2ª capa: ~30% da largura para a esquerda, girada -9° (só desktop) */}
                 {heroCovers[1] && coverUrl(heroCovers[1]) && (
                   <div
                     aria-hidden="true"
-                    className="absolute inset-x-[4%] top-[2.5%] w-[92%] aspect-[4/5] rounded-xl overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.5)]"
-                    style={{ transform: 'rotate(-9deg)', background: '#2A2620' }}
+                    className="hidden lg:block absolute top-[6%] h-[88%] aspect-[4/5] left-1/2 translate-x-[calc(-50%_-_100px)] rotate-[-9deg] rounded-xl overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.5)]"
+                    style={{ background: '#2A2620' }}
                   >
                     <img
                       src={coverUrl(heroCovers[1])!}
@@ -335,7 +265,7 @@ export default function Index() {
                 )}
                 {/* 1ª capa (mais recente): na frente, reta */}
                 {heroCovers[0] && coverUrl(heroCovers[0]) ? (
-                  <div className="absolute inset-0 rounded-xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.55)]">
+                  <div className="absolute inset-0 aspect-[4/5] lg:left-1/2 lg:right-auto lg:w-auto lg:-translate-x-1/2 z-10 rounded-xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.55)]">
                     <img
                       src={coverUrl(heroCovers[0])!}
                       alt={`Capa da edição mais recente da Revista Educação SST (${heroCovers[0].title})`}
@@ -349,7 +279,7 @@ export default function Index() {
                   </div>
                 ) : (
                   <div
-                    className="absolute inset-0 rounded-xl border border-[#FDBE2D]/30 flex flex-col items-center justify-center p-6 text-center"
+                    className="absolute inset-0 aspect-[4/5] lg:left-1/2 lg:right-auto lg:w-auto lg:-translate-x-1/2 z-10 rounded-xl border border-[#FDBE2D]/30 flex flex-col items-center justify-center p-6 text-center"
                     style={{ background: '#2A2620', color: SEC_ON_DARK }}
                   >
                     <span className="text-2xl mb-2" style={{ fontFamily: F_ANTON, color: YELLOW }}>

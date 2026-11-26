@@ -41,6 +41,13 @@ export default function Layout() {
   const [installOpen, setInstallOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  /* Na Home ("/") o menu acompanha o topo escuro da página; nas demais
+     rotas ele segue exatamente como é hoje (tema claro padrão). */
+  const onHome = location.pathname === '/'
+  const headerBg = onHome ? 'linear-gradient(90deg, #2A2620, #342E25)' : undefined
+  const headerText = onHome ? '#FAF8F3' : undefined
+  const headerTextSec = onHome ? '#D9D4C7' : undefined
+
   const handleInstall = () => runInstall(() => setInstallOpen(true))
 
   useEffect(() => {
@@ -60,7 +67,10 @@ export default function Layout() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
-      <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
+      <header
+        className="sticky top-0 z-50 w-full border-b border-border"
+        style={onHome ? { background: headerBg, color: headerText } : undefined}
+      >
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
           {/* Esquerda: Símbolo "E." amarelo (44px), link para a página inicial */}
           <Link to="/" className="flex items-center shrink-0 group" aria-label="Educação SST">
@@ -78,6 +88,7 @@ export default function Layout() {
                 <Link
                   key={item.name}
                   to={item.href}
+                  style={onHome ? { color: isActive ? headerText : headerTextSec } : undefined}
                   className={`text-[15px] font-medium transition-colors hover:text-foreground relative py-1 ${
                     isActive ? 'text-foreground' : 'text-muted-foreground'
                   }`}
@@ -94,7 +105,7 @@ export default function Layout() {
           {/* Direita: idioma, Área do Assinante e Criar conta grátis */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="hidden min-[1150px]:flex items-center gap-4">
-              <LanguageSwitcher />
+              <LanguageSwitcher className={onHome ? 'text-[#FAF8F3]' : undefined} />
 
               {user ? (
                 <DropdownMenu>
@@ -114,7 +125,10 @@ export default function Layout() {
                           {user.name?.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      <ChevronDown
+                        className="w-4 h-4"
+                        style={{ color: onHome ? headerTextSec : undefined }}
+                      />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 bg-card border-border">
@@ -142,6 +156,7 @@ export default function Layout() {
               ) : (
                 <Link
                   to="/login"
+                  style={onHome ? { color: headerText } : undefined}
                   className="editorial-link text-[15px] text-foreground font-semibold px-2 py-1"
                 >
                   {t('nav.subscriberArea')}
@@ -158,7 +173,10 @@ export default function Layout() {
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild className="min-[1150px]:hidden">
                 <Button variant="ghost" size="icon" aria-label="Abrir menu">
-                  <Menu className="w-6 h-6 text-foreground" />
+                  <Menu
+                    className="w-6 h-6 text-foreground"
+                    style={{ color: onHome ? headerText : undefined }}
+                  />
                 </Button>
               </SheetTrigger>
               <SheetContent

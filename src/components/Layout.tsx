@@ -83,7 +83,6 @@ export default function Layout() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  style={undefined}
                   className={`text-[15px] font-medium transition-colors hover:text-foreground relative py-1 ${
                     isActive ? 'text-foreground' : 'text-muted-foreground'
                   }`}
@@ -100,7 +99,7 @@ export default function Layout() {
           {/* Direita: idioma, Área do Assinante e Criar conta grátis */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="hidden min-[1150px]:flex items-center gap-4">
-              <LanguageSwitcher className={onHome ? 'text-[#FAF8F3]' : undefined} />
+              <LanguageSwitcher />
 
               {user ? (
                 <DropdownMenu>
@@ -120,10 +119,7 @@ export default function Layout() {
                           {user.name?.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <ChevronDown
-                        className="w-4 h-4"
-                        style={{ color: onHome ? headerTextSec : undefined }}
-                      />
+                      <ChevronDown className="w-4 h-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 bg-card border-border">
@@ -151,7 +147,6 @@ export default function Layout() {
               ) : (
                 <Link
                   to="/login"
-                  style={onHome ? { color: headerText } : undefined}
                   className="editorial-link text-[15px] text-foreground font-semibold px-2 py-1"
                 >
                   {t('nav.subscriberArea')}
@@ -168,10 +163,7 @@ export default function Layout() {
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild className="min-[1150px]:hidden">
                 <Button variant="ghost" size="icon" aria-label="Abrir menu">
-                  <Menu
-                    className="w-6 h-6 text-foreground"
-                    style={{ color: onHome ? headerText : undefined }}
-                  />
+                  <Menu className="w-6 h-6 text-foreground" />
                 </Button>
               </SheetTrigger>
               <SheetContent

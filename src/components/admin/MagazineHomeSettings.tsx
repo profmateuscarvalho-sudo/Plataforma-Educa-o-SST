@@ -255,7 +255,7 @@ export default function MagazineHomeSettings() {
           onChange={(e) => setPages(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          Aparece no selo da Home: “Folheie a edição de {mêsAtual()} — {pages || '?'} páginas”.
+          Aparece no selo da Home: “Folheie a edição de {mesAtual()} — {pages || '?'} páginas”.
         </p>
       </div>
 

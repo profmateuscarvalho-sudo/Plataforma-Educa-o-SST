@@ -346,19 +346,6 @@ export default function Index() {
                 >
                   Nova edição todo mês
                 </span>
-                <span
-                  className="inline-flex items-center gap-2 whitespace-nowrap px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] rounded-full border"
-                  style={{ fontFamily: F_INTER, color: HERO_INK, borderColor: HERO_OUTLINE }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ background: '#2E8B57' }}
-                  />
-                  {pagesHero > 0
-                    ? `Folheie a edição de ${mesHero}: ${pagesHero} páginas`
-                    : `Folheie a edição de ${mesHero}`}
-                </span>
               </div>
             </div>
           </div>

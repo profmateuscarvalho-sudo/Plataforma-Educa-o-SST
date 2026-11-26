@@ -5,10 +5,13 @@
 import { useEffect, useRef, useState } from 'react'
 import pb from '@/lib/pocketbase/client'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
-import { clearMagazineHomeMediaCache, type MagazineHomeMedia } from '@/lib/magazine-home-media'
+import { MagazineTabs } from '@/components/admin/MagazineTabs'
+import { getErrorMessage } from '@/lib/form-errors'
+import { clearMagazineHomeMediaCache } from '@/lib/magazine-home-media'
 
 const MAX_VIDEO_BYTES = 5 * 1024 * 1024 // 5 MB
 const MAX_VIDEO_MB = 5
@@ -65,8 +68,8 @@ export default function MagazineHomeSettings() {
 
   const videoUrlAtual = rec && !removerVideo ? arquivoUrl(rec, rec.home_video) : null
   const posterUrlAtual = rec && !removerPoster ? arquivoUrl(rec, rec.home_video_poster) : null
-  const videoPreview = videoNovo ? URL.createObjectURL(videoNovo) : videoUrlAtual
-  const posterPreview = posterNovo ? URL.createObjectURL(posterNovo) : posterUrlAtual
+  const videoPreview = useObjectUrl(videoNovo) ?? videoUrlAtual
+  const posterPreview = useObjectUrl(posterNovo) ?? posterUrlAtual
 
   const validarVideo = (f: File): boolean => {
     if (f.type !== 'video/mp4' || !f.name.toLowerCase().endsWith('.mp4')) {
@@ -120,7 +123,7 @@ export default function MagazineHomeSettings() {
     } catch (err) {
       toast({
         title: 'Erro ao salvar',
-        description: err instanceof Error ? err.message : 'Tente novamente.',
+        description: getErrorMessage(err),
       })
     } finally {
       setSalvando(false)
@@ -128,147 +131,184 @@ export default function MagazineHomeSettings() {
   }
 
   if (carregando) {
-    return <p className="text-sm text-muted-foreground">Carregando configurações…</p>
+    return (
+      <div className="space-y-8">
+        <h2 className="text-3xl font-serif font-bold text-secondary mb-4">Revistas SST</h2>
+        <MagazineTabs />
+        <p className="text-sm text-muted-foreground">Carregando configurações…</p>
+      </div>
+    )
   }
 
   if (!rec) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Nenhum registro de configuração encontrado. Ele é criado automaticamente na primeira
-        atualização de preços; tente salvar os preços da venda avulsa primeiro.
-      </p>
+      <div className="space-y-8">
+        <h2 className="text-3xl font-serif font-bold text-secondary mb-4">Revistas SST</h2>
+        <MagazineTabs />
+        <p className="text-sm text-muted-foreground">
+          Nenhum registro de configuração encontrado. Ele é criado automaticamente na primeira
+          atualização de preços; tente salvar os preços da venda avulsa primeiro.
+        </p>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-6 max-w-xl">
-      {/* Vídeo da Home */}
-      <div className="space-y-2">
-        <Label htmlFor="home-video">Vídeo da Home (.mp4, até {MAX_VIDEO_MB} MB)</Label>
-        <Input
-          id="home-video"
-          ref={videoInput}
-          type="file"
-          accept="video/mp4"
-          autoComplete="off"
-          onChange={(e) => {
-            const f = e.target.files?.[0] ?? null
-            if (f && !validarVideo(f)) {
-              e.target.value = ''
-              return
-            }
-            setVideoNovo(f)
-            setRemoverVideo(false)
-          }}
-        />
-        {videoPreview && (
-          <div className="mt-2 rounded-lg overflow-hidden border border-border max-w-[320px]">
-            <video
-              src={videoPreview}
-              controls
-              muted
-              playsInline
-              preload="metadata"
-              className="w-full aspect-video bg-black"
-            />
+    <div className="space-y-8">
+      <h2 className="text-3xl font-serif font-bold text-secondary mb-4">Revistas SST</h2>
+      <MagazineTabs />
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-6 max-w-xl">
+            {/* Vídeo da Home */}
+            <div className="space-y-2">
+              <Label htmlFor="home-video">Vídeo da Home (.mp4, até {MAX_VIDEO_MB} MB)</Label>
+              <Input
+                id="home-video"
+                ref={videoInput}
+                type="file"
+                accept="video/mp4"
+                autoComplete="off"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null
+                  if (f && !validarVideo(f)) {
+                    e.target.value = ''
+                    return
+                  }
+                  setVideoNovo(f)
+                  setRemoverVideo(false)
+                }}
+              />
+              {videoPreview && (
+                <div className="mt-2 rounded-lg overflow-hidden border border-border max-w-[320px]">
+                  <video
+                    src={videoPreview}
+                    controls
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="w-full aspect-video bg-black"
+                  />
+                </div>
+              )}
+              {(rec.home_video || videoNovo) && !removerVideo && !videoNovo && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setRemoverVideo(true)
+                    setVideoNovo(null)
+                  }}
+                >
+                  Remover vídeo atual
+                </Button>
+              )}
+              {removerVideo && (
+                <p className="text-xs text-muted-foreground">
+                  O vídeo atual será removido ao salvar.
+                </p>
+              )}
+            </div>
+
+            {/* Imagem do vídeo (poster) */}
+            <div className="space-y-2">
+              <Label htmlFor="home-video-poster">Imagem do vídeo (.jpg)</Label>
+              <Input
+                id="home-video-poster"
+                ref={posterInput}
+                type="file"
+                accept="image/jpeg"
+                autoComplete="off"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null
+                  if (f && !validarPoster(f)) {
+                    e.target.value = ''
+                    return
+                  }
+                  setPosterNovo(f)
+                  setRemoverPoster(false)
+                }}
+              />
+              {posterPreview && (
+                <div className="mt-2 rounded-lg overflow-hidden border border-border max-w-[260px]">
+                  <img
+                    src={posterPreview}
+                    alt="Prévia da imagem do vídeo da Home"
+                    width={520}
+                    height={650}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full aspect-[4/5] object-cover"
+                  />
+                </div>
+              )}
+              {(rec.home_video_poster || posterNovo) && !removerPoster && !posterNovo && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setRemoverPoster(true)
+                    setPosterNovo(null)
+                  }}
+                >
+                  Remover imagem atual
+                </Button>
+              )}
+              {removerPoster && (
+                <p className="text-xs text-muted-foreground">
+                  A imagem atual será removida ao salvar.
+                </p>
+              )}
+            </div>
+
+            {/* Nº de páginas da edição do mês */}
+            <div className="space-y-2">
+              <Label htmlFor="home-issue-pages">Nº de páginas da edição do mês</Label>
+              <Input
+                id="home-issue-pages"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                autoComplete="off"
+                placeholder="Ex.: 84"
+                value={pages}
+                onChange={(e) => setPages(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Aparece no selo da Home: “Folheie a edição de {mesAtual()} — {pages || '?'}{' '}
+                páginas”.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              onClick={salvar}
+              disabled={salvando}
+              className="min-h-[44px] rounded-full font-bold"
+            >
+              {salvando ? 'Salvando…' : 'Salvar configurações'}
+            </Button>
           </div>
-        )}
-        {(rec.home_video || videoNovo) && !removerVideo && !videoNovo && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setRemoverVideo(true)
-              setVideoNovo(null)
-            }}
-          >
-            Remover vídeo atual
-          </Button>
-        )}
-        {removerVideo && (
-          <p className="text-xs text-muted-foreground">O vídeo atual será removido ao salvar.</p>
-        )}
-      </div>
-
-      {/* Imagem do vídeo (poster) */}
-      <div className="space-y-2">
-        <Label htmlFor="home-video-poster">Imagem do vídeo (.jpg)</Label>
-        <Input
-          id="home-video-poster"
-          ref={posterInput}
-          type="file"
-          accept="image/jpeg"
-          autoComplete="off"
-          onChange={(e) => {
-            const f = e.target.files?.[0] ?? null
-            if (f && !validarPoster(f)) {
-              e.target.value = ''
-              return
-            }
-            setPosterNovo(f)
-            setRemoverPoster(false)
-          }}
-        />
-        {posterPreview && (
-          <div className="mt-2 rounded-lg overflow-hidden border border-border max-w-[260px]">
-            <img
-              src={posterPreview}
-              alt="Prévia da imagem do vídeo da Home"
-              width={520}
-              height={650}
-              loading="lazy"
-              decoding="async"
-              className="w-full aspect-[4/5] object-cover"
-            />
-          </div>
-        )}
-        {(rec.home_video_poster || posterNovo) && !removerPoster && !posterNovo && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setRemoverPoster(true)
-              setPosterNovo(null)
-            }}
-          >
-            Remover imagem atual
-          </Button>
-        )}
-        {removerPoster && (
-          <p className="text-xs text-muted-foreground">A imagem atual será removida ao salvar.</p>
-        )}
-      </div>
-
-      {/* Nº de páginas da edição do mês */}
-      <div className="space-y-2">
-        <Label htmlFor="home-issue-pages">Nº de páginas da edição do mês</Label>
-        <Input
-          id="home-issue-pages"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          autoComplete="off"
-          placeholder="Ex.: 84"
-          value={pages}
-          onChange={(e) => setPages(e.target.value)}
-        />
-        <p className="text-xs text-muted-foreground">
-          Aparece no selo da Home: “Folheie a edição de {mesAtual()} — {pages || '?'} páginas”.
-        </p>
-      </div>
-
-      <Button
-        type="button"
-        onClick={salvar}
-        disabled={salvando}
-        className="min-h-[44px] rounded-full font-bold"
-      >
-        {salvando ? 'Salvando…' : 'Salvar configurações'}
-      </Button>
+        </CardContent>
+      </Card>
     </div>
   )
+}
+
+function useObjectUrl(file: File | null): string | null {
+  const [url, setUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!file) {
+      setUrl(null)
+      return
+    }
+    const u = URL.createObjectURL(file)
+    setUrl(u)
+    return () => URL.revokeObjectURL(u)
+  }, [file])
+  return url
 }
 
 function mesAtual(): string {

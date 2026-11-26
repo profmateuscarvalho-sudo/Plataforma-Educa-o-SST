@@ -4,9 +4,12 @@ import { ArrowRight, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useSubscriptionPlans } from '@/hooks/use-subscription-plans'
 import { getMagazines } from '@/services/magazines'
 import { fetchMagazinePricing, priceForEdition, type MagazinePricing } from '@/lib/magazine-pricing'
+import { fetchMagazineHomeMedia, type MagazineHomeMedia } from '@/lib/magazine-home-media'
+import { formatMagazineMonthYear } from '@/lib/magazine-utils'
 import {
   calcularPrecosDePlano,
   formatBRL,
@@ -29,8 +32,11 @@ const F_INTER = "'Inter', system-ui, sans-serif"
 
 /* Gradientes exatos da spec */
 const BG_HERO =
-  'radial-gradient(circle at 82% 35%, rgba(253,190,45,0.20) 0%, transparent 42%), linear-gradient(135deg, #2A2620 0%, #3A3227 55%, #4D3E25 100%)'
+  'radial-gradient(circle at 80% 40%, rgba(253,190,45,0.22) 0%, transparent 45%), #FAF8F3'
 const BG_REVISTA = 'linear-gradient(135deg, #1E3832 0%, #2B4A40 55%, #3B4A36 100%)'
+const HERO_INK = '#1C1B18'
+const HERO_MUTED = '#5C574C'
+const HERO_OUTLINE = '#D9D2C0'
 const BG_CARD_PRECO = 'linear-gradient(160deg, #2A2620, #3E3428)'
 const BG_FECHAMENTO =
   'radial-gradient(ellipse at 50% 0%, rgba(253,190,45,0.22) 0%, transparent 55%), linear-gradient(180deg, #3A3227, #2A2620)'
@@ -98,9 +104,15 @@ export default function Index() {
   const navigate = useNavigate()
   const { plans } = useSubscriptionPlans()
 
-  /* Dados reais: edições da revista (capas) e preço avulso do servidor */
+  /* Dados reais: edições da revista (capas), preço avulso e mídia do hero */
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [magPricing, setMagPricing] = useState<MagazinePricing | null>(null)
+  const [heroMedia, setHeroMedia] = useState<MagazineHomeMedia>({
+    videoUrl: null,
+    posterUrl: null,
+    pages: 0,
+  })
+  const isMobile = useIsMobile()
 
   /* Redireciona estudante logado para a plataforma (mantém o comportamento atual) */
   useEffect(() => {
@@ -112,11 +124,14 @@ export default function Index() {
   /* Uma única rodada de buscas: falha de uma fonte não derruba a outra */
   useEffect(() => {
     let vivo = true
-    Promise.allSettled([getMagazines(), fetchMagazinePricing()]).then((results) => {
-      if (!vivo) return
-      if (results[0].status === 'fulfilled') setMagazines(results[0].value)
-      if (results[1].status === 'fulfilled') setMagPricing(results[1].value)
-    })
+    Promise.allSettled([getMagazines(), fetchMagazinePricing(), fetchMagazineHomeMedia()]).then(
+      (results) => {
+        if (!vivo) return
+        if (results[0].status === 'fulfilled') setMagazines(results[0].value)
+        if (results[1].status === 'fulfilled') setMagPricing(results[1].value)
+        if (results[2].status === 'fulfilled') setHeroMedia(results[2].value)
+      },
+    )
     return () => {
       vivo = false
     }
@@ -144,9 +159,21 @@ export default function Index() {
   /* Edições: ordem já vem '-created' do serviço; edição do mês = featured ou 1ª */
   const ediDoMes = magazines.find((m) => m.is_featured) || magazines[0] || null
   const precoEdicaoDoMes = ediDoMes && magPricing ? priceForEdition(magPricing, ediDoMes.id) : null
-  const heroCovers = magazines.slice(0, 3)
   const revistaCovers = magazines.slice(0, 5)
   const restantes = Math.max(0, magazines.length - revistaCovers.length)
+
+  /* Hero: vídeo do admin só no desktop; sem vídeo (ou no celular), capa da
+   * edição mais recente. No celular a tag <video> NEM chega a renderizar. */
+  const mesHero = ediDoMes ? formatMagazineMonthYear(ediDoMes) : ''
+  const pagesHero = heroMedia.pages
+  /* O vídeo só existe depois do fetch (videoUrl nasce null), então no celular
+   * ele NUNCA chega a montar: quando a mídia chega, isMobile já está correto. */
+  const showVideo = !isMobile && !!heroMedia.videoUrl
+  const capaHero = ediDoMes
+  /* Imagem estática: no celular o poster cadastrado tem prioridade; no desktop
+   * (sem vídeo) e sem poster, a capa da edição mais recente. */
+  const urlCapaHero = capaHero ? coverUrl(capaHero) : null
+  const imgHeroSrc = isMobile && heroMedia.posterUrl ? heroMedia.posterUrl : urlCapaHero
 
   return (
     <div className="overflow-x-hidden" style={{ background: CREAM, color: INK }}>
@@ -159,15 +186,20 @@ export default function Index() {
             {/* Coluna de texto (primeiro no celular, à esquerda no desktop) */}
             <div>
               <span
-                className="inline-flex items-center px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.16em] border border-[#FDBE2D]/60"
-                style={{ fontFamily: F_INTER, color: YELLOW, borderRadius: 999 }}
+                className="inline-flex items-center px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.16em] border"
+                style={{
+                  fontFamily: F_INTER,
+                  color: HERO_MUTED,
+                  borderColor: HERO_OUTLINE,
+                  borderRadius: 999,
+                }}
               >
-                ASSINE EDUCAÇÃO SST
+                #SEJAEDUCAÇÃOSST
               </span>
 
               <h1
                 className="mt-6 mb-5 text-[38px] leading-[1.04] sm:text-[52px] lg:text-[62px] xl:text-[70px]"
-                style={{ fontFamily: F_PLAYFAIR, fontWeight: 900, color: CREAM }}
+                style={{ fontFamily: F_PLAYFAIR, fontWeight: 900, color: HERO_INK }}
               >
                 Quer evoluir na área de SST?
               </h1>
@@ -178,15 +210,15 @@ export default function Index() {
                   fontFamily: F_PLAYFAIR,
                   fontStyle: 'italic',
                   fontWeight: 800,
-                  color: YELLOW,
+                  color: HERO_INK,
                 }}
               >
-                Menos informação e mais direção.
+                Assine a revista digital e tenha acesso a plataforma de estudos.
               </p>
 
               <p
                 className="text-[16px] sm:text-[17px] leading-relaxed max-w-[540px] mb-8"
-                style={{ fontFamily: F_INTER, color: SEC_ON_DARK }}
+                style={{ fontFamily: F_INTER, color: HERO_MUTED }}
               >
                 Revista mensal, cursos, aulas ao vivo, documentários e mentorias para quem quer
                 estar capacitado para transformar a cultura de segurança e crescer na carreira.
@@ -207,7 +239,7 @@ export default function Index() {
                 <Button
                   asChild
                   size="lg"
-                  className="h-12 min-h-[44px] px-8 rounded-full font-semibold text-base bg-transparent hover:bg-[#FDBE2D]/10 text-[#FAF8F3] border border-[#FAF8F3]/40 hover:border-[#FAF8F3]/70 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
+                  className="h-12 min-h-[44px] px-8 rounded-full font-semibold text-base bg-transparent hover:bg-[#1C1B18]/5 text-[#1C1B18] border border-[#1C1B18]/60 hover:border-[#1C1B18] transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
                 >
                   <Link to="/register">Criar conta grátis</Link>
                 </Button>
@@ -216,7 +248,7 @@ export default function Index() {
               {valorCartao !== null && parcela !== null && (
                 <p
                   className="text-[13px] sm:text-sm"
-                  style={{ fontFamily: F_INTER, color: SEC_ON_DARK2 }}
+                  style={{ fontFamily: F_INTER, color: HERO_MUTED }}
                 >
                   Plano Prata por menos de R$ {semPrefixo(valorCartao)} por dia · 12x de R${' '}
                   {semPrefixo(parcela)}
@@ -224,81 +256,100 @@ export default function Index() {
               )}
             </div>
 
-            {/* Capas: leque no desktop (as 3 visíveis), só a principal no celular */}
+            {/* Vídeo da revista (desktop) / capa ou poster (celular) */}
             <div className="flex flex-col items-center lg:items-end">
-              <div className="relative w-[260px] sm:w-[320px] aspect-[4/5] lg:w-full lg:max-w-[520px] lg:aspect-auto lg:h-[430px] xl:h-[460px]">
-                {/* 3ª capa: ~30% da largura para a direita, girada +8° (só desktop) */}
-                {heroCovers[2] && coverUrl(heroCovers[2]) && (
-                  <div
-                    aria-hidden="true"
-                    className="hidden lg:block absolute top-[6%] h-[88%] aspect-[4/5] left-1/2 translate-x-[calc(-50%_+_100px)] rotate-[8deg] rounded-xl overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.5)]"
-                    style={{ background: '#2A2620' }}
-                  >
-                    <img
-                      src={coverUrl(heroCovers[2])!}
-                      alt=""
-                      width={400}
-                      height={500}
-                      loading="eager"
-                      decoding="async"
-                      className="w-full h-full object-cover opacity-90"
+              <div className="relative w-[260px] sm:w-[320px] lg:w-full lg:max-w-[640px] aspect-[4/5] lg:aspect-auto lg:h-[430px] xl:h-[460px]">
+                {/* Vídeo da revista sendo folheada — só existe no desktop,
+                 * dentro de um wrapper que não renderiza em telas pequenas. */}
+                {showVideo && (
+                  <div className="hidden lg:block absolute inset-0">
+                    <video
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      poster={heroMedia.posterUrl ?? undefined}
+                      src={heroMedia.videoUrl ?? undefined}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{
+                        borderRadius: 18,
+                        boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
+                        transform: 'perspective(1400px) rotateY(-7deg) rotateX(3deg)',
+                      }}
                     />
                   </div>
                 )}
-                {/* 2ª capa: ~30% da largura para a esquerda, girada -9° (só desktop) */}
-                {heroCovers[1] && coverUrl(heroCovers[1]) && (
-                  <div
-                    aria-hidden="true"
-                    className="hidden lg:block absolute top-[6%] h-[88%] aspect-[4/5] left-1/2 translate-x-[calc(-50%_-_100px)] rotate-[-9deg] rounded-xl overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.5)]"
-                    style={{ background: '#2A2620' }}
-                  >
+
+                {/* Imagem estática: celular (poster → capa) e desktop sem vídeo (capa) */}
+                {!showVideo &&
+                  (imgHeroSrc || urlCapaHero ? (
                     <img
-                      src={coverUrl(heroCovers[1])!}
-                      alt=""
+                      src={(imgHeroSrc || urlCapaHero)!}
+                      alt={
+                        isMobile && heroMedia.posterUrl
+                          ? 'Capa (poster) da edição mais recente da Revista Educação SST'
+                          : `Capa da edição mais recente da Revista Educação SST (${capaHero?.title})`
+                      }
                       width={400}
                       height={500}
-                      loading="eager"
+                      loading={isMobile ? 'eager' : 'lazy'}
+                      fetchPriority={isMobile ? 'high' : 'low'}
                       decoding="async"
-                      className="w-full h-full object-cover opacity-95"
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{
+                        borderRadius: 18,
+                        boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
+                        transform: 'perspective(1400px) rotateY(-7deg) rotateX(3deg)',
+                      }}
                     />
-                  </div>
-                )}
-                {/* 1ª capa (mais recente): na frente, reta */}
-                {heroCovers[0] && coverUrl(heroCovers[0]) ? (
-                  <div className="absolute inset-0 aspect-[4/5] lg:left-1/2 lg:right-auto lg:w-auto lg:-translate-x-1/2 z-10 rounded-xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.55)]">
-                    <img
-                      src={coverUrl(heroCovers[0])!}
-                      alt={`Capa da edição mais recente da Revista Educação SST (${heroCovers[0].title})`}
-                      width={400}
-                      height={500}
-                      loading="eager"
-                      fetchPriority="high"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className="absolute inset-0 aspect-[4/5] lg:left-1/2 lg:right-auto lg:w-auto lg:-translate-x-1/2 z-10 rounded-xl border border-[#FDBE2D]/30 flex flex-col items-center justify-center p-6 text-center"
-                    style={{ background: '#2A2620', color: SEC_ON_DARK }}
-                  >
-                    <span className="text-2xl mb-2" style={{ fontFamily: F_ANTON, color: YELLOW }}>
-                      EDUCAÇÃO SST.
-                    </span>
-                    <span className="text-sm" style={{ fontFamily: F_INTER }}>
-                      Revista mensal de Segurança do Trabalho
-                    </span>
-                  </div>
-                )}
+                  ) : (
+                    /* Nem vídeo, nem poster, nem capa: quadro escuro de marca */
+                    <div
+                      className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
+                      style={{
+                        borderRadius: 18,
+                        background: '#2A2620',
+                        color: SEC_ON_DARK,
+                        boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
+                        transform: 'perspective(1400px) rotateY(-7deg) rotateX(3deg)',
+                      }}
+                    >
+                      <span
+                        className="text-2xl mb-2"
+                        style={{ fontFamily: F_ANTON, color: YELLOW }}
+                      >
+                        EDUCAÇÃO SST.
+                      </span>
+                      <span className="text-sm" style={{ fontFamily: F_INTER }}>
+                        Revista mensal de Segurança do Trabalho
+                      </span>
+                    </div>
+                  ))}
               </div>
 
-              {/* Selo amarelo */}
-              <span
-                className="mt-6 lg:mt-8 inline-flex items-center px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] rounded-full"
-                style={{ fontFamily: F_INTER, background: YELLOW, color: INK }}
-              >
-                Nova edição todo mês
-              </span>
+              {/* Selos abaixo do vídeo/capa */}
+              <div className="mt-6 lg:mt-8 flex flex-col sm:flex-row sm:flex-wrap items-center gap-2.5 sm:gap-3">
+                <span
+                  className="inline-flex items-center px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] rounded-full"
+                  style={{ fontFamily: F_INTER, background: YELLOW, color: INK }}
+                >
+                  Nova edição todo mês
+                </span>
+                <span
+                  className="inline-flex items-center gap-2 px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] rounded-full border"
+                  style={{ fontFamily: F_INTER, color: HERO_INK, borderColor: HERO_OUTLINE }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ background: '#2E8B57' }}
+                  />
+                  {pagesHero > 0
+                    ? `Folheie a edição de ${mesHero}: ${pagesHero} páginas`
+                    : `Folheie a edição de ${mesHero}`}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -310,7 +361,7 @@ export default function Index() {
       <section aria-label="Números da revista" style={{ background: YELLOW }}>
         <div className="max-w-[1200px] mx-auto px-5 sm:px-6 py-4 sm:py-5">
           <p
-            className="font-extrabold text-[13px] sm:text-[15px] tracking-[0.06em] text-center sm:text-left"
+            className="font-extrabold text-[13px] sm:text-[15px] tracking-[0.06em] text-center"
             style={{ fontFamily: F_INTER, color: INK }}
           >
             {magazines.length > 0 && (

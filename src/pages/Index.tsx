@@ -312,7 +312,7 @@ export default function Index() {
                         background: '#2A2620',
                         color: SEC_ON_DARK,
                         boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
-                        transform: 'perspective(1400px) rotateY(-7deg) rotateX(3deg)',
+                        transform: 'perspective(1400px) rotateY(-5deg) rotateX(2deg)',
                       }}
                     >
                       <span

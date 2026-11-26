@@ -431,6 +431,8 @@ export default function Index() {
                 {ediDoMes && precoEdicaoDoMes !== null && (
                   <Link
                     to={`/revistas?revista=${ediDoMes.id}`}
+                    target="_blank"
+                    rel="noopener"
                     className="text-[15px] font-semibold underline underline-offset-4 hover:text-[#FDBE2D] transition-colors"
                     style={{ fontFamily: F_INTER, color: SEC_ON_DARK }}
                   >
@@ -448,6 +450,8 @@ export default function Index() {
                   <Link
                     key={mag.id}
                     to={`/revistas?revista=${mag.id}`}
+                    target="_blank"
+                    rel="noopener"
                     aria-label={`Revista ${mag.title}`}
                     className="block rounded-lg overflow-hidden border border-[#FAF8F3]/15 bg-[#173F33] aspect-[4/5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FDBE2D] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E3832]"
                   >
@@ -475,6 +479,8 @@ export default function Index() {
               {restantes > 0 && (
                 <Link
                   to="/revistas"
+                  target="_blank"
+                  rel="noopener"
                   aria-label={`Ver todas as ${magazines.length} edições no acervo`}
                   className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#FAF8F3]/25 hover:border-[#FDBE2D]/60 transition-colors aspect-[4/5] p-2 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FDBE2D] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E3832]"
                 >
@@ -717,29 +723,6 @@ export default function Index() {
           </div>
         </div>
       </section>
-
-      {/* =====================================================================
-          8. RODAPÉ
-          ===================================================================== */}
-      <footer style={{ background: '#24211C', color: SEC_ON_DARK }}>
-        <div className="max-w-[1200px] mx-auto px-5 sm:px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
-          <p className="text-[13px]" style={{ fontFamily: F_INTER, color: SEC_ON_DARK2 }}>
-            Educação SST LTDA · CNPJ 56.009.540/0001-90 · Presidente Prudente/SP
-          </p>
-          <nav
-            aria-label="Links do rodapé"
-            className="flex items-center gap-6 text-[13px]"
-            style={{ fontFamily: F_INTER, color: SEC_ON_DARK }}
-          >
-            <Link to="/privacidade" className="hover:text-[#FDBE2D] transition-colors">
-              Política de privacidade
-            </Link>
-            <Link to="/termos" className="hover:text-[#FDBE2D] transition-colors">
-              Termos de uso
-            </Link>
-          </nav>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T01:37:37.268Z",
+  "generatedAt": "2026-11-26T02:11:25.383Z",
   "collections": [
     {
       "name": "users",
@@ -1872,6 +1872,24 @@
         },
         {
           "name": "previous_issue_price",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "home_video",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "home_video_poster",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "current_issue_pages",
           "type": "number",
           "required": false,
           "system": false

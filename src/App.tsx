@@ -57,6 +57,7 @@ import NewsDetails from './pages/NewsDetails'
 import AdminMagazineArticles from './pages/admin/MagazineArticles'
 import AdminMagazineConnections from './pages/admin/MagazineConnections'
 import AdminMagazineWorkplaces from './pages/admin/MagazineWorkplaces'
+import AdminMagazineSettings from './components/admin/MagazineHomeSettings'
 import AdminNews from './pages/admin/News'
 import AdminLeads from './pages/admin/Leads'
 import AdminLeadImport from './pages/admin/LeadImport'
@@ -168,6 +169,7 @@ const App = () => (
               <Route path="/admin/revistas/artigos" element={<AdminMagazineArticles />} />
               <Route path="/admin/revistas/conexoes" element={<AdminMagazineConnections />} />
               <Route path="/admin/revistas/locais" element={<AdminMagazineWorkplaces />} />
+              <Route path="/admin/revistas/configuracoes" element={<AdminMagazineSettings />} />
               <Route path="/admin/noticias" element={<AdminNews />} />
               <Route path="/admin/leads" element={<AdminLeads />} />
               <Route path="/admin/dia-tst" element={<AdminDiaTst />} />

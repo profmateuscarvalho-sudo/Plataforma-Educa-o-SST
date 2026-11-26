@@ -41,12 +41,10 @@ export default function Layout() {
   const [installOpen, setInstallOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  /* Na Home ("/") o menu acompanha o topo escuro da página; nas demais
-     rotas ele segue exatamente como é hoje (tema claro padrão). */
-  const onHome = location.pathname === '/'
-  const headerBg = onHome ? 'linear-gradient(90deg, #2A2620, #342E25)' : undefined
-  const headerText = onHome ? '#FAF8F3' : undefined
-  const headerTextSec = onHome ? '#D9D4C7' : undefined
+  /* Menu geral do site: fundo claro em TODAS as rotas, inclusive "/".
+     A Home nova usa topo claro (#FAF8F3), então não há mais estilo escuro.
+     headerBg/headerText/headerTextSec foram removidos junto com o tema escuro
+     que o menu tinha apenas na rota "/" (revertido em v0.0.402). */
 
   const handleInstall = () => runInstall(() => setInstallOpen(true))
 
@@ -67,10 +65,7 @@ export default function Layout() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
-      <header
-        className="sticky top-0 z-50 w-full border-b border-border"
-        style={onHome ? { background: headerBg, color: headerText } : undefined}
-      >
+      <header className="sticky top-0 z-50 w-full border-b border-border">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
           {/* Esquerda: Símbolo "E." amarelo (44px), link para a página inicial */}
           <Link to="/" className="flex items-center shrink-0 group" aria-label="Educação SST">
@@ -88,7 +83,7 @@ export default function Layout() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  style={onHome ? { color: isActive ? headerText : headerTextSec } : undefined}
+                  style={undefined}
                   className={`text-[15px] font-medium transition-colors hover:text-foreground relative py-1 ${
                     isActive ? 'text-foreground' : 'text-muted-foreground'
                   }`}

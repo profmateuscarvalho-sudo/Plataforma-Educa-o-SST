@@ -182,7 +182,7 @@ export default function Index() {
           ===================================================================== */}
       <section style={{ background: BG_HERO }} className="relative overflow-hidden">
         <div className="max-w-[1240px] mx-auto px-5 sm:px-6 pt-12 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-14 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-12 lg:gap-16 items-center">
             {/* Coluna de texto (primeiro no celular, à esquerda no desktop) */}
             <div>
               <span
@@ -284,9 +284,8 @@ export default function Index() {
                       className="absolute inset-0 w-full h-full"
                       style={{
                         objectFit: 'contain',
-                        borderRadius: 18,
-                        boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
-                        transform: 'perspective(1400px) rotateY(-5deg) rotateX(2deg)',
+                        borderRadius: 16,
+                        boxShadow: '0 30px 60px rgba(28,27,24,0.25)',
                       }}
                     />
                   </div>
@@ -310,9 +309,8 @@ export default function Index() {
                       className="absolute inset-0 w-full h-full"
                       style={{
                         objectFit: 'contain',
-                        borderRadius: 18,
-                        boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
-                        transform: 'perspective(1400px) rotateY(-5deg) rotateX(2deg)',
+                        borderRadius: 16,
+                        boxShadow: '0 30px 60px rgba(28,27,24,0.25)',
                       }}
                     />
                   ) : (
@@ -320,11 +318,10 @@ export default function Index() {
                     <div
                       className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
                       style={{
-                        borderRadius: 18,
+                        borderRadius: 16,
                         background: '#2A2620',
                         color: SEC_ON_DARK,
-                        boxShadow: '0 40px 80px rgba(28,27,24,0.32)',
-                        transform: 'perspective(1400px) rotateY(-7deg) rotateX(3deg)',
+                        boxShadow: '0 30px 60px rgba(28,27,24,0.25)',
                       }}
                     >
                       <span
@@ -340,17 +337,17 @@ export default function Index() {
                   ))}
               </div>
 
-              {/* Selos abaixo do vídeo/capa — lado a lado, centralizados,
-               * quebrando linha só se faltar espaço */}
-              <div className="mt-6 lg:mt-8 flex flex-wrap justify-center items-center gap-2.5 sm:gap-3">
+              {/* Selos abaixo do vídeo/capa — em UMA linha no desktop, 16px
+               * abaixo da mídia; quebram linha só no celular (flex-wrap) */}
+              <div className="mt-4 flex flex-wrap justify-center items-center gap-2.5 sm:gap-3">
                 <span
-                  className="inline-flex items-center px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] rounded-full"
+                  className="inline-flex items-center whitespace-nowrap px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] rounded-full"
                   style={{ fontFamily: F_INTER, background: YELLOW, color: INK }}
                 >
                   Nova edição todo mês
                 </span>
                 <span
-                  className="inline-flex items-center gap-2 px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] rounded-full border"
+                  className="inline-flex items-center gap-2 whitespace-nowrap px-4 py-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] rounded-full border"
                   style={{ fontFamily: F_INTER, color: HERO_INK, borderColor: HERO_OUTLINE }}
                 >
                   <span

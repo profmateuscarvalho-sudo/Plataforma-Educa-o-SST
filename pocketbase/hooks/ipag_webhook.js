@@ -257,59 +257,16 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
         var contractEndStr = user.getString('contract_end_date')
 
         if (tier !== 'free') {
-          // Idempotência: só altera contract_end_date se ainda não estiver pago
-          if (!alreadyPaid) {
-            var nowIpag = new Date()
-            var utcIpag = nowIpag.getTime() + nowIpag.getTimezoneOffset() * 60000
-            var spIpag = new Date(utcIpag - 3 * 3600000)
-
-            var currentEnd = user.getString('contract_end_date')
-            var baseYear = spIpag.getUTCFullYear()
-            var baseMonth = spIpag.getUTCMonth() + 1
-            var baseDay = spIpag.getUTCDate()
-
-            if (currentEnd && /^\d{4}-\d{2}-\d{2}/.test(currentEnd)) {
-              var cParts = currentEnd.substring(0, 10).split('-')
-              var cY = parseInt(cParts[0], 10)
-              var cM = parseInt(cParts[1], 10)
-              var cD = parseInt(cParts[2], 10)
-              if (
-                cY > baseYear ||
-                (cY === baseYear && cM > baseMonth) ||
-                (cY === baseYear && cM === baseMonth && cD > baseDay)
-              ) {
-                baseYear = cY
-                baseMonth = cM
-                baseDay = cD
-              }
-            }
-
-            var targetYear = baseYear
-            var targetMonth = baseMonth
-            var targetDay = baseDay
-
-            if (billingCycle === 'yearly') {
-              targetYear += 1
-            } else {
-              targetMonth += 1
-              if (targetMonth > 12) {
-                targetYear += 1
-                targetMonth = 1
-              }
-            }
-
-            var daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate()
-            if (targetDay > daysInTargetMonth) {
-              targetDay = daysInTargetMonth
-            }
-
-            var dateStr =
-              targetYear +
-              '-' +
-              (targetMonth < 10 ? '0' + targetMonth : '' + targetMonth) +
-              '-' +
-              (targetDay < 10 ? '0' + targetDay : '' + targetDay)
-
+          // Idempotência em DUAS camadas (contrata as entregas concorrentes do
+          // webhook, que leem o status antigo antes de qualquer save — foi isso
+          // que somou 2 ciclos mensais e gerou 2028 na conta de teste):
+          //  1. alreadyPaid (status no banco) — cobre entregas sequenciais;
+          //  2. contractUtils.claim (guard em $app.store(), TTL 30s) — cobre
+          //     entregas concorrentes que leem o MESMO status "pending".
+          // v0.0.415: lógica centralizada em contract_utils.js (contractUtils).
+          var canExtend = !alreadyPaid && contractUtils.claim(orderId)
+          if (canExtend) {
+            var dateStr = contractUtils.extend(user.getString('contract_end_date'), billingCycle)
             user.set('contract_end_date', dateStr)
           }
 
@@ -1105,61 +1062,16 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
         var contractEndStr = user.getString('contract_end_date')
 
         if (tier !== 'free') {
-          // Idempotência: só altera contract_end_date se ainda não estiver pago
-          if (!alreadyPaid) {
-            var nowIpag2 = new Date()
-            var utcIpag2 = nowIpag2.getTime() + nowIpag2.getTimezoneOffset() * 60000
-            var spIpag2 = new Date(utcIpag2 - 3 * 3600000)
-
-            var currentEnd2 = user.getString('contract_end_date')
-            var baseYear2 = spIpag2.getUTCFullYear()
-            var baseMonth2 = spIpag2.getUTCMonth() + 1
-            var baseDay2 = spIpag2.getUTCDate()
-
-            if (currentEnd2 && /^\d{4}-\d{2}-\d{2}/.test(currentEnd2)) {
-              var cParts2 = currentEnd2.substring(0, 10).split('-')
-              var cY2 = parseInt(cParts2[0], 10)
-              var cM2 = parseInt(cParts2[1], 10)
-              var cD2 = parseInt(cParts2[2], 10)
-              if (
-                cY2 > baseYear2 ||
-                (cY2 === baseYear2 && cM2 > baseMonth2) ||
-                (cY2 === baseYear2 && cM2 === baseMonth2 && cD2 > baseDay2)
-              ) {
-                baseYear2 = cY2
-                baseMonth2 = cM2
-                baseDay2 = cD2
-              }
-            }
-
-            var targetYear2 = baseYear2
-            var targetMonth2 = baseMonth2
-            var targetDay2 = baseDay2
-
-            if (billingCycle === 'yearly') {
-              targetYear2 += 1
-            } else {
-              targetMonth2 += 1
-              if (targetMonth2 > 12) {
-                targetYear2 += 1
-                targetMonth2 = 1
-              }
-            }
-
-            var daysInTargetMonth2 = new Date(Date.UTC(targetYear2, targetMonth2, 0)).getUTCDate()
-            if (targetDay2 > daysInTargetMonth2) {
-              targetDay2 = daysInTargetMonth2
-            }
-
-            var dateStr2 =
-              targetYear2 +
-              '-' +
-              (targetMonth2 < 10 ? '0' + targetMonth2 : '' + targetMonth2) +
-              '-' +
-              (targetDay2 < 10 ? '0' + targetDay2 : '' + targetDay2)
-
+          // Idempotência em DUAS camadas: já-pago + guard de 30s em
+          // $app.store() (contractUtils.claim) contra entregas CONCORRENTES,
+          // que leem o status antigo antes de qualquer save — foi isso que
+          // somou 2 ciclos mensais e gerou 2028 na conta de teste.
+          // v0.0.415: cálculo centralizado em contract_utils.js.
+          if (!alreadyPaid && contractUtils.claim(orderId)) {
+            var dateStr2 = contractUtils.extend(user.getString('contract_end_date'), billingCycle)
             user.set('contract_end_date', dateStr2)
           }
+          // (bloco legado de cálculo inline removido — v0.0.415)
 
           // Reflete a data final (nova ou pré-existente) para o e-mail de confirmação
           contractEndStr = user.getString('contract_end_date')

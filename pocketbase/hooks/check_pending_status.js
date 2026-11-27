@@ -178,62 +178,17 @@ routerAdd(
                   userRecord.set('subscription_billing', billingCycle)
                   userRecord.set('email_verificado', true)
 
-                  // Cálculo no fuso America/Sao_Paulo (UTC-3) por partes civis
-                  var nowPending = new Date()
-                  var utcPending = nowPending.getTime() + nowPending.getTimezoneOffset() * 60000
-                  var spPending = new Date(utcPending - 3 * 3600000)
-
-                  var currentEndDateStr = userRecord.getString('contract_end_date')
-                  var baseYear = spPending.getUTCFullYear()
-                  var baseMonth = spPending.getUTCMonth() + 1
-                  var baseDay = spPending.getUTCDate()
-
-                  if (currentEndDateStr && /^\d{4}-\d{2}-\d{2}/.test(currentEndDateStr)) {
-                    var cParts = currentEndDateStr.substring(0, 10).split('-')
-                    var cY = parseInt(cParts[0], 10)
-                    var cM = parseInt(cParts[1], 10)
-                    var cD = parseInt(cParts[2], 10)
-                    if (
-                      cY > baseYear ||
-                      (cY === baseYear && cM > baseMonth) ||
-                      (cY === baseYear && cM === baseMonth && cD > baseDay)
-                    ) {
-                      baseYear = cY
-                      baseMonth = cM
-                      baseDay = cD
-                    }
+                  // v0.0.415: cálculo centralizado em contract_utils.js
+                  // (contractUtils) — guard claim() contra reprocessamento do
+                  // mesmo payment e base = máx(contrato atual, hoje em SP).
+                  if (contractUtils.claim(pendingPayment.id)) {
+                    var bDateStr = contractUtils.extend(
+                      userRecord.getString('contract_end_date'),
+                      billingCycle,
+                    )
+                    userRecord.set('contract_end_date', bDateStr)
+                    $app.save(userRecord)
                   }
-
-                  var targetYear = baseYear
-                  var targetMonth = baseMonth
-                  var targetDay = baseDay
-
-                  if (billingCycle === 'yearly') {
-                    targetYear += 1
-                  } else {
-                    targetMonth += 1
-                    if (targetMonth > 12) {
-                      targetYear += 1
-                      targetMonth = 1
-                    }
-                  }
-
-                  var daysInTargetMonth = new Date(
-                    Date.UTC(targetYear, targetMonth, 0),
-                  ).getUTCDate()
-                  if (targetDay > daysInTargetMonth) {
-                    targetDay = daysInTargetMonth
-                  }
-
-                  var bDateStr =
-                    targetYear +
-                    '-' +
-                    (targetMonth < 10 ? '0' + targetMonth : '' + targetMonth) +
-                    '-' +
-                    (targetDay < 10 ? '0' + targetDay : '' + targetDay)
-
-                  userRecord.set('contract_end_date', bDateStr)
-                  $app.save(userRecord)
                 }
 
                 $app

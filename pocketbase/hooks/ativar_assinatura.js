@@ -367,59 +367,9 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
         user.set('plan_tier', paidTier)
         user.set('subscription_billing', billingCycle)
 
-        // Calcula contract_end_date no fuso America/Sao_Paulo (UTC-3)
-        var nowPaid = new Date()
-        var utcPaid = nowPaid.getTime() + nowPaid.getTimezoneOffset() * 60000
-        var spPaid = new Date(utcPaid - 3 * 3600000)
-
-        var curEndStr = user.getString('contract_end_date')
-        var baseYear = spPaid.getUTCFullYear()
-        var baseMonth = spPaid.getUTCMonth() + 1
-        var baseDay = spPaid.getUTCDate()
-
-        if (curEndStr && /^\d{4}-\d{2}-\d{2}/.test(curEndStr)) {
-          var parts = curEndStr.substring(0, 10).split('-')
-          var cY = parseInt(parts[0], 10)
-          var cM = parseInt(parts[1], 10)
-          var cD = parseInt(parts[2], 10)
-          if (
-            cY > baseYear ||
-            (cY === baseYear && cM > baseMonth) ||
-            (cY === baseYear && cM === baseMonth && cD > baseDay)
-          ) {
-            baseYear = cY
-            baseMonth = cM
-            baseDay = cD
-          }
-        }
-
-        var targetYear = baseYear
-        var targetMonth = baseMonth
-        var targetDay = baseDay
-
-        if (billingCycle === 'yearly') {
-          targetYear += 1
-        } else {
-          targetMonth += 1
-          if (targetMonth > 12) {
-            targetYear += 1
-            targetMonth = 1
-          }
-        }
-
-        // Ajusta limites de dias do mês
-        var daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate()
-        if (targetDay > daysInTargetMonth) {
-          targetDay = daysInTargetMonth
-        }
-
-        var pDateStr =
-          targetYear +
-          '-' +
-          (targetMonth < 10 ? '0' + targetMonth : '' + targetMonth) +
-          '-' +
-          (targetDay < 10 ? '0' + targetDay : '' + targetDay)
-
+        // v0.0.415: cálculo centralizado em contract_utils.js (contractUtils).
+        // Regra mantida: base = máx(contrato atual, hoje em SP), soma 1 ciclo.
+        var pDateStr = contractUtils.extend(user.getString('contract_end_date'), billingCycle)
         user.set('contract_end_date', pDateStr)
         $app.save(user)
 

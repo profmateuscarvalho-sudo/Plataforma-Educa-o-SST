@@ -56,27 +56,16 @@ onRecordAfterUpdateSuccess((e) => {
             userForPlan.set('plan_tier', tier)
           }
 
-          // Fuso America/Sao_Paulo (UTC-3) por partes civis
-          var nowVer = new Date()
-          var utcVer = nowVer.getTime() + nowVer.getTimezoneOffset() * 60000
-          var spVer = new Date(utcVer - 3 * 3600000)
-          var fYear = spVer.getUTCFullYear() + 1
-          var fMonth = spVer.getUTCMonth() + 1
-          var fDay = spVer.getUTCDate()
-          if (
-            fMonth === 2 &&
-            fDay === 29 &&
-            (fYear % 4 !== 0 || (fYear % 100 === 0 && fYear % 400 !== 0))
-          ) {
-            fDay = 28
+          // v0.0.415: data centralizada em contract_utils.js. Regra: só grava
+          // contract_end_date quando o tier é PAGO (prata/ouro) — conta FREE
+          // fica SEM data, senão o access_guard libera conteúdo pago.
+          var fDateStr = ''
+          if (tier !== 'free') {
+            fDateStr = contractUtils.extend(userForPlan.getString('contract_end_date'), 'yearly')
+            userForPlan.set('contract_end_date', fDateStr)
+          } else {
+            userForPlan.set('contract_end_date', '')
           }
-          var fDateStr =
-            fYear +
-            '-' +
-            (fMonth < 10 ? '0' + fMonth : '' + fMonth) +
-            '-' +
-            (fDay < 10 ? '0' + fDay : '' + fDay)
-          userForPlan.set('contract_end_date', fDateStr)
           $app.saveNoValidate(userForPlan)
 
           $app

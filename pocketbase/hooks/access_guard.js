@@ -213,8 +213,9 @@ onRecordEnrich((e) => {
 
   var nivel = 1
   if (auth) {
-    // Mesma regra de antes: plan_tier + contrato vigente (do registro de auth,
-    // sem consulta) ou assinatura active com plano Prata/Ouro (do cache).
+    // Nível pago exige plan_tier Prata/Ouro COM contrato vigente. Uma data
+    // vazia (ou expirada) mantém a conta em nível 1 (Free), mesmo que um
+    // resíduo antigo do bug do cadastro tenha preenchido plan_tier.
     var t = ''
     try {
       t = String(auth.getString('plan_tier') || '').toLowerCase()
@@ -223,7 +224,7 @@ onRecordEnrich((e) => {
     try {
       fim = String(auth.getString('contract_end_date') || '').trim()
     } catch (_) {}
-    var contratoOk = !fim || fim.slice(0, 10) >= hojeSpDate()
+    var contratoOk = fim !== '' && fim.slice(0, 10) >= hojeSpDate()
     if (contratoOk) {
       if (t === 'ouro') nivel = 3
       else if (t === 'prata') nivel = 2

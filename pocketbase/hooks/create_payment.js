@@ -339,8 +339,25 @@ routerAdd(
       throw new BadRequestError('CPF é obrigatório para o pagamento.')
     }
     var cpfDigits = String(body.customer.cpf_cnpj).replace(/\D/g, '')
-    if (cpfDigits.length !== 11) {
-      throw new BadRequestError('CPF inválido. Verifique os números e tente novamente.')
+    // Validação completa com dígitos verificadores (módulo 11) — mesma regra do
+    // frontend (src/lib/cpf.ts). Um CPF com 11 dígitos mas DV errado não passa.
+    function cpfValido(cpf) {
+      if (!/^\d{11}$/.test(cpf)) return false
+      if (/^(\d)\1{10}$/.test(cpf)) return false
+      var calc = function (base) {
+        var soma = 0
+        for (var i = 0; i < base.length; i++) soma += parseInt(base[i], 10) * (base.length + 1 - i)
+        var r = (soma * 10) % 11
+        return r === 10 ? 0 : r
+      }
+      if (calc(cpf.substring(0, 9)) !== parseInt(cpf[9], 10)) return false
+      if (calc(cpf.substring(0, 10)) !== parseInt(cpf[10], 10)) return false
+      return true
+    }
+    if (!cpfValido(cpfDigits)) {
+      throw new BadRequestError(
+        'CPF inválido. Confira os números digitados — o dígito verificador não bate.',
+      )
     }
     body.customer.cpf_cnpj = cpfDigits
     if (body.type !== 'card' && body.type !== 'pix') {
@@ -544,9 +561,9 @@ routerAdd(
         }
         $app.save(rec)
       } catch (updErr) {
-        $app
-          .logger()
-          .error('Failed to update payment record', 'recordId', recordId, 'error', updErr.message)
+        console.error(
+          '[create-payment] falha ao atualizar payments: ' + recordId + ' ' + updErr.message,
+        )
       }
     }
 

@@ -29,32 +29,10 @@ onRecordCreateRequest((e) => {
       e.record.set('subscription_billing', 'none')
     }
 
-    // Todo cadastro novo nasce ATIVO com validade de +1 ano no fuso America/Sao_Paulo (UTC-3)
-    // Cálculo pelas partes civis de São Paulo sem setFullYear em UTC
-    var now = new Date()
-    var utc = now.getTime() + now.getTimezoneOffset() * 60000
-    var spDate = new Date(utc - 3 * 3600000)
-    var spYear = spDate.getUTCFullYear() + 1
-    var spMonth = spDate.getUTCMonth() + 1
-    var spDay = spDate.getUTCDate()
-    // Ajuste bissexto para 29 de fevereiro caso ocorra
-    if (
-      spMonth === 2 &&
-      spDay === 29 &&
-      (spYear % 4 !== 0 || (spYear % 100 === 0 && spYear % 400 !== 0))
-    ) {
-      spDay = 28
-    }
-    var contractEndDate =
-      spYear +
-      '-' +
-      (spMonth < 10 ? '0' + spMonth : '' + spMonth) +
-      '-' +
-      (spDay < 10 ? '0' + spDay : '' + spDay)
-
-    if (!e.record.getString('contract_end_date')) {
-      e.record.set('contract_end_date', contractEndDate)
-    }
+    // REGRA (v0.0.413): o cadastro NÃO grava contract_end_date — acesso pago só
+    // existe após confirmação do pagamento. A data de validade é gravada
+    // EXCLUSIVAMENTE pelo hook ipag_webhook.js quando o pagamento vira 'paid'
+    // (antes, todo cadastro nascia com +1 ano "de graça", mesmo sem pagar).
     // ATENÇÃO: NÃO mexer no campo 'verified' aqui. Qualquer mutação antes de
     // e.next() entra na validação da requisição pública e a coleção users
     // recusa visitante anônimo definindo esse campo, o que devolve 400

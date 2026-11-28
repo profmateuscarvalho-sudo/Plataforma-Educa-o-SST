@@ -56,16 +56,11 @@ onRecordAfterUpdateSuccess((e) => {
             userForPlan.set('plan_tier', tier)
           }
 
-          // v0.0.415: data centralizada em contract_utils.js. Regra: só grava
-          // contract_end_date quando o tier é PAGO (prata/ouro) — conta FREE
-          // fica SEM data, senão o access_guard libera conteúdo pago.
-          var fDateStr = ''
-          if (tier !== 'free') {
-            fDateStr = contractUtils.extend(userForPlan.getString('contract_end_date'), 'yearly')
-            userForPlan.set('contract_end_date', fDateStr)
-          } else {
-            userForPlan.set('contract_end_date', '')
-          }
+          // REGRA (v0.0.416): este hook NUNCA grava contract_end_date — nem em
+          // Free (era o bug das 102 contas Free com data de contrato) nem em
+          // pago. Ativação de plano pago tem data EXCLUSIVA do webhook iPag
+          // (pagamento confirmado); Free fica SEM data.
+          userForPlan.set('contract_end_date', '')
           $app.saveNoValidate(userForPlan)
 
           $app

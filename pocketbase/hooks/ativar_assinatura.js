@@ -170,27 +170,10 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
       }
       user.set('plan_tier', tier)
 
-      // Fuso America/Sao_Paulo (UTC-3) por partes civis
-      var nowFree = new Date()
-      var utcFree = nowFree.getTime() + nowFree.getTimezoneOffset() * 60000
-      var spFree = new Date(utcFree - 3 * 3600000)
-      var fYear = spFree.getUTCFullYear() + 1
-      var fMonth = spFree.getUTCMonth() + 1
-      var fDay = spFree.getUTCDate()
-      if (
-        fMonth === 2 &&
-        fDay === 29 &&
-        (fYear % 4 !== 0 || (fYear % 100 === 0 && fYear % 400 !== 0))
-      ) {
-        fDay = 28
-      }
-      var fDateStr =
-        fYear +
-        '-' +
-        (fMonth < 10 ? '0' + fMonth : '' + fMonth) +
-        '-' +
-        (fDay < 10 ? '0' + fDay : '' + fDay)
-      user.set('contract_end_date', fDateStr)
+      // REGRA (v0.0.416): ativação de Free NÃO grava contract_end_date —
+      // contas Free ficam SEM data (o campo só é gravado pelo webhook iPag
+      // em pagamento confirmado, ou por edição manual do admin).
+      user.set('contract_end_date', '')
       $app.save(user)
 
       $app
@@ -367,10 +350,9 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
         user.set('plan_tier', paidTier)
         user.set('subscription_billing', billingCycle)
 
-        // v0.0.415: cálculo centralizado em contract_utils.js (contractUtils).
-        // Regra mantida: base = máx(contrato atual, hoje em SP), soma 1 ciclo.
-        var pDateStr = contractUtils.extend(user.getString('contract_end_date'), billingCycle)
-        user.set('contract_end_date', pDateStr)
+        // REGRA (v0.0.416): este hook de ativação NÃO é escritor da data — a
+        // extensão do contrato é EXCLUSIVA do webhook iPag (pagamento
+        // confirmado). Aqui a data fica como estiver (vazia em cadastro novo).
         $app.save(user)
 
         $app
@@ -383,8 +365,6 @@ routerAdd('POST', '/backend/v1/ativar-assinatura', (e) => {
             planName,
             'tier',
             paidTier,
-            'contract_end_date',
-            pDateStr,
           )
 
         $apis.recordAuthResponse(e, user)

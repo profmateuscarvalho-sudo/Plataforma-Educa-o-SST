@@ -2,6 +2,80 @@
 // IIFE, mesmo padrão de magazine_lib/pricing_lib, consumida sem require.
 // Detalhes do que exporta no fim deste arquivo e no DOCS.md.
 routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
+  // REGRA (v0.0.416): utilitários de contract_end_date INLINE no callback —
+  // a JSVM não enxerga declarações top-level/outro arquivo dentro de callbacks
+  // (causa exata do bug "pricingLib is not defined"). Definidos em cada
+  // callback que os usa.
+  // Hoje em partes civis de São Paulo (UTC-3 fixo).
+  function contractSpToday() {
+    var now = new Date()
+    var utc = now.getTime() + now.getTimezoneOffset() * 60000
+    var sp = new Date(utc - 3 * 3600000)
+    return { year: sp.getUTCFullYear(), month: sp.getUTCMonth() + 1, day: sp.getUTCDate() }
+  }
+  function contractParseYMD(dateStr) {
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}/.test(String(dateStr))) return null
+    var p = String(dateStr).substring(0, 10).split('-')
+    var y = parseInt(p[0], 10)
+    var m = parseInt(p[1], 10)
+    var d = parseInt(p[2], 10)
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null
+    return { year: y, month: m, day: d }
+  }
+  function contractToYMD(p) {
+    return (
+      p.year +
+      '-' +
+      (p.month < 10 ? '0' + p.month : '' + p.month) +
+      '-' +
+      (p.day < 10 ? '0' + p.day : '' + p.day)
+    )
+  }
+  function contractIsAfter(a, base) {
+    if (a.year !== base.year) return a.year > base.year
+    if (a.month !== base.month) return a.month > base.month
+    return a.day > base.day
+  }
+  // Free/vencido/vazio → hoje + 1 ciclo; renovação de Prata/Ouro vigente soma
+  // a partir da data atual do contrato.
+  function extContractEnd(currentEndDate, billingCycle, activePaidRenewal) {
+    var today = contractSpToday()
+    var cur = contractParseYMD(currentEndDate)
+    var base = today
+    if (activePaidRenewal && cur && contractIsAfter(cur, today)) {
+      base = { year: cur.year, month: cur.month, day: cur.day }
+    }
+    if ((billingCycle || 'monthly') === 'yearly') {
+      base.year += 1
+    } else {
+      base.month += 1
+      if (base.month > 12) {
+        base.year += 1
+        base.month = 1
+      }
+    }
+    var daysInMonth = new Date(Date.UTC(base.year, base.month, 0)).getUTCDate()
+    if (base.day > daysInMonth) base.day = daysInMonth
+    return contractToYMD(base)
+  }
+  // Guard de idempotência contra entregas concorrentes do webhook: true só na
+  // primeira chamada por payment nos últimos 30s.
+  function claimContractExt(paymentId) {
+    try {
+      var store = $app.store()
+      var key = 'contract_ext_' + String(paymentId)
+      var existing = store.get(key)
+      var nowTs = Date.now()
+      if (existing && typeof existing === 'number' && nowTs - existing < 30 * 1000) {
+        return false
+      }
+      store.set(key, nowTs)
+      return true
+    } catch (_) {
+      return true
+    }
+  }
+
   var t0 = Date.now()
   var method = (e.request.method || '').toUpperCase()
   var reqInfo = e.requestInfo() || {}
@@ -261,12 +335,19 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
           // webhook, que leem o status antigo antes de qualquer save — foi isso
           // que somou 2 ciclos mensais e gerou 2028 na conta de teste):
           //  1. alreadyPaid (status no banco) — cobre entregas sequenciais;
-          //  2. contractUtils.claim (guard em $app.store(), TTL 30s) — cobre
+          //  2. claimContractExt (guard em $app.store(), TTL 30s) — cobre
           //     entregas concorrentes que leem o MESMO status "pending".
-          // v0.0.415: lógica centralizada em contract_utils.js (contractUtils).
-          var canExtend = !alreadyPaid && contractUtils.claim(orderId)
+          // REGRA (v0.0.416): renovação de Prata/Ouro com contrato vigente e
+          // pagamento anterior 'paid' soma a partir da data atual; Free ou
+          // contrato vencido/vazio começa de hoje. Cálculo inline (JSVM não
+          // enxerga declaração de outro arquivo).
+          var canExtend = !alreadyPaid && claimContractExt(orderId)
           if (canExtend) {
-            var dateStr = contractUtils.extend(user.getString('contract_end_date'), billingCycle)
+            var dateStr = extContractEnd(
+              user.getString('contract_end_date'),
+              billingCycle,
+              oldTier === 'prata' || oldTier === 'ouro',
+            )
             user.set('contract_end_date', dateStr)
           }
 
@@ -807,6 +888,75 @@ routerAdd('POST', '/backend/v1/ipag-webhook', (e) => {
 })
 
 routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
+  // REGRA (v0.0.416): utilitários de contract_end_date INLINE no callback —
+  // a JSVM não enxerga declarações top-level/outro arquivo dentro de callbacks
+  // (causa exata do bug "pricingLib is not defined"). Definidos em cada
+  // callback que os usa.
+  function contractSpToday() {
+    var now = new Date()
+    var utc = now.getTime() + now.getTimezoneOffset() * 60000
+    var sp = new Date(utc - 3 * 3600000)
+    return { year: sp.getUTCFullYear(), month: sp.getUTCMonth() + 1, day: sp.getUTCDate() }
+  }
+  function contractParseYMD(dateStr) {
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}/.test(String(dateStr))) return null
+    var p = String(dateStr).substring(0, 10).split('-')
+    var y = parseInt(p[0], 10)
+    var m = parseInt(p[1], 10)
+    var d = parseInt(p[2], 10)
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null
+    return { year: y, month: m, day: d }
+  }
+  function contractToYMD(p) {
+    return (
+      p.year +
+      '-' +
+      (p.month < 10 ? '0' + p.month : '' + p.month) +
+      '-' +
+      (p.day < 10 ? '0' + p.day : '' + p.day)
+    )
+  }
+  function contractIsAfter(a, base) {
+    if (a.year !== base.year) return a.year > base.year
+    if (a.month !== base.month) return a.month > base.month
+    return a.day > base.day
+  }
+  function extContractEnd(currentEndDate, billingCycle, activePaidRenewal) {
+    var today = contractSpToday()
+    var cur = contractParseYMD(currentEndDate)
+    var base = today
+    if (activePaidRenewal && cur && contractIsAfter(cur, today)) {
+      base = { year: cur.year, month: cur.month, day: cur.day }
+    }
+    if ((billingCycle || 'monthly') === 'yearly') {
+      base.year += 1
+    } else {
+      base.month += 1
+      if (base.month > 12) {
+        base.year += 1
+        base.month = 1
+      }
+    }
+    var daysInMonth = new Date(Date.UTC(base.year, base.month, 0)).getUTCDate()
+    if (base.day > daysInMonth) base.day = daysInMonth
+    return contractToYMD(base)
+  }
+  function claimContractExt(paymentId) {
+    try {
+      var store = $app.store()
+      var key = 'contract_ext_' + String(paymentId)
+      var existing = store.get(key)
+      var nowTs = Date.now()
+      if (existing && typeof existing === 'number' && nowTs - existing < 30 * 1000) {
+        return false
+      }
+      store.set(key, nowTs)
+      return true
+    } catch (_) {
+      return true
+    }
+  }
+
   var t0 = Date.now()
   var method = (e.request.method || '').toUpperCase()
   var reqInfo = e.requestInfo() || {}
@@ -1063,15 +1213,21 @@ routerAdd('GET', '/backend/v1/ipag-webhook', (e) => {
 
         if (tier !== 'free') {
           // Idempotência em DUAS camadas: já-pago + guard de 30s em
-          // $app.store() (contractUtils.claim) contra entregas CONCORRENTES,
+          // $app.store() (claimContractExt) contra entregas CONCORRENTES,
           // que leem o status antigo antes de qualquer save — foi isso que
           // somou 2 ciclos mensais e gerou 2028 na conta de teste.
-          // v0.0.415: cálculo centralizado em contract_utils.js.
-          if (!alreadyPaid && contractUtils.claim(orderId)) {
-            var dateStr2 = contractUtils.extend(user.getString('contract_end_date'), billingCycle)
+          // REGRA (v0.0.416): renovação de Prata/Ouro vigente soma a partir
+          // da data atual; Free/vencido começa de hoje. Cálculo inline (JSVM
+          // não enxerga declaração de outro arquivo).
+          var canExtend2 = !alreadyPaid && claimContractExt(orderId)
+          if (canExtend2) {
+            var dateStr2 = extContractEnd(
+              user.getString('contract_end_date'),
+              billingCycle,
+              oldTier === 'prata' || oldTier === 'ouro',
+            )
             user.set('contract_end_date', dateStr2)
           }
-          // (bloco legado de cálculo inline removido — v0.0.415)
 
           // Reflete a data final (nova ou pré-existente) para o e-mail de confirmação
           contractEndStr = user.getString('contract_end_date')

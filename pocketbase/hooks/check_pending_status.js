@@ -178,17 +178,10 @@ routerAdd(
                   userRecord.set('subscription_billing', billingCycle)
                   userRecord.set('email_verificado', true)
 
-                  // v0.0.415: cálculo centralizado em contract_utils.js
-                  // (contractUtils) — guard claim() contra reprocessamento do
-                  // mesmo payment e base = máx(contrato atual, hoje em SP).
-                  if (contractUtils.claim(pendingPayment.id)) {
-                    var bDateStr = contractUtils.extend(
-                      userRecord.getString('contract_end_date'),
-                      billingCycle,
-                    )
-                    userRecord.set('contract_end_date', bDateStr)
-                    $app.save(userRecord)
-                  }
+                  // REGRA (v0.0.416): este poll NÃO é escritor da data — a
+                  // extensão do contrato é EXCLUSIVA do webhook iPag (que tem
+                  // as guardas alreadyPaid + claim). Aqui só reflete tier/ciclo.
+                  $app.save(userRecord)
                 }
 
                 $app

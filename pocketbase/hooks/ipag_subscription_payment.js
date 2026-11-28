@@ -34,60 +34,12 @@ routerAdd(
     }
 
     var user = $app.findRecordById('users', userId)
-    var currentEndDateStr = user.getString('contract_end_date')
 
-    // Cálculo no fuso America/Sao_Paulo (UTC-3) por partes civis
-    var nowIpagPay = new Date()
-    var utcIpagPay = nowIpagPay.getTime() + nowIpagPay.getTimezoneOffset() * 60000
-    var spIpagPay = new Date(utcIpagPay - 3 * 3600000)
-
-    var baseYear = spIpagPay.getUTCFullYear()
-    var baseMonth = spIpagPay.getUTCMonth() + 1
-    var baseDay = spIpagPay.getUTCDate()
-
-    if (currentEndDateStr && /^\d{4}-\d{2}-\d{2}/.test(currentEndDateStr)) {
-      var cParts = currentEndDateStr.substring(0, 10).split('-')
-      var cY = parseInt(cParts[0], 10)
-      var cM = parseInt(cParts[1], 10)
-      var cD = parseInt(cParts[2], 10)
-      if (
-        cY > baseYear ||
-        (cY === baseYear && cM > baseMonth) ||
-        (cY === baseYear && cM === baseMonth && cD > baseDay)
-      ) {
-        baseYear = cY
-        baseMonth = cM
-        baseDay = cD
-      }
-    }
-
-    var targetYear = baseYear
-    var targetMonth = baseMonth
-    var targetDay = baseDay
-
-    if (interval === 'yearly') {
-      targetYear += 1
-    } else {
-      targetMonth += 1
-      if (targetMonth > 12) {
-        targetYear += 1
-        targetMonth = 1
-      }
-    }
-
-    var daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate()
-    if (targetDay > daysInTargetMonth) {
-      targetDay = daysInTargetMonth
-    }
-
-    var dateStr =
-      targetYear +
-      '-' +
-      (targetMonth < 10 ? '0' + targetMonth : '' + targetMonth) +
-      '-' +
-      (targetDay < 10 ? '0' + targetDay : '' + targetDay)
-
-    user.set('contract_end_date', dateStr)
+    // REGRA (v0.0.416): este handler de cobrança LEGADO não é escritor da data —
+    // a extensão do contrato é EXCLUSIVA do webhook iPag (pagamento confirmado),
+    // que cobre idempotência (alreadyPaid + guard claim) e a regra de renovação
+    // (Prata/Ouro vigente soma da data atual; Free/vencido parte de hoje).
+    // Aqui apenas reflete tier/ciclo; a data fica como o webhook deixou.
     user.set('plan_tier', tier)
     user.set('subscription_billing', interval)
     $app.save(user)
@@ -96,7 +48,7 @@ routerAdd(
       status: 'approved',
       transaction_id: transactionId,
       message: 'Pagamento processado com sucesso via iPag.',
-      contract_end_date: dateStr,
+      contract_end_date: user.getString('contract_end_date') || '',
       plan_tier: tier,
     })
   },
